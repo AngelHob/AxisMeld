@@ -358,6 +358,17 @@ else()
   endif()
 endif()
 
+if(WIN32 AND NOT WITH_PYTHON_MODULE)
+  add_custom_command(
+    TARGET blender
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:blender>/portable"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_SOURCE_DIR}/release/datafiles/axismeld/portable/README.txt"
+            "$<TARGET_FILE_DIR:blender>/portable/README.txt"
+  )
+endif()
+
 if(WITH_BUILDINFO)
   # Explicitly say that the executable depends on the `buildinfo`.
   add_dependencies(blender buildinfo)
@@ -2127,6 +2138,10 @@ if(WIN32 AND NOT WITH_PYTHON_MODULE)
     TARGETS blender blender-launcher
     COMPONENT Blender
     DESTINATION "."
+  )
+  install(
+    DIRECTORY "${CMAKE_SOURCE_DIR}/release/datafiles/axismeld/portable/"
+    DESTINATION "${TARGETDIR_EXE}/portable"
   )
   if(WITH_CPU_CHECK)
     install(
