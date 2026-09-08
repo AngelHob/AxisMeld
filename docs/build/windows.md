@@ -22,21 +22,25 @@ path for those locations.
 ## Clone and prepare
 
 GitHub forks do not store Blender's LFS objects. In PowerShell, skip LFS smudge
-only for the clone so that the fork cannot fail with an origin LFS 404. Remove
-the variable immediately after cloning, then obtain the objects from Blender
-upstream.
+while cloning the required integration branch, then obtain the objects from
+Blender upstream. The `finally` block removes the temporary setting after the
+upstream checkout and also removes it if a preparation command fails.
 
 ```powershell
-$env:GIT_LFS_SKIP_SMUDGE = '1'
-git clone https://github.com/AngelHob/AxisMeld.git D:\source\AxisMeld
-Remove-Item Env:GIT_LFS_SKIP_SMUDGE
+try {
+  $env:GIT_LFS_SKIP_SMUDGE = '1'
+  git clone --branch axismeld/integration https://github.com/AngelHob/AxisMeld.git D:\source\AxisMeld
 
-Set-Location D:\source\AxisMeld
-git switch axismeld/integration
-git remote add upstream https://projects.blender.org/blender/blender.git
-git remote set-url --push upstream DISABLED
-git lfs fetch upstream HEAD
-git lfs checkout
+  Set-Location D:\source\AxisMeld
+  git remote add upstream https://projects.blender.org/blender/blender.git
+  git remote set-url --push upstream DISABLED
+  git lfs fetch upstream HEAD
+  git lfs checkout
+}
+finally {
+  Remove-Item Env:GIT_LFS_SKIP_SMUDGE -ErrorAction SilentlyContinue
+}
+
 cmd /c make.bat update 2026b
 ```
 
@@ -69,6 +73,7 @@ Run the installed-build verifier and all three focused tests before distributing
 the build:
 
 ```powershell
+$ctest = 'C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe'
 pwsh -NoProfile -File D:\source\AxisMeld\tools\axismeld\verify_windows_build.ps1 -InstallDir D:\source\AxisMeld-build\install
 & $ctest --test-dir D:\source\AxisMeld-build -C Release -R '^(axismeld_identity|axismeld_cli_identity|axismeld_portable_paths)$' --output-on-failure
 ```
