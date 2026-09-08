@@ -25,7 +25,8 @@ BEGIN
       VALUE "FileVersion", BLEN_VER_RC_STR
       VALUE "ProductVersion", BLEN_VER_RC_STR
       VALUE "CompanyName", "AxisMeld Project"
-      VALUE "FileDescription", "AxisMeld — Maya-style workflow built on Blender"
+      VALUE "FileDescription", "AxisMeld - Maya-style workflow built on Blender"
+      VALUE "InternalName", "blender.exe"
       VALUE "LegalCopyright", "GPLv3; Blender Authors and AxisMeld contributors"
       VALUE "OriginalFilename", "blender.exe"
       VALUE "ProductName", "AxisMeld"

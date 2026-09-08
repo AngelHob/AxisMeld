@@ -6,7 +6,7 @@
 
 **Architecture:** Add a small `bf::axismeld` identity library under the dedicated AxisMeld namespace, then connect it through narrow build-system seams to the creator and window-manager modules. Preserve Blender's file-format version, command-line compatibility, executable filename, and runtime dependencies; use a portable profile directory for Phase 0 isolation and verify the installed build with an independent PowerShell smoke test.
 
-**Tech Stack:** Blender 5.3 alpha C/C++, CMake, GoogleTest, Python 3, PowerShell 7, Visual Studio 2022 Build Tools, Git.
+**Tech Stack:** Blender 5.3 alpha C/C++, CMake 4.3.1, GoogleTest, Python 3, PowerShell 7, Visual Studio Build Tools 2026 (18.8), Git.
 
 **Spec:** `docs/design/2026-09-08-axismeld-architecture.md`
 
@@ -115,18 +115,18 @@ if (Test-Path -LiteralPath $vswhere) {
 }
 ```
 
-Expected: Git, CMake, Python, and a Visual Studio 2022 installation path. The 2026-09-09 preflight found Git and Python but did not find CMake, `vswhere`, MSBuild, or the Visual C++ compiler. If still missing, stop and obtain explicit permission before installing system software.
+Expected: Git, Python, and the installed Visual Studio Build Tools 2026 (18.8) path. Its bundled CMake 4.3.1 is used explicitly because no standalone CMake was present in `PATH`.
 
-- [x] **Step 4: Install missing prerequisites only after permission**
+- [x] **Step 4: Select the verified supported toolchain under Ruling 5**
 
-Run from an elevated terminal only when Step 3 confirms they are absent and the user has approved installation:
+The approved non-interactive Visual Studio 2022 and standalone CMake installation attempts could not cross UAC. Reuse Blender's supported, already installed Visual Studio Build Tools 2026 toolchain instead:
 
 ```powershell
-winget install --exact --id Kitware.CMake --accept-package-agreements --accept-source-agreements
-winget install --exact --id Microsoft.VisualStudio.2022.BuildTools --accept-package-agreements --accept-source-agreements --override "--wait --passive --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
+$cmake = 'C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe'
+& $cmake --version
 ```
 
-Expected: both installers exit with code `0`; a new terminal resolves `cmake`, and `vswhere` returns Visual Studio 2022 Build Tools.
+Expected: CMake 4.3.1 from Visual Studio Build Tools 2026; no successful system installation occurred.
 
 - [x] **Step 5: Download branch-matched Blender libraries and test data**
 
@@ -134,7 +134,9 @@ Run from `cmd.exe`, as required by Blender's Windows build wrapper:
 
 ```bat
 cd /d D:\source\AxisMeld
-make.bat update
+git lfs fetch upstream HEAD
+git lfs checkout
+make.bat update 2026b
 ```
 
 Expected: exit code `0`; the command reports current libraries, add-ons, and tests without switching away from `axismeld/integration`.
@@ -144,17 +146,19 @@ Expected: exit code `0`; the command reports current libraries, add-ons, and tes
 Run:
 
 ```powershell
-cmake -S D:\source\AxisMeld -B D:\source\AxisMeld-build -G "Visual Studio 17 2022" -A x64 -C D:\source\AxisMeld\build_files\cmake\config\blender_developer.cmake -DWITH_GTESTS=ON -DWITH_TESTS_SINGLE_BINARY=OFF -DCMAKE_INSTALL_PREFIX=D:\source\AxisMeld-build\install
+$cmake = 'C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe'
+& $cmake -S D:\source\AxisMeld -B D:\source\AxisMeld-build -G 'Visual Studio 18 2026' -A x64 -C D:\source\AxisMeld\build_files\cmake\config\blender_developer.cmake -DWITH_GTESTS=ON -DWITH_TESTS_SINGLE_BINARY=OFF -DCMAKE_INSTALL_PREFIX=D:\source\AxisMeld-build\install
 ```
 
-Expected: CMake exits `0`, reports Visual Studio 2022 x64, and writes `D:\source\AxisMeld-build\Blender.sln` without modifying tracked files.
+Expected: CMake exits `0`, reports Visual Studio 18 2026 x64, and writes `D:\source\AxisMeld-build\Blender.slnx` without modifying tracked files.
 
 - [x] **Step 7: Build the unmodified baseline before AxisMeld code changes**
 
 Run:
 
 ```powershell
-cmake --build D:\source\AxisMeld-build --target INSTALL --config Release --parallel 8
+$cmake = 'C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe'
+& $cmake --build D:\source\AxisMeld-build --target INSTALL --config Release --parallel 8
 & 'D:\source\AxisMeld-build\install\blender.exe' --version
 ```
 
@@ -366,7 +370,7 @@ result = subprocess.run(
 )
 first_line = result.stdout.splitlines()[0]
 assert re.fullmatch(
-    r"AxisMeld 0\.1\.0-dev \(based on Blender \d+\.\d+\.\d+(?: [A-Za-z]+)?\)",
+    r"AxisMeld 0\.1\.0-dev \(based on Blender \d+\.\d+\.\d+(?: (?:Alpha|Beta|Release Candidate|LTS))?\)",
     first_line,
 ), first_line
 ```
@@ -641,7 +645,7 @@ if ($LASTEXITCODE -ne 0) {
   throw "--version failed with exit code $LASTEXITCODE"
 }
 $firstLine = [string]$versionOutput[0]
-if ($firstLine -notmatch '^AxisMeld 0\.1\.0-dev \(based on Blender \d+\.\d+\.\d+( [A-Za-z]+)?\)$') {
+if ($firstLine -notmatch '^AxisMeld 0\.1\.0-dev \(based on Blender \d+\.\d+\.\d+(?: (?:Alpha|Beta|Release Candidate|LTS))?\)$') {
   throw "Unexpected version line: $firstLine"
 }
 
@@ -693,7 +697,8 @@ In `release/windows/icons/winblender.rc`, set:
 
 ```rc
 VALUE "CompanyName", "AxisMeld Project"
-VALUE "FileDescription", "AxisMeld — Maya-style workflow built on Blender"
+VALUE "FileDescription", "AxisMeld - Maya-style workflow built on Blender"
+VALUE "InternalName", "blender.exe"
 VALUE "LegalCopyright", "GPLv3; Blender Authors and AxisMeld contributors"
 VALUE "OriginalFilename", "blender.exe"
 VALUE "ProductName", "AxisMeld"
@@ -754,27 +759,36 @@ Create `docs/build/windows.md` with these sections and exact commands:
 ## Requirements
 
 - Windows 11 x64
-- Git for Windows
-- CMake in `PATH`
-- Visual Studio 2022 Build Tools with `Microsoft.VisualStudio.Workload.VCTools`
+- Git for Windows and Git LFS
+- CMake 4.3.1 bundled with Visual Studio Build Tools 2026
+- Visual Studio Build Tools 2026 (18.8) with `Microsoft.VisualStudio.Workload.VCTools`
 - At least 40 GB free on `D:` before downloading Blender libraries and build outputs
 
 ## Prepare
 
-    git clone https://github.com/AngelHob/AxisMeld.git D:\source\AxisMeld
-    cd /d D:\source\AxisMeld
-    git switch axismeld/integration
-    make.bat update
+    try {
+      $env:GIT_LFS_SKIP_SMUDGE = '1'
+      git clone --branch axismeld/integration https://github.com/AngelHob/AxisMeld.git D:\source\AxisMeld
+      Set-Location D:\source\AxisMeld
+      git remote add upstream https://projects.blender.org/blender/blender.git
+      git remote set-url --push upstream DISABLED
+      git lfs fetch upstream HEAD
+      git lfs checkout
+    }
+    finally {
+      Remove-Item Env:GIT_LFS_SKIP_SMUDGE -ErrorAction SilentlyContinue
+    }
+    cmd /c make.bat update 2026b
 
 ## Configure and build
 
-    cmake -S D:\source\AxisMeld -B D:\source\AxisMeld-build -G "Visual Studio 17 2022" -A x64 -C D:\source\AxisMeld\build_files\cmake\config\blender_developer.cmake -DWITH_GTESTS=ON -DWITH_TESTS_SINGLE_BINARY=OFF -DCMAKE_INSTALL_PREFIX=D:\source\AxisMeld-build\install
-    cmake --build D:\source\AxisMeld-build --target INSTALL --config Release --parallel 8
+    & 'C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe' -S D:\source\AxisMeld -B D:\source\AxisMeld-build -G "Visual Studio 18 2026" -A x64 -C D:\source\AxisMeld\build_files\cmake\config\blender_developer.cmake -DWITH_GTESTS=ON -DWITH_TESTS_SINGLE_BINARY=OFF -DCMAKE_INSTALL_PREFIX=D:\source\AxisMeld-build\install
+    & 'C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe' --build D:\source\AxisMeld-build --target INSTALL --config Release --parallel 8
 
 ## Verify
 
     pwsh -NoProfile -File D:\source\AxisMeld\tools\axismeld\verify_windows_build.ps1 -InstallDir D:\source\AxisMeld-build\install
-    ctest --test-dir D:\source\AxisMeld-build -C Release -R "^(axismeld_identity|axismeld_cli_identity|axismeld_portable_paths)$" --output-on-failure
+    & 'C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe' --test-dir D:\source\AxisMeld-build -C Release -R "^(axismeld_identity|axismeld_cli_identity|axismeld_portable_paths)$" --output-on-failure
 
 The Phase 0 executable remains named `blender.exe` for compatibility. Its window, version output,
 Windows metadata, and portable profile identify it as AxisMeld. Do not distribute a build until both
@@ -833,7 +847,7 @@ git commit -m "Document AxisMeld build and upstream update workflow"
 
 ---
 
-### Task 7: Phase 0 Acceptance and Publication
+### Task 7: Phase 0 Local Acceptance and Controller Publication
 
 **Files:**
 - Modify only if evidence differs: `README.md`
@@ -841,33 +855,35 @@ git commit -m "Document AxisMeld build and upstream update workflow"
 
 **Interfaces:**
 - Consumes: all Phase 0 commits and the installed Release build.
-- Produces: a verified `axismeld/integration` commit published to GitHub and ready for the separate Maya 2026 input-system plan.
+- Produces locally: a verified `axismeld/phase-0` commit ready for final review. The controller owns visible GUI completion, integration-branch merge, and GitHub push.
 
 - [x] **Step 1: Run the complete focused verification from a clean shell**
 
 Run:
 
 ```powershell
-cmake --build D:\source\AxisMeld-build --target INSTALL --config Release --parallel 8
-ctest --test-dir D:\source\AxisMeld-build -C Release -R "^(axismeld_identity|axismeld_cli_identity|axismeld_portable_paths)$" --output-on-failure
+$cmake = 'C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe'
+$ctest = 'C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe'
+& $cmake --build D:\source\AxisMeld-build --target INSTALL --config Release --parallel 8
+& $ctest --test-dir D:\source\AxisMeld-build -C Release -R "^(axismeld_identity|axismeld_cli_identity|axismeld_portable_paths)$" --output-on-failure
 pwsh -NoProfile -File D:\source\AxisMeld\tools\axismeld\verify_windows_build.ps1 -InstallDir D:\source\AxisMeld-build\install
 git status --short --branch
 ```
 
-Expected: build exit code `0`; three tests, zero failures; verifier `PASS`; clean `axismeld/integration` worktree.
+Expected: build exit code `0`; three tests, zero failures; verifier `PASS`; clean `axismeld/phase-0` worktree apart from ignored SDD audit files.
 
 - [x] **Step 2: Verify upstream ancestry and the protected remote direction**
 
 Run:
 
 ```powershell
-git merge-base --is-ancestor upstream/main HEAD
+git merge-base --is-ancestor 18d84097b4f859582afdec57eece2ae880371adc HEAD
 git remote get-url origin
 git remote get-url upstream
 git remote get-url --push upstream
 ```
 
-Expected: the ancestry command exits `0`; URLs are AxisMeld GitHub for `origin`, Blender Projects for upstream fetch, and `DISABLED` for upstream push.
+Expected: the recorded Blender baseline ancestry command exits `0`; URLs are AxisMeld GitHub for `origin`, Blender Projects for upstream fetch, and `DISABLED` for upstream push. A moving `upstream/main` is not required to be an ancestor until a deliberate upstream merge is validated.
 
 - [ ] **Step 3: Launch the installed UI once**
 
@@ -879,7 +895,9 @@ Start-Process -FilePath 'D:\source\AxisMeld-build\install\blender.exe'
 
 Verify visibly that the main window and splash show `AxisMeld 0.1.0-dev` together with the Blender version. Close the application normally and confirm that new preferences were written only under `D:\source\AxisMeld-build\install\portable`.
 
-- [ ] **Step 4: Push the validated branch**
+Controller status: the main-window title and portable config location were verified, but automated pixel capture failed in the Windows helper. Keep this step unchecked until a visible splash review succeeds.
+
+- [ ] **Step 4: Controller merges and pushes the validated branch**
 
 Run:
 
@@ -891,9 +909,9 @@ git rev-parse HEAD
 
 Expected: push succeeds and the two printed commit hashes are identical.
 
-- [ ] **Step 5: Record the Phase 0 boundary**
+- [x] **Step 5: Record the local Phase 0 boundary**
 
-Add this section to `README.md` only after Steps 1–4 pass:
+The local acceptance commit added this section after the build, focused tests, verifier, ancestry, and remote-direction gates passed. Final integration and publication remain controller-owned Step 4 work:
 
 ```markdown
 ## Phase 0 status
@@ -912,7 +930,6 @@ Run:
 ```powershell
 git add README.md docs/superpowers/plans/2026-09-09-phase-0-build-identity.md
 git commit -m "Record verified AxisMeld Phase 0 baseline"
-git push origin axismeld/integration
 ```
 
-Expected: GitHub default branch shows only verified Phase 0 capability and still states the non-profit, AI-authored, Blender-based project boundaries.
+Expected locally: the Phase 0 branch states only verified capability and retains the non-profit, AI-authored, Blender-based project boundaries. GitHub publication is not complete until Step 4 passes.

@@ -23,6 +23,7 @@ git fetch upstream main
 
 $mergeDate = [TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([DateTimeOffset]::UtcNow, 'China Standard Time').ToString('yyyy-MM-dd')
 $upstreamCommit = git rev-parse upstream/main
+git lfs fetch upstream upstream/main
 git switch -c "integration/blender-main-$mergeDate" axismeld/integration
 ```
 
@@ -38,15 +39,15 @@ files.
 
 ```powershell
 git merge --no-ff upstream/main -m "Merge Blender upstream $upstreamCommit into AxisMeld"
-git lfs fetch upstream HEAD
 git lfs checkout
 cmd /c make.bat update 2026b
 ```
 
-After every upstream merge, fetch and check out main-repository LFS objects
-from `upstream` for the new `HEAD` before the dependency update. Do not fetch
-them from `origin`, because an AxisMeld GitHub fork does not host Blender's LFS
-objects.
+Fetch the main-repository LFS objects from `upstream` before the merge so Git's
+merge smudge can resolve them without consulting the AxisMeld fork. After the
+merge, `git lfs checkout` materializes any objects skipped by smudge before the
+dependency update. Do not fetch LFS objects from `origin`, because an AxisMeld
+GitHub fork does not host Blender's LFS objects.
 
 ## Build and verify the merged result
 
