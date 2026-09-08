@@ -9,6 +9,7 @@ set(INC
 )
 
 set(LIB
+  PRIVATE bf::axismeld
   PRIVATE bf::blenkernel
   PRIVATE bf::blenlib
   PRIVATE bf::bmesh

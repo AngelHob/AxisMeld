@@ -20,6 +20,8 @@
 
 #include "CLG_log.h"
 
+#include "AXM_identity.hh"
+
 #include "DNA_listBase.h"
 #include "DNA_screen_types.h"
 #include "DNA_windowmanager_types.h"
@@ -579,7 +581,7 @@ static std::string wm_window_title_text(
     if (is_single && area && area->spacetype != SPACE_EMPTY) {
       return IFACE_(ED_area_name(area).c_str());
     }
-    return "Blender";
+    return std::string(axismeld::product_name());
   }
 
   /* This path may contain invalid UTF8 byte sequences on UNIX systems,
@@ -668,7 +670,7 @@ static std::string wm_window_title_text(
     win_title.append(fmt::format(" - {}", project->get_name()));
   }
 
-  win_title.append(fmt::format(" — Blender {}", BKE_blender_version_string()));
+  win_title.append(fmt::format(" — {}", axismeld::version_line(BKE_blender_version_string())));
 
   return win_title;
 }

@@ -18,6 +18,8 @@
 
 #  include "CLG_log.h"
 
+#  include "AXM_identity.hh"
+
 #  ifdef WIN32
 #    include "BLI_winstuff.hh"
 #  endif
@@ -604,7 +606,8 @@ static void arg_py_context_restore(bContext *C, BlendePyContextStore *c_py)
 
 static void print_version_full()
 {
-  printf("Blender %s\n", BKE_blender_version_string());
+  const std::string version = axismeld::version_line(BKE_blender_version_string());
+  printf("%s\n", version.c_str());
 #  ifdef BUILD_DATE
   printf("\tbuild date: %s\n", build_date);
   printf("\tbuild time: %s\n", build_time);
@@ -623,22 +626,23 @@ static void print_version_full()
 
 static void print_version_short()
 {
+  const std::string version = axismeld::version_line(BKE_blender_version_string());
 #  ifdef BUILD_DATE
   /* NOTE: We include built time since sometimes we need to tell broken from
    * working built of the same hash. */
-  printf("Blender %s (hash %s built %s %s)\n",
-         BKE_blender_version_string(),
+  printf("%s (hash %s built %s %s)\n",
+         version.c_str(),
          build_hash,
          build_date,
          build_time);
 #  else
-  printf("Blender %s\n", BKE_blender_version_string());
+  printf("%s\n", version.c_str());
 #  endif
 }
 
 static const char arg_handle_print_version_doc[] =
     "\n\t"
-    "Print Blender version and exit.";
+    "Print AxisMeld and Blender versions and exit.";
 static int arg_handle_print_version(int /*argc*/, const char ** /*argv*/, void * /*data*/)
 {
   print_version_full();
@@ -661,7 +665,8 @@ static void print_help(bArgs *ba, bool all)
 
 #  define PRINT(...) BLI_args_printf(ba, __VA_ARGS__)
 
-  PRINT("Blender %s\n", BKE_blender_version_string());
+  const std::string version = axismeld::version_line(BKE_blender_version_string());
+  PRINT("%s\n", version.c_str());
   PRINT("Usage: blender [args ...] [file] [args ...]\n");
   PRINT("\n");
 

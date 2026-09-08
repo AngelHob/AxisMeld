@@ -214,6 +214,12 @@ add_system_python_test(
 # GENERAL PYTHON CORRECTNESS TESTS
 # ------------------------------------------------------------------------------
 
+add_python_test(
+  axismeld_cli_identity
+  ${CMAKE_CURRENT_LIST_DIR}/axismeld_cli_identity.py
+  --blender ${TEST_BLENDER_EXE}
+)
+
 add_blender_test(
   script_load_keymap
   --python ${CMAKE_CURRENT_LIST_DIR}/bl_keymap_completeness.py

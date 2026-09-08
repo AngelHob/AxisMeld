@@ -90,6 +90,7 @@ set(SRC
 )
 
 set(LIB
+  PRIVATE bf::axismeld
   PRIVATE bf::asset_system
   PRIVATE bf::blenfont
   PRIVATE bf::blenkernel
