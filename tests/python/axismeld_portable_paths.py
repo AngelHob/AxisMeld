@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 import argparse
+import os
 import pathlib
 import subprocess
 
@@ -12,10 +13,13 @@ parser.add_argument("--blender", required=True)
 args = parser.parse_args()
 
 expression = "import bpy; print('AXISMELD_CONFIG=' + bpy.utils.user_resource('CONFIG'))"
+clean_env = os.environ.copy()
+clean_env.pop("BLENDER_USER_RESOURCES", None)
 result = subprocess.run(
     [args.blender, "--background", "--factory-startup", "--python-expr", expression],
     check=True,
     capture_output=True,
+    env=clean_env,
     text=True,
     encoding="utf-8",
 )

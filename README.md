@@ -10,7 +10,7 @@ AxisMeld 官方版本永久免费，不销售软件，不设置付费功能，�
 
 AxisMeld 与 Blender Foundation、Autodesk 及其产品均无隶属、合作、赞助或官方背书关系。Blender、Autodesk 和 Maya 等名称仅用于事实性说明软件基础及兼容目标。
 
-当前处于架构设计阶段。详见 [AxisMeld 架构设计](docs/design/2026-09-08-axismeld-architecture.md)。
+当前已进入 Phase 0 开发基线阶段。详见 [AxisMeld 架构设计](docs/design/2026-09-08-axismeld-architecture.md)。
 
 ## AxisMeld project statement
 
@@ -21,6 +21,16 @@ Except for inherited Blender upstream code and third-party dependencies, all Axi
 Official AxisMeld releases are free of charge, contain no paid features, and distribute no profit to maintainers. Transparent donations may only cover infrastructure, hosting, test hardware, and direct maintenance costs. This operating commitment does not restrict personal, educational, or commercial use permitted by the GNU GPL.
 
 AxisMeld is not affiliated with, endorsed by, sponsored by, or an official release of the Blender Foundation or Autodesk.
+
+## Phase 0 status
+
+AxisMeld `0.1.0-dev` has a verified Windows 11 x64 Release build based on Blender commit
+`18d84097b4f859582afdec57eece2ae880371adc`. Phase 0 retains the compatibility filename
+`blender.exe`, identifies the running product as AxisMeld, and stores development preferences under
+the adjacent `portable` directory. The three focused identity and isolation tests pass.
+
+Maya-style shortcuts, hotbox behavior, viewport interaction, modeling additions, and the UV overhaul
+remain planned work and are not part of the Phase 0 build.
 
 ---
 

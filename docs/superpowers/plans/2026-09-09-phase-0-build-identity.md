@@ -76,7 +76,7 @@ The following existing files receive narrow edits:
 - Consumes: clean `axismeld/integration` at commit `5df195d` or its direct successor.
 - Produces: a complete non-sparse checkout, full Git history, Blender dependencies, and a configured build directory at `D:\source\AxisMeld-build`.
 
-- [ ] **Step 1: Verify the repository safety boundary**
+- [x] **Step 1: Verify the repository safety boundary**
 
 Run:
 
@@ -89,7 +89,7 @@ git sparse-checkout list
 
 Expected: the worktree is clean; `origin` is `https://github.com/AngelHob/AxisMeld.git`; `upstream` fetches from `https://projects.blender.org/blender/blender.git` and pushes to `DISABLED`; the repository reports `true`; sparse paths contain `docs/design`.
 
-- [ ] **Step 2: Expand history and the worktree**
+- [x] **Step 2: Expand history and the worktree**
 
 Run:
 
@@ -103,7 +103,7 @@ git status --short
 
 Expected: `false` followed by no status lines. Do not merge `upstream/main` in this step; expanding history must not change `HEAD`.
 
-- [ ] **Step 3: Recheck the required Windows tools**
+- [x] **Step 3: Recheck the required Windows tools**
 
 Run:
 
@@ -117,7 +117,7 @@ if (Test-Path -LiteralPath $vswhere) {
 
 Expected: Git, CMake, Python, and a Visual Studio 2022 installation path. The 2026-09-09 preflight found Git and Python but did not find CMake, `vswhere`, MSBuild, or the Visual C++ compiler. If still missing, stop and obtain explicit permission before installing system software.
 
-- [ ] **Step 4: Install missing prerequisites only after permission**
+- [x] **Step 4: Install missing prerequisites only after permission**
 
 Run from an elevated terminal only when Step 3 confirms they are absent and the user has approved installation:
 
@@ -128,7 +128,7 @@ winget install --exact --id Microsoft.VisualStudio.2022.BuildTools --accept-pack
 
 Expected: both installers exit with code `0`; a new terminal resolves `cmake`, and `vswhere` returns Visual Studio 2022 Build Tools.
 
-- [ ] **Step 5: Download branch-matched Blender libraries and test data**
+- [x] **Step 5: Download branch-matched Blender libraries and test data**
 
 Run from `cmd.exe`, as required by Blender's Windows build wrapper:
 
@@ -139,7 +139,7 @@ make.bat update
 
 Expected: exit code `0`; the command reports current libraries, add-ons, and tests without switching away from `axismeld/integration`.
 
-- [ ] **Step 6: Configure the developer build**
+- [x] **Step 6: Configure the developer build**
 
 Run:
 
@@ -149,7 +149,7 @@ cmake -S D:\source\AxisMeld -B D:\source\AxisMeld-build -G "Visual Studio 17 202
 
 Expected: CMake exits `0`, reports Visual Studio 2022 x64, and writes `D:\source\AxisMeld-build\Blender.sln` without modifying tracked files.
 
-- [ ] **Step 7: Build the unmodified baseline before AxisMeld code changes**
+- [x] **Step 7: Build the unmodified baseline before AxisMeld code changes**
 
 Run:
 
@@ -175,7 +175,7 @@ Expected: build exit code `0`; the executable currently prints `Blender 5.3.0 Al
 - Consumes: a C++17 standard library and Blender's existing test framework.
 - Produces: `blender::axismeld::product_name() -> std::string_view`, `project_version() -> std::string_view`, and `version_line(std::string_view) -> std::string` through target `bf::axismeld`.
 
-- [ ] **Step 1: Write the failing identity test**
+- [x] **Step 1: Write the failing identity test**
 
 Create `source/blender/axismeld/tests/identity_test.cc`:
 
@@ -203,7 +203,7 @@ TEST(axismeld_identity, CombinedVersionLine)
 }  // namespace blender::axismeld::tests
 ```
 
-- [ ] **Step 2: Register the module and confirm the test cannot build yet**
+- [x] **Step 2: Register the module and confirm the test cannot build yet**
 
 Add `add_subdirectory(axismeld)` immediately before `add_subdirectory(windowmanager)` in `source/blender/CMakeLists.txt`.
 
@@ -246,7 +246,7 @@ cmake --build D:\source\AxisMeld-build --target axismeld_identity_test --config 
 
 Expected: build fails because `AXM_identity.hh` and `intern/identity.cc` do not exist.
 
-- [ ] **Step 3: Implement the minimal public identity API**
+- [x] **Step 3: Implement the minimal public identity API**
 
 Create `source/blender/axismeld/AXM_identity.hh`:
 
@@ -299,7 +299,7 @@ std::string version_line(const std::string_view blender_version)
 }  // namespace blender::axismeld
 ```
 
-- [ ] **Step 4: Build and run the identity unit tests**
+- [x] **Step 4: Build and run the identity unit tests**
 
 Run:
 
@@ -311,7 +311,7 @@ ctest --test-dir D:\source\AxisMeld-build -C Release -R "^axismeld_identity$" --
 
 Expected: build exits `0`; CTest reports one matching test and zero failures.
 
-- [ ] **Step 5: Commit the isolated identity module**
+- [x] **Step 5: Commit the isolated identity module**
 
 Run:
 
@@ -339,7 +339,7 @@ Expected: one commit containing only the new module and its single registration 
 - Consumes: `bf::axismeld` and `blender::axismeld::version_line(std::string_view)` from Task 2.
 - Produces: a stable first line for `blender.exe --version`, `AxisMeld 0.1.0-dev (based on Blender <version>)`, plus equivalent title and splash labels.
 
-- [ ] **Step 1: Write the failing black-box CLI test**
+- [x] **Step 1: Write the failing black-box CLI test**
 
 Create `tests/python/axismeld_cli_identity.py`:
 
@@ -391,7 +391,7 @@ ctest --test-dir D:\source\AxisMeld-build -C Release -R "^axismeld_cli_identity$
 
 Expected: the test fails because the first line still starts with `Blender`.
 
-- [ ] **Step 2: Link the identity module into creator and window manager**
+- [x] **Step 2: Link the identity module into creator and window manager**
 
 In `source/creator/CMakeLists.txt`, add this entry to `LIB`:
 
@@ -407,7 +407,7 @@ In `source/blender/windowmanager/CMakeLists.txt`, add the same entry to `LIB`:
 
 Expected: no new include-directory path is added because `bf::axismeld` publishes only its module root.
 
-- [ ] **Step 3: Change creator version output without changing Blender build metadata**
+- [x] **Step 3: Change creator version output without changing Blender build metadata**
 
 Add this include to `source/creator/creator_args.cc`:
 
@@ -424,7 +424,7 @@ printf("%s\n", version.c_str());
 
 Use `PRINT("%s\n", version.c_str());` inside `print_help()`. Keep build date, build hash, branch, platform, compiler flags, the `Usage: blender` command, and Blender's internal version macros unchanged. Change the `--version` help text to `Print AxisMeld and Blender versions and exit.`
 
-- [ ] **Step 4: Change the main-window and temporary-window titles**
+- [x] **Step 4: Change the main-window and temporary-window titles**
 
 Add `#include "AXM_identity.hh"` to `source/blender/windowmanager/intern/wm_window.cc`.
 
@@ -442,7 +442,7 @@ win_title.append(fmt::format(" — {}", axismeld::version_line(BKE_blender_versi
 
 Expected title example: `(Unsaved) — AxisMeld 0.1.0-dev (based on Blender 5.3.0 Alpha)`.
 
-- [ ] **Step 5: Change the splash text while retaining Blender attribution**
+- [x] **Step 5: Change the splash text while retaining Blender attribution**
 
 Add `#include "AXM_identity.hh"` to `source/blender/windowmanager/intern/wm_splash_screen.cc`.
 
@@ -458,7 +458,7 @@ wm_block_splash_add_label(block,
 
 Keep Blender's inherited splash artwork for Phase 0; the combined text prevents the image from being presented as an unmodified official build.
 
-- [ ] **Step 6: Run unit and CLI tests**
+- [x] **Step 6: Run unit and CLI tests**
 
 Run:
 
@@ -469,7 +469,7 @@ ctest --test-dir D:\source\AxisMeld-build -C Release -R "^(axismeld_identity|axi
 
 Expected: two matching tests, zero failures, and the CLI test observes both AxisMeld and Blender versions.
 
-- [ ] **Step 7: Commit the visible product identity**
+- [x] **Step 7: Commit the visible product identity**
 
 Run:
 
@@ -492,7 +492,7 @@ git commit -m "Show AxisMeld identity in the application"
 - Consumes: Blender's existing `portable` directory lookup in `BKE_appdir_folder_id_ex`.
 - Produces: a `portable` directory beside every built and installed Phase 0 executable; `bpy.utils.user_resource('CONFIG')` resolves beneath that directory.
 
-- [ ] **Step 1: Write the failing portable-path test**
+- [x] **Step 1: Write the failing portable-path test**
 
 Create `tests/python/axismeld_portable_paths.py`:
 
@@ -544,7 +544,7 @@ ctest --test-dir D:\source\AxisMeld-build -C Release -R "^axismeld_portable_path
 
 Expected: failure because no `portable` directory exists beside the executable.
 
-- [ ] **Step 2: Add the tracked portable-profile notice**
+- [x] **Step 2: Add the tracked portable-profile notice**
 
 Create `release/datafiles/axismeld/portable/README.txt` with:
 
@@ -565,7 +565,7 @@ Add `release/datafiles/axismeld/portable/.gitignore`:
 !README.txt
 ```
 
-- [ ] **Step 3: Create the portable directory beside build and install executables**
+- [x] **Step 3: Create the portable directory beside build and install executables**
 
 In the Windows, non-Python-module branch of `source/creator/CMakeLists.txt`, add:
 
@@ -586,7 +586,7 @@ install(
 
 The condition must be `WIN32 AND NOT WITH_PYTHON_MODULE`; do not create a portable directory for the `bpy` module build.
 
-- [ ] **Step 4: Build and verify isolation**
+- [x] **Step 4: Build and verify isolation**
 
 Run:
 
@@ -598,7 +598,7 @@ ctest --test-dir D:\source\AxisMeld-build -C Release -R "^axismeld_portable_path
 
 Expected: one matching test, zero failures, and both the build executable directory and `D:\source\AxisMeld-build\install` contain `portable\README.txt`.
 
-- [ ] **Step 5: Commit portable profile isolation**
+- [x] **Step 5: Commit portable profile isolation**
 
 Run:
 
@@ -620,7 +620,7 @@ git commit -m "Isolate AxisMeld development preferences"
 - Consumes: installed `blender.exe`, CLI identity from Task 3, and portable directory from Task 4.
 - Produces: Windows AppUserModel ID `axismeld.<major>.<minor>`, friendly name `AxisMeld <major>.<minor>`, AxisMeld file metadata, and an independent acceptance command.
 
-- [ ] **Step 1: Write the build verifier before changing metadata**
+- [x] **Step 1: Write the build verifier before changing metadata**
 
 Create `tools/axismeld/verify_windows_build.ps1`:
 
@@ -676,7 +676,7 @@ pwsh -NoProfile -File D:\source\AxisMeld\tools\axismeld\verify_windows_build.ps1
 
 Expected: failure on `ProductName`, which still reports `Blender`.
 
-- [ ] **Step 2: Change the Windows AppUserModel identity**
+- [x] **Step 2: Change the Windows AppUserModel identity**
 
 In the Windows definition block in root `CMakeLists.txt`, change only the string values:
 
@@ -687,7 +687,7 @@ In the Windows definition block in root `CMakeLists.txt`, change only the string
 
 Keep the existing macro names so downstream Blender modules require no additional edits.
 
-- [ ] **Step 3: Change Windows executable metadata**
+- [x] **Step 3: Change Windows executable metadata**
 
 In `release/windows/icons/winblender.rc`, set:
 
@@ -701,7 +701,7 @@ VALUE "ProductName", "AxisMeld"
 
 Keep `OriginalFilename` as `blender.exe`, retain the inherited icons for Phase 0, and do not remove Blender copyright notices elsewhere.
 
-- [ ] **Step 4: Rebuild and run the independent verifier**
+- [x] **Step 4: Rebuild and run the independent verifier**
 
 Run:
 
@@ -713,7 +713,7 @@ pwsh -NoProfile -File D:\source\AxisMeld\tools\axismeld\verify_windows_build.ps1
 
 Expected: the verifier prints one object with `Result : PASS`, the combined AxisMeld/Blender version, AxisMeld product metadata, and the portable marker path.
 
-- [ ] **Step 5: Run the focused automated suite**
+- [x] **Step 5: Run the focused automated suite**
 
 Run:
 
@@ -723,7 +723,7 @@ ctest --test-dir D:\source\AxisMeld-build -C Release -R "^(axismeld_identity|axi
 
 Expected: three matching tests and zero failures.
 
-- [ ] **Step 6: Commit Windows identity and verification**
+- [x] **Step 6: Commit Windows identity and verification**
 
 Run:
 
@@ -744,7 +744,7 @@ git commit -m "Brand and verify the AxisMeld Windows build"
 - Consumes: exact build and verification commands from Tasks 1–5.
 - Produces: maintainer procedures that another worker can execute without relying on conversation history.
 
-- [ ] **Step 1: Write the Windows build guide**
+- [x] **Step 1: Write the Windows build guide**
 
 Create `docs/build/windows.md` with these sections and exact commands:
 
@@ -781,7 +781,7 @@ Windows metadata, and portable profile identify it as AxisMeld. Do not distribut
 verification commands pass.
 ```
 
-- [ ] **Step 2: Write the upstream update guide**
+- [x] **Step 2: Write the upstream update guide**
 
 Create `docs/build/upstream-update.md`:
 
@@ -811,7 +811,7 @@ Create `docs/build/upstream-update.md`:
 `axismeld/stable`. Run the date command in the Asia/Shanghai time zone used by the project.
 ```
 
-- [ ] **Step 3: Verify that documentation matches executable commands**
+- [x] **Step 3: Verify that documentation matches executable commands**
 
 Run:
 
@@ -822,7 +822,7 @@ git diff --check
 
 Expected: both documents use the same source, build, install, verifier, and test names; `git diff --check` emits no errors.
 
-- [ ] **Step 4: Commit the maintainer procedures**
+- [x] **Step 4: Commit the maintainer procedures**
 
 Run:
 
@@ -843,7 +843,7 @@ git commit -m "Document AxisMeld build and upstream update workflow"
 - Consumes: all Phase 0 commits and the installed Release build.
 - Produces: a verified `axismeld/integration` commit published to GitHub and ready for the separate Maya 2026 input-system plan.
 
-- [ ] **Step 1: Run the complete focused verification from a clean shell**
+- [x] **Step 1: Run the complete focused verification from a clean shell**
 
 Run:
 
@@ -856,7 +856,7 @@ git status --short --branch
 
 Expected: build exit code `0`; three tests, zero failures; verifier `PASS`; clean `axismeld/integration` worktree.
 
-- [ ] **Step 2: Verify upstream ancestry and the protected remote direction**
+- [x] **Step 2: Verify upstream ancestry and the protected remote direction**
 
 Run:
 
