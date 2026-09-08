@@ -24,11 +24,11 @@ BEGIN
     BEGIN
       VALUE "FileVersion", BLEN_VER_RC_STR
       VALUE "ProductVersion", BLEN_VER_RC_STR
-      VALUE "CompanyName", "Blender Foundation"
-      VALUE "FileDescription", "Blender"
-      VALUE "LegalCopyright", "GPLv3 (Blender Foundation)"
+      VALUE "CompanyName", "AxisMeld Project"
+      VALUE "FileDescription", "AxisMeld — Maya-style workflow built on Blender"
+      VALUE "LegalCopyright", "GPLv3; Blender Authors and AxisMeld contributors"
       VALUE "OriginalFilename", "blender.exe"
-      VALUE "ProductName", "Blender"
+      VALUE "ProductName", "AxisMeld"
     END
   END
   BLOCK "VarFileInfo"
