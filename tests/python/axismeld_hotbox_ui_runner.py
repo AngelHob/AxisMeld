@@ -11,10 +11,11 @@ import tempfile
 parser = argparse.ArgumentParser()
 parser.add_argument('--blender', required=True)
 parser.add_argument('--artifacts', help='Optional directory for isolated factory-scene screenshots')
-parser.add_argument('--suite', choices=('hotbox', 'release', 'release-cross-window'), default='hotbox')
+parser.add_argument('--suite', choices=('hotbox', 'menus', 'release', 'release-cross-window'), default='hotbox')
 args = parser.parse_args()
 suite_script, pass_marker = {
     'hotbox': ('axismeld_hotbox_events.py', b'AXISMELD_HOTBOX_EVENTS_PASS'),
+    'menus': ('axismeld_hotbox_menu_events.py', b'AXISMELD_HOTBOX_MENU_EVENTS_PASS'),
     'release': ('axismeld_hotbox_release_events.py', b'AXISMELD_HOTBOX_RELEASE_EVENTS_PASS'),
     'release-cross-window': ('axismeld_hotbox_release_events.py', b'AXISMELD_HOTBOX_CROSS_WINDOW_PASS'),
 }[args.suite]

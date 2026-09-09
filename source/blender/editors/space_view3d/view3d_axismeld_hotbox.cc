@@ -1,13 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 AxisMeld Authors
  * SPDX-License-Identifier: GPL-2.0-or-later */
-
-#include <cmath>
-#include <cstring>
-
 #include "BKE_context.hh"
+#include "BKE_report.hh"
 #include "BKE_screen.hh"
 #include "BKE_wm_runtime.hh"
-#include "BLF_api.hh"
 #include "BLI_listbase.hh"
 #include "BLI_time.hh"
 #include "DNA_scene_types.h"
@@ -16,37 +12,33 @@
 #include "DNA_windowmanager_types.h"
 #include "ED_screen.hh"
 #include "ED_space_api.hh"
-#include "GPU_immediate.hh"
-#include "GPU_state.hh"
 #include "RNA_access.hh"
 #include "RNA_define.hh"
 #include "UI_interface.hh"
 #include "WM_api.hh"
 #include "WM_types.hh"
-#include "wm_event_system.hh"
-
 #include "view3d_axismeld.hh"
+#include "view3d_axismeld_hotbox_internal.hh"
+#include "wm_event_system.hh"
+#include <algorithm>
 
 namespace blender {
 namespace {
-using axismeld::HotboxAction;
-using axismeld::HotboxPhase;
-
-struct HotboxData {
-  axismeld::HotboxState state;
+using namespace axismeld;
+struct HotboxData : HotboxVisual {
+  HotboxState state;
   wmWindow *window;
   bScreen *screen;
   ScrArea *area;
   ARegion *region;
   View3D *space;
   ARegionType *region_type;
+  rcti region_rect;
   wmTimer *timer = nullptr;
   void *draw_handle = nullptr;
   int trigger;
   eContextObjectMode mode;
   unsigned int scene_uid;
-  float center[2], origin[2];
-  float scale;
 };
 
 /* Validate each containing live list before inspecting the next captured pointer. */
@@ -62,28 +54,25 @@ static bool source_live(const bContext *C, const HotboxData &data)
   {
     return false;
   }
-  return data.region->regiontype == RGN_TYPE_WINDOW && data.region->regiondata;
-}
-
-static void remove_visuals(bContext *C, HotboxData &data)
-{
-  if (data.draw_handle) {
-    ED_region_draw_cb_exit(data.region_type, data.draw_handle);
-    data.draw_handle = nullptr;
-  }
-  if (data.timer) {
-    WM_event_timer_remove(CTX_wm_manager(C), nullptr, data.timer);
-    data.timer = nullptr;
-  }
-  if (source_live(C, data)) {
-    ED_region_tag_redraw(data.region);
-  }
+  const rcti &rect = data.region->winrct;
+  return data.region->regiontype == RGN_TYPE_WINDOW && data.region->regiondata &&
+         data.scale == UI_SCALE_FAC && rect.xmin == data.region_rect.xmin &&
+         rect.xmax == data.region_rect.xmax && rect.ymin == data.region_rect.ymin &&
+         rect.ymax == data.region_rect.ymax;
 }
 
 static void cleanup(bContext *C, wmOperator *op)
 {
   if (auto *data = static_cast<HotboxData *>(op->customdata)) {
-    remove_visuals(C, *data);
+    if (data->draw_handle) {
+      ED_region_draw_cb_exit(data->region_type, data->draw_handle);
+    }
+    if (data->timer) {
+      WM_event_timer_remove(CTX_wm_manager(C), nullptr, data->timer);
+    }
+    if (source_live(C, *data)) {
+      ED_region_tag_redraw(data->region);
+    }
     delete data;
     op->customdata = nullptr;
   }
@@ -92,45 +81,9 @@ static void cleanup(bContext *C, wmOperator *op)
 static void draw(const bContext *C, ARegion *region, void *customdata)
 {
   const auto &data = *static_cast<HotboxData *>(customdata);
-  if (!source_live(C, data) || region != data.region || CTX_wm_window(C) != data.window) {
-    return;
+  if (source_live(C, data) && region == data.region && CTX_wm_window(C) == data.window) {
+    hotbox_draw(data);
   }
-  const float scale = data.scale;
-  const bool marking = data.state.phase() == HotboxPhase::Marking;
-  const float cx = (marking ? data.origin[0] : data.center[0]) - region->winrct.xmin;
-  const float cy = (marking ? data.origin[1] : data.center[1]) - region->winrct.ymin;
-  struct Label {
-    const char *text;
-    float x, y;
-    HotboxAction action;
-  };
-  const Label labels[] = {{"AxisMeld", 0, 0, HotboxAction::None},
-                          {"Perspective", 0, 48, HotboxAction::Perspective},
-                          {"Side", 95, 0, HotboxAction::Side},
-                          {"Front", 0, -48, HotboxAction::Front},
-                          {"Top", -95, 0, HotboxAction::Top}};
-  const int font = BLF_default();
-  BLF_size(font, 12.0f * scale);
-  GPU_blend(GPU_BLEND_ALPHA);
-  const uint pos = GPU_vertformat_attr_add(
-      immVertexFormat(), "pos", gpu::VertAttrType::SFLOAT_32_32);
-  immBindBuiltinProgram(GPU_SHADER_3D_UNIFORM_COLOR);
-  for (const Label &label : labels) {
-    const float x = cx + label.x * scale;
-    const float y = cy + label.y * scale;
-    const bool selected = label.action != HotboxAction::None &&
-                          data.state.candidate() == label.action;
-    immUniformColor4f(selected ? 0.17f : 0.055f, selected ? 0.40f : 0.055f, 0.11f, 0.92f);
-    immRectf(pos, x - 43 * scale, y - 15 * scale, x + 43 * scale, y + 15 * scale);
-  }
-  immUnbindProgram();
-  for (const Label &label : labels) {
-    BLF_color4f(font, 0.95f, 0.95f, 0.95f, 1.0f);
-    const float width = BLF_width(font, label.text, std::strlen(label.text));
-    BLF_position(font, cx + label.x * scale - width / 2, cy + (label.y - 4) * scale, 0);
-    BLF_draw(font, label.text, std::strlen(label.text));
-  }
-  GPU_blend(GPU_BLEND_NONE);
 }
 
 static bool source_context(bContext *C, const HotboxData &data)
@@ -138,10 +91,130 @@ static bool source_context(bContext *C, const HotboxData &data)
   if (!source_live(C, data)) {
     return false;
   }
-  /* WM modal context is frozen to the initiating region, even while the pointer moves. */
   return CTX_wm_window(C) == data.window && CTX_wm_area(C) == data.area &&
          CTX_wm_region(C) == data.region && CTX_data_mode_enum(C) == data.mode &&
-         CTX_data_scene(C)->id.session_uid == data.scene_uid && axismeld_view_context_poll(C);
+         CTX_data_scene(C) && CTX_data_scene(C)->id.session_uid == data.scene_uid &&
+         axismeld_view_context_poll(C);
+}
+
+static wmOperatorStatus close_guard(bContext *C, wmOperator *op, const bool trigger_down)
+{
+  const auto &data = *static_cast<HotboxData *>(op->customdata);
+  const int trigger = data.trigger, mouse = data.active_mouse;
+  cleanup(C, op);
+  if (trigger_down || mouse) {
+    axismeld_hotbox_guard_begin(C, trigger, mouse, trigger_down, mouse != 0);
+  }
+  return OPERATOR_FINISHED;
+}
+
+static bool refresh(bContext *C, HotboxData &data)
+{
+  MenuSnapshot next;
+  std::string error;
+  if (!parse_menu_snapshot(axismeld_hotbox_refresh(C), next, error)) {
+    return false;
+  }
+  data.snapshot = std::move(next);
+  hotbox_measure(data);
+  hotbox_layout(data);
+  return data.menu_layout.supported;
+}
+
+static wmOperatorStatus submit(bContext *C, wmOperator *op, const MenuNode &leaf)
+{
+  auto &data = *static_cast<HotboxData *>(op->customdata);
+  // Strings must outlive cleanup and Python rebuilding its catalog/context.
+  const std::string command = leaf.command, value = leaf.value;
+  const bool setting = leaf.kind == MenuKind::Setting;
+  if (!setting && hotbox_command_closes(command)) {
+    const int trigger = data.trigger, mouse = data.active_mouse;
+    cleanup(C, op);
+    axismeld_hotbox_dispatch(C, command.c_str());
+    // No source-area/region access after dispatch: mode/quad commands can destroy them.
+    axismeld_hotbox_guard_begin(C, trigger, mouse, true, mouse != 0);
+    return OPERATOR_FINISHED;
+  }
+  const wmOperatorStatus result = setting ?
+                                      axismeld_hotbox_setting(C, command.c_str(), value.c_str()) :
+                                      axismeld_hotbox_dispatch(C, command.c_str());
+  if (result == OPERATOR_FINISHED) {
+    data.open_path.clear();
+  }
+  if (!source_context(C, data) || (result == OPERATOR_FINISHED && !refresh(C, data))) {
+    return close_guard(C, op, true);
+  }
+  return OPERATOR_RUNNING_MODAL;
+}
+
+static void open_menu(HotboxData &data, const MenuRect &rect)
+{
+  const size_t prefix = !data.open_path.empty() && data.open_path.front() == "center" ? 1 : 0;
+  if (rect.depth == 0) {
+    if (rect.id == "views") {
+      return;
+    }
+    if (!prefix && !data.open_path.empty() && data.open_path.front() == rect.id) {
+      return;  // Returning to a parent retains the deeper path.
+    }
+    data.open_path = {rect.id};
+  }
+  else {
+    const size_t index = prefix + rect.depth;
+    if (index < data.open_path.size() && data.open_path[index] == rect.id) {
+      return;
+    }
+    data.open_path.resize(index);
+    data.open_path.push_back(rect.id);
+  }
+  hotbox_layout(data);
+}
+
+static void scroll_owner(HotboxData &data, const std::string &owner, const int delta)
+{
+  const auto begin = data.open_path.begin() +
+                     (!data.open_path.empty() && data.open_path.front() == "center" ? 1 : 0);
+  const auto item = std::find(begin, data.open_path.end(), owner);
+  if (item != data.open_path.end()) {
+    data.open_path.erase(item + 1, data.open_path.end());
+  }
+  else {
+    data.open_path.clear();
+  }
+  const MenuNode *node = hotbox_find_node(data.snapshot.menus, owner);
+  if (node) {
+    data.scroll_offsets[owner] = std::clamp(
+        data.scroll_offsets[owner] + delta, 0, std::max(0, int(node->children.size()) - 1));
+    hotbox_layout(data);
+  }
+}
+
+static void scroll_control(HotboxData &data, const std::string &id)
+{
+  const size_t end = id.rfind(':');
+  scroll_owner(data, id.substr(8, end - 8), id.substr(end + 1) == "next" ? 1 : -1);
+}
+
+static std::string direction_id(const HotboxAction action)
+{
+  switch (action) {
+    case HotboxAction::Perspective:
+      return "views.perspective";
+    case HotboxAction::Side:
+      return "views.side";
+    case HotboxAction::Front:
+      return "views.front";
+    case HotboxAction::Top:
+      return "views.top";
+    case HotboxAction::Left:
+      return "views.left";
+    case HotboxAction::Back:
+      return "views.back";
+    case HotboxAction::Bottom:
+      return "views.bottom";
+    default:
+      return {};
+  }
 }
 
 static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event)
@@ -150,32 +223,45 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
     return OPERATOR_PASS_THROUGH;
   }
   wmWindow *window = CTX_wm_window(C);
-  /* Respect active tools even when their modal callback deliberately passes this key through. */
   for (const wmEventHandler &handler : window->runtime->modalhandlers) {
     if (ELEM(handler.type, WM_HANDLER_TYPE_OP, WM_HANDLER_TYPE_UI)) {
       return OPERATOR_PASS_THROUGH;
     }
   }
+  MenuSnapshot snapshot;
+  std::string error;
+  if (!parse_menu_snapshot(RNA_string_get(op->ptr, "menu_json"), snapshot, error)) {
+    BKE_report(op->reports, RPT_WARNING, error.c_str());
+    return OPERATOR_CANCELLED;
+  }
   auto *data = new HotboxData();
+  data->snapshot = std::move(snapshot);
   data->window = window;
   data->screen = CTX_wm_screen(C);
   data->area = CTX_wm_area(C);
   data->region = CTX_wm_region(C);
   data->space = CTX_wm_view3d(C);
   data->region_type = data->region->runtime->type;
+  data->region_rect = data->region->winrct;
   data->trigger = event->type;
   data->mode = CTX_data_mode_enum(C);
   data->scene_uid = CTX_data_scene(C)->id.session_uid;
   data->scale = UI_SCALE_FAC;
-  /* Preserve the press point at edges too: native region clipping trims labels, never the hit
-   * origin. */
-  data->center[0] = event->xy[0];
-  data->center[1] = event->xy[1];
+  data->width = data->region->winx / data->scale;
+  data->height = data->region->winy / data->scale;
+  data->center[0] = (event->xy[0] - data->region->winrct.xmin) / data->scale;
+  data->center[1] = (event->xy[1] - data->region->winrct.ymin) / data->scale;
+  hotbox_measure(*data);
+  hotbox_layout(*data);
+  if (!data->menu_layout.supported) {
+    delete data;
+    return OPERATOR_CANCELLED;
+  }
   data->state.begin(BLI_time_now_seconds(), RNA_float_get(op->ptr, "tap_seconds"));
   op->customdata = data;
   data->draw_handle = ED_region_draw_cb_activate(
       data->region_type, draw, data, REGION_DRAW_POST_PIXEL);
-  data->timer = WM_event_timer_add(CTX_wm_manager(C), window, TIMER, 0.02);
+  data->timer = WM_event_timer_add(CTX_wm_manager(C), window, TIMER, .02);
   WM_event_add_modal_handler(C, op);
   ED_region_tag_redraw(data->region);
   return OPERATOR_RUNNING_MODAL;
@@ -184,69 +270,127 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
 static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
 {
   auto &data = *static_cast<HotboxData *>(op->customdata);
-  if (data.state.phase() == HotboxPhase::Cancelled) {
-    if (event->type == data.trigger) {
-      if (event->val == KM_RELEASE) {
-        cleanup(C, op);
-        return OPERATOR_CANCELLED;
-      }
-      if (event->val == KM_PRESS && !(event->flag & WM_EVENT_IS_REPEAT)) {
-        /* A fresh physical press also recovers after a lost release during window deactivation. */
-        cleanup(C, op);
-        return OPERATOR_FINISHED | OPERATOR_PASS_THROUGH;
-      }
-      return OPERATOR_RUNNING_MODAL;
-    }
-    return OPERATOR_RUNNING_MODAL | OPERATOR_PASS_THROUGH;
-  }
   if (event->type == WINDEACTIVATE || event->type == EVT_ESCKEY || !source_context(C, data)) {
-    data.state.cancel();
-    remove_visuals(C, data);
-    return OPERATOR_RUNNING_MODAL;
+    if (event->type == data.active_mouse && event->val == KM_RELEASE) {
+      data.active_mouse = 0;
+    }
+    return close_guard(C, op, !(event->type == data.trigger && event->val == KM_RELEASE));
   }
   data.state.advance(BLI_time_now_seconds());
   if (event->type == data.trigger) {
     if (event->val == KM_RELEASE) {
-      const HotboxAction action = data.state.release_trigger(BLI_time_now_seconds());
-      /* Remove the region draw callback before native quad-view can destroy any panes. */
-      cleanup(C, op);
-      if (action == HotboxAction::ToggleQuad) {
-        axismeld_view_action(C, op, action);
+      const bool tap = data.tap_eligible && data.state.release_trigger(BLI_time_now_seconds()) ==
+                                                HotboxAction::ToggleQuad;
+      if (tap) {
+        cleanup(C, op);
+        axismeld_hotbox_dispatch(C, "view.toggle_quad");
+        return OPERATOR_FINISHED;
       }
-      return OPERATOR_FINISHED;
+      return close_guard(C, op, false);
     }
     return OPERATOR_RUNNING_MODAL;
   }
-  if (event->type == LEFTMOUSE && event->val == KM_PRESS &&
-      ELEM(data.state.phase(), HotboxPhase::Pending, HotboxPhase::Held))
-  {
-    if (std::abs(event->xy[0] - data.center[0]) <= 43 * data.scale &&
-        std::abs(event->xy[1] - data.center[1]) <= 15 * data.scale)
-    {
-      data.origin[0] = event->xy[0];
-      data.origin[1] = event->xy[1];
-      data.state.begin_marking();
+  const float x = (event->xy[0] - data.region->winrct.xmin) / data.scale;
+  const float y = (event->xy[1] - data.region->winrct.ymin) / data.scale;
+  const MenuRect *hover = hit_menu_rect(data.menu_layout, x, y);
+  // Copy before open_menu/scroll can rebuild the owning rect vector.
+  const MenuRect rect = hover ? *hover : MenuRect{};
+  data.hover_id = hover ? rect.id : "";
+  data.hover_depth = hover ? rect.depth : -1;
+  const std::string item = hit_menu(data.menu_layout, x, y);
+  const MenuNode *node = hotbox_find_node(data.snapshot.menus, item);
+  const bool mouse = ELEM(event->type, LEFTMOUSE, MIDDLEMOUSE, RIGHTMOUSE);
+  if (mouse && event->val == KM_PRESS && !data.active_mouse) {
+    data.tap_eligible = false;
+    data.active_mouse = event->type;
+    data.pending_leaf.clear();
+    if (item == "views" && rect.depth == 0) {
+      const int button = event->type == LEFTMOUSE ? 0 : event->type == MIDDLEMOUSE ? 1 : 2;
+      const std::string &mapping = data.snapshot.center_buttons[button];
+      data.open_path.clear();
+      if (mapping == "views") {
+        data.marking = true;
+        data.open_path = {"center", "views"};
+        data.origin[0] = x;
+        data.origin[1] = y;
+        data.candidate = HotboxAction::None;
+      }
+      else if (!mapping.empty()) {
+        data.open_path = {"center", mapping};
+      }
+      hotbox_layout(data);
     }
-    else {
-      /* Any menu mouse interaction irrevocably removes tap eligibility. */
-      data.state.begin_marking();
-      data.state.release_mouse();
+    else if (item.starts_with("@scroll:")) {
+      scroll_control(data, item);
+    }
+    else if (node && node->kind == MenuKind::Menu) {
+      open_menu(data, rect);
     }
   }
-  if (data.state.phase() == HotboxPhase::Marking &&
-      (ISMOUSE_MOTION(event->type) || (event->type == LEFTMOUSE && event->val == KM_RELEASE)))
+  if (ISMOUSE_MOTION(event->type) && !data.open_path.empty() && node &&
+      node->kind == MenuKind::Menu)
   {
-    data.state.motion(
-        event->xy[0] - data.origin[0], event->xy[1] - data.origin[1], 12 * data.scale);
-    if (event->type == LEFTMOUSE) {
-      const HotboxAction action = data.state.release_mouse();
-      if (action != HotboxAction::None) {
-        axismeld_view_action(C, op, action);
+    open_menu(data, rect);
+  }
+  if (!data.marking && ELEM(event->type, WHEELUPMOUSE, WHEELDOWNMOUSE)) {
+    data.tap_eligible = false;
+    if (hover) {
+      std::string owner;
+      if (item.starts_with("@scroll:")) {
+        owner = item.substr(8, item.rfind(':') - 8);
+      }
+      else if (rect.depth > 0) {
+        const size_t index = rect.depth - 1 +
+                             (!data.open_path.empty() && data.open_path.front() == "center" ? 1 :
+                                                                                              0);
+        if (index < data.open_path.size()) {
+          owner = data.open_path[index];
+        }
+      }
+      else {
+        for (const MenuNode &root : data.snapshot.menus) {
+          for (const MenuNode &child : root.children) {
+            if (child.id == rect.id) {
+              owner = root.id;
+            }
+          }
+        }
+      }
+      scroll_owner(data, owner, event->type == WHEELUPMOUSE ? -1 : 1);
+    }
+  }
+  if (data.active_mouse && (ISMOUSE_MOTION(event->type) ||
+                            (event->type == data.active_mouse && event->val == KM_RELEASE)))
+  {
+    if (data.marking) {
+      // Appended Style and its real list items take precedence over angular inference.
+      data.candidate = hover ? HotboxAction::None :
+                               hotbox_direction(x - data.origin[0], y - data.origin[1], 12);
+      data.pending_leaf = node && node->kind == MenuKind::Setting ? item :
+                                                                    direction_id(data.candidate);
+    }
+    else {
+      data.pending_leaf = node && ELEM(node->kind, MenuKind::Command, MenuKind::Setting) ? item :
+                                                                                           "";
+    }
+    if (event->type == data.active_mouse && event->val == KM_RELEASE) {
+      data.active_mouse = 0;
+      if (data.marking && (!node || node->kind != MenuKind::Menu)) {
+        data.open_path.clear();
+      }
+      data.marking = false;
+      data.candidate = HotboxAction::None;
+      hotbox_layout(data);
+      const MenuNode *leaf = hotbox_find_node(data.snapshot.menus, data.pending_leaf);
+      data.pending_leaf.clear();
+      if (leaf && leaf->enabled && ELEM(leaf->kind, MenuKind::Command, MenuKind::Setting)) {
+        if (submit(C, op, *leaf) == OPERATOR_FINISHED) {
+          return OPERATOR_FINISHED;
+        }
       }
     }
   }
   ED_region_tag_redraw(data.region);
-  /* Active gestures own mouse, keyboard modifiers, and timers; nothing selects or navigates. */
   return OPERATOR_RUNNING_MODAL;
 }
 }  // namespace
@@ -255,19 +399,22 @@ void VIEW3D_OT_axismeld_hotbox(wmOperatorType *ot)
 {
   ot->name = "AxisMeld Hotbox";
   ot->idname = "VIEW3D_OT_axismeld_hotbox";
-  ot->description = "Hold for view marking gestures or tap to maximize and restore a pane";
+  ot->description = "Hold for Maya-style menus and central view gestures, tap to toggle a pane";
   ot->poll = axismeld_view_context_poll;
   ot->invoke = invoke;
   ot->modal = modal;
   ot->cancel = cleanup;
   RNA_def_float(ot->srna,
                 "tap_seconds",
-                0.4f,
-                0.1f,
-                1.0f,
+                .4f,
+                .1f,
+                1,
                 "Tap Threshold",
                 "Release before this time to toggle the layout",
-                0.1f,
-                1.0f);
+                .1f,
+                1);
+  PropertyRNA *prop = RNA_def_string(
+      ot->srna, "menu_json", nullptr, 0, "Menu Snapshot", "Validated declarative menu snapshot");
+  RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
 }
 }  // namespace blender

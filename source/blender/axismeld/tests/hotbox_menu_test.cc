@@ -422,4 +422,20 @@ TEST(axismeld_hotbox_menu, CenterRootMappingIsNotMistakenForAPathCycle)
   EXPECT_EQ(hit_menu(layout, style->x + style->width / 2, style->y + style->height / 2),
             style->id);
 }
+TEST(axismeld_hotbox_menu, RectHitPreservesVisibleOccurrenceAndDisabledOcclusion)
+{
+  MenuLayout layout{{{"views", 0, 0, 100, 28, 0},
+                     {"views", 50, 0, 100, 28, 1},
+                     {"disabled", 80, 0, 10, 28, 2, false},
+                     {"last", 120, 0, 20, 28, 1}},
+                    true};
+  EXPECT_EQ(hit_menu_rect(layout, 20, 10), &layout.rects[0]);
+  EXPECT_EQ(hit_menu_rect(layout, 60, 10), &layout.rects[1]);
+  EXPECT_EQ(hit_menu_rect(layout, 85, 10), &layout.rects[2]);
+  EXPECT_EQ(hit_menu(layout, 85, 10), "");
+  EXPECT_EQ(hit_menu_rect(layout, 130, 10), &layout.rects[3]);
+  EXPECT_EQ(hit_menu_rect(layout, -1, 10), nullptr);
+  layout.supported = false;
+  EXPECT_EQ(hit_menu_rect(layout, 60, 10), nullptr);
+}
 }  // namespace blender::axismeld::tests

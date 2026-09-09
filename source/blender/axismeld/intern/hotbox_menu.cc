@@ -347,8 +347,14 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
 
 std::string hit_menu(const MenuLayout &layout, const float x, const float y)
 {
+  const MenuRect *hit = hit_menu_rect(layout, x, y);
+  return hit && hit->interactive ? hit->id : "";
+}
+
+const MenuRect *hit_menu_rect(const MenuLayout &layout, const float x, const float y)
+{
   if (!layout.supported || !std::isfinite(x) || !std::isfinite(y)) {
-    return {};
+    return nullptr;
   }
   const MenuRect *hit = nullptr;
   for (const MenuRect &item : layout.rects) {
@@ -358,7 +364,7 @@ std::string hit_menu(const MenuLayout &layout, const float x, const float y)
       hit = &item;
     }
   }
-  return hit && hit->interactive ? hit->id : "";
+  return hit;
 }
 
 bool hotbox_command_closes(const std::string_view command)

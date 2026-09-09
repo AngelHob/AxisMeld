@@ -20,6 +20,8 @@ set(SRC
   drawobject.cc
   space_view3d.cc
   view3d_axismeld_hotbox.cc
+  view3d_axismeld_hotbox_draw.cc
+  view3d_axismeld_hotbox_model.cc
   view3d_axismeld_hotbox_release.cc
   view3d_axismeld_views.cc
   view3d_buttons.cc
@@ -126,3 +128,10 @@ blender_add_lib(bf_editor_space_view3d "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
 
 # RNA_prototypes.hh
 add_dependencies(bf_editor_space_view3d bf_rna)
+
+if(WITH_GTESTS)
+  blender_add_test_suite_lib(editor_hotbox
+    "tests/hotbox_model_test.cc"
+    "../../axismeld" "" "bf::blenlib;bf::axismeld"
+    "view3d_axismeld_hotbox_model.cc")
+endif()

@@ -74,8 +74,10 @@ def run(context, command, *, invoke=True):
         if not invoke:
             raise ValueError('hotbox.open requires a keyboard invoke event')
         preferences = context.window_manager.keyconfigs.active.preferences
+        from . import hotbox_runtime
         return bpy.ops.view3d.axismeld_hotbox(
-            'INVOKE_DEFAULT', tap_seconds=preferences.hotbox_tap_seconds)
+            'INVOKE_DEFAULT', tap_seconds=preferences.hotbox_tap_seconds,
+            menu_json=hotbox_runtime.snapshot(context))
     if command in {'view.wireframe', 'view.shaded'}:
         context.space_data.shading.type = 'WIREFRAME' if command == 'view.wireframe' else 'SOLID'
         return {'FINISHED'}

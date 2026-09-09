@@ -53,5 +53,7 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
                        const std::unordered_map<std::string, int> &scroll_offsets,
                        const std::unordered_map<std::string, float> &label_widths);
 std::string hit_menu(const MenuLayout &layout, float x, float y);
+/* Includes disabled/separator occlusion and preserves the exact visible occurrence/depth. */
+const MenuRect *hit_menu_rect(const MenuLayout &layout, float x, float y);
 bool hotbox_command_closes(std::string_view command);
 }  // namespace blender::axismeld
