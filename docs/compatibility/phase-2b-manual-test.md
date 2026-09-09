@@ -16,9 +16,9 @@ exe 与当前激活的键位预设混为一件事。
 
 | 编号 | 操作 | 预期 | 结果 |
 |---|---|---|---|
-| B12-1 | 按住 Space 查看首层 | 依次显示 Common、Current Pane、Recent/AxisMeld/Hotbox Controls、Modeling；未接入项灰显并说明原因 | 待手测 |
+| B12-1 | 按住 Space 查看首层 | 显示公共菜单行（File/Edit/Create/Select/Modify/Display/Windows）、视窗菜单行（View/Shading/Lighting/Show/Renderer/Panels）、中央 Recent/AxisMeld/Hotbox Controls 及 Modeling 行；未接入项灰显并说明原因 | 待手测 |
 | B12-2 | Space+RMB 分别划向 N/E/S/W/NW/SW/SE，另试 NE 与死区 | 依次为透视/侧/前/顶/左/后/底；NE 与死区不执行；LMB/MMB 默认行为相同 | 待手测 |
-| B12-3 | 点击 Pane→Shading 后再点叶项；另从标题按住拖到叶项释放 | 点击式浏览和划选式各只执行一次；空白或禁用项释放取消 | 待手测 |
+| B12-3 | 点击第二行 Shading 标题后再点叶项；另从标题按住拖到叶项释放 | 点击式浏览和划选式各只执行一次；空白或禁用项释放取消 | 待手测 |
 | B12-4 | 在四边和四个真实内容角打开；分别试 UI scale 1.0 与 2.0 | 指针仍是手势原点，按钮向内适配，无错误重叠；原生工具栏重叠区不被抢占 | 待手测 |
 | B12-5 | Space 与鼠标几乎同时按下并快速划选；反向释放、Esc、切模式后松键 | 快速手势无需等 0.4 秒；取消不执行；残留 Space/鼠标释放不触发播放或第二次命令 | 待手测 |
 | B12-6 | 在 Hotbox Controls 中分别改 LMB/MMB/RMB 为另一菜单或 Disabled | 下一次 invoke 使用新映射；三键互不串位；Preferences 显示同一值 | 待手测 |

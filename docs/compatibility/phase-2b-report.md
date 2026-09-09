@@ -7,7 +7,8 @@ B12 人工手感待验收，跨新窗口残留释放仍是独立已知失败，�
 
 | 项目 | 核对值 |
 |---|---|
-| 实现提交 | `ef4f0b56709997da3a7faf969c2a234a9f31fabc` (`Add persistent hotbox settings and recent menu`) |
+| 原始 Phase 2B/native 实现提交 | `ef4f0b56709997da3a7faf969c2a234a9f31fabc` (`Add persistent hotbox settings and recent menu`) |
+| Python 严格引用校验修复 | `437861476926a4ca4abf990c33db85326d8c05f8` (`Reject unresolved hotbox setting menu references`) |
 | Blender 上游基点 | `18d84097b4f859582afdec57eece2ae880371adc` |
 | 新测试版 | `D:/source/AxisMeld-build/phase2b-test-install/blender.exe` |
 | 新 exe SHA-256 | `7A71A11B98B849B9FCFABFDC1CB33B9C39FF79AF694C759DE1C57C2E1A2402FC` |
@@ -39,13 +40,13 @@ Git/文件哈希证据。测试版仍是 opt-in：启动新 exe 后若预设未�
 | 门禁 | 命令摘要 | 结果/证据 |
 |---|---|---|
 | 构建/独立安装 | `cmake --build ... --target blender <5 native targets> --parallel 8`；`cmake --install ... --prefix .../phase2b-test-install` | exit 0；`task5-final-build.log`、`task5-postcommit-build.log`、`task5-postcommit-install.log` |
-| Python pure | `C:/Python314/python.exe -m unittest discover -s tests/python -p axismeld_hotbox_*_test.py -v` | 24/24；`task5-final-pure-after-fixes.log` |
+| Python pure | `C:/Python314/python.exe -m unittest discover -s tests/python -p axismeld_hotbox_*_test.py -v` | 原交付 24/24；严格引用修复后 25/25：`task5-fix1-green-pure.log` |
 | 输入 pure | `C:/Python314/python.exe tests/python/axismeld_input_test.py` | 14/14；`task5-final-input.log` |
 | native 五套 | `ctest ... -R ^(axismeld_(hotbox_menu\|hotbox_state\|identity\|transform_axis)\|editor_hotbox_hotbox_model)$` | 5/5 targets；`task5-final-native-five.log` |
 | 安装态输入 | staged exe `-b --factory-startup --python-exit-code 1 --python tests/python/axismeld_input_blender.py` | 11/11；`task5-final-installed-input.log` |
-| 安装态 profiles | hotbox runner `--suite profiles` | PASS；`task5-final-profiles-after-drawfix.log` |
+| 安装态 profiles | hotbox runner `--suite profiles` | 修复脚本重装后 PASS；`task5-fix1-profiles.log` |
 | CLI/portable | `axismeld_cli_identity.py`、`axismeld_portable_paths.py --blender <new-stage>` | 两项 exit 0；`task5-final-cli.log`、`task5-final-portable.log` |
-| 完整菜单 GUI | hotbox runner `--suite menus` | PASS；真实 Controls 写 delta、Recent 点击重放、缩放/四角/小视口；`task5-final-menus-with-list-screenshots.log` |
+| 完整菜单 GUI | hotbox runner `--suite menus` | 修复脚本重装后 PASS；正常完整树仍接受，真实 Controls/Recent、缩放/四角/小视口均通过；`task5-fix1-menus.log` |
 | 旧 hotbox GUI | hotbox runner 默认 `hotbox` | PASS；`task5-final-hotbox-drawfix.log` |
 | 同窗口 release | hotbox runner `--suite release` | PASS；`task5-final-release-sessionfix.log` |
 | 操纵器 | `axismeld_manipulator_ui_runner.py --blender <new-stage>` | PASS；`task5-final-manipulator.log` |
@@ -61,6 +62,7 @@ marking 截图；菜单文字可读，Controls 长列表未越出窗口，Recent
 - 文件层 RED：pure 导入缺少 `load_hotbox_profiles/save_hotbox_user`；旧 stage 安装态断言不能解析 hotbox 文件层。
 - native RED：重建 parser 测试后二进制明确拒绝新增 `center.RIGHTMOUSE` setting；实现后 model 6/6。
 - 会话语义 RED：普通 reload 丢失 session、无效 session 覆盖旧有效值；实现后两项通过。
+- 审查修复 RED：从当前 snapshot 树移除已注册 `pane.shading`、保留 Controls setting option 时，Python 错误接受；`task5-fix1-red-python-unresolved-setting.log` 为 0/1。完整遍历后校验 center setting 引用属于当前 `menu_ids`，定点 GREEN 1/1、pure 25/25。该 Python 修复来自 `43786147692`，原 native 实现与 exe 不变。
 - 首轮旧 hotbox 在 Preferences draw 暴露 `NameError: bpy`；补齐导入并重新安装后，完整 hotbox 无 traceback 通过。
 - 预期输出包括损坏 user 文件拒绝覆盖警告、测试夹具的无效 JSON/小视口/不支持上下文警告、
   addon 冲突夹具警告和既有 libpng iCCP 警告；因此不声称输出 pristine，也不声称已解决卡顿。
