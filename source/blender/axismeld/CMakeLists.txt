@@ -10,6 +10,7 @@ set(INC_SYS
 set(SRC
   intern/identity.cc
   AXM_identity.hh
+  AXM_transform_axis.hh
 )
 set(LIB
 )
@@ -20,6 +21,7 @@ add_library(bf::axismeld ALIAS bf_axismeld)
 if(WITH_GTESTS)
   set(TEST_SRC
     tests/identity_test.cc
+    tests/transform_axis_test.cc
   )
   blender_add_test_suite_lib(axismeld "${TEST_SRC}" "${INC}" "${INC_SYS}" "bf::axismeld")
 endif()

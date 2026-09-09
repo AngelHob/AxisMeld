@@ -25,8 +25,17 @@ struct ScrArea;
 struct wmGizmoGroup;
 struct wmGizmoGroupType;
 struct wmMsgBus;
+struct wmEvent;
 
 namespace ed::transform {
+
+/** Narrow AxisMeld bridge. False/-1 means native input must remain untouched. */
+int axismeld_gizmo_highlight_axis(const bContext *C);
+int axismeld_gizmo_selected_axis(const bContext *C);
+bool axismeld_gizmo_select_axis(const bContext *C);
+void axismeld_gizmo_clear_axis(const bContext *C);
+bool axismeld_gizmo_drag_axis(bContext *C, const wmEvent *event);
+void axismeld_transform_operatortypes();
 
 /** \} */
 

@@ -11,6 +11,7 @@
  */
 
 #include "BLI_array_utils_c.hh"
+#include "AXM_transform_axis.hh"
 #include "BLI_bounds.hh"
 #include "BLI_function_ref.hh"
 #include "BLI_listbase.hh"
@@ -32,6 +33,7 @@
 #include "BKE_global.hh"
 #include "BKE_grease_pencil.hh"
 #include "BKE_layer.hh"
+#include "BKE_lib_id.hh"
 #include "BKE_library.hh"
 #include "BKE_object.hh"
 #include "BKE_object_types.hh"
@@ -168,7 +170,112 @@ struct GizmoGroup {
   float rotation;
 
   wmGizmo *gizmos[MAN_AXIS_LAST];
+  axismeld::TransformAxisState axismeld_axis;
 };
+
+/* AxisMeld: only the opt-in preset and the three built-in modeling tools own axis state. */
+static int axismeld_tool(const bContext *C)
+{
+  const ScrArea *area = CTX_wm_area(C);
+  if (!STREQ(U.keyconfigstr, "AxisMeld_Maya_2026") || !area || area->spacetype != SPACE_VIEW3D ||
+      !CTX_wm_region_view3d(C))
+  {
+    return 0;
+  }
+  const Object *object = CTX_data_active_object(C);
+  if (!object || object->type != OB_MESH || !(object->base_flag & BASE_SELECTED) ||
+      !ELEM(object->mode, OB_MODE_OBJECT, OB_MODE_EDIT) ||
+      !BKE_id_is_editable(CTX_data_main(C), &object->id) ||
+      !BKE_id_is_editable(CTX_data_main(C), static_cast<const ID *>(object->data)))
+  {
+    return 0;
+  }
+  const bToolRef *tool = area->runtime.tool;
+  if (tool) {
+    if (STREQ(tool->idname, "builtin.move")) {
+      return MAN_AXES_TRANSLATE;
+    }
+    if (STREQ(tool->idname, "builtin.rotate")) {
+      return MAN_AXES_ROTATE;
+    }
+    if (STREQ(tool->idname, "builtin.scale")) {
+      return MAN_AXES_SCALE;
+    }
+  }
+  return 0;
+}
+
+static void axismeld_axis_update(const bContext *C, GizmoGroup *ggd)
+{
+  const int tool = axismeld_tool(C);
+  const Object *object = tool ? CTX_data_active_object(C) : nullptr;
+  ggd->axismeld_axis.update_context(object ? object->id.session_uid : 0,
+                                   object ? object->mode : 0, tool);
+}
+
+static wmGizmoGroup *axismeld_group(const bContext *C)
+{
+  ARegion *region = CTX_wm_region(C);
+  if (!region || region->regiontype != RGN_TYPE_WINDOW || !region->runtime->gizmo_map ||
+      !g_GGT_xform_gizmo)
+  {
+    return nullptr;
+  }
+  wmGizmoGroup *group = WM_gizmomap_group_find_ptr(region->runtime->gizmo_map, g_GGT_xform_gizmo);
+  if (group && group->customdata) {
+    axismeld_axis_update(C, static_cast<GizmoGroup *>(group->customdata));
+    return axismeld_tool(C) ? group : nullptr;
+  }
+  return nullptr;
+}
+
+static int axismeld_axis_index(const int tool, const int axis)
+{
+  return axis + (tool == MAN_AXES_TRANSLATE ? MAN_AXIS_TRANS_X :
+                 tool == MAN_AXES_ROTATE ? MAN_AXIS_ROT_X : MAN_AXIS_SCALE_X);
+}
+
+int axismeld_gizmo_highlight_axis(const bContext *C)
+{
+  wmGizmoGroup *group = axismeld_group(C);
+  if (!group) {
+    return -1;
+  }
+  const auto *ggd = static_cast<GizmoGroup *>(group->customdata);
+  for (int axis = 0; axis < 3; axis++) {
+    const wmGizmo *gz = ggd->gizmos[axismeld_axis_index(axismeld_tool(C), axis)];
+    if (!(gz->flag & WM_GIZMO_HIDDEN) && (gz->state & WM_GIZMO_STATE_HIGHLIGHT)) {
+      return axis;
+    }
+  }
+  return -1;
+}
+
+int axismeld_gizmo_selected_axis(const bContext *C)
+{
+  wmGizmoGroup *group = axismeld_group(C);
+  return group ? static_cast<GizmoGroup *>(group->customdata)->axismeld_axis.axis() : -1;
+}
+
+bool axismeld_gizmo_select_axis(const bContext *C)
+{
+  const int axis = axismeld_gizmo_highlight_axis(C);
+  if (axis == -1) {
+    return false;
+  }
+  auto *ggd = static_cast<GizmoGroup *>(axismeld_group(C)->customdata);
+  ggd->axismeld_axis.select(axis);
+  ED_region_tag_redraw(CTX_wm_region(C));
+  return true;
+}
+
+void axismeld_gizmo_clear_axis(const bContext *C)
+{
+  if (wmGizmoGroup *group = axismeld_group(C)) {
+    static_cast<GizmoGroup *>(group->customdata)->axismeld_axis.clear();
+    ED_region_tag_redraw(CTX_wm_region(C));
+  }
+}
 
 /** \} */
 
@@ -2049,6 +2156,7 @@ static void gizmogroup_hide_all(GizmoGroup *ggd)
 static void WIDGETGROUP_gizmo_draw_prepare(const bContext *C, wmGizmoGroup *gzgroup)
 {
   GizmoGroup *ggd = static_cast<GizmoGroup *>(gzgroup->customdata);
+  axismeld_axis_update(C, ggd);
   // ScrArea *area = CTX_wm_area(C);
   ARegion *region = CTX_wm_region(C);
   // View3D *v3d =static_cast< View3D *> (area->spacedata.first);
@@ -2101,6 +2209,13 @@ static void WIDGETGROUP_gizmo_draw_prepare(const bContext *C, wmGizmoGroup *gzgr
 
     float color[4], color_hi[4];
     gizmo_get_axis_color(axis_idx, idot, color, color_hi);
+    if (ggd->axismeld_axis.axis() != -1 &&
+        axis_idx == axismeld_axis_index(axismeld_tool(C), ggd->axismeld_axis.axis()))
+    {
+      color[0] = color_hi[0] = 1.0f;
+      color[1] = color_hi[1] = 0.8f;
+      color[2] = color_hi[2] = 0.0f;
+    }
     WM_gizmo_set_color(axis, color);
     WM_gizmo_set_color_highlight(axis, color_hi);
   }
@@ -2181,6 +2296,12 @@ static void WIDGETGROUP_gizmo_invoke_prepare(const bContext *C,
   GizmoGroup *ggd = static_cast<GizmoGroup *>(gzgroup->customdata);
   const int axis_idx = BLI_array_findindex(ggd->gizmos, ARRAY_SIZE(ggd->gizmos), &gz);
 
+  axismeld_axis_update(C, ggd);
+  if (const int tool = axismeld_tool(C)) {
+    const int selected_axis = axis_idx - axismeld_axis_index(tool, 0);
+    ggd->axismeld_axis.select(event->modifier == 0 ? selected_axis : -1);
+  }
+
   const float mval[2] = {float(event->mval[0]), float(event->mval[1])};
   gizmo_3d_draw_invoke(gzgroup, CTX_wm_region(C), axis_idx, mval);
 
@@ -2242,6 +2363,27 @@ static void WIDGETGROUP_gizmo_invoke_prepare(const bContext *C,
       }
     }
   }
+}
+
+bool axismeld_gizmo_drag_axis(bContext *C, const wmEvent *event)
+{
+  const int selected_axis = axismeld_gizmo_selected_axis(C);
+  wmGizmoGroup *group = axismeld_group(C);
+  if (selected_axis == -1 || !group || event->type != MIDDLEMOUSE || event->modifier != 0) {
+    return false;
+  }
+  auto *ggd = static_cast<GizmoGroup *>(group->customdata);
+  wmGizmo *gz = ggd->gizmos[axismeld_axis_index(axismeld_tool(C), selected_axis)];
+  wmGizmoOpElem *gzop = WM_gizmo_operator_get(gz, 0);
+  if (!gzop || !gzop->type || !WM_operator_poll(C, gzop->type)) {
+    return false;
+  }
+  // Match the gizmo's orientation setup without replacing native transform computation.
+  WIDGETGROUP_gizmo_invoke_prepare(C, group, gz, event);
+  const wmOperatorStatus result = WM_operator_name_call_ptr(
+      C, gzop->type, wm::OpCallContext::InvokeDefault, &gzop->ptr, event);
+  ED_region_tag_redraw(CTX_wm_region(C));
+  return (result & (OPERATOR_RUNNING_MODAL | OPERATOR_FINISHED)) != 0;
 }
 
 static bool WIDGETGROUP_gizmo_poll_generic(View3D *v3d)

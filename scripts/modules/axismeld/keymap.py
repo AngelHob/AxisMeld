@@ -37,6 +37,11 @@ def generate_keymaps(base, bindings):
     owned = [*baseline_bindings().values(), *(value for value in bindings.values() if value),
              *({'type': key} for key in RESERVED_KEYS)]
     for name, args, content in result:
+        # Native operators poll the Maya preset, modeling context and highlighted/armed
+        # transform gizmo. Other gizmos and unconstrained drags fall through unchanged.
+        if name == 'Generic Gizmo Maybe Drag':
+            content['items'].insert(0, ('axismeld.axis_select',
+                                       {'type': 'LEFTMOUSE', 'value': 'CLICK'}, None))
         if not modeling_keymap(name, args):
             continue
         content['items'] = [item for item in content['items']
@@ -46,6 +51,11 @@ def generate_keymaps(base, bindings):
             if name in target and event is not None:
                 content['items'].append(('axismeld.command', dict(event),
                                          {'properties': [('command', command)]}))
+        if name in {'3D View Tool: Move', '3D View Tool: Rotate', '3D View Tool: Scale'}:
+            content['items'][0:0] = [
+                ('axismeld.axis_drag', {'type': 'MIDDLEMOUSE', 'value': 'PRESS'}, None),
+                ('axismeld.axis_clear', {'type': 'ESC', 'value': 'PRESS'}, None),
+            ]
     return result
 
 

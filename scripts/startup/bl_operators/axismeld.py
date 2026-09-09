@@ -66,6 +66,7 @@ class AXISMELD_Preferences(KeyConfigPreferences):
     def draw(self, context):
         layout = self.layout
         layout.label(text='Maya 2026 - Modeling baseline (adapted)')
+        layout.label(text='Click a transform axis, then middle-drag in empty viewport space')
         layout.prop(self, 'use_file_overrides')
         layout.operator('axismeld.reload_profile')
         layout.label(text=str(runtime.profile_directory() or 'No configuration directory'))

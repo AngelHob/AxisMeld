@@ -42,6 +42,7 @@
 
 #include "transform.hh"
 #include "transform_convert.hh"
+#include "transform_gizmo.hh"
 
 namespace blender {
 
@@ -1526,6 +1527,7 @@ void transform_operatortypes()
   WM_operatortype_append(TRANSFORM_OT_delete_orientation);
 
   WM_operatortype_append(TRANSFORM_OT_from_gizmo);
+  axismeld_transform_operatortypes();
 }
 
 void keymap_transform(wmKeyConfig *keyconf)

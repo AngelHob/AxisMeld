@@ -80,6 +80,27 @@ class ProfilesTest(unittest.TestCase):
 
 
 class KeymapTest(unittest.TestCase):
+    def test_axis_events_precede_fallback_without_touching_navigation(self):
+        items = [('transform.translate', {'type': 'MIDDLEMOUSE', 'value': 'PRESS'}, None),
+                 ('view3d.move', {'type': 'MIDDLEMOUSE', 'value': 'PRESS', 'alt': True}, None)]
+        base = [('3D View Tool: Move', {'space_type': 'VIEW_3D'}, {'items': items}),
+                ('Generic Gizmo Maybe Drag', {'space_type': 'EMPTY'}, {'items': [
+                    ('gizmogroup.gizmo_tweak', {'type': 'LEFTMOUSE', 'value': 'CLICK_DRAG'}, None)]}),
+                ('UV Editor', {'space_type': 'EMPTY'}, {'items': items}),
+                ('3D View', {'space_type': 'VIEW_3D'}, {'items': []})]
+        original = copy.deepcopy(base)
+        result = generate_keymaps(base, baseline_bindings())
+        self.assertEqual(result[0][2]['items'][0],
+                         ('axismeld.axis_drag', {'type': 'MIDDLEMOUSE', 'value': 'PRESS'}, None))
+        self.assertTrue(any(op == 'axismeld.command' and event['type'] == 'MIDDLEMOUSE'
+                            and event.get('alt') and data['properties'] == [('command', 'view.pan')]
+                            for op, event, data in result[3][2]['items']))
+        self.assertEqual(result[1][2]['items'][0],
+                         ('axismeld.axis_select', {'type': 'LEFTMOUSE', 'value': 'CLICK'}, None))
+        self.assertIn(original[1][2]['items'][0], result[1][2]['items'])
+        self.assertEqual(result[2], original[2])
+        self.assertEqual(base, original)
+
     def test_global_shortcut_collision_rejects_only_bad_layer(self):
         base = [('Window', {'space_type': 'EMPTY'}, {'items': [
             ('wm.quit_blender', {'type': 'Q', 'value': 'PRESS', 'ctrl': True}, None)]})]

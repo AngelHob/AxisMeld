@@ -70,7 +70,10 @@ class InstalledInputTest(unittest.TestCase):
         self.assertEqual(original, base)
         self.assertEqual(len(base), len(result))
         for before, after in zip(base, result):
-            if not modeling_keymap(before[0], before[1]):
+            if before[0] == 'Generic Gizmo Maybe Drag':
+                self.assertEqual(after[2]['items'][1:], before[2]['items'])
+                self.assertEqual(after[2]['items'][0][0], 'axismeld.axis_select')
+            elif not modeling_keymap(before[0], before[1]):
                 self.assertEqual(before, after, before[0])
             else:
                 for op, event, props in after[2]['items']:

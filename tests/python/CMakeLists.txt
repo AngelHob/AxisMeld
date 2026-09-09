@@ -236,6 +236,17 @@ add_blender_test(
   --python ${CMAKE_CURRENT_LIST_DIR}/axismeld_input_blender.py
 )
 
+if(WIN32)
+  # The hidden GUI runner is currently validated on Windows only. Do not force a
+  # display-server dependency on headless Linux/macOS test builds.
+  add_python_test(
+    axismeld_manipulator_events
+    ${CMAKE_CURRENT_LIST_DIR}/axismeld_manipulator_ui_runner.py
+    --blender ${TEST_BLENDER_EXE}
+  )
+  set_tests_properties(axismeld_manipulator_events PROPERTIES TIMEOUT 200 RUN_SERIAL TRUE)
+endif()
+
 add_blender_test(
   script_load_keymap
   --python ${CMAKE_CURRENT_LIST_DIR}/bl_keymap_completeness.py

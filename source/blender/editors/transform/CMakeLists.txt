@@ -85,6 +85,7 @@ set(SRC
   transform_mode_translate.cc
   transform_mode_vert_slide.cc
   transform_ops.cc
+  transform_axismeld.cc
   transform_orientations.cc
   transform_snap.cc
   transform_snap_animation.cc
@@ -109,6 +110,7 @@ set(SRC
 )
 
 set(LIB
+  PRIVATE bf::axismeld
   PRIVATE bf::animrig
   PRIVATE bf::blenfont
   PRIVATE bf::blentranslation
