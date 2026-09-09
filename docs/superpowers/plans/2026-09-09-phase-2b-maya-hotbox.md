@@ -375,6 +375,11 @@ const std::string item = axismeld::hit_menu(data.menu_layout, x, y);
 **Consumes:** 前四项全部接口及实际 UI。
 **Produces:** 可重载/保存的个人设置、Recent、独立测试安装与可追溯报告。
 
+Task 5 文件清单补充：`hotbox_catalog.py`/`hotbox_profiles.py` 承担 Recent 的静态菜单身份与
+Controls 中心键入口；若新增声明式 setting ID，同步窄改原生 `view3d_axismeld_hotbox_model.cc`
+及 `tests/hotbox_model_test.cc` 的严格校验。中心键 setting 仅接受三种已有鼠标键、已注册菜单
+ID 或禁用值，不引入任意 operator、脚本或改树配置；偏好和 Controls 使用同一更新/持久化路径。
+
 - [ ] **1. 写设置和历史 RED。** `resolve_hotbox` 无 bpy 测试与安装态偏好测试分别执行；历史不依赖 current scene。下面测试加入 Task 1 的 unittest.TestCase 并带 self 参数，确保 discover 实际收集。
 
 ```python
