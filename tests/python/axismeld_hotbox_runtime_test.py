@@ -11,6 +11,33 @@ from axismeld import hotbox_runtime
 
 
 class RecentCommandsTest(unittest.TestCase):
+    def test_empty_recent_is_disabled_then_populated_menu_is_enabled_and_mappable(self):
+        old_recent = hotbox_runtime.recent
+        try:
+            hotbox_runtime.recent = hotbox_runtime.RecentCommands()
+            settings = hotbox_runtime.make_snapshot(generation=1)['settings']
+            settings['center_buttons']['RIGHTMOUSE'] = 'center.recent'
+            empty = hotbox_runtime.make_snapshot(generation=2, settings=settings)
+            hotbox_runtime.serialize_snapshot(empty)  # Strict validation retains menu identity.
+            menu = next(child for child in empty['menus'][2]['children']
+                        if child['id'] == 'center.recent')
+            self.assertEqual(menu['kind'], 'menu')
+            self.assertFalse(menu['enabled'])
+            self.assertTrue(menu['reason'])
+            self.assertEqual(menu['children'], [])
+            hotbox_runtime.recent.record('view.front')
+            populated = hotbox_runtime.make_snapshot(generation=3, settings=settings)
+            hotbox_runtime.serialize_snapshot(populated)
+            menu = next(child for child in populated['menus'][2]['children']
+                        if child['id'] == 'center.recent')
+            self.assertTrue(menu['enabled'])
+            self.assertEqual(menu['reason'], '')
+            self.assertEqual([(child['command'], child['label']) for child in menu['children']],
+                             [('view.front', 'Front View')])
+            self.assertFalse(empty['menus'][2]['children'][0]['enabled'])
+        finally:
+            hotbox_runtime.recent = old_recent
+
     def test_session_history_is_newest_first_unique_and_copy_safe(self):
         self.assertTrue(hasattr(hotbox_runtime, 'RecentCommands'), 'session history is missing')
         recent = hotbox_runtime.RecentCommands()

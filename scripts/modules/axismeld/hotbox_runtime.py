@@ -393,6 +393,8 @@ def _catalog_with_recent():
         'reason': '',
         'children': [],
     } for index, command in enumerate(recent.items())]
+    recent_menu['enabled'] = bool(recent_menu['children'])
+    recent_menu['reason'] = '' if recent_menu['enabled'] else 'No recent commands in this session'
     return menus
 
 

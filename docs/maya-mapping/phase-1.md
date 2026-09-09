@@ -1,5 +1,9 @@
 # Maya 2026 建模输入：Phase 1
 
+本文保留 Phase 1 输入适配与 Phase 2A 热盒的历史范围说明。当前 Phase 2B 的 Space
+先打开主菜单，中央 LMB/MMB/RMB 默认再打开七视图，并可逐键改映射或禁用；当前操作、
+样式与边界以 [Phase 2B 人工验收表](../compatibility/phase-2b-manual-test.md) 为准。
+
 ## 启用
 
 构建后运行安装目录里的 `blender.exe`，打开 **Edit → Preferences → Keymap**，
@@ -30,7 +34,7 @@ Industry Compatible 的配置，不代表已经完成 Maya 对照。
 | 4 | `view.wireframe` | Blender Wireframe 显示 |
 | 5 | `view.shaded` | Blender Solid 显示；材质和灯光模式未映射 |
 | Space 短按 | `hotbox.open` → `view.toggle_quad` | 当前面板单视图/四视图切换；0.4 秒阈值可在预设偏好中改为 0.1–1.0 秒 |
-| Space 按住，向上/右/下/左拖动并释放左键 | `view.perspective` / `view.side` / `view.front` / `view.top` | 四项视图菜单切片；不是完整 Maya 热盒 |
+| Space 热盒（历史 Phase 2A） | `view.perspective` / `view.side` / `view.front` / `view.top` | 当时按住 Space 后由中央左键四向拖选；已被 Phase 2B 主菜单与中央七视图契约替代 |
 
 全部标记为 `adapted`，不是完全等价实现。组件选择使用 Blender 的选择转换规则；
 多对象 Edit Mode 使用 Blender 自身的网格编辑规则。F8–F11 不处理 NURBS、绑定或
@@ -59,7 +63,7 @@ BOXCLIP 继续经过原生缩放路径与边界处理，不引入镜头焦距变
 ## 保留但尚未实现
 
 建模键位中的裸按 D、X、C、V、J、F12、1/2/3 暂不绑定操作：分别为后续
-临时枢轴、吸附、UV 选择与平滑预览预留。Space 已由 Phase 2A 视图热盒占用。
+临时枢轴、吸附、UV 选择与平滑预览预留。Space 从 Phase 2A 起由热盒占用，当前为 Phase 2B 主菜单。
 Ctrl/Shift 等组合、其他
 未列入命令表的键仍可能沿用 Industry Compatible；例如 F1–F5 的标准视图切换。
 不要把这些继承键位视为 Maya 一一对照完成。
@@ -86,7 +90,8 @@ Blender 适配器在独立模块内，不改变公共基线含义。每个 JSON 
 每项是完整事件替换；省略的 ctrl/shift/alt/oskey 默认为 false，value 默认为 PRESS。
 schema 1 不接受释放、按住、通配修饰键，也不执行 Python 或自定义 operator 字符串。
 `hotbox.open` 只接受键盘事件，可改键或设为 `null` 停用；停用后 3D View 的 Space
-回落到原有 Frames 播放逻辑。四个菜单视图语义 ID 默认不制造独立快捷键，但可由覆盖层绑定。
+回落到原有 Frames 播放逻辑。历史 Phase 2A 有四个菜单视图语义 ID，Phase 2B 扩充为
+七个（增加 `view.left`、`view.back`、`view.bottom`）；它们默认不制造独立快捷键，但可由覆盖层绑定。
 保存文件后，在该预设偏好中点 **Reload AxisMeld Profiles**。冲突、未知命令、重复
 JSON 字段、错误 schema 或坏文件会显示诊断；问题文件保持原样。
 与 Window/Screen/Frames 全局命令相撞的覆盖也会被拒绝，例如将 Move 改为 Ctrl+Q。

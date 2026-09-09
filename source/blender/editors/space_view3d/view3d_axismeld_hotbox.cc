@@ -306,7 +306,10 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
     data.tap_eligible = false;
     data.active_mouse = event->type;
     data.pending_leaf.clear();
-    if (item == "views" && rect.depth == 0) {
+    // Real menu rectangles (including disabled/separators) occlude the center-only fallback.
+    const bool blank_center = data.menu_layout.supported && data.snapshot.style == "center" &&
+                              !hover && x >= 0 && x < data.width && y >= 0 && y < data.height;
+    if ((item == "views" && rect.depth == 0) || blank_center) {
       const int button = event->type == LEFTMOUSE ? 0 : event->type == MIDDLEMOUSE ? 1 : 2;
       const std::string &mapping = data.snapshot.center_buttons[button];
       data.open_path.clear();

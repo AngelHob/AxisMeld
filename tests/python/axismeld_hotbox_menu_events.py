@@ -242,7 +242,12 @@ def suite():
     shading_items = popup(shading, ['Wireframe', 'Solid'])
     review_failures = []
     # Releasing anywhere except a title/parent must discard the old executable popup.
-    common_labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows', 'Cache', 'Help']
+    common_labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
+    with bpy.context.temp_override(window=win, area=area, region=region):
+        common = json.loads(hotbox_runtime.snapshot(bpy.context))['menus'][0]['children']
+    check([node['label'] for node in common] == common_labels and
+          common[0]['id'] == 'common.file' and not common[0]['enabled'],
+          'disabled cancellation fixture must address the actual seven-item public File row')
     for target, point in (('blank', (cx-300*scale, cy-180*scale)),
                           ('disabled', midpoint(row_title(common_labels, 0, 64)))):
         yield from open_box()
@@ -282,7 +287,6 @@ def suite():
     print('PASS B4 click browse and held drag dispatch actual shading commands', flush=True)
 
     # A disabled File title must neither dispatch nor turn the gesture into a tap.
-    common_labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
     yield from open_box()
     count = len(observed)
     yield from click(midpoint(row_title(common_labels, 0, 64)))
@@ -368,6 +372,84 @@ def suite():
     event('RIGHTMOUSE', 'RELEASE')
     yield from close_box()
     check(len(observed) == count, 'null center mapping executed or became short tap')
+    reset_hotbox_settings()
+
+    # Center-only applies to blank WINDOW content, retaining actual mouse-press origin.
+    # B is far from Space's A origin and all visible center/popup rectangles.
+    blank = (cx-230*scale, cy-130*scale)
+    hotbox_runtime.reload_settings(bpy.context, session={
+        'schema_version': 1, 'settings': {'style': 'center'}})
+    for dx, dy, command, rotation in directions:
+        yield from open_box()
+        yield from move(blank)
+        event('RIGHTMOUSE')
+        yield
+        yield from move((blank[0]+dx*scale, blank[1]+dy*scale))
+        count = len(observed)
+        event('RIGHTMOUSE', 'RELEASE')
+        yield from settle()
+        check(len(observed) == count+1 and observed[-1] == (command, {'FINISHED'}),
+              f'center blank RMB {command} must use actual press origin and execute exactly once')
+        q, projection = current_pose()
+        check(projection == ('PERSP' if rotation is None else 'ORTHO'), 'blank ' + command)
+        if rotation:
+            check(abs(abs(sum(a*b for a,b in zip(q, rotation))) - 1) < 1e-5,
+                  'blank ' + command + ' orientation')
+        yield from close_box()
+        check(len(observed) == count+1, 'center blank release became tap')
+    print('PASS center blank RMB seven views use actual press origin', flush=True)
+
+    hotbox_runtime.reload_settings(bpy.context, session={
+        'schema_version': 1, 'settings': {'style': 'center', 'center_buttons': {
+            'LEFTMOUSE': 'views', 'MIDDLEMOUSE': 'pane.shading', 'RIGHTMOUSE': None}}})
+    yield from open_box()
+    yield from move(blank)
+    count = len(observed)
+    event('RIGHTMOUSE')
+    yield
+    yield from move((blank[0]+90*scale, blank[1]))
+    event('RIGHTMOUSE', 'RELEASE')
+    yield from close_box()
+    check(len(observed) == count, 'center blank null mapping executed or became tap')
+    yield from open_box()
+    yield from move(blank)
+    event('MIDDLEMOUSE')
+    yield
+    yield from move(midpoint(center))
+    event('MIDDLEMOUSE', 'RELEASE')
+    yield from settle()
+    screenshot('menus-center-blank-mapped-shading.png')
+    # Fresh LMB has views mapping, but an existing actual leaf must win over fallback.
+    count = len(observed)
+    yield from click(midpoint(mapped_items[1]))
+    check(len(observed) == count+1 and observed[-1] == ('view.shaded', {'FINISHED'}) and
+          area.spaces.active.shading.type == 'SOLID',
+          'center blank ordinary mapping or existing leaf priority failed')
+    yield from close_box()
+    yield from open_box()
+    yield from move(blank)
+    count = len(observed)
+    event('LEFTMOUSE')
+    yield
+    yield from move((blank[0], blank[1]-90*scale))
+    event('LEFTMOUSE', 'RELEASE')
+    yield from close_box()
+    check(len(observed) == count+1 and observed[-1][0] == 'view.front',
+          'center blank independent LMB views mapping failed')
+    for style in ('rows', 'zones'):
+        hotbox_runtime.reload_settings(bpy.context, session={
+            'schema_version': 1, 'settings': {'style': style}})
+        yield from open_box()
+        yield from move(blank)
+        count = len(observed)
+        event('RIGHTMOUSE')
+        yield
+        yield from move((blank[0]+90*scale, blank[1]))
+        event('RIGHTMOUSE', 'RELEASE')
+        yield from close_box()
+        check(len(observed) == count, style + ' blank unexpectedly became central mapping')
+    print('PASS center blank independent views/menu/null mappings, leaf priority and rows/zones isolation',
+          flush=True)
     reset_hotbox_settings()
 
     # The central marking menu's appended Style list wins over the directional sector.
