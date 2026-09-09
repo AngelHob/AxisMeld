@@ -25,7 +25,7 @@
 | CLI 身份 | `C:/Python314/python.exe tests/python/axismeld_cli_identity.py --blender <staged-exe>` | exit 0 | `D:/source/AxisMeld-build/phase2a-task3-validation-20260909/cli-identity.log` |
 | portable 路径 | `C:/Python314/python.exe tests/python/axismeld_portable_paths.py --blender <staged-exe>` | exit 0 | `D:/source/AxisMeld-build/phase2a-task3-validation-20260909/portable-paths.log` |
 | 纯配置 | `C:/Python314/python.exe tests/python/axismeld_input_test.py` | 14/14 通过 | `D:/source/AxisMeld-build/phase2a-task3-validation-20260909/input-profiles.log` |
-| 安装态输入 | `<staged-exe> -b --factory-startup --python-exit-code 1 --python tests/python/axismeld_input_blender.py` | 10/10 通过 | `D:/source/AxisMeld-build/phase2a-task3-validation-20260909/installed-input.log` |
+| 安装态输入 | `<staged-exe> -b --factory-startup --python-exit-code 1 --python tests/python/axismeld_input_blender.py` | 11/11 通过 | `D:/source/AxisMeld-build/phase2a-task3-validation-20260909/installed-input-fix1-green.log` |
 | 操纵器 GUI | `C:/Python314/python.exe tests/python/axismeld_manipulator_ui_runner.py --blender <staged-exe>` | 通过 | `D:/source/AxisMeld-build/phase2a-task3-validation-20260909/manipulator-gui.log` |
 | 热盒 GUI | `C:/Python314/python.exe tests/python/axismeld_hotbox_ui_runner.py --blender <staged-exe>` | 通过且无 Python traceback | `D:/source/AxisMeld-build/phase2a-task3-validation-20260909/hotbox-gui.log` |
 | 安装脚本来源 | `<staged-exe> -b --factory-startup --python-exit-code 1 --python-expr <path assertions>` | 模块、预设、exe 均来自暂存目录 | `D:/source/AxisMeld-build/phase2a-task3-validation-20260909/installed-script-identity.log` |
@@ -33,6 +33,12 @@
 
 这里的 `<staged-exe>` 均为上面的独立可运行文件。持久日志独立于最终会清理的 SDD scratch。
 配置期 whole CTest 仍指向旧的 normal install，因此没有拿它替代上述显式暂存测试。
+
+Task 3 首轮审查补充了“删除唯一 user hotbox 项后，设置层级不得显示空行”的回归。
+修复前的定点 RED 为 11 项中该项失败，日志 `installed-input-fix1-red.log`；改为检查
+`keyconfigs.user` 的有效 map 后，安装态 11/11 与偏好 GUI 均通过。补充日志位于同一
+持久目录的 `cmake-install-fix1.log`、`installed-input-fix1-green.log`、
+`hotbox-gui-fix1-green.log` 和 `exe-hashes-fix1.log`，未覆盖首轮日志。
 
 私有 GUI runner 为子进程设置独占 `BLENDER_USER_CONFIG`、`TEMP`、`TMP` 和 `TMPDIR`；
 不会向用户正在运行的正常安装注入事件或复制偏好。已知预期输出包括 PNG 色彩 metadata

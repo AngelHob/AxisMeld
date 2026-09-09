@@ -19,10 +19,10 @@ def _km_expand_from_toolsystem(space_type, context_mode):
 
 def _km_expand_axismeld_hotbox():
     import bpy
-    keyconfig = bpy.context.window_manager.keyconfigs.active
-    if keyconfig is None:
+    keymap = bpy.context.window_manager.keyconfigs.user.keymaps.get('AxisMeld Hotbox')
+    if keymap is None:
         return []
-    keymap = keyconfig.keymaps.get('AxisMeld Hotbox')
+    keymap = keymap.active()
     if keymap is None or not keymap.keymap_items:
         return []
     return [('AxisMeld Hotbox', 'VIEW_3D', 'WINDOW', [])]

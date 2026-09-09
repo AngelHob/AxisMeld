@@ -244,6 +244,41 @@ class InstalledInputTest(unittest.TestCase):
             user_hotbox().type = original
             keyconfigs.update()
 
+    def test_hierarchy_hides_hotbox_after_user_delete_and_profile_reload(self):
+        from bl_keymap_utils.keymap_hierarchy import generate
+
+        def hierarchy_names():
+            names = set()
+            def visit(entries):
+                for name, _space_type, _region_type, children in entries:
+                    names.add(name)
+                    visit(children)
+            visit(generate())
+            return names
+
+        keyconfigs = bpy.context.window_manager.keyconfigs
+        self.assertTrue(bpy.utils.keyconfig_set(str(self.preset)))
+        keyconfigs.update()
+        active = keyconfigs.active
+        user_map = keyconfigs.user.keymaps['AxisMeld Hotbox']
+        item = next(item for item in user_map.keymap_items
+                    if item.idname == 'axismeld.command' and
+                    item.properties.command == 'hotbox.open')
+        try:
+            user_map.keymap_items.remove(item)
+            keyconfigs.update()
+            self.assertEqual(len(active.keymaps['AxisMeld Hotbox'].keymap_items), 1)
+            self.assertEqual(len(user_map.active().keymap_items), 0)
+            self.assertNotIn('AxisMeld Hotbox', hierarchy_names())
+            runtime.load()
+            keyconfigs.update()
+            user_map = keyconfigs.user.keymaps['AxisMeld Hotbox']
+            self.assertEqual(len(user_map.active().keymap_items), 0)
+            self.assertNotIn('AxisMeld Hotbox', hierarchy_names())
+        finally:
+            user_map.restore_to_default()
+            keyconfigs.update()
+
     def test_disabled_file_overrides_survive_keyconfig_recreation(self):
         old_directory = runtime.profile_directory
         keyconfigs = bpy.context.window_manager.keyconfigs
