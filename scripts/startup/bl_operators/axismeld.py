@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 AxisMeld Authors
 # SPDX-License-Identifier: GPL-2.0-or-later
 from bpy.types import Operator, KeyConfigPreferences
-from bpy.props import StringProperty, BoolProperty
+from bpy.props import StringProperty, BoolProperty, FloatProperty
 
 from axismeld import adapter, runtime
 from axismeld.commands import PRESET_NAME
@@ -63,14 +63,18 @@ class AXISMELD_Preferences(KeyConfigPreferences):
         name='Use Studio and User Profile Files', default=True, update=_update_profile,
         description='Disable to use the public Maya baseline; Blender native keymap edits remain separate')
 
-    def draw(self, context):
-        layout = self.layout
+    hotbox_tap_seconds: FloatProperty(
+        name='Hotbox Tap Threshold', default=0.4, min=0.1, max=1.0,
+        description='Maximum Space tap duration for single/quad view switching')
+
+    def draw(self, layout):
         layout.label(text='Maya 2026 - Modeling baseline (adapted)')
         layout.label(text='Click a transform axis, then middle-drag in empty viewport space')
+        layout.prop(self, 'hotbox_tap_seconds')
         layout.prop(self, 'use_file_overrides')
         layout.operator('axismeld.reload_profile')
         layout.label(text=str(runtime.profile_directory() or 'No configuration directory'))
-        layout.label(text='Space hotbox, temporary snapping and UV commands are not implemented yet')
+        layout.label(text='Space view hotbox is adapted; full Maya hotbox, snapping and UV are not implemented')
         for message in runtime.diagnostics:
             layout.label(text=message, icon='ERROR')
 

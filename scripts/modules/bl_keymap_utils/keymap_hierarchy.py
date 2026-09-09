@@ -17,6 +17,17 @@ def _km_expand_from_toolsystem(space_type, context_mode):
     return _fn
 
 
+def _km_expand_axismeld_hotbox():
+    import bpy
+    keyconfig = bpy.context.window_manager.keyconfigs.active
+    if keyconfig is None:
+        return []
+    keymap = keyconfig.keymaps.get('AxisMeld Hotbox')
+    if keymap is None or not keymap.keymap_items:
+        return []
+    return [('AxisMeld Hotbox', 'VIEW_3D', 'WINDOW', [])]
+
+
 def _km_hierarchy_iter_recursive(items):
     for sub in items:
         if callable(sub):
@@ -56,6 +67,7 @@ _km_hierarchy = [
     ('Toolbar Popup', 'EMPTY', 'TEMPORARY', []),  # tool switching popup
 
     ('3D View', 'VIEW_3D', 'WINDOW', [  # view 3d navigation and generic stuff (select, transform)
+        _km_expand_axismeld_hotbox,
         ('Object Mode', 'EMPTY', 'WINDOW', [
             _km_expand_from_toolsystem('VIEW_3D', 'OBJECT'),
         ]),

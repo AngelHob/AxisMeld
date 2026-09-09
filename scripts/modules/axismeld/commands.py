@@ -13,7 +13,7 @@ SOURCE_URL = ('https://help.autodesk.com/cloudhelp/2026/ENU/Maya-KeyboardShortcu
 class Command:
     id: str
     label: str
-    key: str
+    key: str | None = None
     alt: bool = False
     status: str = 'adapted'
     difference: str = 'Uses Blender semantics; Maya hold menus are not implemented.'
@@ -35,13 +35,25 @@ COMMANDS = MappingProxyType({command.id: command for command in (
     Command('view.dolly', 'Dolly', 'RIGHTMOUSE', alt=True),
     Command('view.wireframe', 'Wireframe', 'FOUR'),
     Command('view.shaded', 'Shaded', 'FIVE'),
+    Command('hotbox.open', 'View Hotbox', 'SPACE',
+            difference='Adapted four-direction view menu and tap quad toggle; not the full Maya hotbox.'),
+    Command('view.toggle_quad', 'Toggle Single / Quad View',
+            difference='Uses AxisMeld session view slots; hidden slots are not saved across restart.'),
+    Command('view.perspective', 'Perspective View',
+            difference='Restores the current pane perspective history with Blender navigation semantics.'),
+    Command('view.side', 'Side View',
+            difference='Uses the AxisMeld right-side orthographic view.'),
+    Command('view.front', 'Front View',
+            difference='Uses the AxisMeld front orthographic view.'),
+    Command('view.top', 'Top View',
+            difference='Uses the AxisMeld top orthographic view.'),
 )})
 
 # No approximate stand-in for hold/release behavior or UV/smoothing semantics.
-RESERVED_KEYS = ('SPACE', 'D', 'X', 'C', 'V', 'J', 'F12', 'ONE', 'TWO', 'THREE')
+RESERVED_KEYS = ('D', 'X', 'C', 'V', 'J', 'F12', 'ONE', 'TWO', 'THREE')
 
 
 def baseline_bindings():
     return {key: {'type': command.key, 'value': 'PRESS', 'alt': command.alt,
                   'ctrl': False, 'shift': False, 'oskey': False}
-            for key, command in COMMANDS.items()}
+            for key, command in COMMANDS.items() if command.key is not None}

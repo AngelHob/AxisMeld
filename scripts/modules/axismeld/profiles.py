@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 
-from .commands import baseline_bindings
+from .commands import COMMANDS, baseline_bindings
 
 MODIFIERS = ('ctrl', 'shift', 'alt', 'oskey')
 KEY_TYPES = frozenset((*'ABCDEFGHIJKLMNOPQRSTUVWXYZ', *(f'F{i}' for i in range(1, 25)),
@@ -23,11 +23,13 @@ class ResolvedProfile:
     diagnostics: list
 
 
-def normalize_event(event):
+def normalize_event(event, *, keyboard_only=False):
     if not isinstance(event, dict) or set(event) - {'type', 'value', *MODIFIERS}:
         raise ValueError('event must contain only type, value and boolean modifiers')
     if not isinstance(event.get('type'), str) or event['type'] not in KEY_TYPES:
         raise ValueError('unsupported event type')
+    if keyboard_only and event['type'].endswith('MOUSE'):
+        raise ValueError('hotbox.open requires a keyboard event')
     if event.get('value', 'PRESS') != 'PRESS':
         raise ValueError('this profile version supports PRESS only')
     if any(type(event.get(key, False)) is not bool for key in MODIFIERS):
@@ -45,11 +47,12 @@ def _apply(bindings, document):
     if type(document['schema_version']) is not int or document['schema_version'] != 1:
         raise ValueError('unsupported schema_version; expected 1')
     changes = document['bindings']
-    if not isinstance(changes, dict) or changes.keys() - bindings.keys():
+    if not isinstance(changes, dict) or changes.keys() - COMMANDS.keys():
         raise ValueError('unknown command or invalid bindings object')
     candidate = {key: (dict(value) if value else None) for key, value in bindings.items()}
     for command, event in changes.items():
-        candidate[command] = normalize_event(event) if event is not None else None
+        candidate[command] = (normalize_event(event, keyboard_only=command == 'hotbox.open')
+                              if event is not None else None)
     seen = {}
     for command, event in candidate.items():
         if event is None:

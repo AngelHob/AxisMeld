@@ -36,6 +36,7 @@ def load(*, session=None):
     validate = lambda candidate: validate_global_bindings(base, candidate)
     resolved = (load_profiles(directory, session=session, validate=validate) if use_overrides and directory else
                 resolve_profiles([('session', session)] if session is not None else [], validate=validate))
+    validate_global_bindings(base, resolved.bindings)
     data = generate_keymaps(base, resolved.bindings)
     diagnostics = resolved.diagnostics + addon_conflicts(keyconfigs.addon, resolved.bindings)
     if bpy.context.preferences.inputs.use_mouse_emulate_3_button:

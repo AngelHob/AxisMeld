@@ -17,8 +17,18 @@ def overlaps(event, owned):
 
 def modeling_keymap(name, args):
     return not args.get('modal', False) and (
-        name in {'Object Mode', 'Mesh', 'Object Non-modal', '3D View', '3D View Generic'} or
+        name in {'Object Mode', 'Mesh', 'Object Non-modal', '3D View', '3D View Generic',
+                 'AxisMeld Hotbox'} or
         name.startswith('3D View Tool:'))
+
+
+def _original_frames_space_play(name, args, operator, event, data, command, owned):
+    return (command == 'hotbox.open' and name == 'Frames' and
+            args == {'space_type': 'EMPTY', 'region_type': 'WINDOW'} and
+            operator == 'screen.animation_play' and
+            event == {'type': 'SPACE', 'value': 'PRESS'} and data is None and
+            owned == {'type': 'SPACE', 'value': 'PRESS', 'alt': False,
+                      'ctrl': False, 'shift': False, 'oskey': False})
 
 
 def validate_global_bindings(base, bindings):
@@ -29,6 +39,9 @@ def validate_global_bindings(base, bindings):
         for operator, event, data in content['items']:
             for command, owned in bindings.items():
                 if owned is not None and overlaps(event, owned):
+                    if _original_frames_space_play(
+                            name, args, operator, event, data, command, owned):
+                        continue
                     raise ValueError(f'global input conflict: {command} with {name}/{operator}')
 
 
@@ -47,6 +60,8 @@ def generate_keymaps(base, bindings):
         content['items'] = [item for item in content['items']
                             if not any(overlaps(item[1], event) for event in owned)]
         for command, event in bindings.items():
+            if command == 'hotbox.open':
+                continue
             target = ('3D View',) if command.startswith('view.') else ('Object Mode', 'Mesh')
             if name in target and event is not None:
                 content['items'].append(('axismeld.command', dict(event),
@@ -56,6 +71,19 @@ def generate_keymaps(base, bindings):
                 ('axismeld.axis_drag', {'type': 'MIDDLEMOUSE', 'value': 'PRESS'}, None),
                 ('axismeld.axis_clear', {'type': 'ESC', 'value': 'PRESS'}, None),
             ]
+    hotbox_items = []
+    hotbox_event = bindings.get('hotbox.open')
+    if hotbox_event is not None:
+        hotbox_items.append(('axismeld.command', dict(hotbox_event),
+                             {'properties': [('command', 'hotbox.open')]}))
+    hotbox_maps = [entry for entry in result if entry[0] == 'AxisMeld Hotbox']
+    if hotbox_maps:
+        hotbox_maps[0][2]['items'] = hotbox_items
+        result[:] = [entry for entry in result
+                     if entry[0] != 'AxisMeld Hotbox' or entry is hotbox_maps[0]]
+    elif hotbox_items:
+        result.append(('AxisMeld Hotbox', {'space_type': 'VIEW_3D', 'region_type': 'WINDOW'},
+                       {'items': hotbox_items}))
     return result
 
 

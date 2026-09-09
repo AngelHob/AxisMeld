@@ -10,7 +10,7 @@ import unittest
 
 import bpy
 from axismeld import adapter, runtime
-from axismeld.commands import COMMANDS, PRESET_NAME, baseline_bindings
+from axismeld.commands import PRESET_NAME, baseline_bindings
 
 
 class InstalledInputTest(unittest.TestCase):
@@ -68,8 +68,15 @@ class InstalledInputTest(unittest.TestCase):
         validate_global_bindings(base, bindings)
         result = generate_keymaps(base, bindings)
         self.assertEqual(original, base)
-        self.assertEqual(len(base), len(result))
-        for before, after in zip(base, result):
+        self.assertEqual(len(result), len(base) + 1)
+        generated_by_name = {entry[0]: entry for entry in result}
+        self.assertEqual(sum(entry[0] == 'AxisMeld Hotbox' for entry in result), 1)
+        hotbox = generated_by_name['AxisMeld Hotbox']
+        self.assertEqual(hotbox[1], {'space_type': 'VIEW_3D', 'region_type': 'WINDOW'})
+        self.assertEqual(hotbox[2]['items'][0][0], 'axismeld.command')
+        self.assertEqual(hotbox[2]['items'][0][2]['properties'], [('command', 'hotbox.open')])
+        for before in base:
+            after = generated_by_name[before[0]]
             if before[0] == 'Generic Gizmo Maybe Drag':
                 self.assertEqual(after[2]['items'][1:], before[2]['items'])
                 self.assertEqual(after[2]['items'][0][0], 'axismeld.axis_select')
@@ -87,6 +94,9 @@ class InstalledInputTest(unittest.TestCase):
             self.assertEqual(self.area.spaces.active.shading.type, expected)
         for command in ('view.focus_selected', 'view.frame_all'):
             self.assertEqual(bpy.ops.axismeld.command(command=command), {'FINISHED'})
+        for command in ('view.front', 'view.side', 'view.top', 'view.perspective'):
+            self.assertEqual(bpy.ops.axismeld.command(command=command), {'FINISHED'})
+        self.assertEqual(bpy.ops.axismeld.command(command='hotbox.open'), {'CANCELLED'})
         self.assertFalse(adapter.available(bpy.context, 'uv.cut')[0])
         self.obj.select_set(False)
         self.assertFalse(adapter.available(bpy.context, 'selection.vertex_mode')[0])
@@ -112,11 +122,16 @@ class InstalledInputTest(unittest.TestCase):
                 self.assertEqual(bpy.ops.axismeld.reload_profile(), {'FINISHED'})
                 self.assertEqual(sum(len(km.keymap_items) for km in config.keymaps), first_count)
             for command, event in baseline_bindings().items():
-                target = '3D View' if command.startswith('view.') else 'Mesh'
+                target = ('AxisMeld Hotbox' if command == 'hotbox.open' else
+                          '3D View' if command.startswith('view.') else 'Mesh')
                 matches = [item for item in config.keymaps[target].keymap_items
                            if item.idname == 'axismeld.command' and item.properties.command == command]
                 self.assertEqual(len(matches), 1, command)
                 self.assertEqual(matches[0].type, event['type'])
+            self.assertAlmostEqual(config.preferences.hotbox_tap_seconds, 0.4, places=6)
+            prop = config.preferences.bl_rna.properties['hotbox_tap_seconds']
+            self.assertAlmostEqual(prop.hard_min, 0.1, places=6)
+            self.assertEqual(prop.hard_max, 1.0)
             self.assertEqual(original, (item.idname, item.type, item.active, item.properties.action))
             # Background mode may not provide an addon keyconfig; directly test that case too.
             from axismeld.keymap import addon_conflicts
@@ -157,13 +172,17 @@ class InstalledInputTest(unittest.TestCase):
         try:
             self.assertTrue(bpy.utils.keyconfig_set(str(self.preset)))
             keyconfigs.update()
+            runtime.load(session={'schema_version': 1, 'bindings': {
+                'view.front': {'type': 'K'},
+            }})
+            keyconfigs.update()
             with tempfile.TemporaryDirectory() as directory:
                 export = Path(directory) / 'AxisMeld_Export_Test.py'
                 keyconfig_export_as_data(bpy.context.window_manager, keyconfigs.active, str(export), all_keymaps=True)
                 self.assertTrue(bpy.utils.keyconfig_set(str(export)))
                 saved = {item.properties.command for keymap in keyconfigs.active.keymaps
                          for item in keymap.keymap_items if item.idname == 'axismeld.command'}
-                self.assertEqual(saved, set(COMMANDS))
+                self.assertEqual(saved, set(baseline_bindings()) | {'view.front'})
         finally:
             keyconfigs.active = previous
             exported = keyconfigs.get('AxisMeld_Export_Test')
@@ -189,6 +208,42 @@ class InstalledInputTest(unittest.TestCase):
             user_move().type = original
             keyconfigs.update()
 
+    def test_native_hotbox_edit_survives_profile_reload(self):
+        from bl_keymap_utils.io import keyconfig_export_as_data
+        keyconfigs = bpy.context.window_manager.keyconfigs
+        self.assertTrue(bpy.utils.keyconfig_set(str(self.preset)))
+        keyconfigs.update()
+        config = keyconfigs.active
+
+        def user_hotbox():
+            return next(item for item in keyconfigs.user.keymaps['AxisMeld Hotbox'].keymap_items
+                        if item.idname == 'axismeld.command' and
+                        item.properties.command == 'hotbox.open')
+
+        item = user_hotbox()
+        original = item.type
+        try:
+            item.type = 'F13'
+            keyconfigs.update()
+            runtime.load()
+            keyconfigs.update()
+            self.assertEqual(user_hotbox().type, 'F13')
+            with tempfile.TemporaryDirectory() as directory:
+                export = Path(directory) / 'AxisMeld_Hotbox_Edit_Export.py'
+                keyconfig_export_as_data(bpy.context.window_manager, config, str(export), all_keymaps=True)
+                self.assertTrue(bpy.utils.keyconfig_set(str(export)))
+                saved = next(item for item in keyconfigs.active.keymaps['AxisMeld Hotbox'].keymap_items
+                             if item.idname == 'axismeld.command' and
+                             item.properties.command == 'hotbox.open')
+                self.assertEqual(saved.type, 'F13')
+        finally:
+            keyconfigs.active = config
+            exported = keyconfigs.get('AxisMeld_Hotbox_Edit_Export')
+            if exported:
+                keyconfigs.remove(exported)
+            user_hotbox().type = original
+            keyconfigs.update()
+
     def test_disabled_file_overrides_survive_keyconfig_recreation(self):
         old_directory = runtime.profile_directory
         keyconfigs = bpy.context.window_manager.keyconfigs
@@ -211,6 +266,24 @@ class InstalledInputTest(unittest.TestCase):
             if config:
                 config.preferences.use_file_overrides = True
             runtime.load()
+
+    def test_final_validation_failure_preserves_working_keyconfig(self):
+        keyconfigs = bpy.context.window_manager.keyconfigs
+        existing = runtime.load()
+        pointer = existing.as_pointer()
+        item_count = sum(len(keymap.keymap_items) for keymap in existing.keymaps)
+        original_validate = runtime.validate_global_bindings
+        try:
+            def reject_final_bindings(_base, _bindings):
+                raise ValueError('synthetic final collision')
+            runtime.validate_global_bindings = reject_final_bindings
+            with self.assertRaisesRegex(ValueError, 'synthetic final collision'):
+                runtime.load()
+            preserved = keyconfigs.get(PRESET_NAME)
+            self.assertEqual(preserved.as_pointer(), pointer)
+            self.assertEqual(sum(len(keymap.keymap_items) for keymap in preserved.keymaps), item_count)
+        finally:
+            runtime.validate_global_bindings = original_validate
 
 
 if __name__ == '__main__':

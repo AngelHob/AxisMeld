@@ -12,6 +12,8 @@ COMPONENTS = {'selection.vertex_mode': 'VERT', 'selection.edge_mode': 'EDGE',
 VIEW_OPS = {'view.focus_selected': ('view_selected', {'use_all_regions': False}),
             'view.frame_all': ('view_all', {'center': False}),
             'view.orbit': ('rotate', {}), 'view.pan': ('move', {}), 'view.dolly': ('zoom', {})}
+VIEW_ACTIONS = {'view.toggle_quad': 'TOGGLE_QUAD', 'view.perspective': 'PERSPECTIVE',
+                'view.side': 'SIDE', 'view.front': 'FRONT', 'view.top': 'TOP'}
 
 
 def modeling_context(context):
@@ -34,6 +36,10 @@ def available(context, command):
         operation = getattr(bpy.ops.view3d, VIEW_OPS[command][0], None)
         if operation is None or not operation.poll():
             return False, 'Blender view operator is unavailable in this context'
+    if command in VIEW_ACTIONS and not bpy.ops.view3d.axismeld_view.poll():
+        return False, 'AxisMeld view operator is unavailable in this context'
+    if command == 'hotbox.open' and not bpy.ops.view3d.axismeld_hotbox.poll():
+        return False, 'AxisMeld hotbox is unavailable in this context'
     return True, ''
 
 
@@ -60,6 +66,14 @@ def run(context, command, *, invoke=True):
     if command in VIEW_OPS:
         name, properties = VIEW_OPS[command]
         return getattr(bpy.ops.view3d, name)('INVOKE_DEFAULT' if invoke else 'EXEC_DEFAULT', **properties)
+    if command in VIEW_ACTIONS:
+        return bpy.ops.view3d.axismeld_view('EXEC_DEFAULT', action=VIEW_ACTIONS[command])
+    if command == 'hotbox.open':
+        if not invoke:
+            raise ValueError('hotbox.open requires a keyboard invoke event')
+        preferences = context.window_manager.keyconfigs.active.preferences
+        return bpy.ops.view3d.axismeld_hotbox(
+            'INVOKE_DEFAULT', tap_seconds=preferences.hotbox_tap_seconds)
     if command in {'view.wireframe', 'view.shaded'}:
         context.space_data.shading.type = 'WIREFRAME' if command == 'view.wireframe' else 'SOLID'
         return {'FINISHED'}

@@ -10,7 +10,8 @@ AxisMeld 官方版本永久免费，不销售软件，不设置付费功能，�
 
 AxisMeld 与 Blender Foundation、Autodesk 及其产品均无隶属、合作、赞助或官方背书关系。Blender、Autodesk 和 Maya 等名称仅用于事实性说明软件基础及兼容目标。
 
-当前已进入 Phase 1.1 操纵器交互阶段。详见 [AxisMeld 架构设计](docs/design/2026-09-08-axismeld-architecture.md)。
+当前正在本地验证 Phase 1.1 操纵器交互和 Phase 2A 视图热盒；两者均仍待最终审核。
+详见 [AxisMeld 架构设计](docs/design/2026-09-08-axismeld-architecture.md)。
 
 ## AxisMeld project statement
 
@@ -46,9 +47,17 @@ viewport-local. [Usage and manual acceptance checklist](docs/maya-mapping/phase-
 Real simulated-event tests cover object transforms, repeated drags, cancellation/undo, mesh editing,
 tool/mode changes and preset isolation. Physical mouse feel and reported stutter still need user acceptance.
 
-Hotbox/marking menus, Maya single/quad view switching, temporary snapping/pivot gestures,
-modeling additions and the UV overhaul remain planned work. This is a development baseline;
-physical input and splash visibility still require interactive acceptance before a binary release.
+## Phase 2A view hotbox
+
+The AxisMeld Maya 2026 preset now has a native Space view hotbox in 3D View Object and mesh Edit
+Mode. A short tap toggles single/quad view; hold shows four adapted view directions (perspective,
+side, front and top). The tap threshold is adjustable from 0.1 to 1.0 seconds in Keymap preferences,
+and the keyboard trigger can be remapped or disabled through the existing schema-1 profile layers.
+[Scope, differences and manual acceptance checklist](docs/compatibility/phase-2a-manual-test.md).
+
+This is only the approved four-item view slice, not the complete Maya hotbox or marking-menu set.
+Temporary snapping/pivot gestures, modeling additions and the UV overhaul remain planned work.
+Phase 1.1 and Phase 2A remain pending independent review and physical-input acceptance before release.
 
 ---
 

@@ -36,3 +36,5 @@ with tempfile.TemporaryDirectory(prefix='axismeld-hotbox-') as directory:
         raise SystemExit(result.returncode or 1)
     if b"empty keymap 'AxisMeld Hotbox'" in result.stdout + result.stderr:
         raise SystemExit('Empty optional hotbox keymap must not warn on normal input')
+    if b'Traceback (most recent call last):' in result.stdout + result.stderr:
+        raise SystemExit('Python traceback reported during hotbox or Keymap preferences draw')

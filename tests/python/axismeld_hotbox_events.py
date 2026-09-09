@@ -12,6 +12,7 @@ import traceback
 
 import bpy
 from mathutils import Quaternion
+from axismeld import runtime
 
 test_root = Path(os.environ['AXISMELD_TEST_ROOT']).resolve()
 if not Path(bpy.app.tempdir).resolve().is_relative_to(test_root):
@@ -291,11 +292,25 @@ def suite():
     same(pose(rv(regions()[0])), perspective, 'perspective history')
     yield from settle()
 
-    # Temporary isolated fixture binding: production configuration is Task 3.
-    km = bpy.context.window_manager.keyconfigs.active.keymaps.new(
-        'AxisMeld Hotbox', space_type='VIEW_3D', region_type='WINDOW')
-    binding = km.keymap_items.new('view3d.axismeld_hotbox', 'SPACE', 'PRESS')
-    binding.properties.tap_seconds = 0.4
+    # Exercise the installed preset's semantic wrapper, not a fixture-only native binding.
+    config = bpy.context.window_manager.keyconfigs.active
+    km = config.keymaps['AxisMeld Hotbox']
+    binding = next(item for item in km.keymap_items
+                   if item.idname == 'axismeld.command' and
+                   item.properties.command == 'hotbox.open')
+    check(binding.type == 'SPACE' and binding.value == 'PRESS', 'missing default semantic hotbox binding')
+
+    def hierarchy_names():
+        from bl_keymap_utils.keymap_hierarchy import generate
+        names = set()
+        def visit(entries):
+            for name, _space_type, _region_type, children in entries:
+                names.add(name)
+                visit(children)
+        visit(generate())
+        return names
+
+    check('AxisMeld Hotbox' in hierarchy_names(), 'bound hotbox missing from Keymap hierarchy')
     pos = [0, 0]
 
     def event(kind, value='PRESS', *, x=None, y=None, **mods):
@@ -343,6 +358,11 @@ def suite():
     yield from locate()
     yield from key(hold=25)
     check(len(regions()) == 1, 'long hold toggled layout')
+    config.preferences.hotbox_tap_seconds = 0.1
+    yield from locate()
+    yield from key(hold=6)
+    check(len(regions()) == 1, 'adapter did not forward adjusted tap threshold')
+    config.preferences.hotbox_tap_seconds = 0.4
     for dx, dy, quat, projection in [
             (90, 0, (0.5, 0.5, 0.5, 0.5), 'ORTHO'),
             (0, -90, (0.70710678, 0.70710678, 0, 0), 'ORTHO'),
@@ -481,7 +501,15 @@ def suite():
          '2x UI scale direction outside dead zone')
     bpy.context.preferences.view.ui_scale = old_scale
     yield from settle(8)
-    binding.type = 'F13'
+    runtime.load(session={'schema_version': 1, 'bindings': {
+        'hotbox.open': {'type': 'F13'},
+    }})
+    bpy.context.window_manager.keyconfigs.update()
+    config = bpy.context.window_manager.keyconfigs.active
+    binding = next(item for item in config.keymaps['AxisMeld Hotbox'].keymap_items
+                   if item.idname == 'axismeld.command' and
+                   item.properties.command == 'hotbox.open')
+    check(binding.type == 'F13', 'profile remap did not reach installed hotbox keymap')
     yield from settle()
     yield from locate()
     yield from key('F13')
@@ -489,7 +517,8 @@ def suite():
     yield from locate()
     yield from key('F13')
     check(len(regions()) == 1, 'remapped release did not maximize')
-    binding.type = 'SPACE'
+    runtime.load()
+    bpy.context.window_manager.keyconfigs.update()
     yield from settle()
     # Repeated PRESS events must not create another modal or restart the timer. The
     # RNA simulator cannot set WM_EVENT_IS_REPEAT; true flag boundaries are in the core test.
@@ -680,7 +709,7 @@ def suite():
     with bpy.context.temp_override(window=second_window):
         bpy.ops.wm.window_close()
     yield from settle()
-    # Timeline Space retains native playback, and disabling the fixture restores viewport playback.
+    # Timeline Space retains native playback, and a disabled profile restores viewport playback.
     timeline = next(a for a in win.screen.areas if a.type == 'DOPESHEET_EDITOR')
     timeline_region = next(r for r in timeline.regions if r.type == 'WINDOW')
     event('MOUSEMOVE', 'NOTHING', x=timeline_region.x + timeline_region.width // 2,
@@ -690,17 +719,20 @@ def suite():
     check(win.screen.is_animation_playing, 'timeline Space was stolen')
     yield from key()
     check(not win.screen.is_animation_playing, 'timeline did not stop')
-    binding.active = False
+    runtime.load(session={'schema_version': 1, 'bindings': {'hotbox.open': None}})
+    bpy.context.window_manager.keyconfigs.update()
+    check('AxisMeld Hotbox' not in bpy.context.window_manager.keyconfigs.active.keymaps,
+          'disabled hotbox left a phantom keymap')
     yield from settle()
     yield from locate()
     yield from key()
     check(win.screen.is_animation_playing, 'disabled viewport binding did not fall through')
     yield from key()
     check(not win.screen.is_animation_playing, 'viewport playback did not stop')
-    km.keymap_items.remove(binding)
     yield from locate()
     # Context guard, including a real preset change while the operator is pending.
-    binding = km.keymap_items.new('view3d.axismeld_hotbox', 'SPACE', 'PRESS')
+    runtime.load()
+    bpy.context.window_manager.keyconfigs.update()
     yield from settle()
     event('SPACE')
     yield
@@ -712,7 +744,7 @@ def suite():
     with bpy.context.temp_override(window=win, area=area, region=regions()[0]):
         check(not bpy.ops.view3d.axismeld_hotbox.poll() and not bpy.ops.view3d.axismeld_view.poll(),
               'native hotbox/view leaked into another preset')
-    km.keymap_items.remove(binding)
+    check('AxisMeld Hotbox' not in hierarchy_names(), 'empty hotbox row leaked into another preset')
     bpy.utils.keyconfig_set(str(preset))
     yield from settle()
     print('PASS native marking/tap/hold/remap/cancel, contexts, scene/topology invalidation, areas/windows, undo', flush=True)
@@ -742,6 +774,13 @@ def suite():
         check(tuple(rv(pane).view_location) == (301, 302, 303), 'hidden runtime cache persisted in file')
         check(abs(rv(pane).view_distance - 304) < 1e-5, 'hidden runtime distance persisted in file')
     print('PASS save/reopen current view and discarded hidden runtime slots', flush=True)
+    config = bpy.context.window_manager.keyconfigs.active
+    config.preferences.show_ui_keyconfig = True
+    bpy.context.preferences.active_section = 'KEYMAP'
+    area.type = 'PREFERENCES'
+    yield from settle(8)
+    check(area.type == 'PREFERENCES', 'failed to open private Keymap preferences')
+    print('PASS installed AxisMeld Keymap preferences draw requested', flush=True)
     print('AXISMELD_HOTBOX_EVENTS_PASS', flush=True)
 
 

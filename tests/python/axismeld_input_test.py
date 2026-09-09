@@ -27,6 +27,37 @@ class ProfilesTest(unittest.TestCase):
         self.assertEqual({key: baseline_bindings()[key]['type'] for key in expected}, expected)
         self.assertTrue(all(command.status == 'adapted' for command in COMMANDS.values()))
 
+    def test_hotbox_is_bound_but_menu_view_commands_are_known_and_unbound(self):
+        bindings = baseline_bindings()
+        self.assertEqual(bindings['hotbox.open']['type'], 'SPACE')
+        self.assertEqual(bindings['hotbox.open']['value'], 'PRESS')
+        self.assertEqual(set(COMMANDS) - set(bindings), {
+            'view.toggle_quad', 'view.perspective', 'view.side', 'view.front', 'view.top'})
+
+    def test_unbound_menu_command_can_be_remapped_and_hotbox_disabled(self):
+        result = resolve_profiles([('user', profile(**{
+            'view.front': {'type': 'K'},
+            'hotbox.open': None,
+        }))])
+        self.assertEqual(result.bindings['view.front']['type'], 'K')
+        self.assertIsNone(result.bindings['hotbox.open'])
+        self.assertEqual(result.sources['view.front'], 'user')
+        self.assertEqual(result.diagnostics, [])
+
+    def test_mouse_hotbox_override_rolls_back_only_invalid_layer(self):
+        result = resolve_profiles([
+            ('studio', profile(**{'hotbox.open': {'type': 'F13'}})),
+            ('user', profile(**{
+                'hotbox.open': {'type': 'LEFTMOUSE'},
+                'transform.move': {'type': 'T'},
+            })),
+        ])
+        self.assertEqual(result.bindings['hotbox.open']['type'], 'F13')
+        self.assertEqual(result.bindings['transform.move']['type'], 'W')
+        self.assertEqual(result.sources['hotbox.open'], 'studio')
+        self.assertEqual(len(result.diagnostics), 1)
+        self.assertIn('keyboard', result.diagnostics[0])
+
     def test_precedence_disable_and_no_mutation(self):
         baseline = baseline_bindings()
         layers = [('studio', profile(**{'transform.move': {'type': 'T'}})),
@@ -111,6 +142,26 @@ class KeymapTest(unittest.TestCase):
         self.assertEqual(result.bindings['transform.move']['type'], 'T')
         self.assertIn('wm.quit_blender', result.diagnostics[0])
 
+    def test_only_original_frames_space_play_may_overlap_hotbox(self):
+        frames = [('Frames', {'space_type': 'EMPTY', 'region_type': 'WINDOW'}, {'items': [
+            ('screen.animation_play', {'type': 'SPACE', 'value': 'PRESS'}, None)]})]
+        validate_global_bindings(frames, baseline_bindings())
+        for changed, shifted in (
+                ([('Frames', {'space_type': 'EMPTY', 'region_type': 'WINDOW'}, {'items': [
+                    ('screen.animation_cancel', {'type': 'SPACE', 'value': 'PRESS'}, None)]})], False),
+                ([('Screen', {'space_type': 'EMPTY', 'region_type': 'WINDOW'}, {'items': [
+                    ('screen.animation_play', {'type': 'SPACE', 'value': 'PRESS'}, None)]})], False),
+                ([('Frames', {'space_type': 'EMPTY', 'region_type': 'WINDOW'}, {'items': [
+                    ('screen.animation_play', {'type': 'SPACE', 'value': 'PRESS', 'shift': True}, None)]})], True),
+        ):
+            with self.subTest(changed=changed):
+                bindings = baseline_bindings()
+                bindings['hotbox.open'] = {
+                    'type': 'SPACE', 'value': 'PRESS', 'ctrl': False,
+                    'shift': shifted, 'alt': False, 'oskey': False}
+                with self.assertRaisesRegex(ValueError, 'global input conflict'):
+                    validate_global_bindings(changed, bindings)
+
     def test_duplicate_json_key_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             (Path(directory) / 'user.json').write_text(
@@ -133,7 +184,15 @@ class KeymapTest(unittest.TestCase):
         bindings = resolve_profiles([('user', profile(**{'transform.move': {'type': 'T'}}))]).bindings
         generated = generate_keymaps(base, bindings)
         self.assertEqual(base, original)
-        self.assertEqual(generated[3:], base[3:])
+        generated_by_name = {entry[0]: entry for entry in generated}
+        self.assertEqual(generated_by_name['Text'], base[3])
+        self.assertEqual(generated_by_name['Transform Modal Map'], base[4])
+        hotbox = [entry for entry in generated if entry[0] == 'AxisMeld Hotbox']
+        self.assertEqual(len(hotbox), 1)
+        self.assertEqual(hotbox[0][1], {'space_type': 'VIEW_3D', 'region_type': 'WINDOW'})
+        self.assertEqual(hotbox[0][2]['items'], [
+            ('axismeld.command', baseline_bindings()['hotbox.open'],
+             {'properties': [('command', 'hotbox.open')]})])
         items = generated[0][2]['items']
         self.assertNotIn('mesh.old', [item[0] for item in items])
         self.assertNotIn('mesh.wild', [item[0] for item in items])
@@ -142,6 +201,12 @@ class KeymapTest(unittest.TestCase):
         events = [event for op, event, data in items if op == 'axismeld.command']
         self.assertTrue(any(event['type'] == 'T' for event in events))
         self.assertFalse(any(event['type'] == 'W' for event in events))
+
+    def test_hotbox_map_is_not_duplicated_when_regenerating_generated_data(self):
+        base = [('3D View', {'space_type': 'VIEW_3D', 'region_type': 'WINDOW'}, {'items': []})]
+        once = generate_keymaps(base, baseline_bindings())
+        twice = generate_keymaps(once, baseline_bindings())
+        self.assertEqual(sum(name == 'AxisMeld Hotbox' for name, _args, _content in twice), 1)
 
 
 if __name__ == '__main__':
