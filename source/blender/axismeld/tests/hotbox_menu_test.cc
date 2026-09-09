@@ -322,6 +322,42 @@ TEST(axismeld_hotbox_menu, HidingRowsDoesNotMovePaneBelowTheCentralRow)
   EXPECT_EQ(rect(layout, "modeling.mesh"), nullptr);
 }
 
+TEST(axismeld_hotbox_menu, EveryRowSubsetAvoidsCentralButtonAtTopAndBottomEdges)
+{
+  const std::array<std::string, 3> row_ids = {"common", "pane", "modeling"};
+  for (const auto size : {std::array<float, 2>{480, 320}, {1920, 1080}}) {
+    for (int mask = 0; mask < 8; mask++) {
+      auto snapshot = default_snapshot();
+      snapshot.rows.clear();
+      for (int index = 0; index < 3; index++) {
+        if (mask & (1 << index)) {
+          snapshot.rows.push_back(row_ids[index]);
+        }
+      }
+      for (const float x : {0.0f, size[0] / 2, size[0]}) {
+        for (const float y : {0.0f, size[1]}) {
+          SCOPED_TRACE(testing::Message()
+                       << size[0] << "x" << size[1] << " rows=" << mask << " @ " << x << "," << y);
+          const auto layout = layout_menu(
+              snapshot, size[0], size[1], x, y, {}, {}, measured(snapshot));
+          ASSERT_TRUE(layout.supported);
+          const auto *center = rect(layout, "views");
+          ASSERT_NE(center, nullptr);
+          EXPECT_EQ(hit_menu(layout, x, y), "views");
+          for (const auto &item : layout.rects) {
+            if (item.id == "views") {
+              continue;
+            }
+            EXPECT_TRUE(item.x >= center->x + center->width || item.x + item.width <= center->x ||
+                        item.y >= center->y + center->height || item.y + item.height <= center->y)
+                << item.id << " overlaps central button";
+          }
+        }
+      }
+    }
+  }
+}
+
 TEST(axismeld_hotbox_menu, CenterOnlyCanOpenAGlobalMappedMenu)
 {
   auto snapshot = default_snapshot();

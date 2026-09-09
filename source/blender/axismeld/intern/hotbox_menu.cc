@@ -306,11 +306,12 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
   }
   std::vector<float> row_positions;
   if (normal_rows) {
+    const MenuRect *center = build.rect("views");
+    const float row_origin = center ? center->y : center_y - row_height / 2;
     for (const auto &row : rows) {
-      row_positions.push_back(center_y - row_height / 2 +
-                              (row.first->id == "common" ? 64 :
-                               row.first->id == "pane"   ? 32 :
-                                                           -32));
+      row_positions.push_back(row_origin + (row.first->id == "common" ? 64 :
+                                            row.first->id == "pane"   ? 32 :
+                                                                        -32));
     }
   }
   else {
