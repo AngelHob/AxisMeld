@@ -224,6 +224,8 @@ class HotboxCatalogTest(unittest.TestCase):
             changed(lambda value: value.__setitem__('generation', math.nan)),
             changed(lambda value: value['settings'].__setitem__('transparency', True)),
             changed(lambda value: value['menus'][0].__setitem__('extra', 'field')),
+            changed(lambda value: value['menus'][0].update(
+                kind='command', command='view.frame_all', children=[])),
             changed(lambda value: value['menus'][0].__setitem__('id', '公共')),
             changed(lambda value: value['menus'][0].__setitem__('label', 'x' * 129)),
             changed(lambda value: node_by_id(value['menus'], 'pane.view.frame_all').__setitem__(

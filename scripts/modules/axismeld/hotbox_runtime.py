@@ -59,9 +59,13 @@ def validate_snapshot(value):
     menus = value['menus']
     if not isinstance(menus, list):
         raise ValueError('menus must be an array')
-    if [node.get('id') if isinstance(node, dict) else None for node in menus] != [
+    if not all(isinstance(node, dict) for node in menus):
+        raise ValueError('root menu groups must be objects')
+    if [node.get('id') for node in menus] != [
             'common', 'pane', 'center', 'modeling']:
         raise ValueError('root menus must be common, pane, center and modeling in order')
+    if not all(node.get('kind') == 'menu' for node in menus):
+        raise ValueError('root menu groups must have menu kind')
 
     identifiers = set()
     menu_ids = set()
