@@ -385,6 +385,12 @@ FINISHED/replayable 门禁。下方早期 record(...finished,replayable) 草案�
 保留已审核的容器接口，失败/取消/modal 不入历史通过实际 dispatch 测试，容量/去重通过容器测试。
 不要仅为复现草案签名而新增重复的成功状态判断层。
 
+会话层契约：独立保留 session document；普通 `reload_settings(session=None)` 保留它，显式有效
+document 原子替换，显式空 settings document 清空，无效 document 不覆盖现有有效会话层并报诊断。
+文件覆盖关闭时 Controls 仅更新该会话层；开启时按当前有效显示值形成用户修改意图，仅把被改
+设置合入 default/studio/user 的模型后保存差异，移除会话层该设置的覆盖以立即显示用户选择，
+其余会话字段保留且不写盘。`rows` 仍为既有原子列表字段，`center_buttons` 按单个鼠标键更新。
+
 - [ ] **1. 写设置和历史 RED。** `resolve_hotbox` 无 bpy 测试与安装态偏好测试分别执行；历史不依赖 current scene。下面测试加入 Task 1 的 unittest.TestCase 并带 self 参数，确保 discover 实际收集。
 
 ```python
