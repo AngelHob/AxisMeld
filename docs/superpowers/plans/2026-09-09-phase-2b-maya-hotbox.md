@@ -339,7 +339,7 @@ if (!root) {
 ```
 
 解析代码只放编辑器 model 文件；GTest 为 parser 加 malformed/超限测试，链接 bf_blenlib 的现有模块依赖，不引入第三方 JSON 库。
-- [ ] **3. 替换原固定四向 draw 和 LMB 判断。** HotboxData 新增 snapshot、open_path、active_mouse、pending_leaf、menu_layout；绘制只消费布局矩形和候选，不调用 adapter。
+- [ ] **3. 替换原固定四向 draw 和 LMB 判断。** HotboxData 新增 snapshot、open_path、scroll_offsets、active_mouse、pending_leaf、menu_layout；绘制只消费布局矩形和候选，不调用 adapter。
 状态为主热盒、下拉浏览、中央划选、关闭后 guard，短按资格单独单向清除。中心映射 null 只取消短按，不执行；普通菜单映射进入下拉而不是 marking。
 
 ```cpp
@@ -351,7 +351,8 @@ const std::string item = axismeld::hit_menu(data.menu_layout, x, y);
 ```
 
 - [ ] **4. 实现点击和拖选两条路径。** 菜单标题按下展开；松开在标题/父项保持菜单；按住拖到叶项松开执行；点击浏览后需新按下+释放才能执行。子菜单 hover 打开，退回父菜单不丢失路径；切另一标题替换 open_path。另一个鼠标键不得提交当前候选。
-- [ ] **5. 中央/边缘绘制与命中。** 主目录可见时不显示方向标签；中央鼠标按下才画七视图。屏幕边缘保留原始中心命中，行与列表独立向内排布。按照 layout_menu 提供的所有可达菜单矩形画文字、禁用/候选与滚动提示，标签测量与点击矩形同一 UI scale。
+- [ ] **5. 中央/边缘绘制与命中。** 主目录可见时不显示方向标签；中央鼠标按下才画七视图。按 Task 2 的中央边角扩展规则保留实际捕获原点，行与列表独立向内排布。按照 layout_menu 提供的所有可达菜单矩形画文字、禁用/候选与滚动提示，标签测量与点击矩形同一 UI scale。
+滚动仅改变相应 owner 的 scroll_offsets；滚动祖先前收起其更深路径。保留子级滚动时父级标题位置；@scroll: 控件只导航、不交给语义派发器。原生解析器拒绝同前缀普通节点 ID。
 - [ ] **6. 命令提交与重建。** C++ 用 `WM_operator_name_call` 调用 `AXISMELD_OT_hotbox_dispatch`，不执行任意字符串。close_before 策略由共享接口的 hotbox_command_closes 确定，不能由用户 JSON 指定；刷新快照仅在即时命令成功、设置改变或新 invoke 时发生。即时命令后通过 AXISMELD_OT_hotbox_refresh 和隐藏 RNA 返回通道刷新快照；设置通过 AXISMELD_OT_hotbox_setting 修改并刷新。区域改变后禁止回调原 draw。Space 先松取消未完成鼠标动作并启用只等待鼠标 RELEASE 的 guard。
 - [ ] **7. 更新完整 GUI 回归并提交。** 覆盖 B1–B4/B6–B9；旧视图/BOXCLIP/生命周期用例保留。断言主目录截图、RMB 七向数值、click/drag 的调用次数、模式改变无 stale pointers、禁用项/NE 不执行、失焦后重新使用。不能只把旧 LMB 测试整体替换成 RMB 而丢掉其余基线。
 
