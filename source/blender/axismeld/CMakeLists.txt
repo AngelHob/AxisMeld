@@ -9,6 +9,7 @@ set(INC_SYS
 )
 set(SRC
   intern/identity.cc
+  AXM_hotbox_state.hh
   AXM_identity.hh
   AXM_transform_axis.hh
 )
@@ -20,6 +21,7 @@ add_library(bf::axismeld ALIAS bf_axismeld)
 
 if(WITH_GTESTS)
   set(TEST_SRC
+    tests/hotbox_state_test.cc
     tests/identity_test.cc
     tests/transform_axis_test.cc
   )
