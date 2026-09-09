@@ -213,7 +213,8 @@ struct MenuRect {
 struct MenuLayout { std::vector<MenuRect> rects; bool supported; };
 MenuLayout layout_menu(const MenuSnapshot &, float width, float height,
                        float center_x, float center_y,
-                       const std::vector<std::string> &open_path, int scroll,
+                       const std::vector<std::string> &open_path,
+                       const std::unordered_map<std::string, int> &scroll_offsets,
                        const std::unordered_map<std::string, float> &label_widths);
 std::string hit_menu(const MenuLayout &, float x, float y);
 }
@@ -221,6 +222,10 @@ std::string hit_menu(const MenuLayout &, float x, float y);
 
 label_widths 以节点 ID 映射逻辑像素宽度；原生在打开/缩放重布局时用 BLF 测量并除 UI scale，
 MenuRect.interactive 对禁用项和分隔项为 false：保留绘制/提示所需 ID，但 hit_menu 不返回它们。
+scroll_offsets 按 root row / menu ID 保存各自偏移；打开或滚动子菜单不得改变祖先标题的位置。
+布局只做保持 open_path 当前父项可见的最小归一化；Task 4 滚动祖先时先收起其更深路径。
+这是未发布内部接口的直接替换，不保留单 int 兼容 wrapper；测试父级锚点和子级滚动相互独立。
+单个实测标签无法完整放入可用宽度时 supported=false；默认目录在支持尺寸仍须完整可达。
 布局滚动控件使用保留 ID `@scroll:<owner>:previous` / `@scroll:<owner>:next`，只导航，不派发命令。
 普通目录节点不得以 `@scroll:` 开头；Python（Task 2 补充）与 native（Task 4）边界都校验并测试。
 纯测试使用固定字面宽度。非空目录缺失宽度或出现非有限/负宽度时返回 supported=false，不能
