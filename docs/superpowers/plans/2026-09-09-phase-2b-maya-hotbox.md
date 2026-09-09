@@ -98,6 +98,8 @@ class RecentCommands:
 若子工具返回 RUNNING_MODAL，其 handler 属于子工具，内部 wrapper 返回 FINISHED 但不得记为成功历史。
 内部 `AXISMELD_OT_hotbox_setting` 属性为 `setting`、`value`。设置 ID 仅有 `style`、`transparency`、
 `row.common`、`row.pane`、`row.modeling`；设置后允许一次新快照，不在 motion 中重读。
+行设置点击使用 value=`toggle`，按当前有效配置切换；持久化仍保存规范顺序的显式 rows 列表。
+中央与 Controls 的样式子菜单复用构造函数，但使用不同节点 ID 前缀，避免全树 ID 重复。
 
 刷新接口为内部 `AXISMELD_OT_hotbox_refresh`（EXEC，无参数）：调用 snapshot(context)，把 JSON
 写入 Python 注册的 `WindowManager.axismeld_hotbox_snapshot` StringProperty（HIDDEN、SKIP_SAVE）。
