@@ -204,7 +204,12 @@ def apply_validated_layer(base, patch, validate):
 
 ```cpp
 namespace blender::axismeld {
-struct MenuRect { std::string id; float x, y, width, height; int depth; };
+struct MenuRect {
+  std::string id;
+  float x, y, width, height;
+  int depth;
+  bool interactive = true;
+};
 struct MenuLayout { std::vector<MenuRect> rects; bool supported; };
 MenuLayout layout_menu(const MenuSnapshot &, float width, float height,
                        float center_x, float center_y,
@@ -215,6 +220,9 @@ std::string hit_menu(const MenuLayout &, float x, float y);
 ```
 
 label_widths 以节点 ID 映射逻辑像素宽度；原生在打开/缩放重布局时用 BLF 测量并除 UI scale，
+MenuRect.interactive 对禁用项和分隔项为 false：保留绘制/提示所需 ID，但 hit_menu 不返回它们。
+布局滚动控件使用保留 ID `@scroll:<owner>:previous` / `@scroll:<owner>:next`，只导航，不派发命令。
+普通目录节点不得以 `@scroll:` 开头；Python（Task 2 补充）与 native（Task 4）边界都校验并测试。
 纯测试使用固定字面宽度。非空目录缺失宽度或出现非有限/负宽度时返回 supported=false，不能
 用另一套猜测字宽造成绘制与命中不一致。该纯头显式 include array/cstdint/string/string_view/vector/unordered_map。
 
