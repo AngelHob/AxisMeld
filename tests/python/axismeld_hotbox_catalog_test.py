@@ -80,7 +80,13 @@ class HotboxCatalogTest(unittest.TestCase):
         self.assertEqual(node_by_id(catalog, 'modeling.uv')['children'], [])
         for identifier in ('views.left', 'views.back', 'views.bottom',
                            'pane.panels.left', 'pane.panels.back', 'pane.panels.bottom'):
-            self.assertFalse(node_by_id(catalog, identifier)['enabled'])
+            self.assertTrue(node_by_id(catalog, identifier)['enabled'])
+
+    def test_layout_control_prefix_cannot_be_injected_as_catalog_node(self):
+        value = hotbox_runtime.make_snapshot(generation=1)
+        value['menus'][0]['children'][0]['id'] = '@scroll:common:next'
+        with self.assertRaisesRegex(ValueError, 'reserved'):
+            hotbox_runtime.validate_snapshot(value)
 
     def test_catalog_ids_are_unique_and_copies_do_not_share_mutable_nodes(self):
         first = default_catalog()

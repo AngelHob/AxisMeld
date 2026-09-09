@@ -13,7 +13,8 @@ VIEW_OPS = {'view.focus_selected': ('view_selected', {'use_all_regions': False})
             'view.frame_all': ('view_all', {'center': False}),
             'view.orbit': ('rotate', {}), 'view.pan': ('move', {}), 'view.dolly': ('zoom', {})}
 VIEW_ACTIONS = {'view.toggle_quad': 'TOGGLE_QUAD', 'view.perspective': 'PERSPECTIVE',
-                'view.side': 'SIDE', 'view.front': 'FRONT', 'view.top': 'TOP'}
+                'view.side': 'SIDE', 'view.front': 'FRONT', 'view.top': 'TOP',
+                'view.left': 'LEFT', 'view.back': 'BACK', 'view.bottom': 'BOTTOM'}
 
 
 def modeling_context(context):

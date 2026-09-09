@@ -412,6 +412,11 @@ bool axismeld_view_action(bContext *C, wmOperator *op, const HotboxAction action
               action == HotboxAction::Front ? RV3D_VIEW_FRONT :
                                               RV3D_VIEW_TOP);
   }
+  else if (ELEM(action, HotboxAction::Left, HotboxAction::Back, HotboxAction::Bottom)) {
+    next.axis(action == HotboxAction::Left ? RV3D_VIEW_LEFT :
+              action == HotboxAction::Back ? RV3D_VIEW_BACK :
+                                             RV3D_VIEW_BOTTOM);
+  }
   else {
     return false;
   }
@@ -445,6 +450,9 @@ void VIEW3D_OT_axismeld_view(wmOperatorType *ot)
       {int(HotboxAction::Side), "SIDE", 0, "Side", "View from the right"},
       {int(HotboxAction::Front), "FRONT", 0, "Front", "View from the front"},
       {int(HotboxAction::Top), "TOP", 0, "Top", "View from above"},
+      {int(HotboxAction::Left), "LEFT", 0, "Left", "View from the left"},
+      {int(HotboxAction::Back), "BACK", 0, "Back", "View from behind"},
+      {int(HotboxAction::Bottom), "BOTTOM", 0, "Bottom", "View from below"},
       {0, nullptr, 0, nullptr, nullptr},
   };
   ot->name = "AxisMeld View";

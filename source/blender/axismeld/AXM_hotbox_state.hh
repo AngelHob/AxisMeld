@@ -7,7 +7,18 @@
 namespace blender::axismeld {
 
 enum class HotboxPhase { Idle, Pending, Held, Marking, Cancelled };
-enum class HotboxAction { None, ToggleQuad, Perspective, Side, Front, Top, Close };
+enum class HotboxAction {
+  None,
+  ToggleQuad,
+  Perspective,
+  Side,
+  Front,
+  Top,
+  Close,
+  Left,
+  Back,
+  Bottom
+};
 
 inline HotboxAction hotbox_direction(const float dx, const float dy, const float dead_zone)
 {
@@ -19,15 +30,21 @@ inline HotboxAction hotbox_direction(const float dx, const float dy, const float
     return HotboxAction::None;
   }
 
-  const float abs_x = std::fabs(dx);
-  const float abs_y = std::fabs(dy);
-  if (abs_x == abs_y) {
+  constexpr double sector_angle = 3.14159265358979323846 / 4.0;
+  const double angle = std::atan2(double(dy), double(dx));
+  const double nearest = std::round(angle / sector_angle);
+  if (std::abs(std::abs(angle - nearest * sector_angle) - sector_angle / 2.0) < 1e-6) {
     return HotboxAction::None;
   }
-  if (abs_x > abs_y) {
-    return dx > 0.0f ? HotboxAction::Side : HotboxAction::Top;
-  }
-  return dy > 0.0f ? HotboxAction::Perspective : HotboxAction::Front;
+  constexpr HotboxAction sectors[] = {HotboxAction::Side,
+                                      HotboxAction::None,
+                                      HotboxAction::Perspective,
+                                      HotboxAction::Left,
+                                      HotboxAction::Top,
+                                      HotboxAction::Back,
+                                      HotboxAction::Front,
+                                      HotboxAction::Bottom};
+  return sectors[(int(nearest) + 8) % 8];
 }
 
 class HotboxState {

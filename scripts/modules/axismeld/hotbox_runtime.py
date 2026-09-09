@@ -87,6 +87,8 @@ def validate_snapshot(value):
 
         identifier = node['id']
         _validate_text(identifier, 'node id', ascii_only=True, nonempty=True, max_length=MAX_TEXT)
+        if identifier.startswith('@scroll:'):
+            raise ValueError('node id uses reserved layout control prefix')
         if identifier in identifiers:
             raise ValueError(f'duplicate menu node id: {identifier}')
         identifiers.add(identifier)

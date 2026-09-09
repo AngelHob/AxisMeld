@@ -126,13 +126,41 @@ TEST(axismeld_hotbox_state, CardinalDirectionsUseFixedViewMapping)
   EXPECT_EQ(hotbox_direction(-40.0f, 0.0f, 12.0f), HotboxAction::Top);
 }
 
-TEST(axismeld_hotbox_state, DeadZoneAndDiagonalBoundarySelectNothing)
+TEST(axismeld_hotbox_state, SevenDirections)
 {
   EXPECT_EQ(hotbox_direction(3.0f, 4.0f, 5.0f), HotboxAction::None);
   EXPECT_EQ(hotbox_direction(40.0f, 40.0f, 12.0f), HotboxAction::None);
-  EXPECT_EQ(hotbox_direction(-40.0f, 40.0f, 12.0f), HotboxAction::None);
-  EXPECT_EQ(hotbox_direction(40.0f, -40.0f, 12.0f), HotboxAction::None);
-  EXPECT_EQ(hotbox_direction(-40.0f, -40.0f, 12.0f), HotboxAction::None);
+  EXPECT_EQ(hotbox_direction(-40.0f, 40.0f, 12.0f), HotboxAction::Left);
+  EXPECT_EQ(hotbox_direction(40.0f, -40.0f, 12.0f), HotboxAction::Bottom);
+  EXPECT_EQ(hotbox_direction(-40.0f, -40.0f, 12.0f), HotboxAction::Back);
+  EXPECT_EQ(hotbox_direction(0.0f, 12.0f, 12.0f), HotboxAction::None);
+}
+
+TEST(axismeld_hotbox_state, EightSectorBoundariesAreEmptyWithinTolerance)
+{
+  constexpr double pi = 3.14159265358979323846;
+  const HotboxAction sectors[] = {HotboxAction::Side,
+                                  HotboxAction::None,
+                                  HotboxAction::Perspective,
+                                  HotboxAction::Left,
+                                  HotboxAction::Top,
+                                  HotboxAction::Back,
+                                  HotboxAction::Front,
+                                  HotboxAction::Bottom};
+  for (int i = 0; i < 8; i++) {
+    const double boundary = (i + 0.5) * pi / 4.0;
+    for (const double offset : {-0.0000005, 0.0, 0.0000005}) {
+      EXPECT_EQ(hotbox_direction(
+                    100 * std::cos(boundary + offset), 100 * std::sin(boundary + offset), 12),
+                HotboxAction::None);
+    }
+    EXPECT_EQ(hotbox_direction(
+                  100 * std::cos(boundary - 0.00001), 100 * std::sin(boundary - 0.00001), 12),
+              sectors[i]);
+    EXPECT_EQ(hotbox_direction(
+                  100 * std::cos(boundary + 0.00001), 100 * std::sin(boundary + 0.00001), 12),
+              sectors[(i + 1) % 8]);
+  }
 }
 
 TEST(axismeld_hotbox_state, LogicalDeadZoneSupportsDpiScaledCoordinates)

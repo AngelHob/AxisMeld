@@ -6,6 +6,7 @@ Catches swapped locked panes, discarded hidden poses, retargeted axis commands,
 and accidental geometry edits. Expected quaternions are literal Blender Z-up poses.
 """
 import os
+import json
 from pathlib import Path
 import sys
 import traceback
@@ -76,6 +77,32 @@ def suite():
         region = region or regions()[0]
         with bpy.context.temp_override(window=win, area=area, region=region):
             check(bpy.ops.view3d.axismeld_view(action=kind) == {'FINISHED'}, kind + ': failed')
+
+    # Independent literal Blender Z-up orientations, exercised through the installed adapter.
+    from axismeld import adapter, hotbox_runtime
+    with bpy.context.temp_override(window=win, area=area, region=regions()[0]):
+        snapshots = [json.loads(hotbox_runtime.snapshot(bpy.context)) for _ in range(2)]
+        check(snapshots[1]['generation'] > snapshots[0]['generation'] > 0,
+              'installed snapshots must have increasing positive generations')
+        pending = list(snapshots[1]['menus'])
+        found = set()
+        while pending:
+            node = pending.pop()
+            pending.extend(node['children'])
+            if node['command'] in {'view.left', 'view.back', 'view.bottom'}:
+                check(node['enabled'] and not node['reason'], 'installed new view capability disabled')
+                found.add(node['id'])
+        check(found == {'views.left', 'views.back', 'views.bottom',
+                        'pane.panels.left', 'pane.panels.back', 'pane.panels.bottom'},
+              'installed new direction entries missing')
+        start = pose(rv(regions()[0]))
+        for command, rotation in (
+                ('view.left', (0.5, 0.5, -0.5, -0.5)),
+                ('view.back', (0, 0, 0.70710678, 0.70710678)),
+                ('view.bottom', (0, 1, 0, 0))):
+            check(adapter.run(bpy.context, command, invoke=False) == {'FINISHED'}, command + ' failed')
+            same(pose(rv(regions()[0])), (rotation, start[1], start[2], 'ORTHO'), command)
+    print('PASS installed seven-view adapter and snapshot capability/generation', flush=True)
 
     cube = bpy.data.objects['Cube']
     geometry = (tuple(tuple(row) for row in cube.matrix_world),
@@ -293,7 +320,7 @@ def suite():
             rv(pane).view_location = expected[i][1]
             rv(pane).view_distance = expected[i][2]
 
-    for source_index, restore_axis in ((0, 'TOP'), (2, 'FRONT')):
+    for source_index, restore_axis in ((0, 'TOP'), (2, 'FRONT'), (0, 'BOTTOM'), (2, 'BACK')):
         for navigation in ('zoom', 'pan'):
             action('SIDE', panes[source_index])
             before = [pose(rv(p)) for p in panes]
@@ -321,21 +348,31 @@ def suite():
             action(restore_axis, panes[source_index])
             yield from settle()
             # Restored contributors must allow the next real navigation to recalculate.
-            native_zoom(panes[0])
+            before_restore_navigation = pose(rv(panes[0]))
+            if navigation == 'zoom':
+                native_zoom(panes[0])
+            else:
+                with bpy.context.temp_override(window=win, area=area, region=panes[0]):
+                    check(bpy.ops.view3d.view_pan('INVOKE_DEFAULT', type='PANUP') == {'FINISHED'},
+                          'native pan after contributor restoration failed')
             yield from settle()
-            distance = expected[0][2] / 1.2
+            check(pose(rv(panes[0])) != before_restore_navigation,
+                  'navigation after contributor restoration did not move the view')
+            distance = expected[0][2] / 1.2 if navigation == 'zoom' else expected[0][2]
             half_y = distance * panes[0].height / panes[0].width
-            half_z = distance * panes[2].height / panes[2].width
-            x, y, _ = expected[0][1]
-            z = expected[2][1][2]
+            front_distance = distance if navigation == 'zoom' else expected[2][2]
+            half_z = front_distance * panes[2].height / panes[2].width
+            x, y, _ = rv(panes[0]).view_location
+            z = rv(panes[2]).view_location.z
             # TOP zoom shares X with FRONT; FRONT retains its own Z center.
             zoom_planes = ((0, 1, 0, half_y - y), (-1, 0, 0, x + distance),
                            (0, -1, 0, y + half_y), (1, 0, 0, distance - x),
                            (0, 0, 1, half_z - z), (0, 0, -1, z + half_z))
             recalculated = [(True, zoom_planes), clip_states[1], (True, zoom_planes), clip_states[3]]
-            verify_navigation_clips(recalculated, f'native zoom after restoring {restore_axis}')
+            verify_navigation_clips(recalculated, f'native {navigation} after restoring {restore_axis}')
             reset_linked_fixture()
             action('TOP', panes[0])
+            action('FRONT', panes[2])
             yield from settle()
 
     # A retained AxisMeld cache must not alter navigation under another preset.
@@ -478,7 +515,10 @@ def suite():
     for dx, dy, quat, projection in [
             (90, 0, (0.5, 0.5, 0.5, 0.5), 'ORTHO'),
             (0, -90, (0.70710678, 0.70710678, 0, 0), 'ORTHO'),
-            (-90, 0, (1, 0, 0, 0), 'ORTHO')]:
+            (-90, 0, (1, 0, 0, 0), 'ORTHO'),
+            (-90, 90, (0.5, 0.5, -0.5, -0.5), 'ORTHO'),
+            (-90, -90, (0, 0, 0.70710678, 0.70710678), 'ORTHO'),
+            (90, -90, (0, 1, 0, 0), 'ORTHO')]:
         yield from locate()
         view = pose(rv(regions()[0]))
         yield from gesture(dx, dy)

@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later */
 #pragma once
 
+#include "AXM_hotbox_menu.hh"
 #include "AXM_hotbox_state.hh"
 
 namespace blender {

@@ -64,11 +64,11 @@ def _view_items(prefix):
     items = (
         ('perspective', 'Perspective View', 'view.perspective', True),
         ('side', 'Side View', 'view.side', True),
-        ('bottom', 'Bottom View', 'view.bottom', False),
+        ('bottom', 'Bottom View', 'view.bottom', True),
         ('front', 'Front View', 'view.front', True),
-        ('back', 'Back View', 'view.back', False),
+        ('back', 'Back View', 'view.back', True),
         ('top', 'Top View', 'view.top', True),
-        ('left', 'Left View', 'view.left', False),
+        ('left', 'Left View', 'view.left', True),
     )
     return [_command(f'{prefix}.{suffix}', label, command, enabled=operational,
                      reason='' if operational else 'Adapter not implemented')
