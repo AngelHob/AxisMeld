@@ -307,14 +307,17 @@ class AXISMELD_OT_release_probe(bpy.types.Operator):
         return {'FINISHED'} if event.type == 'ESC' else {'RUNNING_MODAL'}
 ```
 
-- [ ] **2. 实现专用 guard。** 参数：`trigger_type`（实际键）、`mouse_type`（实际鼠标键或 NONE）、`trigger_down`、`mouse_down`。只消费捕获键的 RELEASE/自动重复；其他事件 `RUNNING_MODAL | PASS_THROUGH`；全部释放 FINISHED；失焦取消；再次收到捕获键的新非重复 PRESS 表示旧 RELEASE 已丢失，清除此键的等待并放行新按下。不得长期吞新按键。
+- [ ] **2. 实现专用 guard。** 参数：`trigger_type`（实际键）、`mouse_type`（实际鼠标键或 NONE）、`trigger_down`、`mouse_down`。只消费捕获键的 RELEASE/自动重复；有等待状态时其他事件仅返回 `OPERATOR_PASS_THROUGH`；全部释放 FINISHED；失焦取消；再次收到捕获键的新非重复 PRESS 表示旧 RELEASE 已丢失，清除此键的等待并放行新按下。不得长期吞新按键。
+本版 WM 对精确 `RUNNING_MODAL | PASS_THROUGH` 返回组合会停止后续 modal 分发，故不能用于此 guard。
+单独 PASS_THROUGH 保留已有 handler 并继续分发；终结分支仍按 FINISHED/CANCELLED 清理，实测最后
+一个待释放键被新 PRESS 替代时同样到达子工具。此修正不改全局 WM。
 
 ```cpp
 if (event->type == data.trigger && event->val == KM_RELEASE) {
   data.trigger_down = false;
   return data.mouse_down ? OPERATOR_RUNNING_MODAL : OPERATOR_FINISHED;
 }
-return OPERATOR_RUNNING_MODAL | OPERATOR_PASS_THROUGH;
+return OPERATOR_PASS_THROUGH;
 ```
 
 guard 的默认状态只包括本热盒已经捕获的 DOWN；不猜整个键盘状态。无待释放键时不创建 handler。
