@@ -65,7 +65,7 @@ class AXISMELD_Preferences(KeyConfigPreferences):
 
     hotbox_tap_seconds: FloatProperty(
         name='Hotbox Tap Threshold', default=0.4, min=0.1, max=1.0,
-        description='Maximum Space tap duration for single/quad view switching')
+        description='Maximum trigger-key tap duration for single/quad view switching')
 
     def draw(self, layout):
         layout.label(text='Maya 2026 - Modeling baseline (adapted)')
@@ -74,7 +74,7 @@ class AXISMELD_Preferences(KeyConfigPreferences):
         layout.prop(self, 'use_file_overrides')
         layout.operator('axismeld.reload_profile')
         layout.label(text=str(runtime.profile_directory() or 'No configuration directory'))
-        layout.label(text='Space view hotbox is adapted; full Maya hotbox, snapping and UV are not implemented')
+        layout.label(text='View hotbox is adapted; full Maya hotbox, snapping and UV are not implemented')
         for message in runtime.diagnostics:
             layout.label(text=message, icon='ERROR')
 

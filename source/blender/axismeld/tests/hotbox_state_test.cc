@@ -85,8 +85,12 @@ TEST(axismeld_hotbox_state, CancelConsumesReleaseAndAllowsFreshRepress)
 {
   HotboxState state;
   EXPECT_TRUE(state.begin(0.0, 0.4));
+  state.begin_marking();
+  state.motion(40.0f, 0.0f, 12.0f);
+  ASSERT_EQ(state.candidate(), HotboxAction::Side);
   state.cancel();
   EXPECT_EQ(state.phase(), HotboxPhase::Cancelled);
+  EXPECT_EQ(state.candidate(), HotboxAction::None);
   EXPECT_FALSE(state.begin(0.1, 0.4, true));
   EXPECT_EQ(state.release_trigger(0.2), HotboxAction::None);
   EXPECT_EQ(state.phase(), HotboxPhase::Idle);

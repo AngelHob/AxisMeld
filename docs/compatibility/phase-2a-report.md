@@ -48,3 +48,43 @@ Task 3 首轮审查补充了“删除唯一 user hotbox 项后，设置层级不
 
 见 [Phase 2A 人工验收表](phase-2a-manual-test.md)。尤其不能由自动化推断视觉平滑、
 物理重复键边界、实际鼠标手感或完整 Maya 对等。
+
+## 全分支审查后的最终修复验证（2026-09-09）
+
+最终审查发现：AxisMeld 自身刷新有贡献窗格检查，但原生 zoom/pan 经
+`view3d_boxview_sync` 直接进入 `view3d_boxview_clip`，仍会在缺少 TOP/BOTTOM 或
+FRONT/BACK 的 BOXCLIP 窗格时写入退化裁剪。检查现已统一放在该原生入口的私有
+AxisMeld 谓词中，只在当前预设为 AxisMeld、区域已有缓存且拓扑匹配时保留原有裁剪体积。
+完整贡献恢复后继续原生计算；原生联动位置/距离、锁定标记和独立用户裁剪保持既有语义。
+缓存仍只持有数值，`clipbb` 继续归 RegionView3D 所有。
+
+取消测试现在先创建有效 SIDE 候选再取消；偏好里的热盒说明改为与触发键无关的文字。
+边缘标签裁切和既有 PNG metadata 警告保持原有披露，没有扩大到全局导航、缩放、UV
+或完整 Maya 菜单。Phase 1.1 仍需另行批准。
+
+本轮使用同一独立测试安装目录。最新构建和暂存 exe 的 SHA256 均为
+`7A606A5B96723A75129DD9124657165097BCBB56389FB7ADE89E5E3BEB92050F`。
+上面 Task 3 表中的 `35156F...` 是当时实际测试的历史哈希，未改写为本轮结果。
+
+持久日志目录：`D:/source/AxisMeld-build/phase2a-final-fix-validation-20260909`。
+
+| 门禁 | 结果 | 日志文件 |
+|---|---|---|
+| 真实导航 RED | 修复前 exit 1；缺 TOP/FRONT × zoom/pan 均导致两个裁剪窗格的六面数值错误，共 8 条失败 | `hotbox-native-red.log` |
+| Release 构建 | `cmake --build D:/source/AxisMeld-build --config Release --target blender axismeld_hotbox_state_test --parallel 8`，exit 0 | `build-green.log` |
+| 独立暂存 | `cmake --install D:/source/AxisMeld-build --config Release --prefix D:/source/AxisMeld-build/phase2a-test-install`，exit 0 | `install-green.log` |
+| 状态机 | `ctest -C Release --test-dir D:/source/AxisMeld-build -R '^axismeld_hotbox_state$' --output-on-failure`；1/1 target、13/13 cases | `state-ctest-green.log`、`state-ctest-detail-green.log` |
+| 安装态输入 | `C:/Python314/python.exe <日志目录>/installed-input-runner.py`；私有 TEMP/config，11/11 | `installed-input-green.log` |
+| 完整热盒 GUI | `C:/Python314/python.exe tests/python/axismeld_hotbox_ui_runner.py --blender D:/source/AxisMeld-build/phase2a-test-install/blender.exe`；exit 0、终态 PASS 标记 | `hotbox-native-final-green.log` |
+| 哈希与日志检查 | raw/stage 哈希一致；最终 GUI/安装输入日志均为 0 traceback、0 空 hotbox keymap 警告 | `exe-hashes.log`、`log-checks.log` |
+
+新增 GUI 检查直接执行原生 `zoom('EXEC_DEFAULT')` 和 `view_pan('INVOKE_DEFAULT')`，
+验证实际六个面、原生锁定窗格联动、独立裁剪、恢复贡献后的原生 zoom 数值，以及切到
+Industry Compatible 和 AxisMeld 预设内从未接管的原生区域两种隔离情形。RNA 赋值仅用于
+还原测试夹具，没有替代这些真实导航调用。既有完整 GUI 覆盖仍通过。
+
+首个修复后 GUI 日志 `hotbox-native-green.log` 中，新增导航用例已通过，但新增原生区域
+夹具留下隐藏四视图布局，使后续旧区域用例失败；补上原生退出四视图的夹具清理后，
+上表最终完整 GUI 通过。该失败日志保留，没有覆盖或误报为最终成功。
+
+本轮只完成最终审查修复及覆盖验证，仍等待控制器的限定复审和用户人工验收；不代表集成批准。

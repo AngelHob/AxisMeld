@@ -184,7 +184,7 @@ static std::vector<ARegion *> window_regions(ScrArea *area)
   return regions;
 }
 
-static std::vector<uintptr_t> topology(ScrArea *area)
+static std::vector<uintptr_t> topology(const ScrArea *area)
 {
   std::vector<uintptr_t> signature;
   for (const ARegion &region : area->regionbase) {
@@ -201,20 +201,6 @@ static void refresh_quad_clipping(bContext *C, ViewCache &cache, const bool layo
   ScrArea *area = CTX_wm_area(C);
   const auto regions = window_regions(area);
   if (regions.size() != 4) {
-    return;
-  }
-  bool has_xy_bounds = false;
-  bool has_z_bounds = false;
-  for (const ARegion *region : regions) {
-    const auto *rv = static_cast<const RegionView3D *>(region->regiondata);
-    if (RV3D_LOCK_FLAGS(rv) & RV3D_BOXCLIP) {
-      has_xy_bounds |= ELEM(rv->view, RV3D_VIEW_TOP, RV3D_VIEW_BOTTOM);
-      has_z_bounds |= ELEM(rv->view, RV3D_VIEW_FRONT, RV3D_VIEW_BACK);
-    }
-  }
-  /* Axis actions may remove a boundary contributor while retaining quad locks.
-   * Keep the last valid volume until native clipping can derive all three extents. */
-  if (!has_xy_bounds || !has_z_bounds) {
     return;
   }
   if (layout_changed) {
@@ -331,6 +317,7 @@ static bool toggle_quad(bContext *C, ViewCache &cache)
     for (int i = 0; i < 4; i++) {
       cache.slots[i].pose.apply(*static_cast<RegionView3D *>(regions[i]->regiondata));
     }
+    cache.topology = topology(area);
     refresh_quad_clipping(C, cache, true);
   }
   cache.topology = topology(area);
@@ -342,6 +329,33 @@ static bool toggle_quad(bContext *C, ViewCache &cache)
 void axismeld_view_cache_free(void *cache)
 {
   delete static_cast<ViewCache *>(cache);
+}
+
+bool axismeld_boxview_clip_preserve(const ScrArea *area)
+{
+  if (!STREQ(U.keyconfigstr, "AxisMeld_Maya_2026") || area->spacetype != SPACE_VIEW3D) {
+    return false;
+  }
+  const View3D *v3d = area->spacedata.first_as<View3D>();
+  const auto *cache = static_cast<const ViewCache *>(v3d->runtime.axismeld_view_cache);
+  if (!cache || cache->topology != topology(area)) {
+    return false;
+  }
+  bool has_xy_bounds = false;
+  bool has_z_bounds = false;
+  for (const ARegion &region : area->regionbase) {
+    if (region.regiontype != RGN_TYPE_WINDOW || !region.regiondata) {
+      continue;
+    }
+    const auto *rv = static_cast<const RegionView3D *>(region.regiondata);
+    if (RV3D_LOCK_FLAGS(rv) & RV3D_BOXCLIP) {
+      has_xy_bounds |= ELEM(rv->view, RV3D_VIEW_TOP, RV3D_VIEW_BOTTOM);
+      has_z_bounds |= ELEM(rv->view, RV3D_VIEW_FRONT, RV3D_VIEW_BACK);
+    }
+  }
+  /* Axis actions may remove a boundary contributor while retaining quad locks.
+   * Preserve the region-owned last valid volume, including during native navigation. */
+  return !has_xy_bounds || !has_z_bounds;
 }
 
 bool axismeld_view_context_poll(bContext *C)

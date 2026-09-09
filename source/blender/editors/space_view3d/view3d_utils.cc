@@ -63,6 +63,7 @@
 
 #include "UI_resources.hh"
 
+#include "view3d_axismeld.hh"
 #include "view3d_intern.hh" /* own include */
 
 namespace blender {
@@ -838,6 +839,9 @@ bool ED_view3d_camera_lock_undo_grouped_push(const char *str,
 
 void view3d_boxview_clip(ScrArea *area)
 {
+  if (axismeld_boxview_clip_preserve(area)) {
+    return;
+  }
   BoundBox *bb = MEM_new<BoundBox>("clipbb");
   float clip[6][4];
   float x1 = 0.0f, y1 = 0.0f, z1 = 0.0f, ofs[3] = {0.0f, 0.0f, 0.0f};

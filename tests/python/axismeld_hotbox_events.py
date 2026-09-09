@@ -272,6 +272,118 @@ def suite():
     for i, pane in enumerate(panes):
         same_clipping(clipping(rv(pane)), clip_states[i], 'contributor repair reset')
     print('PASS clipped directional actions preserve incomplete bounds and recompute restored contributors', flush=True)
+    # Real navigation reaches boxview_clip through native linked-view synchronization.
+    # RNA assignments below only reset the fixture; they never stand in for navigation.
+    navigation_failures = []
+
+    def verify_navigation_clips(states, label):
+        for i, pane in enumerate(panes):
+            try:
+                same_clipping(clipping(rv(pane)), states[i], f'{label} pane {i}')
+            except AssertionError as error:
+                navigation_failures.append(str(error))
+
+    def native_zoom(region):
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            check(bpy.ops.view3d.zoom('EXEC_DEFAULT', delta=1, use_cursor_init=False) == {'FINISHED'},
+                  'native zoom failed')
+
+    def reset_linked_fixture():
+        for i, pane in enumerate(panes):
+            rv(pane).view_location = expected[i][1]
+            rv(pane).view_distance = expected[i][2]
+
+    for source_index, restore_axis in ((0, 'TOP'), (2, 'FRONT')):
+        for navigation in ('zoom', 'pan'):
+            action('SIDE', panes[source_index])
+            before = [pose(rv(p)) for p in panes]
+            if navigation == 'zoom':
+                native_zoom(panes[source_index])
+            else:
+                with bpy.context.temp_override(window=win, area=area, region=panes[source_index]):
+                    check(bpy.ops.view3d.view_pan('INVOKE_DEFAULT', type='PANUP') == {'FINISHED'},
+                          'native pan failed')
+            yield from settle()
+            after = [pose(rv(p)) for p in panes]
+            check(after[source_index] != before[source_index], f'native {navigation} did not move source')
+            if navigation == 'zoom':
+                for i in (0, 2, 3):
+                    check(abs(after[i][2] - before[source_index][2] / 1.2) < 1e-5,
+                          'native linked zoom no longer synchronizes locked panes')
+            else:
+                other = 2 if source_index == 0 else 0
+                check(after[other][1] != before[other][1], 'native pan lost shared-axis linkage')
+            same(after[1], before[1], 'native navigation touched unlocked user pose')
+            verify_navigation_clips(clip_states, f'native {navigation} missing {restore_axis}')
+            check([(rv(p).lock_rotation, rv(p).show_sync_view, rv(p).use_box_clip) for p in panes] == locks,
+                  'native navigation changed quad locks')
+            reset_linked_fixture()
+            action(restore_axis, panes[source_index])
+            yield from settle()
+            # Restored contributors must allow the next real navigation to recalculate.
+            native_zoom(panes[0])
+            yield from settle()
+            distance = expected[0][2] / 1.2
+            half_y = distance * panes[0].height / panes[0].width
+            half_z = distance * panes[2].height / panes[2].width
+            x, y, _ = expected[0][1]
+            z = expected[2][1][2]
+            # TOP zoom shares X with FRONT; FRONT retains its own Z center.
+            zoom_planes = ((0, 1, 0, half_y - y), (-1, 0, 0, x + distance),
+                           (0, -1, 0, y + half_y), (1, 0, 0, distance - x),
+                           (0, 0, 1, half_z - z), (0, 0, -1, z + half_z))
+            recalculated = [(True, zoom_planes), clip_states[1], (True, zoom_planes), clip_states[3]]
+            verify_navigation_clips(recalculated, f'native zoom after restoring {restore_axis}')
+            reset_linked_fixture()
+            action('TOP', panes[0])
+            yield from settle()
+
+    # A retained AxisMeld cache must not alter navigation under another preset.
+    action('SIDE', panes[0])
+    bpy.utils.keyconfig_set(str(preset.with_name('Industry_Compatible.py')))
+    native_zoom(panes[0])
+    yield from settle()
+    check(any(sum(abs(v) for v in p[:3]) == 0 for p in rv(panes[0]).clip_planes),
+          'AxisMeld clipping guard leaked into Industry Compatible')
+    for i in (1, 3):
+        same_clipping(clipping(rv(panes[i])), clip_states[i], 'preset isolation touched independent clip')
+    bpy.utils.keyconfig_set(str(preset))
+    reset_linked_fixture()
+    action('TOP', panes[0])
+    yield from settle()
+    # The AxisMeld preset alone must not claim an untouched native quad area.
+    native_area = next(a for a in win.screen.areas if a.type == 'PROPERTIES')
+    native_area.type = 'VIEW_3D'
+    yield from settle()
+    native_region = next(r for r in native_area.regions if r.type == 'WINDOW')
+    with bpy.context.temp_override(window=win, area=native_area, region=native_region):
+        bpy.ops.screen.region_quadview()
+    yield from settle()
+    native_panes = sorted((r for r in native_area.regions if r.type == 'WINDOW'),
+                          key=lambda r: (-r.y, r.x))
+    with bpy.context.temp_override(window=win, area=native_area, region=native_panes[0]):
+        native_top = bpy.context.region_data
+        native_top.show_sync_view = True
+        native_top.use_box_clip = True
+    yield from settle()
+    check(all(sum(abs(v) for v in p[:3]) > 0.9 for p in native_top.clip_planes),
+          'native-only fixture has no valid starting volume')
+    # Set up missing TOP without ever invoking an AxisMeld view action in this area.
+    native_top.view_rotation = Quaternion((0.5, 0.5, 0.5, 0.5))
+    with bpy.context.temp_override(window=win, area=native_area, region=native_panes[0]):
+        check(bpy.ops.view3d.zoom('EXEC_DEFAULT', delta=1, use_cursor_init=False) == {'FINISHED'},
+              'native-only zoom failed')
+    yield from settle()
+    check(any(sum(abs(v) for v in p[:3]) == 0 for p in native_top.clip_planes),
+          'AxisMeld clipping guard claimed an untouched native area')
+    with bpy.context.temp_override(window=win, area=native_area, region=native_panes[0]):
+        bpy.ops.screen.region_quadview()
+    yield from settle()
+    native_area.type = 'PROPERTIES'
+    yield from settle()
+    check(not navigation_failures, '\n'.join(navigation_failures))
+    print('PASS native zoom/pan retain incomplete clipping, resume six-plane calculation and preserve preset isolation',
+          flush=True)
     # Remove only the native independent fixture before later navigation cases.
     with bpy.context.temp_override(window=win, area=area, region=panes[3]):
         bpy.ops.view3d.clip_border('INVOKE_DEFAULT')
