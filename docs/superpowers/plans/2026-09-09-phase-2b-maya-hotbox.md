@@ -380,6 +380,11 @@ Controls 中心键入口；若新增声明式 setting ID，同步窄改原生 `v
 及 `tests/hotbox_model_test.cc` 的严格校验。中心键 setting 仅接受三种已有鼠标键、已注册菜单
 ID 或禁用值，不引入任意 operator、脚本或改树配置；偏好和 Controls 使用同一更新/持久化路径。
 
+执行到 Task 5 时，Task 3 已实现 `RecentCommands.record(command)` 和真实 dispatch 的
+FINISHED/replayable 门禁。下方早期 record(...finished,replayable) 草案不要求重塑既有容器 API；
+保留已审核的容器接口，失败/取消/modal 不入历史通过实际 dispatch 测试，容量/去重通过容器测试。
+不要仅为复现草案签名而新增重复的成功状态判断层。
+
 - [ ] **1. 写设置和历史 RED。** `resolve_hotbox` 无 bpy 测试与安装态偏好测试分别执行；历史不依赖 current scene。下面测试加入 Task 1 的 unittest.TestCase 并带 self 参数，确保 discover 实际收集。
 
 ```python
