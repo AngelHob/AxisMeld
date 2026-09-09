@@ -2,6 +2,10 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 """Strict, atomic layering for non-executable hotbox settings."""
 from copy import deepcopy
+import json
+import os
+from pathlib import Path
+import tempfile
 
 from .hotbox_catalog import default_catalog
 
@@ -112,3 +116,105 @@ def resolve_hotbox(layers=()):
             continue
         value = candidate
     return deepcopy(value), diagnostics
+
+
+def _unique_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f'duplicate JSON key: {key}')
+        result[key] = value
+    return result
+
+
+def _read_document(path):
+    with Path(path).open('rb') as stream:
+        data = stream.read(65537)
+    if len(data) > 65536:
+        raise ValueError('profile exceeds 64 KiB')
+    document = json.loads(data.decode('utf-8-sig'), object_pairs_hook=_unique_object)
+    _validate_layer_document(document)
+    return document
+
+
+def load_hotbox_profiles(config_dir, session=None):
+    """Load strict studio/user settings with per-file diagnostics and optional session layer."""
+    layers, diagnostics = [], []
+    for name, filename in zip(('studio', 'user'), HOTBOX_PROFILE_FILENAMES):
+        path = Path(config_dir) / filename
+        try:
+            layers.append((name, _read_document(path)))
+        except FileNotFoundError:
+            pass
+        except (OSError, UnicodeError, ValueError, RecursionError) as error:
+            diagnostics.append(f'hotbox {name}: {error}; file left unchanged')
+    if session is not None:
+        layers.append(('session', session))
+    value, layer_errors = resolve_hotbox(layers)
+    return value, diagnostics + layer_errors
+
+
+def _settings_delta(base, settings):
+    delta = {}
+    for key in ('style', 'transparency', 'rows'):
+        if settings[key] != base[key]:
+            delta[key] = deepcopy(settings[key])
+    buttons = {button: settings['center_buttons'][button]
+               for button in MOUSE_BUTTONS
+               if settings['center_buttons'][button] != base['center_buttons'][button]}
+    if buttons:
+        delta['center_buttons'] = buttons
+    return delta
+
+
+def save_hotbox_user(config_dir, settings):
+    """Atomically replace only the validated user settings delta; never repair bad input."""
+    validate_settings(settings)
+    root = Path(config_dir)
+    studio_path = root / HOTBOX_PROFILE_FILENAMES[0]
+    user_path = root / HOTBOX_PROFILE_FILENAMES[1]
+    try:
+        studio = _read_document(studio_path)
+    except FileNotFoundError:
+        studio = None
+    except (OSError, UnicodeError, ValueError, RecursionError) as error:
+        raise ValueError(f'existing hotbox_studio.json is invalid: {error}') from error
+    try:
+        _read_document(user_path)
+    except FileNotFoundError:
+        pass
+    except (OSError, UnicodeError, ValueError, RecursionError) as error:
+        raise ValueError(f'existing hotbox_user.json is invalid: {error}') from error
+
+    base_layers = [] if studio is None else [('studio', studio)]
+    base, errors = resolve_hotbox(base_layers)
+    if errors:
+        raise ValueError(errors[0])
+    document = {'schema_version': 1,
+                'settings': _settings_delta(base['settings'], settings)}
+    _validate_layer_document(document)
+    resolved, errors = resolve_hotbox([*base_layers, ('user', document)])
+    if errors or resolved['settings'] != settings:
+        raise ValueError('user hotbox settings failed round-trip validation')
+
+    root.mkdir(parents=True, exist_ok=True)
+    payload = (json.dumps(document, ensure_ascii=False, allow_nan=False,
+                          separators=(',', ':'), sort_keys=True) + '\n').encode('utf-8')
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode='wb', dir=root, prefix='.hotbox_user.json.',
+                                         suffix='.tmp', delete=False) as stream:
+            temporary = Path(stream.name)
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        _read_document(temporary)
+        os.replace(temporary, user_path)
+        temporary = None
+    finally:
+        if temporary is not None:
+            try:
+                temporary.unlink()
+            except FileNotFoundError:
+                pass
+    return deepcopy(document)

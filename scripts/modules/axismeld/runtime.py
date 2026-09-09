@@ -46,4 +46,7 @@ def load(*, session=None):
         print('AxisMeld:', message)
     config = keyconfigs.new(PRESET_NAME)
     keyconfig_init_from_data(config, data)
+    from . import hotbox_runtime
+    hotbox_runtime.reload_settings(bpy.context)
+    diagnostics.extend(hotbox_runtime.diagnostics)
     return config

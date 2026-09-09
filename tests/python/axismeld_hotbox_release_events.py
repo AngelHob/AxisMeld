@@ -317,6 +317,8 @@ def bridge_suite(win, area, region):
                   if (Path(p) / 'AxisMeld_Maya_2026.py').exists())
     bpy.utils.keyconfig_set(str(preset))
     yield from settle()
+    bpy.context.window_manager.keyconfigs.active.preferences.use_file_overrides = False
+    yield from settle()
     with bpy.context.temp_override(window=win, area=area, region=region):
         wm = bpy.context.window_manager
         check(bpy.ops.axismeld.hotbox_refresh() == {'FINISHED'}, 'snapshot refresh failed')
@@ -352,9 +354,11 @@ def bridge_suite(win, area, region):
         hotbox_runtime.reload_settings(bpy.context, session={
             'schema_version': True, 'settings': {'style': 'center'}})
         check(hotbox_runtime.diagnostics, 'invalid reload omitted diagnostics')
-        check(json.loads(hotbox_runtime.snapshot(bpy.context))['settings']['style'] == 'rows',
-              'invalid layer was not atomically rejected to baseline')
-        hotbox_runtime.reload_settings(bpy.context)
+        preserved = json.loads(hotbox_runtime.snapshot(bpy.context))['settings']
+        check(preserved['style'] == 'zones' and preserved['rows'] == ['pane'],
+              'invalid layer replaced the previous valid session')
+        hotbox_runtime.reload_settings(
+            bpy.context, session={'schema_version': 1, 'settings': {}})
         for command in ('view.front', 'view.wireframe', 'view.shaded'):
             check(bpy.ops.axismeld.hotbox_dispatch(command=command) == {'FINISHED'}, command)
         check(area.spaces.active.shading.type == 'SOLID', 'dispatch did not change real shading')

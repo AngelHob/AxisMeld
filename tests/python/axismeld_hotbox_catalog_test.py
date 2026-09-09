@@ -5,6 +5,7 @@ import copy
 import json
 import math
 import sys
+import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts' / 'modules'))
@@ -13,7 +14,8 @@ from axismeld.commands import COMMANDS
 from axismeld import hotbox_catalog
 from axismeld import hotbox_runtime
 from axismeld.hotbox_catalog import default_catalog
-from axismeld.hotbox_profiles import HOTBOX_PROFILE_FILENAMES, resolve_hotbox
+from axismeld.hotbox_profiles import (HOTBOX_PROFILE_FILENAMES, load_hotbox_profiles,
+                                      resolve_hotbox, save_hotbox_user)
 from axismeld.profiles import resolve_profiles
 
 
@@ -122,10 +124,61 @@ class HotboxCatalogTest(unittest.TestCase):
         transparency = node_by_id(catalog, 'center.controls.transparency')
         self.assertEqual([node['value'] for node in transparency['children']],
                          ['0', '25', '50', '75', '100'])
+        recent = node_by_id(catalog, 'center.recent')
+        self.assertEqual((recent['kind'], recent['children']), ('menu', []))
+        buttons = node_by_id(catalog, 'center.controls.buttons')
+        for button, label in (('LEFTMOUSE', 'Left Mouse Button'),
+                              ('MIDDLEMOUSE', 'Middle Mouse Button'),
+                              ('RIGHTMOUSE', 'Right Mouse Button')):
+            choices = node_by_id(buttons['children'], f'center.controls.buttons.{button.lower()}')
+            self.assertEqual(choices['label'], label)
+            self.assertIn((f'center.{button}', 'none'),
+                          [(node['command'], node['value']) for node in choices['children']])
+            self.assertIn((f'center.{button}', 'pane.shading'),
+                          [(node['command'], node['value']) for node in choices['children']])
 
     def test_hotbox_profile_names_are_separate_from_legacy_keybinding_files(self):
         self.assertEqual(HOTBOX_PROFILE_FILENAMES,
                          ('hotbox_studio.json', 'hotbox_user.json'))
+
+    def test_preferences_can_display_every_strictly_valid_center_menu_target(self):
+        choices = dict(hotbox_catalog.registered_menu_choices())
+        self.assertEqual(choices['none'], 'Disabled')
+        self.assertEqual(set(choices) - {'none'}, hotbox_runtime.MENU_IDS)
+
+    def test_file_layers_load_atomically_and_user_write_is_validated_delta_only(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'hotbox_studio.json').write_text(json.dumps({
+                'schema_version': 1, 'settings': {'style': 'zones', 'transparency': 50}}),
+                encoding='utf-8')
+            (root / 'hotbox_user.json').write_text(json.dumps({
+                'schema_version': 1, 'settings': {'transparency': 75}}), encoding='utf-8')
+            value, errors = load_hotbox_profiles(root, session={
+                'schema_version': 1, 'settings': {'center_buttons': {'RIGHTMOUSE': None}}})
+            self.assertEqual(errors, [])
+            self.assertEqual(value['settings']['style'], 'zones')
+            self.assertEqual(value['settings']['transparency'], 75)
+            self.assertIsNone(value['settings']['center_buttons']['RIGHTMOUSE'])
+
+            target = copy.deepcopy(value['settings'])
+            target['transparency'] = 50
+            target['center_buttons']['RIGHTMOUSE'] = 'pane.shading'
+            saved = save_hotbox_user(root, target)
+            self.assertEqual(saved, {'schema_version': 1, 'settings': {
+                'center_buttons': {'RIGHTMOUSE': 'pane.shading'}}})
+            self.assertEqual(json.loads((root / 'hotbox_user.json').read_text(encoding='utf-8')), saved)
+            self.assertEqual(list(root.glob('.hotbox_user.json.*.tmp')), [])
+
+    def test_invalid_existing_user_file_is_never_overwritten(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / 'hotbox_user.json'
+            original = '{"schema_version":1,"settings":{"style":"bad"}}'
+            path.write_text(original, encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'existing hotbox_user.json'):
+                save_hotbox_user(root, hotbox_runtime.make_snapshot(generation=1)['settings'])
+            self.assertEqual(path.read_text(encoding='utf-8'), original)
 
     def test_command_policy_is_narrow_and_explicit(self):
         for command in ('view.perspective', 'view.side', 'view.bottom', 'view.front',
@@ -240,6 +293,9 @@ class HotboxCatalogTest(unittest.TestCase):
                 'value', 'not-empty')),
             changed(lambda value: node_by_id(value['menus'], 'views.style.rows').__setitem__(
                 'value', 'invalid-style')),
+            changed(lambda value: node_by_id(value['menus'],
+                    'center.controls.buttons.rightmouse.pane_shading').__setitem__(
+                        'value', 'missing.menu')),
             changed(lambda value: value['settings']['center_buttons'].__setitem__(
                 'RIGHTMOUSE', 'missing.menu')),
         ))

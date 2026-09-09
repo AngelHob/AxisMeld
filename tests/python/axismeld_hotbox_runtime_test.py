@@ -3,6 +3,7 @@
 """Pure session-history behavior; live dispatch/settings are covered by release suite."""
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts' / 'modules'))
@@ -41,6 +42,58 @@ class RecentCommandsTest(unittest.TestCase):
         recent.record('view.front')
         self.assertEqual(recent.items()[0], 'view.front')
         self.assertEqual(len(recent.items()), 10)
+
+    def test_snapshot_exposes_only_session_history_as_replayable_leaf_commands(self):
+        old_recent = hotbox_runtime.recent
+        try:
+            hotbox_runtime.recent = hotbox_runtime.RecentCommands()
+            hotbox_runtime.recent.record('view.front')
+            hotbox_runtime.recent.record('transform.move')
+            value = hotbox_runtime.make_snapshot(generation=1)
+            recent = next(child for child in value['menus'][2]['children']
+                          if child['id'] == 'center.recent')
+            self.assertEqual(recent['kind'], 'menu')
+            self.assertEqual([(node['command'], node['label']) for node in recent['children']], [
+                ('transform.move', 'Move Tool'), ('view.front', 'Front View')])
+            self.assertEqual(len({node['id'] for node in recent['children']}), 2)
+        finally:
+            hotbox_runtime.recent = old_recent
+
+
+class SessionSettingsTest(unittest.TestCase):
+    @staticmethod
+    def context(use_file_overrides=False):
+        preferences = SimpleNamespace(use_file_overrides=use_file_overrides)
+        config = SimpleNamespace(preferences=preferences)
+        keyconfigs = SimpleNamespace(get=lambda name: config)
+        return SimpleNamespace(window_manager=SimpleNamespace(keyconfigs=keyconfigs))
+
+    def tearDown(self):
+        hotbox_runtime.reload_settings(self.context(), session={
+            'schema_version': 1, 'settings': {}})
+
+    def test_normal_reload_preserves_session_controls_and_explicit_empty_clears(self):
+        context = self.context()
+        hotbox_runtime.reload_settings(context, session={
+            'schema_version': 1, 'settings': {'style': 'zones'}})
+        hotbox_runtime.apply_setting(context, 'transparency', '75')
+        hotbox_runtime.reload_settings(context)
+        self.assertEqual(hotbox_runtime.current_settings()['style'], 'zones')
+        self.assertEqual(hotbox_runtime.current_settings()['transparency'], 75)
+        hotbox_runtime.reload_settings(context, session={
+            'schema_version': 1, 'settings': {}})
+        self.assertEqual(hotbox_runtime.current_settings()['style'], 'rows')
+        self.assertEqual(hotbox_runtime.current_settings()['transparency'], 25)
+
+    def test_invalid_explicit_session_keeps_previous_valid_layer(self):
+        context = self.context()
+        hotbox_runtime.reload_settings(context, session={
+            'schema_version': 1, 'settings': {'center_buttons': {'RIGHTMOUSE': 'pane.shading'}}})
+        hotbox_runtime.reload_settings(context, session={
+            'schema_version': 1, 'settings': {'center_buttons': {'RIGHTMOUSE': 'missing.menu'}}})
+        self.assertEqual(hotbox_runtime.current_settings()['center_buttons']['RIGHTMOUSE'],
+                         'pane.shading')
+        self.assertTrue(any('session:' in message for message in hotbox_runtime.diagnostics))
 
 
 if __name__ == '__main__':

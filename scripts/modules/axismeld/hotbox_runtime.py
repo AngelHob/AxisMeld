@@ -8,7 +8,9 @@ from threading import Lock
 
 from .commands import COMMANDS, PRESET_NAME
 from .hotbox_catalog import default_catalog, command_policy
-from .hotbox_profiles import CANONICAL_ROWS, DEFAULT_SETTINGS, resolve_hotbox, validate_settings
+from .hotbox_profiles import (CANONICAL_ROWS, DEFAULT_SETTINGS, MENU_IDS, MOUSE_BUTTONS,
+                              load_hotbox_profiles, resolve_hotbox, save_hotbox_user,
+                              validate_settings)
 
 
 MAX_NODES = 256
@@ -23,12 +25,15 @@ SETTING_VALUES = {
     'row.common': frozenset({'toggle'}),
     'row.pane': frozenset({'toggle'}),
     'row.modeling': frozenset({'toggle'}),
+    **{f'center.{button}': frozenset({'none', *MENU_IDS}) for button in MOUSE_BUTTONS},
 }
 
 _generation = 0
 _generation_lock = Lock()
 _settings = deepcopy(DEFAULT_SETTINGS)
 diagnostics = []
+_syncing_preferences = False
+_session_document = {'schema_version': 1, 'settings': {}}
 
 # Deliberately independent of the general adapter registry: new-window/file and interactive
 # navigation actions must not become callable through this batch's menu bridge.
@@ -82,29 +87,147 @@ def dispatch(context, command):
 
 
 def apply_setting(context, setting, value):
-    """Apply a single validated menu setting to this session, without disk writes."""
+    """Apply one setting through the shared Controls/Preferences persistence path."""
     global _settings
     if (not isinstance(setting, str) or setting not in SETTING_VALUES or
             not isinstance(value, str) or value not in SETTING_VALUES[setting]):
         raise ValueError('Unknown hotbox setting or option')
-    candidate = deepcopy(_settings)
+    candidate = _settings_with_change(_settings, setting, value)
+    if _file_overrides_enabled(context):
+        from . import runtime
+        directory = runtime.profile_directory()
+        if directory is None:
+            raise ValueError('No configuration directory for hotbox_user.json')
+        persisted, _errors = load_hotbox_profiles(directory)
+        persisted_settings = deepcopy(persisted['settings'])
+        model_key = 'rows' if setting.startswith('row.') else (
+            'center_buttons' if setting.startswith('center.') else setting)
+        if model_key == 'center_buttons':
+            button = setting.removeprefix('center.')
+            persisted_settings[model_key][button] = candidate[model_key][button]
+        else:
+            persisted_settings[model_key] = deepcopy(candidate[model_key])
+        try:
+            save_hotbox_user(directory, persisted_settings)
+        except (OSError, ValueError) as error:
+            raise ValueError(str(error)) from error
+        _remove_session_setting(setting)
+        reload_settings(context)
+    else:
+        _store_session_setting(setting, candidate)
+        _settings = candidate
+        _sync_preferences(context)
+
+
+def _settings_with_change(base, setting, value):
+    candidate = deepcopy(base)
     if setting.startswith('row.'):
         row = setting.removeprefix('row.')
         rows = set(candidate['rows'])
         rows.symmetric_difference_update({row})
         candidate['rows'] = [item for item in CANONICAL_ROWS if item in rows]
+    elif setting.startswith('center.'):
+        candidate['center_buttons'][setting.removeprefix('center.')] = (
+            None if value == 'none' else value)
     else:
         candidate[setting] = int(value) if setting == 'transparency' else value
     validate_settings(candidate)
-    _settings = candidate
+    return candidate
+
+
+def _store_session_setting(setting, settings):
+    patch = _session_document['settings']
+    if setting.startswith('row.'):
+        patch['rows'] = deepcopy(settings['rows'])
+    elif setting.startswith('center.'):
+        button = setting.removeprefix('center.')
+        patch.setdefault('center_buttons', {})[button] = settings['center_buttons'][button]
+    else:
+        patch[setting] = deepcopy(settings[setting])
+
+
+def _remove_session_setting(setting):
+    patch = _session_document['settings']
+    if setting.startswith('row.'):
+        patch.pop('rows', None)
+    elif setting.startswith('center.'):
+        buttons = patch.get('center_buttons', {})
+        buttons.pop(setting.removeprefix('center.'), None)
+        if not buttons:
+            patch.pop('center_buttons', None)
+    else:
+        patch.pop(setting, None)
 
 
 def reload_settings(context, *, session=None):
-    """Resolve baseline plus optional session layer; file/prefs loading belongs to Task5."""
-    global _settings, diagnostics
-    value, errors = resolve_hotbox([] if session is None else [('session', session)])
+    """Resolve baseline/file/session layers and update non-owning Preferences controls."""
+    global _settings, diagnostics, _session_document
+    session_errors = []
+    if session is not None:
+        _candidate, session_errors = resolve_hotbox([('session', session)])
+        if not session_errors:
+            _session_document = deepcopy(session)
+    active_session = _session_document
+    if _file_overrides_enabled(context):
+        from . import runtime
+        directory = runtime.profile_directory()
+        if directory is not None:
+            value, errors = load_hotbox_profiles(directory, session=active_session)
+        else:
+            value, errors = resolve_hotbox([('session', active_session)])
+    else:
+        value, errors = resolve_hotbox([('session', active_session)])
     _settings = value['settings']
-    diagnostics = errors
+    diagnostics = session_errors + errors
+    _sync_preferences(context)
+
+
+def current_settings():
+    return deepcopy(_settings)
+
+
+def preferences_are_syncing():
+    return _syncing_preferences
+
+
+def settings_storage_note(context):
+    if not _file_overrides_enabled(context):
+        return 'Session only: file overrides are disabled; Controls changes are not saved'
+    from . import runtime
+    directory = runtime.profile_directory()
+    return f'User settings: {directory / "hotbox_user.json"}' if directory else 'No configuration directory'
+
+
+def _preferences(context):
+    try:
+        configs = context.window_manager.keyconfigs
+        config = configs.get(PRESET_NAME)
+        return config.preferences if config is not None else None
+    except (AttributeError, RuntimeError):
+        return None
+
+
+def _file_overrides_enabled(context):
+    preferences = _preferences(context)
+    return True if preferences is None else bool(preferences.use_file_overrides)
+
+
+def _sync_preferences(context):
+    global _syncing_preferences
+    preferences = _preferences(context)
+    if preferences is None or not hasattr(preferences, 'hotbox_style'):
+        return
+    _syncing_preferences = True
+    try:
+        preferences.hotbox_style = _settings['style']
+        preferences.hotbox_transparency = str(_settings['transparency'])
+        for row in CANONICAL_ROWS:
+            setattr(preferences, f'hotbox_row_{row}', row in _settings['rows'])
+        for button in MOUSE_BUTTONS:
+            setattr(preferences, f'hotbox_center_{button.lower()}',
+                    _settings['center_buttons'][button] or 'none')
+    finally:
+        _syncing_preferences = False
 
 
 def _next_generation():
@@ -233,7 +356,7 @@ def make_snapshot(*, generation, settings=None, menus=None):
         'schema_version': 1,
         'generation': generation,
         'settings': deepcopy(DEFAULT_SETTINGS if settings is None else settings),
-        'menus': list(deepcopy(default_catalog() if menus is None else menus)),
+        'menus': list(deepcopy(_catalog_with_recent() if menus is None else menus)),
     }
     validate_snapshot(value)
     return value
@@ -250,6 +373,22 @@ def serialize_snapshot(value):
     if len(payload.encode('utf-8')) > MAX_JSON_BYTES:
         raise ValueError('snapshot exceeds 256 KiB')
     return payload
+
+
+def _catalog_with_recent():
+    menus = default_catalog()
+    center = next(node for node in menus if node['id'] == 'center')
+    recent_menu = next(node for node in center['children'] if node['id'] == 'center.recent')
+    recent_menu['children'] = [{
+        'id': f'center.recent.{index}.{command.replace(".", "_")}',
+        'kind': 'command',
+        'label': COMMANDS[command].label,
+        'command': command,
+        'enabled': True,
+        'reason': '',
+        'children': [],
+    } for index, command in enumerate(recent.items())]
+    return menus
 
 
 def _apply_runtime_capabilities(context, menus):
@@ -270,5 +409,5 @@ def _apply_runtime_capabilities(context, menus):
 
 def snapshot(context):
     """Return a capability-resolved snapshot for a live Blender context."""
-    menus = _apply_runtime_capabilities(context, default_catalog())
+    menus = _apply_runtime_capabilities(context, _catalog_with_recent())
     return serialize_snapshot(make_snapshot(generation=_next_generation(), settings=_settings, menus=menus))

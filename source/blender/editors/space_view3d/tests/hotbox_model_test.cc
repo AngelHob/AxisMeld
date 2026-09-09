@@ -70,6 +70,8 @@ TEST(hotbox_model, BoundaryValidationCannotPartiallyReplaceSnapshot)
       snapshot(
           R"({"id":"bad","kind":"setting","label":"Bad","command":"style","enabled":true,"reason":"","value":"bad","children":[]})"),
       snapshot(
+          R"({"id":"bad","kind":"setting","label":"Bad","command":"center.RIGHTMOUSE","enabled":true,"reason":"","value":"missing.menu","children":[]})"),
+      snapshot(
           R"({"id":"bad","kind":"disabled","label":"Bad","command":"","enabled":false,"reason":"","children":[]})")};
   for (const auto &json : invalid) {
     MenuSnapshot out{};
@@ -80,6 +82,17 @@ TEST(hotbox_model, BoundaryValidationCannotPartiallyReplaceSnapshot)
     EXPECT_EQ(out.generation, 99);
     EXPECT_EQ(out.style, "untouched");
   }
+}
+
+TEST(hotbox_model, CenterButtonSettingAcceptsRegisteredMenuOrDisabledOnly)
+{
+  const std::string registered =
+      R"({"id":"center.mapping","kind":"setting","label":"Pane Shading","command":"center.RIGHTMOUSE","enabled":true,"reason":"","value":"views","children":[]})";
+  const std::string disabled =
+      R"({"id":"center.disabled","kind":"setting","label":"Disabled","command":"center.LEFTMOUSE","enabled":true,"reason":"","value":"none","children":[]})";
+  MenuSnapshot out{};
+  std::string error;
+  EXPECT_TRUE(parse_menu_snapshot(snapshot(registered + "," + disabled), out, error));
 }
 
 TEST(hotbox_model, NodeCountAndDepthAreBounded)

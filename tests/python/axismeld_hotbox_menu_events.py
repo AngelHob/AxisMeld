@@ -99,7 +99,13 @@ def suite():
     check(not failures, '\n'.join(failures))
     print('PASS actual Space main directory screenshot and RMB NW native Left view', flush=True)
 
-    from axismeld import hotbox_runtime
+    from axismeld import hotbox_runtime, runtime
+    from axismeld.commands import COMMANDS
+    hotbox_user = runtime.profile_directory() / 'hotbox_user.json'
+    def reset_hotbox_settings():
+        hotbox_user.unlink(missing_ok=True)
+        hotbox_runtime.reload_settings(
+            bpy.context, session={'schema_version': 1, 'settings': {}})
     observed = []
     real_dispatch = hotbox_runtime.dispatch
     def observed_dispatch(context, command):
@@ -362,7 +368,7 @@ def suite():
     event('RIGHTMOUSE', 'RELEASE')
     yield from close_box()
     check(len(observed) == count, 'null center mapping executed or became short tap')
-    hotbox_runtime.reload_settings(bpy.context)
+    reset_hotbox_settings()
 
     # The central marking menu's appended Style list wins over the directional sector.
     yield from open_box()
@@ -381,7 +387,7 @@ def suite():
         check(json.loads(hotbox_runtime.snapshot(bpy.context))['settings']['style'] == 'zones' and
               len(observed) == count, 'marking Style list must win over direction inference')
     yield from close_box()
-    hotbox_runtime.reload_settings(bpy.context)
+    reset_hotbox_settings()
 
     yield from open_box()
     event('RIGHTMOUSE')
@@ -396,12 +402,13 @@ def suite():
         check(json.loads(hotbox_runtime.snapshot(bpy.context))['settings']['style'] == 'zones' and
               len(observed) == count, 'marking Style parent must support click browsing')
     yield from close_box()
-    hotbox_runtime.reload_settings(bpy.context)
+    reset_hotbox_settings()
 
     # Actual settings leaves use the native bridge and rebuild the same live hotbox.
     control_width = (label_width('Hotbox Controls')+24)*scale
     controls = (center[0]+center[2]+4*scale, cy-14*scale, control_width, 28*scale)
-    control_items = popup(controls, ['Menu Rows', 'Hotbox Style', 'Transparency'])
+    control_items = popup(controls, ['Menu Rows', 'Hotbox Style', 'Transparency',
+                                     'Center Mouse Buttons'])
     yield from open_box()
     yield from click(midpoint(controls))
     yield from move(midpoint(control_items[1]))
@@ -416,7 +423,45 @@ def suite():
     yield from click(midpoint(shading_items[0]))
     check(len(observed) == count, 'hidden row still dispatched after immediate style rebuild')
     yield from close_box()
-    hotbox_runtime.reload_settings(bpy.context)
+    reset_hotbox_settings()
+    # Configure the same center-button model through the visible Controls tree.
+    yield from open_box()
+    yield from click(midpoint(controls))
+    yield from click(midpoint(control_items[3]))
+    button_items = popup(control_items[3], ['Left Mouse Button', 'Middle Mouse Button',
+                                            'Right Mouse Button'])
+    yield from click(midpoint(button_items[2]))
+    mapping_labels = ['Disabled', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls',
+                      'Common', 'Select', 'Modify', 'Current Pane', 'Pane View',
+                      'Pane Shading', 'Panels', 'Panel Views', 'Modeling']
+    mapping_items = popup(button_items[2], mapping_labels)
+    yield from click(midpoint(mapping_items[9]))
+    with bpy.context.temp_override(window=win, area=area, region=region):
+        check(json.loads(hotbox_runtime.snapshot(bpy.context))['settings']['center_buttons']
+              ['RIGHTMOUSE'] == 'pane.shading',
+              'visible center-button Controls did not persist another registered menu')
+    check(json.loads(hotbox_user.read_text(encoding='utf-8')) == {
+        'schema_version': 1,
+        'settings': {'center_buttons': {'RIGHTMOUSE': 'pane.shading'}},
+    }, 'visible center-button Controls did not write a delta-only user layer')
+    yield from close_box()
+    print('PASS visible Controls center-button click persisted one delta setting', flush=True)
+
+    # A successful leaf is visible and replayable through the session-only Recent menu.
+    recent_command = hotbox_runtime.recent.items()[0]
+    recent_width = (label_width('Recent Commands')+24)*scale
+    recent_rect = (center[0]-4*scale-recent_width, cy-14*scale, recent_width, 28*scale)
+    yield from open_box()
+    yield from click(midpoint(recent_rect))
+    recent_labels = [COMMANDS[command].label for command in hotbox_runtime.recent.items()]
+    recent_items = popup(recent_rect, recent_labels)
+    count = len(observed)
+    yield from click(midpoint(recent_items[0]))
+    check(len(observed) == count+1 and observed[-1] == (recent_command, {'FINISHED'}),
+          'visible Recent did not replay the newest available command')
+    yield from close_box()
+    print('PASS visible Recent opened and replayed newest currently available command', flush=True)
+    reset_hotbox_settings()
 
     # Changing the live viewport geometry/scale invalidates the captured drawing context.
     preferences = bpy.context.window_manager.keyconfigs.active.preferences

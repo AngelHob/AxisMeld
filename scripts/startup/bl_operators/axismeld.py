@@ -1,10 +1,12 @@
 # SPDX-FileCopyrightText: 2026 AxisMeld Authors
 # SPDX-License-Identifier: GPL-2.0-or-later
+import bpy
 from bpy.types import Operator, KeyConfigPreferences, WindowManager
-from bpy.props import StringProperty, BoolProperty, FloatProperty
+from bpy.props import StringProperty, BoolProperty, EnumProperty, FloatProperty
 
 from axismeld import adapter, runtime, hotbox_runtime
 from axismeld.commands import PRESET_NAME
+from axismeld.hotbox_catalog import registered_menu_choices
 
 
 class AXISMELD_OT_command(Operator):
@@ -100,6 +102,19 @@ def _update_profile(self, context):
     runtime.load()
 
 
+def _hotbox_update(setting, attribute=None):
+    def update(self, context):
+        if hotbox_runtime.preferences_are_syncing():
+            return
+        value = 'toggle' if attribute is None else getattr(self, attribute)
+        try:
+            hotbox_runtime.apply_setting(context, setting, value)
+        except ValueError as error:
+            print('AxisMeld:', error)
+            hotbox_runtime.reload_settings(context)
+    return update
+
+
 class AXISMELD_Preferences(KeyConfigPreferences):
     bl_idname = PRESET_NAME
 
@@ -111,6 +126,39 @@ class AXISMELD_Preferences(KeyConfigPreferences):
         name='Hotbox Tap Threshold', default=0.4, min=0.1, max=1.0,
         description='Maximum trigger-key tap duration for single/quad view switching')
 
+    hotbox_style: EnumProperty(
+        name='Hotbox Style', items=(('rows', 'Zones and Menu Rows', ''),
+                                    ('zones', 'Zones Only', ''),
+                                    ('center', 'Center Zone Only', '')),
+        default='rows', options={'SKIP_SAVE'}, update=_hotbox_update('style', 'hotbox_style'))
+    hotbox_transparency: EnumProperty(
+        name='Hotbox Transparency', items=tuple((str(value), f'{value}%', '')
+                                                for value in (0, 25, 50, 75, 100)),
+        default='25', options={'SKIP_SAVE'},
+        update=_hotbox_update('transparency', 'hotbox_transparency'))
+    hotbox_row_common: BoolProperty(
+        name='Show Common Menus', default=True, options={'SKIP_SAVE'},
+        update=_hotbox_update('row.common'))
+    hotbox_row_pane: BoolProperty(
+        name='Show Pane Specific Menus', default=True, options={'SKIP_SAVE'},
+        update=_hotbox_update('row.pane'))
+    hotbox_row_modeling: BoolProperty(
+        name='Show Modeling', default=True, options={'SKIP_SAVE'},
+        update=_hotbox_update('row.modeling'))
+    _center_items = tuple((value, label, '') for value, label in registered_menu_choices())
+    hotbox_center_leftmouse: EnumProperty(
+        name='Left Mouse Button', items=_center_items, default='views',
+        options={'SKIP_SAVE'}, update=_hotbox_update('center.LEFTMOUSE',
+                                                     'hotbox_center_leftmouse'))
+    hotbox_center_middlemouse: EnumProperty(
+        name='Middle Mouse Button', items=_center_items, default='views',
+        options={'SKIP_SAVE'}, update=_hotbox_update('center.MIDDLEMOUSE',
+                                                     'hotbox_center_middlemouse'))
+    hotbox_center_rightmouse: EnumProperty(
+        name='Right Mouse Button', items=_center_items, default='views',
+        options={'SKIP_SAVE'}, update=_hotbox_update('center.RIGHTMOUSE',
+                                                     'hotbox_center_rightmouse'))
+
     def draw(self, layout):
         layout.label(text='Maya 2026 - Modeling baseline (adapted)')
         layout.label(text='Click a transform axis, then middle-drag in empty viewport space')
@@ -118,7 +166,17 @@ class AXISMELD_Preferences(KeyConfigPreferences):
         layout.prop(self, 'use_file_overrides')
         layout.operator('axismeld.reload_profile')
         layout.label(text=str(runtime.profile_directory() or 'No configuration directory'))
-        layout.label(text='View hotbox is adapted; full Maya hotbox, snapping and UV are not implemented')
+        layout.label(text=hotbox_runtime.settings_storage_note(bpy.context))
+        layout.prop(self, 'hotbox_style')
+        layout.prop(self, 'hotbox_transparency')
+        row = layout.row(align=True)
+        row.prop(self, 'hotbox_row_common')
+        row.prop(self, 'hotbox_row_pane')
+        row.prop(self, 'hotbox_row_modeling')
+        layout.prop(self, 'hotbox_center_leftmouse')
+        layout.prop(self, 'hotbox_center_middlemouse')
+        layout.prop(self, 'hotbox_center_rightmouse')
+        layout.label(text='Hotbox menus and seven views are adapted; modeling/UV directories remain disabled')
         for message in runtime.diagnostics:
             layout.label(text=message, icon='ERROR')
 

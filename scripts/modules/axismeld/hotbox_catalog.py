@@ -83,6 +83,38 @@ def _style_menu(prefix):
     ))
 
 
+_CENTER_MENU_CHOICES = (
+    (None, 'Disabled'),
+    ('views', 'AxisMeld Views'),
+    ('center.recent', 'Recent Commands'),
+    ('center.controls', 'Hotbox Controls'),
+    ('common', 'Common'),
+    ('common.select', 'Select'),
+    ('common.modify', 'Modify'),
+    ('pane', 'Current Pane'),
+    ('pane.view', 'Pane View'),
+    ('pane.shading', 'Pane Shading'),
+    ('pane.panels', 'Panels'),
+    ('pane.panels.views', 'Panel Views'),
+    ('modeling', 'Modeling'),
+)
+
+
+def center_menu_choices():
+    """Return stable option strings used by Preferences and the Controls menu."""
+    return tuple(('none' if identifier is None else identifier, label)
+                 for identifier, label in _CENTER_MENU_CHOICES)
+
+
+def _center_button_menu(button, label):
+    prefix = f'center.controls.buttons.{button.lower()}'
+    return _menu(prefix, label, tuple(
+        _setting(f'{prefix}.{value.replace(".", "_")}', option_label,
+                 f'center.{button}', value)
+        for value, option_label in center_menu_choices()
+    ))
+
+
 def _catalog():
     common = _menu('common', 'Common', (
         _disabled('common.file', 'File'),
@@ -138,9 +170,14 @@ def _catalog():
             _setting(f'center.controls.transparency.{value}', f'{value}%', 'transparency', str(value))
             for value in (0, 25, 50, 75, 100)
         )),
+        _menu('center.controls.buttons', 'Center Mouse Buttons', (
+            _center_button_menu('LEFTMOUSE', 'Left Mouse Button'),
+            _center_button_menu('MIDDLEMOUSE', 'Middle Mouse Button'),
+            _center_button_menu('RIGHTMOUSE', 'Right Mouse Button'),
+        )),
     ))
     center = _menu('center', 'Center', (
-        _disabled('center.recent', 'Recent Commands', 'Session history is not connected yet'),
+        _menu('center.recent', 'Recent Commands', ()),
         _menu('views', 'AxisMeld', views_children),
         controls,
     ))
@@ -167,3 +204,15 @@ _DEFAULT_CATALOG = _catalog()
 def default_catalog():
     """Return an independent copy of the built-in menu tree."""
     return tuple(deepcopy(_DEFAULT_CATALOG))
+
+
+def registered_menu_choices():
+    """Return every valid center target in stable tree order for Preferences."""
+    result = [('none', 'Disabled')]
+    pending = list(default_catalog())
+    while pending:
+        node = pending.pop(0)
+        if node['kind'] == 'menu':
+            result.append((node['id'], node['label']))
+        pending[0:0] = node['children']
+    return tuple(result)

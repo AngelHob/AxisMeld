@@ -53,6 +53,9 @@ bool setting_value(const std::string &command, const std::string &value)
     return value == "rows" || value == "zones" || value == "center";
   if (command == "transparency")
     return value == "0" || value == "25" || value == "50" || value == "75" || value == "100";
+  if (command == "center.LEFTMOUSE" || command == "center.MIDDLEMOUSE" ||
+      command == "center.RIGHTMOUSE")
+    return !value.empty();
   return (command == "row.common" || command == "row.pane" || command == "row.modeling") &&
          value == "toggle";
 }
@@ -84,6 +87,7 @@ const std::unordered_set<std::string> commands = {"tool.select",
 
 struct Parser {
   std::unordered_set<std::string> ids, menu_ids;
+  std::vector<std::pair<std::string, std::string>> center_settings;
   bool node(const Value &value, MenuNode &out, const int depth)
   {
     const auto *dict = value.as_dictionary_value();
@@ -121,6 +125,8 @@ struct Parser {
         out.kind = MenuKind::Setting;
         if (!setting_value(out.command, out.value))
           return false;
+        if (out.command.starts_with("center."))
+          center_settings.emplace_back(out.command, out.value);
       }
       else {
         if (out.enabled || !out.command.empty() || !out.value.empty())
@@ -232,6 +238,10 @@ bool parse_menu_snapshot(const std::string_view json, MenuSnapshot &out, std::st
     if (!str || !parser.menu_ids.contains(str->value()))
       return false;
     next.center_buttons[i] = str->value();
+  }
+  for (const auto &[command, value] : parser.center_settings) {
+    if (value != "none" && !parser.menu_ids.contains(value))
+      return false;
   }
   out = std::move(next);
   error.clear();

@@ -11,13 +11,14 @@ import tempfile
 parser = argparse.ArgumentParser()
 parser.add_argument('--blender', required=True)
 parser.add_argument('--artifacts', help='Optional directory for isolated factory-scene screenshots')
-parser.add_argument('--suite', choices=('hotbox', 'menus', 'release', 'release-cross-window'), default='hotbox')
+parser.add_argument('--suite', choices=('hotbox', 'menus', 'release', 'release-cross-window', 'profiles'), default='hotbox')
 args = parser.parse_args()
 suite_script, pass_marker = {
     'hotbox': ('axismeld_hotbox_events.py', b'AXISMELD_HOTBOX_EVENTS_PASS'),
     'menus': ('axismeld_hotbox_menu_events.py', b'AXISMELD_HOTBOX_MENU_EVENTS_PASS'),
     'release': ('axismeld_hotbox_release_events.py', b'AXISMELD_HOTBOX_RELEASE_EVENTS_PASS'),
     'release-cross-window': ('axismeld_hotbox_release_events.py', b'AXISMELD_HOTBOX_CROSS_WINDOW_PASS'),
+    'profiles': ('axismeld_hotbox_profiles_blender.py', b'AXISMELD_HOTBOX_PROFILES_PASS'),
 }[args.suite]
 startup = None
 if sys.platform == 'win32':
@@ -34,8 +35,13 @@ with tempfile.TemporaryDirectory(prefix='axismeld-hotbox-') as directory:
         artifacts = Path(args.artifacts).resolve()
         artifacts.mkdir(parents=True, exist_ok=True)
         env['AXISMELD_TEST_ARTIFACTS'] = str(artifacts)
+    blender_args = [args.blender, '--factory-startup']
+    if args.suite == 'profiles':
+        blender_args.append('--background')
+    else:
+        blender_args.append('--enable-event-simulate')
     result = subprocess.run(
-        [args.blender, '--factory-startup', '--enable-event-simulate', '--python-exit-code', '1',
+        [*blender_args, '--python-exit-code', '1',
          '--python', str(Path(__file__).with_name(suite_script))],
         env=env, startupinfo=startup, capture_output=True, timeout=240)
     sys.stdout.buffer.write(result.stdout)
