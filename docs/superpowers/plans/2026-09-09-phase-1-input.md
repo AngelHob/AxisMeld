@@ -40,7 +40,7 @@
   activation path, override schema example and reserved/unimplemented gestures.
 - [x] Run INSTALL through existing CMake tree; CTest `^axismeld_` and Windows verifier.
 - [x] Review the complete diff, fix concrete findings, update README to actual capabilities.
-- [ ] Commit, fast-forward integration and push; verify matching remote/local hashes.
+- [x] Commit, fast-forward integration and push; verify matching remote/local hashes.
 
 ## Verification commands
 
@@ -66,3 +66,5 @@ git diff --check
 - Scoped re-review: addressed, no remaining Critical/Important findings.
 - Export/reimport preserves semantic properties; native user keymap edits survive reload.
 - Physical keyboard/mouse, hotbox and splash visual acceptance remain outside this slice.
+- Fast-forwarded and published `axismeld/integration`; local HEAD and remote branch
+  both verified as `7cec0a11c86cba7dcd6a73ce9b72948e2abdc3b2` before this status-only update.
