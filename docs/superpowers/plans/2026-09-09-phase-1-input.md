@@ -14,32 +14,32 @@
 
 ## Task 1: Command and profile contracts
 
-- [ ] Create `tests/python/axismeld_input_test.py` with unittest cases importing
+- [x] Create `tests/python/axismeld_input_test.py` with unittest cases importing
   `axismeld.commands`, `axismeld.profiles`, `axismeld.keymap` from source scripts/modules.
-- [ ] Run `python tests/python/axismeld_input_test.py` and observe missing module failure.
-- [ ] Implement `commands.py`: frozen catalog, `baseline_bindings()` returning copies.
+- [x] Run `python tests/python/axismeld_input_test.py` and observe missing module failure.
+- [x] Implement `commands.py`: frozen catalog, `baseline_bindings()` returning copies.
   Implement `profiles.py`: `resolve_profiles(layers)` returns bindings, provenance,
   diagnostics; `load_profiles(config_dir, session=None)` reads studio/user in order.
-- [ ] Verify real precedence, disable, collision, malformed JSON and baseline immutability.
+- [x] Verify real precedence, disable, collision, malformed JSON and baseline immutability.
 
 ## Task 2: Built-in preset and semantic adapter
 
-- [ ] Implement `keymap.py: generate_keymaps(base, bindings)` and collision reporting
+- [x] Implement `keymap.py: generate_keymaps(base, bindings)` and collision reporting
   without mutating caller data or addon keymaps; preserve other editors and modal maps.
-- [ ] Implement `adapter.py: available(context, command)` and
+- [x] Implement `adapter.py: available(context, command)` and
   `run(context, command, invoke=True)`, using native Blender tools, mode and view operations.
-- [ ] Add `scripts/startup/bl_operators/axismeld.py` and register in its package list.
-- [ ] Add `scripts/presets/keyconfig/AxisMeld_Maya_2026.py` with reload and baseline controls.
-- [ ] Add `tests/python/axismeld_input_blender.py`; test actual RNA, tool and mesh transitions,
+- [x] Add `scripts/startup/bl_operators/axismeld.py` and register in its package list.
+- [x] Add `scripts/presets/keyconfig/AxisMeld_Maya_2026.py` with reload and baseline controls.
+- [x] Add `tests/python/axismeld_input_blender.py`; test actual RNA, tool and mesh transitions,
   keyconfig registration, reload and switch-back using the built executable.
 
 ## Task 3: Integration and user-facing handoff
 
-- [ ] Register pure and Blender tests beside Phase 0 tests in `tests/python/CMakeLists.txt`.
-- [ ] Write `docs/maya-mapping/phase-1.md`: exact input catalog, adapted differences,
+- [x] Register pure and Blender tests beside Phase 0 tests in `tests/python/CMakeLists.txt`.
+- [x] Write `docs/maya-mapping/phase-1.md`: exact input catalog, adapted differences,
   activation path, override schema example and reserved/unimplemented gestures.
-- [ ] Run INSTALL through existing CMake tree; CTest `^axismeld_` and Windows verifier.
-- [ ] Review the complete diff, fix concrete findings, update README to actual capabilities.
+- [x] Run INSTALL through existing CMake tree; CTest `^axismeld_` and Windows verifier.
+- [x] Review the complete diff, fix concrete findings, update README to actual capabilities.
 - [ ] Commit, fast-forward integration and push; verify matching remote/local hashes.
 
 ## Verification commands
@@ -53,3 +53,16 @@ $ctest = Join-Path (Split-Path $cmake) 'ctest.exe'
 pwsh -NoProfile -File tools/axismeld/verify_windows_build.ps1 -InstallDir D:\source\AxisMeld-build\install
 git diff --check
 ```
+
+## Execution evidence (2026-09-09)
+
+- Implementation: `82fc5257074`; saved-profile recovery fix: `03778ad6eb1`.
+- Initial pure/import and installed-module tests failed before implementation.
+- INSTALL Release build: exit 0 using the existing VS2026 / CMake build tree.
+- Final `ctest -R '^axismeld_'`: 5/5 passed (8 pure cases and 8 Blender integration cases).
+- Windows verifier: PASS; product identity and portable profile preserved.
+- Independent review found one saved-preference opt-out defect; real-file recreation test
+  failed with Move=T while preference=False, then passed with Move=W after correction.
+- Scoped re-review: addressed, no remaining Critical/Important findings.
+- Export/reimport preserves semantic properties; native user keymap edits survive reload.
+- Physical keyboard/mouse, hotbox and splash visual acceptance remain outside this slice.
