@@ -171,7 +171,8 @@ bool parse_menu_snapshot(const std::string_view json, MenuSnapshot &out, std::st
   std::istringstream stream{std::string(json)};
   blender::io::serialize::JsonFormatter formatter;
   auto root = formatter.deserialize(stream);
-  if (!root) {
+  // The shared formatter extracts one value; this boundary accepts exactly one JSON document.
+  if (!root || (stream >> std::ws).peek() != std::char_traits<char>::eof()) {
     error = "Invalid hotbox JSON";
     return false;
   }

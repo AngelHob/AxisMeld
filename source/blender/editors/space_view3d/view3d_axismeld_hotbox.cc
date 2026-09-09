@@ -254,13 +254,15 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   hotbox_measure(*data);
   hotbox_layout(*data);
   if (!data->menu_layout.supported) {
-    delete data;
-    return OPERATOR_CANCELLED;
+    BKE_report(
+        op->reports, RPT_WARNING, "Viewport too small for hotbox menus (minimum 480 x 320)");
   }
   data->state.begin(BLI_time_now_seconds(), RNA_float_get(op->ptr, "tap_seconds"));
   op->customdata = data;
-  data->draw_handle = ED_region_draw_cb_activate(
-      data->region_type, draw, data, REGION_DRAW_POST_PIXEL);
+  if (data->menu_layout.supported) {
+    data->draw_handle = ED_region_draw_cb_activate(
+        data->region_type, draw, data, REGION_DRAW_POST_PIXEL);
+  }
   data->timer = WM_event_timer_add(CTX_wm_manager(C), window, TIMER, .02);
   WM_event_add_modal_handler(C, op);
   ED_region_tag_redraw(data->region);
@@ -375,7 +377,7 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
     }
     if (event->type == data.active_mouse && event->val == KM_RELEASE) {
       data.active_mouse = 0;
-      if (data.marking && (!node || node->kind != MenuKind::Menu)) {
+      if ((!node || node->kind != MenuKind::Menu) && !item.starts_with("@scroll:")) {
         data.open_path.clear();
       }
       data.marking = false;

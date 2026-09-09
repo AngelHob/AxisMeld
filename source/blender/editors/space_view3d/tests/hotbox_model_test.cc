@@ -117,4 +117,22 @@ TEST(hotbox_model, InvalidInputIsAtomic)
     EXPECT_FALSE(error.empty());
   }
 }
+
+TEST(hotbox_model, TrailingContentIsRejectedAtomically)
+{
+  for (const std::string suffix : {" {}", " true", " garbage", "\n[]"}) {
+    MenuSnapshot out{};
+    out.generation = 77;
+    out.style = "sentinel";
+    std::string error;
+    EXPECT_FALSE(parse_menu_snapshot(snapshot() + suffix, out, error)) << suffix;
+    EXPECT_EQ(out.generation, 77);
+    EXPECT_EQ(out.style, "sentinel");
+    EXPECT_FALSE(error.empty());
+  }
+  MenuSnapshot out{};
+  std::string error;
+  EXPECT_TRUE(parse_menu_snapshot(snapshot() + " \t\r\n", out, error));
+  EXPECT_EQ(out.generation, 7);
+}
 }  // namespace blender::axismeld

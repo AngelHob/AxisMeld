@@ -234,6 +234,24 @@ def suite():
     pane_labels = ['View', 'Shading', 'Lighting', 'Show', 'Renderer', 'Panels']
     shading = row_title(pane_labels, 1, 32)
     shading_items = popup(shading, ['Wireframe', 'Solid'])
+    review_failures = []
+    # Releasing anywhere except a title/parent must discard the old executable popup.
+    common_labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows', 'Cache', 'Help']
+    for target, point in (('blank', (cx-300*scale, cy-180*scale)),
+                          ('disabled', midpoint(row_title(common_labels, 0, 64)))):
+        yield from open_box()
+        yield from move(midpoint(shading))
+        event('LEFTMOUSE')
+        yield
+        yield from move(point)
+        event('LEFTMOUSE', 'RELEASE')
+        yield from settle()
+        screenshot(f'menus-cancel-{target}.png')
+        count = len(observed)
+        yield from click(midpoint(shading_items[0]))
+        if len(observed) != count:
+            review_failures.append(f'ordinary dropdown {target} release left an executable child')
+        yield from close_box()
     yield from open_box()
     count = len(observed)
     yield from click(midpoint(shading))
@@ -621,6 +639,8 @@ def suite():
     count = len(observed)
     yield from click(midpoint(child_rects[-2]))
     check(len(observed) == count, 'scrolling ancestor left executable deeper child rectangles')
+    # The blank release above cancels browsing; explicitly reopen the same owner.
+    yield from click((cx, cy), 'RIGHTMOUSE')
     yield from move(midpoint(parent_rects[-1]))
     event('WHEELUPMOUSE')
     yield
@@ -633,6 +653,55 @@ def suite():
     yield from close_box()
     hotbox_runtime.snapshot = real_snapshot
     print('PASS B9 actual small viewport, row controls and nested per-owner scrolling', flush=True)
+    # Unsupported menu dimensions still own the trigger lifecycle; no menu layout is permitted.
+    for dimension in ('width', 'height'):
+        if dimension == 'height':
+            area = max((a for a in win.screen.areas if a.type == 'VIEW_3D'),
+                       key=lambda a: a.width*a.height)
+            region = next(r for r in area.regions if r.type == 'WINDOW')
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            bpy.ops.screen.area_split(direction='VERTICAL' if dimension == 'width' else 'HORIZONTAL',
+                                      factor=.5 if dimension == 'width' else .25)
+        yield from settle(8)
+        candidates = [a for a in win.screen.areas if a.type == 'VIEW_3D']
+        area = min(candidates, key=lambda a: a.width if dimension == 'width' else a.height)
+        region = next(r for r in area.regions if r.type == 'WINDOW')
+        check((region.width/scale < 480 and region.height/scale >= 320) if dimension == 'width'
+              else (region.height/scale < 320 and region.width/scale >= 480),
+              f'unsupported {dimension} fixture must isolate one limit: {region.width}x{region.height}')
+        print('UNSUPPORTED_VIEWPORT', dimension, region.x, region.y, region.width, region.height, flush=True)
+        cx, cy = region.x+region.width//2, region.y+region.height//2
+        count = len(observed)
+        yield from open_box()
+        yield from close_box()
+        if (len(observed) != count+1 or observed[-1] != ('view.toggle_quad', {'FINISHED'})
+                or not area.spaces.active.region_quadviews):
+            review_failures.append(f'unsupported {dimension} short tap did not toggle quad')
+        if area.spaces.active.region_quadviews:
+            region = next(r for r in area.regions if r.type == 'WINDOW')
+            with bpy.context.temp_override(window=win, area=area, region=region):
+                real_dispatch(bpy.context, 'view.toggle_quad')
+            yield from settle(8)
+        region = next(r for r in area.regions if r.type == 'WINDOW')
+        cx, cy = region.x+region.width//2, region.y+region.height//2
+        count = len(observed)
+        yield from open_box()
+        yield from settle(20)
+        screenshot(f'menus-unsupported-{dimension}-hold.png')
+        yield from close_box()
+        check(len(observed) == count and not area.spaces.active.region_quadviews,
+              f'unsupported {dimension} hold toggled layout')
+        yield from open_box()
+        event('RIGHTMOUSE')
+        yield
+        event('SPACE', 'RELEASE')
+        yield
+        event('RIGHTMOUSE', 'RELEASE')
+        yield from settle()
+        check(len(observed) == count, f'unsupported {dimension} mouse gesture became tap')
+        check(not win.screen.is_animation_playing, f'unsupported {dimension} leaked Space playback')
+    check(not review_failures, '\n'.join(review_failures))
+    print('PASS review regression: ordinary cancellation and unsupported width/height tap/hold', flush=True)
     hotbox_runtime.dispatch = real_dispatch
     print('PASS B2/B3/B4/B8 cancel, two buttons, disabled, mode cleanup, center remaps', flush=True)
     print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
