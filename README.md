@@ -10,7 +10,7 @@ AxisMeld 官方版本永久免费，不销售软件，不设置付费功能，�
 
 AxisMeld 与 Blender Foundation、Autodesk 及其产品均无隶属、合作、赞助或官方背书关系。Blender、Autodesk 和 Maya 等名称仅用于事实性说明软件基础及兼容目标。
 
-当前已进入 Phase 0 开发基线阶段。详见 [AxisMeld 架构设计](docs/design/2026-09-08-axismeld-architecture.md)。
+当前已进入 Phase 1 输入基础阶段。详见 [AxisMeld 架构设计](docs/design/2026-09-08-axismeld-architecture.md)。
 
 ## AxisMeld project statement
 
@@ -29,8 +29,17 @@ AxisMeld `0.1.0-dev` has a verified Windows 11 x64 Release build based on Blende
 `blender.exe`, identifies the running product as AxisMeld, and stores development preferences under
 the adjacent `portable` directory. The three focused identity and isolation tests pass.
 
-Maya-style shortcuts, hotbox behavior, viewport interaction, modeling additions, and the UV overhaul
-remain planned work and are not part of the Phase 0 build.
+## Phase 1 input foundation
+
+The bundled **AxisMeld Maya 2026** keymap preset is available under **Edit → Preferences → Keymap**.
+It covers Q/W/E/R tools, F8–F11 mesh component modes, A/F framing, Alt+mouse navigation and
+4/5 shading in the 3D View, with separate studio/user JSON overrides and conflict diagnostics.
+These are adapted Blender behaviors, not full Maya parity. Other editors inherit Industry
+Compatible bindings. [Activation, mapping differences and profile format](docs/maya-mapping/phase-1.md).
+
+Hotbox/marking menus, Maya single/quad view switching, temporary snapping/pivot gestures,
+modeling additions and the UV overhaul remain planned work. This is a development baseline;
+physical input and splash visibility still require interactive acceptance before a binary release.
 
 ---
 

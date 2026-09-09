@@ -14,6 +14,7 @@ _modules = [
     "add_mesh_torus",
     "anim",
     "assets",
+    "axismeld",
     "bone_selection_sets",
     "clip",
     "connect_to_output",
@@ -71,6 +72,7 @@ def register():
             register_class(cls)
 
     bone_selection_sets.register()
+    axismeld.register()
     copy_global_transform.register()
     project.register()
 
@@ -83,6 +85,7 @@ def unregister():
     )
 
     bone_selection_sets.unregister()
+    axismeld.unregister()
     copy_global_transform.unregister()
     project.unregister()
 

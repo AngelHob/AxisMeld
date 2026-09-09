@@ -226,6 +226,16 @@ add_python_test(
   --blender ${TEST_BLENDER_EXE}
 )
 
+add_python_test(
+  axismeld_input_profiles
+  ${CMAKE_CURRENT_LIST_DIR}/axismeld_input_test.py
+)
+
+add_blender_test(
+  axismeld_input_blender
+  --python ${CMAKE_CURRENT_LIST_DIR}/axismeld_input_blender.py
+)
+
 add_blender_test(
   script_load_keymap
   --python ${CMAKE_CURRENT_LIST_DIR}/bl_keymap_completeness.py
