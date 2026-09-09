@@ -32,6 +32,7 @@
 #include "ED_transform.hh"
 
 #include "view3d_intern.hh"
+#include "view3d_axismeld.hh"
 #include "view3d_navigate.hh"
 
 #ifdef WIN32
@@ -188,6 +189,8 @@ static void VIEW3D_OT_pastebuffer(wmOperatorType *ot)
 
 void view3d_operatortypes()
 {
+  WM_operatortype_append(VIEW3D_OT_axismeld_hotbox);
+  WM_operatortype_append(VIEW3D_OT_axismeld_view);
   WM_operatortype_append(VIEW3D_OT_rotate);
   WM_operatortype_append(VIEW3D_OT_move);
   WM_operatortype_append(VIEW3D_OT_zoom);
@@ -268,6 +271,7 @@ void view3d_operatortypes()
 
 void view3d_keymap(wmKeyConfig *keyconf)
 {
+  WM_keymap_ensure(keyconf, "AxisMeld Hotbox", SPACE_VIEW3D, RGN_TYPE_WINDOW);
   WM_keymap_ensure(keyconf, "3D View Generic", SPACE_VIEW3D, RGN_TYPE_WINDOW);
 
   /* only for region 3D window */

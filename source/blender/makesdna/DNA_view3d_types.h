@@ -700,6 +700,8 @@ struct View3DOverlay {
 };
 
 struct View3D_Runtime {
+  void *axismeld_view_cache = nullptr;
+  void (*axismeld_view_cache_free)(void *cache) = nullptr;
   /** Nkey panel stores stuff here. */
   void *properties_storage = nullptr;
   void (*properties_storage_free)(void *properties_storage) = nullptr;

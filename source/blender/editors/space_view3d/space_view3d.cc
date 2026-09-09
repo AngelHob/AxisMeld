@@ -280,6 +280,9 @@ static void view3d_free(SpaceLink *sl)
     vd->runtime.properties_storage_free(vd->runtime.properties_storage);
     vd->runtime.properties_storage_free = nullptr;
   }
+  if (vd->runtime.axismeld_view_cache_free) {
+    vd->runtime.axismeld_view_cache_free(vd->runtime.axismeld_view_cache);
+  }
 
   if (vd->shading.prop) {
     IDP_FreeProperty(vd->shading.prop);
@@ -328,6 +331,22 @@ static SpaceLink *view3d_duplicate(SpaceLink *sl)
   /* copy or clear inside new stuff */
 
   return reinterpret_cast<SpaceLink *>(v3dn);
+}
+
+/* Resolve optional user bindings each event; empty maps must not reach WM_keymap_poll. */
+static void axismeld_hotbox_keymap(wmWindowManager *wm,
+                                   wmWindow * /*win*/,
+                                   wmEventHandler_Keymap * /*handler*/,
+                                   wmEventHandler_KeymapResult *result)
+{
+  *result = {};
+  if (!wm->runtime->userconf) {
+    return;
+  }
+  wmKeyMap *keymap = WM_keymap_find_all(wm, "AxisMeld Hotbox", SPACE_VIEW3D, RGN_TYPE_WINDOW);
+  if (keymap && !keymap->items.is_empty()) {
+    result->keymaps[result->keymaps_len++] = keymap;
+  }
 }
 
 /* add handlers, stuff you only do once or on area/region changes */
@@ -448,6 +467,9 @@ static void view3d_main_region_init(wmWindowManager *wm, ARegion *region)
   keymap = WM_keymap_ensure(
       wm->runtime->defaultconf, "Object Non-modal", SPACE_EMPTY, RGN_TYPE_WINDOW);
   WM_event_add_keymap_handler(&region->runtime->handlers, keymap);
+
+  WM_keymap_ensure(wm->runtime->defaultconf, "AxisMeld Hotbox", SPACE_VIEW3D, RGN_TYPE_WINDOW);
+  WM_event_add_keymap_handler_dynamic(&region->runtime->handlers, axismeld_hotbox_keymap, nullptr);
 
   keymap = WM_keymap_ensure(wm->runtime->defaultconf, "Frames", SPACE_EMPTY, RGN_TYPE_WINDOW);
   WM_event_add_keymap_handler(&region->runtime->handlers, keymap);
@@ -627,6 +649,10 @@ static void view3d_main_region_listener(const wmRegionListenerParams *params)
   switch (wmn->category) {
     case NC_WM:
       if (ELEM(wmn->data, ND_UNDO)) {
+        if (v3d->runtime.axismeld_view_cache_free) {
+          v3d->runtime.axismeld_view_cache_free(v3d->runtime.axismeld_view_cache);
+          v3d->runtime.axismeld_view_cache = nullptr;
+        }
         WM_gizmomap_tag_refresh(gzmap);
       }
       else if (ELEM(wmn->data, ND_XR_DATA_CHANGED)) {

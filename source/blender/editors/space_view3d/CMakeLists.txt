@@ -19,6 +19,8 @@ set(INC_SYS
 set(SRC
   drawobject.cc
   space_view3d.cc
+  view3d_axismeld_hotbox.cc
+  view3d_axismeld_views.cc
   view3d_buttons.cc
   view3d_camera_control.cc
   view3d_context.cc
@@ -68,10 +70,12 @@ set(SRC
   view3d_vr_location_scouting.cc
 
   view3d_intern.hh
+  view3d_axismeld.hh
   view3d_navigate.hh
 )
 
 set(LIB
+  PRIVATE bf::axismeld
   PRIVATE bf::animrig
   PRIVATE bf::asset_system
   PRIVATE bf::blenfont

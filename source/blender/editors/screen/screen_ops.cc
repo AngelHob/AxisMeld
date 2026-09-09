@@ -5919,7 +5919,7 @@ static wmOperatorStatus region_quadview_exec(bContext *C, wmOperator *op)
       RegionView3D *rv3d = static_cast<RegionView3D *>(region->regiondata);
 
       /* if this is a locked view, use settings from 'User' view */
-      if (rv3d->viewlock) {
+      if (rv3d->viewlock && !RNA_boolean_get(op->ptr, "preserve_active_view")) {
         View3D *v3d_user;
         ARegion *region_user;
 
@@ -6031,6 +6031,11 @@ static void SCREEN_OT_region_quadview(wmOperatorType *ot)
   ot->exec = region_quadview_exec;
   ot->poll = ED_operator_region_view3d_active;
   ot->flag = 0;
+  RNA_def_boolean(ot->srna,
+                  "preserve_active_view",
+                  false,
+                  "Preserve Active View",
+                  "Keep the initiating pane when leaving quad view, including locked views");
 }
 
 /** \} */

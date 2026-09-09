@@ -245,6 +245,12 @@ if(WIN32)
     --blender ${TEST_BLENDER_EXE}
   )
   set_tests_properties(axismeld_manipulator_events PROPERTIES TIMEOUT 200 RUN_SERIAL TRUE)
+  add_python_test(
+    axismeld_hotbox_events
+    ${CMAKE_CURRENT_LIST_DIR}/axismeld_hotbox_ui_runner.py
+    --blender ${TEST_BLENDER_EXE}
+  )
+  set_tests_properties(axismeld_hotbox_events PROPERTIES TIMEOUT 260 RUN_SERIAL TRUE)
 endif()
 
 add_blender_test(
