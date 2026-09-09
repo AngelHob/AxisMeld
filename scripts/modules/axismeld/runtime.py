@@ -22,7 +22,11 @@ def load(*, session=None):
     global diagnostics, sources
     keyconfigs = bpy.context.window_manager.keyconfigs
     existing = keyconfigs.get(PRESET_NAME)
-    use_overrides = existing.preferences.use_file_overrides if existing and existing.preferences else True
+    # Preferences outlive their keyconfig, including on a fresh application startup.
+    # Obtain the saved preference before deciding whether profile files are enabled.
+    if existing is None:
+        existing = keyconfigs.new(PRESET_NAME)
+    use_overrides = existing.preferences.use_file_overrides
     directory = profile_directory()
     # Both files are shipped in the standard scripts tree and installed by upstream CMake.
     data_file = Path(__file__).resolve().parents[2] / 'presets/keyconfig/keymap_data/industry_compatible_data.py'

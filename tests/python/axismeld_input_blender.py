@@ -147,6 +147,68 @@ class InstalledInputTest(unittest.TestCase):
             runtime.profile_directory = old_directory
             runtime.load()
 
+    def test_export_preserves_semantic_command_properties(self):
+        from bl_keymap_utils.io import keyconfig_export_as_data
+        keyconfigs = bpy.context.window_manager.keyconfigs
+        previous = keyconfigs.active
+        try:
+            self.assertTrue(bpy.utils.keyconfig_set(str(self.preset)))
+            keyconfigs.update()
+            with tempfile.TemporaryDirectory() as directory:
+                export = Path(directory) / 'AxisMeld_Export_Test.py'
+                keyconfig_export_as_data(bpy.context.window_manager, keyconfigs.active, str(export), all_keymaps=True)
+                self.assertTrue(bpy.utils.keyconfig_set(str(export)))
+                saved = {item.properties.command for keymap in keyconfigs.active.keymaps
+                         for item in keymap.keymap_items if item.idname == 'axismeld.command'}
+                self.assertEqual(saved, set(COMMANDS))
+        finally:
+            keyconfigs.active = previous
+            exported = keyconfigs.get('AxisMeld_Export_Test')
+            if exported:
+                keyconfigs.remove(exported)
+
+    def test_native_user_keymap_edit_survives_profile_reload(self):
+        keyconfigs = bpy.context.window_manager.keyconfigs
+        self.assertTrue(bpy.utils.keyconfig_set(str(self.preset)))
+        keyconfigs.update()
+        def user_move():
+            return next(item for item in keyconfigs.user.keymaps['Mesh'].keymap_items
+                        if item.idname == 'axismeld.command' and item.properties.command == 'transform.move')
+        item = user_move()
+        original = item.type
+        try:
+            item.type = 'U'
+            keyconfigs.update()
+            runtime.load()
+            keyconfigs.update()
+            self.assertEqual(user_move().type, 'U')
+        finally:
+            user_move().type = original
+            keyconfigs.update()
+
+    def test_disabled_file_overrides_survive_keyconfig_recreation(self):
+        old_directory = runtime.profile_directory
+        keyconfigs = bpy.context.window_manager.keyconfigs
+        try:
+            with tempfile.TemporaryDirectory() as directory:
+                runtime.profile_directory = lambda: Path(directory)
+                (Path(directory) / 'user.json').write_text(json.dumps({
+                    'schema_version': 1, 'bindings': {'transform.move': {'type': 'T'}}}))
+                config = runtime.load()
+                config.preferences.use_file_overrides = False
+                keyconfigs.remove(config)
+                recreated = runtime.load()
+                self.assertFalse(recreated.preferences.use_file_overrides)
+                move = next(item.type for item in recreated.keymaps['Mesh'].keymap_items
+                            if item.idname == 'axismeld.command' and item.properties.command == 'transform.move')
+                self.assertEqual(move, 'W')
+        finally:
+            runtime.profile_directory = old_directory
+            config = keyconfigs.get(PRESET_NAME)
+            if config:
+                config.preferences.use_file_overrides = True
+            runtime.load()
+
 
 if __name__ == '__main__':
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(InstalledInputTest)
