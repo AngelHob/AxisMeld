@@ -2,6 +2,11 @@
 
 Status: user approved priority, scope and implementation on 2026-09-09.
 
+Follow-up decision (2026-09-09): the user deferred the Object Mode Global scaling
+geometry mismatch (AXM-COMPAT-001). Retain native transform mathematics and continue
+the hotbox/view roadmap; do not adopt the experimental geometry or parent-matrix routes.
+See `../compatibility/global-object-scale.md`. Deferral is not a fix or a review approval.
+
 ## Interaction contract
 
 In the AxisMeld Maya 2026 preset, Object Mode and mesh Edit Mode:
