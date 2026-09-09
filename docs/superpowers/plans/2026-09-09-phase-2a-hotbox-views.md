@@ -149,3 +149,11 @@ Minimal seam: native `SCREEN_OT_region_quadview` boolean property `preserve_acti
 8. `git diff --check`, commit task files; report RED/GREEN commands, installed smoke evidence, exact executable location and outstanding manual tests. Independent task review, then whole-branch review over this plan's implementation commits, no integration merge/push.
 
 **Acceptance:** H1-H10 covered by explicit tests or honestly listed manual limits; no undocumented partial user-facing feature. A locally built hand-test deliverable is not approval to merge into integration.
+
+## Final review closure: native navigation and small acceptance gaps
+
+The final review reproduced BOXCLIP degeneration after an AxisMeld TOP-to-SIDE action followed by native `view3d.zoom`: native navigation reaches the shared clipping helper without passing the AxisMeld-only refresh guard. Extend the existing last-valid-volume contract to that real navigation entry point. Keep the guard local to AxisMeld-controlled view state and preserve unrelated presets' native behavior; reuse one contributor-completeness check rather than duplicating clipping mathematics. No global keymap, GHOST, geometry or transform changes.
+
+Write a real native zoom regression before the correction, including missing TOP and missing FRONT contributors, last-valid planes through navigation, and recalculation after contributors return. Exercise native pan where it shares this path. Do not substitute direct RNA assignments for these navigation events. Preserve independent user clipping and native linked-navigation/lock semantics.
+
+In the same single final fix wave, strengthen the pure cancellation test with a live marking candidate, and replace the preset's hardcoded Space wording with trigger-key-neutral text. Retain the disclosed edge-label cropping and baseline PNG warning; neither requires new feature work. Build affected targets, restage only the separate test installation, run covering native/installed/GUI tests, and record evidence before scoped re-review. Original install and integration branch remain untouched.
