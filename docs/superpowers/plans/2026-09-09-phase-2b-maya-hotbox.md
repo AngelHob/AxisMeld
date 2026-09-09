@@ -10,7 +10,7 @@
 
 **Spec:** [已批准的 Phase 2B 规格](../specs/2026-09-09-phase-2b-maya-hotbox-design.md)。同时完整读取 [菜单清单](../../maya-mapping/hotbox-maya2026.md)。
 
-状态：计划已编写，步骤均未执行。源码检查基线 `8007814bb87`；该提交没有新版热盒实现。
+状态：用户已确认逐项子代理实现与审查，进入执行；进度记录在本计划专属 SDD ledger。执行基线 `4a6ea4c819c`；该提交没有新版热盒实现。
 
 ## Global Constraints
 
@@ -137,11 +137,18 @@ bool parse_menu_snapshot(std::string_view json, MenuSnapshot &out, std::string &
 纯布局模型使用同一个 MenuNode/MenuSnapshot 定义：把这些纯类型放 `AXM_hotbox_menu.hh`，
 内部头只 include 该公共头并声明编辑器函数，禁止复制一份类型。接口中的 std 容器只持有数值/字符串。
 
+JSON 的 null 中央映射在 native parser 内转为空 string；合法菜单 ID 非空，必须覆盖禁用映射的
+往返测试。不要把 JSON null 与字面字符串 "null" 混淆。
+
 ## Task 1：声明式目录、覆盖校验与快照契约
 
 **Files:** 创建 `hotbox_catalog.py`、`hotbox_profiles.py`、`hotbox_runtime.py`；创建 `tests/python/axismeld_hotbox_catalog_test.py`；修改 `commands.py`。
 **Consumes:** 已批准菜单对照表、现有 COMMANDS、共享 JSON schema。
 **Produces:** 上述 Python 接口；默认目录、固定策略、三方向无默认键位的元数据。
+
+执行前所有权澄清：本任务实现 catalog/policy、严格校验/层合并及 snapshot 序列化；dispatch、
+内存 settings 和其所需 Recent 容器在 Task 3 实现，文件/偏好持久化和历史 UI 在 Task 5 接入。
+不为后续函数添加空实现。各项仍沿用共享接口签名。
 
 - [ ] **1. 写首个失败测试：目录顺序、三方向元数据、层回退。** 测试文件在脚本开头把源码 `scripts/modules` 加入 sys.path；不加载 bpy。让 hotbox_runtime 的 bpy import 延迟到需要 context 的函数。
 
@@ -252,6 +259,10 @@ TEST(axismeld_hotbox, SmallViewportRefusesMenus)
 **Files:** 创建 `view3d_axismeld_hotbox_release.cc`、`view3d_axismeld_hotbox_internal.hh`；修改 `view3d_axismeld.hh`、`space_view3d.cc`、模块 CMake、`scripts/startup/bl_operators/axismeld.py`、`hotbox_runtime.py`；创建 `tests/python/axismeld_hotbox_release_events.py`。
 **Consumes:** Task 1 dispatch/策略定义、Task 2 内部类型。
 **Produces:** 内部语义 dispatch operator 和 `VIEW3D_OT_axismeld_hotbox_release_guard`；后者只有捕获键释放/重复与失焦处理，不绘制 UI。
+
+本任务提前增加 runner 的固定 --suite 路由以执行 release 夹具，默认 hotbox 保持不变；
+Task 4/5 在对应脚本存在后扩展枚举。将 Task 5 的 Recent 最小容器及纯行为测试一起前置到
+本任务，使 dispatch 成功记录有实际消费者；Task 5 负责其产品显示、容量/重放与持久设置验证。
 
 本任务也实现共享接口中的 AXISMELD_OT_hotbox_refresh、WindowManager 隐藏 JSON 属性及注册/注销，
 以便 Task 4 不需要直接运行 Python 源码字符串来刷新菜单。
