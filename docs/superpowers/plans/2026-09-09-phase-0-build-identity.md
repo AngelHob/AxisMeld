@@ -897,7 +897,7 @@ Verify visibly that the main window and splash show `AxisMeld 0.1.0-dev` togethe
 
 Controller status: the main-window title and portable config location were verified, but automated pixel capture failed in the Windows helper. Keep this step unchecked until a visible splash review succeeds.
 
-- [ ] **Step 4: Controller merges and pushes the validated branch**
+- [x] **Step 4: Controller merges and pushes the validated branch**
 
 Run:
 
@@ -908,6 +908,10 @@ git rev-parse HEAD
 ```
 
 Expected: push succeeds and the two printed commit hashes are identical.
+
+Controller result: `axismeld/phase-0` was fast-forwarded into `axismeld/integration`, the merged
+result passed the focused tests and Windows verifier, and the GitHub branch hash matched the local
+integration hash after push.
 
 - [x] **Step 5: Record the local Phase 0 boundary**
 
