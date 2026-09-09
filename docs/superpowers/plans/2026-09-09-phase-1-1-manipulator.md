@@ -83,4 +83,10 @@ Files: `tests/python/axismeld_input_benchmark.py`, `docs/maya-mapping/phase-1-1.
   preference; normal cleanup writes only into the disposable test root.
 - Dispatch-only timing: native median 0.0435 ms / p95 0.0476 ms; adapter median 0.0722 ms /
   p95 0.0788 ms. Sequential shared-cache measurement is not physical latency or a stutter fix claim.
-- Native seam review and final publication remain pending.
+- Final targeted build/install and Windows verifier passed; final CTest 7/7 passed in 18.61 s.
+- Implementation commit: `d67889346c6`. Installed executable SHA-256 matched build output:
+  `72DB65EDE53C3E5C724D5ACF33586FF04EEC9C123B5004AAE9D3D365DF481408`.
+- Independent native review was dispatched, but returned no assessment after repeated bounded
+  waits and a request for partial findings. It was stopped rather than recorded as approval.
+  Review and integration/publication are deliberately still pending. The local build is handed
+  off for manual acceptance; `axismeld/integration` and origin remain at the Phase 1 baseline.
