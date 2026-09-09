@@ -11,6 +11,8 @@
 **Spec:** [已批准的 Phase 2B 规格](../specs/2026-09-09-phase-2b-maya-hotbox-design.md)。同时完整读取 [菜单清单](../../maya-mapping/hotbox-maya2026.md)。
 
 状态：用户已确认逐项子代理实现与审查，进入执行；进度记录在本计划专属 SDD ledger。执行基线 `4a6ea4c819c`；该提交没有新版热盒实现。
+续作顺序：先完成用户新增的镜头双轴/方向修复并审查，再继续 Task 3–5。跨新窗口交接按更新规格
+延期；所有新开窗口命令仍禁用，保留其失败诊断。热盒主界面未接入前不得称新版交互可用。
 
 ## Global Constraints
 
@@ -323,10 +325,10 @@ return OPERATOR_PASS_THROUGH;
 guard 的默认状态只包括本热盒已经捕获的 DOWN；不猜整个键盘状态。无待释放键时不创建 handler。
 命令导致原区域销毁时 guard 只依赖仍存活的窗口，不解引用旧 region。来源窗口失效由 WM 生命周期清理。
 
-- [ ] **3. 按源码证据确定调用次序并测门禁。** `WM_event_add_modal_handler_ex` 走窗口 modal handler 插入逻辑；先去掉热盒 draw/timer、调用子命令，再添加 guard，使 guard 先看到残留释放。用实际 probe 证明顺序，不仅检查列表名字。禁止修改 wm_event_system.cc；若文件浏览器等 handler 优先级无法满足则停止该任务并报告，不以延迟执行到 Space 松开偷换命令时序。
-- [ ] **4. 无写入文件选择夹具。** 测试进程注册 invoke 调用 `fileselect_add(self)` 的空 operator，execute/cancel 仅返回状态；不指定用户目录，不写文件。验证 Space/RMB 释放不选文件/确认，Esc 正常取消。probe 同时验证 guard 不阻碍随后 MOUSEMOVE、一次新的 LMB 和 Esc。
+- [ ] **3. 按源码证据确定调用次序并测同窗口门禁。** `WM_event_add_modal_handler_ex` 走窗口 modal handler 插入逻辑；先去掉热盒 draw/timer、调用子命令，再添加 guard，使 guard 先看到残留释放。用实际普通及优先 modal probe 证明顺序，不仅检查列表名字。禁止修改 wm_event_system.cc；不以延迟执行到 Space 松开偷换命令时序。补测预设切换及同窗口 popup 正常后续输入；不扩大为跨窗口机制。
+- [ ] **4. 保留无写入新窗口诊断。** 原 `fileselect_add` 真实新窗口接收探针保留为固定 `--suite release-cross-window` 独立诊断，仍以收到残留 RELEASE 判失败，不能改成假绿色。正常 `--suite release` 仅覆盖本轮同窗口及生命周期门禁，输出明确范围。execute/cancel 不写文件，Esc 清理测试窗口。产品目录和 dispatch 允许列表均不得启用新开窗口命令。
 - [ ] **5. 同步与失败路径。** dispatch 重新 adapter.available；CANCELLED/异常不写 Recent；FINISHED 才 record。上下文变化类命令执行前关闭热盒；普通方向动作保留主热盒。guard 不要求 active preset 保持原值；否则用户切预设会导致释放穿透。
-- [ ] **6. 运行并提交。** 保存无 guard RED、guard GREEN、同步成功/失败及文件夹具结果；确认正常安装哈希未变。该任务门禁失败不得进入 Task 4 UI 集成。
+- [ ] **6. 运行并提交。** 保存无 guard RED、同窗口 guard GREEN、同步成功/失败和单列的跨窗口已知失败诊断；确认正常安装哈希未变。同窗口门禁失败不得进入 Task 4；跨窗口明确延期，不掩盖或宣称全门禁通过。
 
 ## Task 4：原生主菜单、中央七向与完整生命周期
 
@@ -421,7 +423,7 @@ $ctestTool = 'C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Commo
 & 'C:\Python314\python.exe' tests/python/axismeld_manipulator_ui_runner.py --blender D:/source/AxisMeld-build/phase2b-test-install/blender.exe
 ```
 
-扩展原 runner 支持 `--suite`，只接受固定枚举 `hotbox|menus|release|profiles`，映射到本计划四个明确测试文件，不接受任意用户脚本路径。默认 hotbox 保留向后兼容。
+扩展原 runner 支持 `--suite`，只接受固定枚举 `hotbox|menus|release|release-cross-window|profiles`（新增导航修复可有独立固定入口），映射到明确测试文件，不接受任意用户脚本路径。默认 hotbox 保留向后兼容。release-cross-window 是延期缺陷的独立诊断，不混入本轮成功汇总。
 布局纯测试覆盖全部规定缩放；GUI 至少覆盖 1.0/2.0 与四角，保存并实际查看截图。低于尺寸下限的 short/hold 分开断言。
 - [ ] **6. 文档和 handoff。** 报告记录源码/上游提交、真实命令、用例数、exe 哈希、已知警告、人工待验收和未接入目录。菜单表只按实际结果更新。人工表至少包括 Space 主目录、RMB 七向、点击式/划选式子菜单、边缘、快速手势、残留释放、三键覆盖、四视图和 W/E/R 回归。
 - [ ] **7. 审查后提交交付。** 每项审查加最终整体审查；重大问题按开发技能门禁修复，不靠后续批次掩盖。保留分支和独立 stage，提供 exe 与人工表链接，不自动启动用户 GUI、不合并/推送。只有 B12 人工通过后才写体验验收通过。
@@ -437,7 +439,7 @@ $ctestTool = 'C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Commo
 | B5 配置/隔离 | 1 原子层校验、5 安装态 |
 | B6 生命周期 | 3 退出、4 上下文、5 文件/预设回归 |
 | B7 缓存/裁剪 | 2 七方向回归、4/5 保留既有完整 GUI |
-| B8 modal/文件转交 | 3 无写入夹具、4 提交桥 |
+| B8 同窗口转交/新窗口禁用 | 3 同窗口门禁及独立跨窗口已知失败诊断、4 提交桥允许列表 |
 | B9 UI scale/小视口 | 2 布局、4 绘制、5 截图 |
 | B10 Recent | 1 策略、3 成功回报、5 历史 |
 | B11 既有命令 | 2 adapter、5 全部相关回归 |
