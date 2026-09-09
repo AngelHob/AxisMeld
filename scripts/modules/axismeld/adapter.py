@@ -11,7 +11,8 @@ COMPONENTS = {'selection.vertex_mode': 'VERT', 'selection.edge_mode': 'EDGE',
               'selection.face_mode': 'FACE'}
 VIEW_OPS = {'view.focus_selected': ('view_selected', {'use_all_regions': False}),
             'view.frame_all': ('view_all', {'center': False}),
-            'view.orbit': ('rotate', {}), 'view.pan': ('move', {}), 'view.dolly': ('zoom', {})}
+            'view.orbit': ('rotate', {}), 'view.pan': ('move', {}),
+            'view.dolly': ('zoom', {'use_axismeld_dolly': True})}
 VIEW_ACTIONS = {'view.toggle_quad': 'TOGGLE_QUAD', 'view.perspective': 'PERSPECTIVE',
                 'view.side': 'SIDE', 'view.front': 'FRONT', 'view.top': 'TOP',
                 'view.left': 'LEFT', 'view.back': 'BACK', 'view.bottom': 'BOTTOM'}

@@ -188,6 +188,8 @@ struct ViewOpsData {
 
   float reverse;
   bool axis_snap; /* view rotate only */
+  /** Opt-in two-axis mouse dolly; only the AxisMeld adapter enables this. */
+  bool use_axismeld_dolly = false;
 
   /** Use for orbit selection and auto-dist. */
   float dyn_ofs[3];

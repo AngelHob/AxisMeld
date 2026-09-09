@@ -26,7 +26,7 @@ Industry Compatible 的配置，不代表已经完成 Maya 对照。
 | A | `view.frame_all` | 当前区域全部聚焦；未实现 Maya 的历史菜单 |
 | Alt + 左键拖动 | `view.orbit` | Blender 原生旋转；相机枢轴、锁定和灵敏度仍按 Blender 设置 |
 | Alt + 中键拖动 | `view.pan` | Blender 原生平移 |
-| Alt + 右键拖动 | `view.dolly` | Blender 原生 zoom；投影和相机语义与 Maya dolly 不完全相同 |
+| Alt + 右键拖动 | `view.dolly` | AxisMeld 双轴输入接入 Blender 原生 zoom；向右/下拉近，向左/上拉远；投影和相机语义与 Maya dolly 不完全相同 |
 | 4 | `view.wireframe` | Blender Wireframe 显示 |
 | 5 | `view.shaded` | Blender Solid 显示；材质和灯光模式未映射 |
 | Space 短按 | `hotbox.open` → `view.toggle_quad` | 当前面板单视图/四视图切换；0.4 秒阈值可在预设偏好中改为 0.1–1.0 秒 |
@@ -38,6 +38,23 @@ Industry Compatible 的配置，不代表已经完成 Maya 对照。
 
 键位依据：[Autodesk Maya 2026 官方快捷键表](https://help.autodesk.com/cloudhelp/2026/ENU/Maya-KeyboardShortcuts/files/GUID-30CACC9D-8FBE-4B85-8A8F-C5ADF32DDD4E.htm)。
 组件和聚焦绑定另与本机 Maya 2026 默认配置核对；未复制其脚本或个人设置。
+
+## Dolly 输入修复边界（2026-09-09）
+
+只由 AxisMeld 的 `view.dolly` 显式启用原生 `view3d.zoom` 的
+`use_axismeld_dolly` 属性（默认关闭）。Blender / Industry Compatible 的键位与
+全局缩放偏好不修改。水平方向依据 [Autodesk 官方 Camera tools 教程](https://download.autodesk.com/us/maya/maya_2014_gettingstarted/files/Viewing_the_Maya_3D_scene_Camera_tools.htm)：
+Alt+右键向右拉近、向左拉远。垂直采用用户确认的现有默认行为反向：向上拉远、
+向下拉近；不把此确认扩展为所有 Maya 相机设置的完全等价承诺。
+
+输入使用按下点至当前点的累计位移，屏幕坐标向上为正。
+距离比例为 `exp(clamp((dy-dx)/(300*UI_SCALE_FAC), -20, 20))`。
+两轴等权相加：右下加强拉近，左上加强拉远，等量右上/左下抵消。
+相同位移不依赖起点；回到按下点恢复起始距离；停止鼠标不继续移动。
+这是有界、平滑的 AxisMeld 灵敏度选择，不宣称与 Maya 数值相同。
+相机画框采用倒数比例；普通/正交距离、相机缩放、锁定相机、四视图同步与
+BOXCLIP 继续经过原生缩放路径与边界处理，不引入镜头焦距变动或新相机模型。
+原生滚轮/触控板步进不变；合成事件验证不替代人工键鼠手感验收。
 
 ## 保留但尚未实现
 

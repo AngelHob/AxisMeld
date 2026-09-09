@@ -19,6 +19,7 @@
 #include "WM_api.hh"
 
 #include "RNA_access.hh"
+#include "RNA_define.hh"
 
 #include "ED_screen.hh"
 
@@ -262,8 +263,23 @@ static float viewzoom_scale_value_offset(const rcti *winrct,
                                          const int xy_offset[2],
                                          const float val,
                                          const float val_orig,
-                                         double *r_timer_lastdraw)
+                                         double *r_timer_lastdraw,
+                                         const bool use_axismeld_dolly)
 {
+  if (use_axismeld_dolly) {
+    /* Screen Y is up: right/down move closer, left/up move farther away.
+     * Use total displacement so event rate and drag origin do not affect the result.
+     * Clamp the exponent before expf; the caller still applies native distance/camera bounds.
+     * Camera framing stores magnification instead of distance, hence the inverse sign. */
+    const double dx = double(xy_curr[0]) - double(xy_init[0]);
+    const double dy = double(xy_curr[1]) - double(xy_init[1]);
+    float exponent = float((dy - dx) / (300.0 * UI_SCALE_FAC));
+    if (zoom_invert_force) {
+      exponent = -exponent;
+    }
+    return val_orig * expf(clamp_f(exponent, -20.0f, 20.0f)) / val;
+  }
+
   const int xy_curr_offset[2] = {
       xy_curr[0] + xy_offset[0],
       xy_curr[1] + xy_offset[1],
@@ -302,7 +318,8 @@ static void viewzoom_apply_camera(ViewOpsData *vod,
                                      vod->init.event_xy_offset,
                                      zoomfac,
                                      zoomfac_prev,
-                                     &vod->prev.time);
+                                     &vod->prev.time,
+                                     vod->use_axismeld_dolly);
 
   if (!ELEM(zfac, 1.0f, 0.0f)) {
     /* calculate inverted, then invert again (needed because of camera zoom scaling) */
@@ -334,7 +351,8 @@ static void viewzoom_apply_3d(ViewOpsData *vod,
                                            vod->init.event_xy_offset,
                                            vod->rv3d->dist,
                                            vod->init.dist,
-                                           &vod->prev.time);
+                                           &vod->prev.time,
+                                           vod->use_axismeld_dolly);
 
   if (zfac != 1.0f) {
     const float zfac_min = dist_range.min / vod->rv3d->dist;
@@ -537,7 +555,10 @@ static wmOperatorStatus viewzoom_invoke_impl(bContext *C,
     return OPERATOR_FINISHED;
   }
 
-  if (U.viewzoom == USER_ZOOM_CONTINUE) {
+  /* Trackpad and step events above keep their native interpretation. */
+  vod->use_axismeld_dolly = RNA_boolean_get(ptr, "use_axismeld_dolly");
+
+  if (!vod->use_axismeld_dolly && U.viewzoom == USER_ZOOM_CONTINUE) {
     /* needs a timer to continue redrawing */
     vod->timer = WM_event_timer_add(CTX_wm_manager(C), CTX_wm_window(C), TIMER, 0.01f);
     vod->prev.time = BLI_time_now_seconds();
@@ -572,6 +593,12 @@ void VIEW3D_OT_zoom(wmOperatorType *ot)
   /* properties */
   view3d_operator_properties_common(
       ot, V3D_OP_PROP_DELTA | V3D_OP_PROP_MOUSE_CO | V3D_OP_PROP_USE_MOUSE_INIT);
+  PropertyRNA *prop = RNA_def_boolean(ot->srna,
+                                     "use_axismeld_dolly",
+                                     false,
+                                     "AxisMeld Dolly Input",
+                                     "Use cumulative right/down dolly input on both mouse axes");
+  RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
 }
 
 /** \} */
