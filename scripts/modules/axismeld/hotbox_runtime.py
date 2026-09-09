@@ -5,9 +5,9 @@ from copy import deepcopy
 import json
 from threading import Lock
 
-from .commands import COMMANDS
-from .hotbox_catalog import default_catalog
-from .hotbox_profiles import DEFAULT_SETTINGS, validate_settings
+from .commands import COMMANDS, PRESET_NAME
+from .hotbox_catalog import default_catalog, command_policy
+from .hotbox_profiles import CANONICAL_ROWS, DEFAULT_SETTINGS, resolve_hotbox, validate_settings
 
 
 MAX_NODES = 256
@@ -26,6 +26,82 @@ SETTING_VALUES = {
 
 _generation = 0
 _generation_lock = Lock()
+_settings = deepcopy(DEFAULT_SETTINGS)
+diagnostics = []
+
+# Deliberately independent of the general adapter registry: new-window/file and interactive
+# navigation actions must not become callable through this batch's menu bridge.
+SUPPORTED_COMMANDS = frozenset({
+    'view.perspective', 'view.side', 'view.bottom', 'view.front', 'view.back',
+    'view.top', 'view.left', 'view.focus_selected', 'view.frame_all', 'view.wireframe',
+    'view.shaded', 'view.toggle_quad', 'selection.toggle_component', 'selection.vertex_mode',
+    'selection.edge_mode', 'selection.face_mode', 'transform.move', 'transform.rotate',
+    'transform.scale',
+})
+
+
+class RecentCommands:
+    """Session-only semantic IDs; never retains object references or file paths."""
+    def __init__(self):
+        self._items = []
+
+    def record(self, command):
+        if not isinstance(command, str) or command not in SUPPORTED_COMMANDS or not command_policy(command)[1]:
+            return
+        self._items = [command] + [item for item in self._items if item != command]
+        del self._items[10:]
+
+    def items(self):
+        return tuple(self._items)
+
+
+recent = RecentCommands()
+
+
+def dispatch(context, command):
+    """Recheck live availability and record only synchronous successful menu commands."""
+    if not isinstance(command, str) or command not in SUPPORTED_COMMANDS:
+        return {'CANCELLED'}
+    from . import adapter
+    config = context.window_manager.keyconfigs.active
+    if config is None or config.name != PRESET_NAME:
+        return {'CANCELLED'}
+    try:
+        available, _reason = adapter.available(context, command)
+        if not available:
+            return {'CANCELLED'}
+        result = adapter.run(context, command, invoke=True)
+    except Exception:
+        return {'CANCELLED'}
+    if result == {'FINISHED'}:
+        recent.record(command)
+    return result
+
+
+def apply_setting(context, setting, value):
+    """Apply a single validated menu setting to this session, without disk writes."""
+    global _settings
+    if (not isinstance(setting, str) or setting not in SETTING_VALUES or
+            not isinstance(value, str) or value not in SETTING_VALUES[setting]):
+        raise ValueError('Unknown hotbox setting or option')
+    candidate = deepcopy(_settings)
+    if setting.startswith('row.'):
+        row = setting.removeprefix('row.')
+        rows = set(candidate['rows'])
+        rows.symmetric_difference_update({row})
+        candidate['rows'] = [item for item in CANONICAL_ROWS if item in rows]
+    else:
+        candidate[setting] = int(value) if setting == 'transparency' else value
+    validate_settings(candidate)
+    _settings = candidate
+
+
+def reload_settings(context, *, session=None):
+    """Resolve baseline plus optional session layer; file/prefs loading belongs to Task5."""
+    global _settings, diagnostics
+    value, errors = resolve_hotbox([] if session is None else [('session', session)])
+    _settings = value['settings']
+    diagnostics = errors
 
 
 def _next_generation():
@@ -192,4 +268,4 @@ def _apply_runtime_capabilities(context, menus):
 def snapshot(context):
     """Return a capability-resolved snapshot for a live Blender context."""
     menus = _apply_runtime_capabilities(context, default_catalog())
-    return serialize_snapshot(make_snapshot(generation=_next_generation(), menus=menus))
+    return serialize_snapshot(make_snapshot(generation=_next_generation(), settings=_settings, menus=menus))

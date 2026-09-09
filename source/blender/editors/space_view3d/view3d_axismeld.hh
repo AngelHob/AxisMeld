@@ -11,6 +11,7 @@ struct ScrArea;
 struct wmOperator;
 struct wmOperatorType;
 void VIEW3D_OT_axismeld_hotbox(wmOperatorType *ot);
+void VIEW3D_OT_axismeld_hotbox_release_guard(wmOperatorType *ot);
 void VIEW3D_OT_axismeld_view(wmOperatorType *ot);
 bool axismeld_view_context_poll(bContext *C);
 bool axismeld_view_action(bContext *C, wmOperator *op, axismeld::HotboxAction action);

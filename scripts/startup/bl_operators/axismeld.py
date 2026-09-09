@@ -1,9 +1,9 @@
 # SPDX-FileCopyrightText: 2026 AxisMeld Authors
 # SPDX-License-Identifier: GPL-2.0-or-later
-from bpy.types import Operator, KeyConfigPreferences
+from bpy.types import Operator, KeyConfigPreferences, WindowManager
 from bpy.props import StringProperty, BoolProperty, FloatProperty
 
-from axismeld import adapter, runtime
+from axismeld import adapter, runtime, hotbox_runtime
 from axismeld.commands import PRESET_NAME
 
 
@@ -52,6 +52,50 @@ class AXISMELD_OT_reload_profile(Operator):
         return {'FINISHED'}
 
 
+class AXISMELD_OT_hotbox_dispatch(Operator):
+    bl_idname = 'axismeld.hotbox_dispatch'
+    bl_label = 'AxisMeld Hotbox Command'
+    bl_options = {'INTERNAL'}
+    command: StringProperty(name='Semantic command')
+
+    def execute(self, context):
+        result = hotbox_runtime.dispatch(context, self.command)
+        # Only the child owns a modal handler. A running child is not successful history yet.
+        return {'FINISHED'} if 'RUNNING_MODAL' in result else result
+
+
+class AXISMELD_OT_hotbox_setting(Operator):
+    bl_idname = 'axismeld.hotbox_setting'
+    bl_label = 'AxisMeld Hotbox Setting'
+    bl_options = {'INTERNAL'}
+    setting: StringProperty(name='Setting')
+    value: StringProperty(name='Option')
+
+    def execute(self, context):
+        try:
+            hotbox_runtime.apply_setting(context, self.setting, self.value)
+        except ValueError as error:
+            self.report({'WARNING'}, str(error))
+            return {'CANCELLED'}
+        return {'FINISHED'}
+
+
+class AXISMELD_OT_hotbox_refresh(Operator):
+    bl_idname = 'axismeld.hotbox_refresh'
+    bl_label = 'Refresh AxisMeld Hotbox'
+    bl_options = {'INTERNAL'}
+
+    def execute(self, context):
+        wm = context.window_manager
+        wm.axismeld_hotbox_snapshot = ''
+        try:
+            wm.axismeld_hotbox_snapshot = hotbox_runtime.snapshot(context)
+        except Exception as error:
+            self.report({'WARNING'}, str(error))
+            return {'CANCELLED'}
+        return {'FINISHED'}
+
+
 def _update_profile(self, context):
     runtime.load()
 
@@ -79,14 +123,18 @@ class AXISMELD_Preferences(KeyConfigPreferences):
             layout.label(text=message, icon='ERROR')
 
 
-classes = (AXISMELD_OT_command, AXISMELD_OT_reload_profile)
+classes = (AXISMELD_OT_command, AXISMELD_OT_reload_profile, AXISMELD_OT_hotbox_dispatch,
+           AXISMELD_OT_hotbox_setting, AXISMELD_OT_hotbox_refresh)
 
 
 def register():
     from bpy.utils import register_class
     register_class(AXISMELD_Preferences)
+    WindowManager.axismeld_hotbox_snapshot = StringProperty(
+        name='AxisMeld Hotbox Snapshot', options={'HIDDEN', 'SKIP_SAVE'})
 
 
 def unregister():
     from bpy.utils import unregister_class
     unregister_class(AXISMELD_Preferences)
+    del WindowManager.axismeld_hotbox_snapshot

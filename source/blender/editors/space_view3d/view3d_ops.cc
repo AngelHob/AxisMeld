@@ -190,6 +190,7 @@ static void VIEW3D_OT_pastebuffer(wmOperatorType *ot)
 void view3d_operatortypes()
 {
   WM_operatortype_append(VIEW3D_OT_axismeld_hotbox);
+  WM_operatortype_append(VIEW3D_OT_axismeld_hotbox_release_guard);
   WM_operatortype_append(VIEW3D_OT_axismeld_view);
   WM_operatortype_append(VIEW3D_OT_rotate);
   WM_operatortype_append(VIEW3D_OT_move);

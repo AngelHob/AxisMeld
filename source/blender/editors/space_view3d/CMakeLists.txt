@@ -20,6 +20,7 @@ set(SRC
   drawobject.cc
   space_view3d.cc
   view3d_axismeld_hotbox.cc
+  view3d_axismeld_hotbox_release.cc
   view3d_axismeld_views.cc
   view3d_buttons.cc
   view3d_camera_control.cc
@@ -71,6 +72,7 @@ set(SRC
 
   view3d_intern.hh
   view3d_axismeld.hh
+  view3d_axismeld_hotbox_internal.hh
   view3d_navigate.hh
 )
 
