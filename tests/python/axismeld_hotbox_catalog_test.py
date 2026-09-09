@@ -306,6 +306,14 @@ class HotboxCatalogTest(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     hotbox_runtime.validate_snapshot(value)
 
+    def test_snapshot_rejects_setting_option_for_menu_missing_from_current_tree(self):
+        value = hotbox_runtime.make_snapshot(generation=1)
+        pane = node_by_id(value['menus'], 'pane')
+        pane['children'] = [child for child in pane['children']
+                            if child['id'] != 'pane.shading']
+        with self.assertRaisesRegex(ValueError, 'unresolved menu ID'):
+            hotbox_runtime.validate_snapshot(value)
+
     def test_snapshot_rejects_cycles_excess_depth_node_count_and_size(self):
         cycle = hotbox_runtime.make_snapshot(generation=1)
         cycle['menus'][0]['children'] = [cycle['menus'][0]]

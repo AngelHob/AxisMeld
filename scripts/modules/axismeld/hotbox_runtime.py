@@ -271,6 +271,7 @@ def validate_snapshot(value):
 
     identifiers = set()
     menu_ids = set()
+    center_setting_menu_ids = set()
     active = set()
     count = 0
 
@@ -327,6 +328,8 @@ def validate_snapshot(value):
         elif kind == 'setting':
             if node['command'] not in SETTING_VALUES or item_value not in SETTING_VALUES[node['command']]:
                 raise ValueError('unknown setting ID or option')
+            if node['command'].startswith('center.') and item_value != 'none':
+                center_setting_menu_ids.add(item_value)
         else:
             if node['command'] or item_value:
                 raise ValueError('non-setting value and command must be empty')
@@ -344,6 +347,8 @@ def validate_snapshot(value):
 
     for root in menus:
         visit(root, 1)
+    if not center_setting_menu_ids <= menu_ids:
+        raise ValueError('center setting references an unresolved menu ID')
     for button, menu_id in value['settings']['center_buttons'].items():
         if menu_id is not None and menu_id not in menu_ids:
             raise ValueError(f'{button} references an unresolved menu ID')
