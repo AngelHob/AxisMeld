@@ -435,6 +435,7 @@ def suite():
                       'Common', 'Select', 'Modify', 'Current Pane', 'Pane View',
                       'Pane Shading', 'Panels', 'Panel Views', 'Modeling']
     mapping_items = popup(button_items[2], mapping_labels)
+    screenshot('menus-controls-center-button-open.png')
     yield from click(midpoint(mapping_items[9]))
     with bpy.context.temp_override(window=win, area=area, region=region):
         check(json.loads(hotbox_runtime.snapshot(bpy.context))['settings']['center_buttons']
@@ -455,6 +456,7 @@ def suite():
     yield from click(midpoint(recent_rect))
     recent_labels = [COMMANDS[command].label for command in hotbox_runtime.recent.items()]
     recent_items = popup(recent_rect, recent_labels)
+    screenshot('menus-recent-open.png')
     count = len(observed)
     yield from click(midpoint(recent_items[0]))
     check(len(observed) == count+1 and observed[-1] == (recent_command, {'FINISHED'}),
