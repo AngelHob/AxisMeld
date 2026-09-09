@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import sys
 import traceback
+import unittest
 
 import bpy
 
@@ -381,11 +382,18 @@ def bridge_suite(win, area, region):
                   'dispatch delegated availability checking solely to the adapter run')
             cube.hide_set(False)
             adapter.run = lambda *a, **k: {'CANCELLED'}
-            check(bpy.ops.axismeld.hotbox_dispatch(command='view.top') == {'CANCELLED'}, 'cancel lost')
+            with unittest.TestCase().assertNoLogs('axismeld.hotbox_runtime', level='ERROR'):
+                check(bpy.ops.axismeld.hotbox_dispatch(command='view.top') == {'CANCELLED'}, 'cancel lost')
             def raise_error(*args, **kwargs):
                 raise RuntimeError('private expected adapter failure')
             adapter.run = raise_error
-            check(bpy.ops.axismeld.hotbox_dispatch(command='view.top') == {'CANCELLED'}, 'exception lost')
+            with unittest.TestCase().assertLogs('axismeld.hotbox_runtime', level='ERROR') as diagnostic:
+                check(bpy.ops.axismeld.hotbox_dispatch(command='view.top') == {'CANCELLED'}, 'exception lost')
+            message = diagnostic.records[0].getMessage()
+            check(all(detail in message for detail in
+                      ('view.top', 'RuntimeError', 'private expected adapter failure')),
+                  'dispatch exception diagnostic lacks command/type/message')
+            print('PASS dispatch exception diagnostic:', message, flush=True)
             adapter.run = lambda *a, **k: bpy.ops.axismeld.release_priority_probe('INVOKE_DEFAULT')
             check(bpy.ops.axismeld.hotbox_dispatch(command='view.top') == {'FINISHED'}, 'modal wrapper')
             check([op.bl_idname for op in win.modal_operators] == ['AXISMELD_OT_release_priority_probe'],

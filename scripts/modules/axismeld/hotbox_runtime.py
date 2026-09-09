@@ -3,6 +3,7 @@
 """Runtime construction of validated hotbox JSON snapshots."""
 from copy import deepcopy
 import json
+import logging
 from threading import Lock
 
 from .commands import COMMANDS, PRESET_NAME
@@ -71,7 +72,9 @@ def dispatch(context, command):
         if not available:
             return {'CANCELLED'}
         result = adapter.run(context, command, invoke=True)
-    except Exception:
+    except Exception as error:
+        logging.getLogger(__name__).error(
+            'Hotbox command %s failed: %s: %s', command, type(error).__name__, error)
         return {'CANCELLED'}
     if result == {'FINISHED'}:
         recent.record(command)
