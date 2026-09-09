@@ -836,7 +836,7 @@ bool ED_view3d_camera_lock_undo_grouped_push(const char *str,
  * Use with quad-split so each view is clipped by the bounds of each view axis.
  * \{ */
 
-static void view3d_boxview_clip(ScrArea *area)
+void view3d_boxview_clip(ScrArea *area)
 {
   BoundBox *bb = MEM_new<BoundBox>("clipbb");
   float clip[6][4];

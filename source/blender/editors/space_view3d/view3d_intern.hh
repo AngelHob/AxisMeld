@@ -100,6 +100,8 @@ void view3d_boxview_copy(ScrArea *area, ARegion *region);
  * Sync center/zoom view of region to others, for view transforms.
  */
 void view3d_boxview_sync(ScrArea *area, ARegion *region);
+/** Rebuild only quad-derived clipping; does not synchronize view poses or independent clips. */
+void view3d_boxview_clip(ScrArea *area);
 
 bool ED_view3d_boundbox_clip_ex(const RegionView3D *rv3d, const BoundBox *bb, float obmat[4][4]);
 bool ED_view3d_boundbox_clip(RegionView3D *rv3d, const BoundBox *bb);

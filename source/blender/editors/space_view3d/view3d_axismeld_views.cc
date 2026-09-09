@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstdint>
+#include <cstring>
 #include <vector>
 
 #include "BKE_context.hh"
@@ -11,12 +12,14 @@
 #include "BLI_math_rotation_c.hh"
 #include "BLI_math_vector_c.hh"
 #include "BLI_string.hh"
+#include "DNA_object_types.h"
 #include "DNA_scene_types.h"
 #include "DNA_screen_types.h"
 #include "DNA_userdef_types.h"
 #include "DNA_view3d_types.h"
 #include "ED_screen.hh"
 #include "ED_view3d.hh"
+#include "MEM_guardedalloc.h"
 #include "RNA_access.hh"
 #include "RNA_define.hh"
 #include "WM_api.hh"
@@ -30,8 +33,50 @@ namespace blender {
 namespace {
 using axismeld::HotboxAction;
 
+/* Numeric clipping state only. RegionView3D owns clipbb; never retain its pointer. */
+struct ViewClipping {
+  bool enabled = false;
+  bool has_bounds = false;
+  float planes[6][4] = {};
+  float local_planes[6][4] = {};
+  float bounds[8][3] = {};
+
+  void capture(const RegionView3D &rv)
+  {
+    enabled = (rv.rflag & RV3D_CLIPPING) != 0;
+    has_bounds = rv.clipbb != nullptr;
+    memcpy(planes, rv.clip, sizeof(planes));
+    memcpy(local_planes, rv.clip_local, sizeof(local_planes));
+    if (has_bounds) {
+      memcpy(bounds, rv.clipbb->vec, sizeof(bounds));
+    }
+  }
+
+  void apply(RegionView3D &rv) const
+  {
+    if (enabled) {
+      rv.rflag |= RV3D_CLIPPING;
+    }
+    else {
+      rv.rflag &= ~RV3D_CLIPPING;
+    }
+    memcpy(rv.clip, planes, sizeof(planes));
+    memcpy(rv.clip_local, local_planes, sizeof(local_planes));
+    if (has_bounds) {
+      if (!rv.clipbb) {
+        rv.clipbb = MEM_new<BoundBox>("AxisMeld view clipping");
+      }
+      memcpy(rv.clipbb->vec, bounds, sizeof(bounds));
+    }
+    else {
+      MEM_SAFE_DELETE(rv.clipbb);
+    }
+  }
+};
+
 /* Deliberately not RegionView3D: that struct owns render, smooth-view and local-view pointers. */
 struct ViewPose {
+  ViewClipping clipping;
   float quat[4], ofs[3], dist;
   float last_quat[4], ofs_lock[2];
   eRegionView3D_Persp persp, last_persp;
@@ -42,6 +87,7 @@ struct ViewPose {
 
   void capture(const RegionView3D &rv)
   {
+    clipping.capture(rv);
     copy_qt_qt(quat, rv.viewquat);
     copy_v3_v3(ofs, rv.ofs);
     dist = rv.dist;
@@ -59,6 +105,7 @@ struct ViewPose {
   }
   void apply(RegionView3D &rv) const
   {
+    clipping.apply(rv);
     copy_qt_qt(rv.viewquat, quat);
     copy_v3_v3(rv.ofs, ofs);
     rv.dist = dist;
@@ -87,13 +134,24 @@ struct ViewPose {
 struct ViewSlot {
   ViewPose pose{};
   ViewPose perspective{};
+  /* A quad-derived clip is suspended in single view. User border clipping there is independent. */
+  ViewClipping single_clipping;
   bool has_perspective = false;
   void capture(const RegionView3D &rv, const bool preserve_quad_locks)
   {
     const auto lock = pose.lock;
     const auto runtime_lock = pose.runtime_lock;
     const auto quad_lock = pose.quad_lock;
+    const bool had_quad_clip = ((lock | runtime_lock) & RV3D_BOXCLIP) != 0;
+    const ViewClipping quad_clipping = pose.clipping;
     pose.capture(rv);
+    if (preserve_quad_locks && had_quad_clip) {
+      single_clipping = pose.clipping;
+      pose.clipping = quad_clipping;
+    }
+    else if ((RV3D_LOCK_FLAGS(&rv) & RV3D_BOXCLIP) == 0) {
+      single_clipping = pose.clipping;
+    }
     if (preserve_quad_locks) {
       pose.lock = lock;
       pose.runtime_lock = runtime_lock;
@@ -136,6 +194,34 @@ static std::vector<uintptr_t> topology(ScrArea *area)
     signature.push_back(uintptr_t(region.regiontype));
   }
   return signature;
+}
+
+static void refresh_quad_clipping(bContext *C, ViewCache &cache, const bool layout_changed)
+{
+  ScrArea *area = CTX_wm_area(C);
+  const auto regions = window_regions(area);
+  if (regions.size() != 4) {
+    return;
+  }
+  bool has_quad_clip = false;
+  for (const ARegion *region : regions) {
+    const auto *rv = static_cast<const RegionView3D *>(region->regiondata);
+    has_quad_clip |= (RV3D_LOCK_FLAGS(rv) & RV3D_BOXCLIP) != 0;
+  }
+  if (!has_quad_clip) {
+    return;
+  }
+  if (layout_changed) {
+    /* Native duplicates still have the single-view rectangle until layout is updated. */
+    ED_area_tag_region_size_update(area, regions[0]);
+    ED_area_update_region_sizes(CTX_wm_manager(C), CTX_wm_window(C), area);
+  }
+  /* Unlike quadview_update/boxview_sync, this does not overwrite other slots' poses.
+   * Native clipping writes only BOXCLIP panes; independent border clipping is left intact. */
+  view3d_boxview_clip(area);
+  for (int i = 0; i < 4; i++) {
+    cache.slots[i].pose.clipping.capture(*static_cast<RegionView3D *>(regions[i]->regiondata));
+  }
 }
 
 static ViewCache &cache_ensure(bContext *C, View3D *v3d, ScrArea *area)
@@ -231,6 +317,7 @@ static bool toggle_quad(bContext *C, ViewCache &cache)
   if (regions.size() == 1) {
     RegionView3D &rv = *static_cast<RegionView3D *>(regions[0]->regiondata);
     cache.slots[cache.selected].pose.apply(rv);
+    cache.slots[cache.selected].single_clipping.apply(rv);
     rv.viewlock &= ~(RV3D_LOCK_ROTATION | RV3D_BOXVIEW | RV3D_BOXCLIP);
     rv.runtime_viewlock &= ~(RV3D_LOCK_ROTATION | RV3D_BOXVIEW | RV3D_BOXCLIP);
   }
@@ -238,6 +325,7 @@ static bool toggle_quad(bContext *C, ViewCache &cache)
     for (int i = 0; i < 4; i++) {
       cache.slots[i].pose.apply(*static_cast<RegionView3D *>(regions[i]->regiondata));
     }
+    refresh_quad_clipping(C, cache, true);
   }
   cache.topology = topology(area);
   ED_area_tag_redraw(area);
@@ -309,6 +397,7 @@ bool axismeld_view_action(bContext *C, wmOperator *op, const HotboxAction action
   }
   next.apply(rv);
   slot.capture(rv, cache.initialized && regions.size() == 1);
+  refresh_quad_clipping(C, cache, false);
   ED_region_tag_redraw(region);
   return true;
 }

@@ -37,6 +37,16 @@ def same(actual, expected, label):
     check(abs(actual[2] - expected[2]) < 1e-5, label + ': distance')
 
 
+def clipping(rv):
+    return rv.use_clip_planes, tuple(tuple(plane) for plane in rv.clip_planes)
+
+
+def same_clipping(actual, expected, label):
+    check(actual[0] == expected[0], label + ': enabled clipping')
+    check(max(abs(a - b) for p, q in zip(actual[1], expected[1]) for a, b in zip(p, q)) < 1e-5,
+          label + f': clipping planes: actual={actual[1]!r}, expected={expected[1]!r}')
+
+
 def settle(count=3):
     for _ in range(count):
         yield
@@ -109,6 +119,16 @@ def suite():
     linked.show_sync_view = True
     linked.use_box_clip = True
     yield from settle()
+    check([rv(p).use_clip_planes for p in panes] == [True, False, True, False],
+          'fixture must have quad clipping only in top/front, with unclipped user/right panes')
+    # An independent native border clip in the right pane must not be mistaken for
+    # quad-derived clipping; the top-right user pane remains deliberately unclipped.
+    with bpy.context.temp_override(window=win, area=area, region=panes[3]):
+        bpy.ops.view3d.clip_border('EXEC_DEFAULT', xmin=20, ymin=30, xmax=160, ymax=150)
+    yield from settle()
+    check(rv(panes[3]).use_clip_planes and not rv(panes[3]).use_box_clip,
+          'independent native clipping fixture was not created')
+    clip_states = [clipping(rv(p)) for p in panes]
     locks = [(rv(p).lock_rotation, rv(p).show_sync_view, rv(p).use_box_clip) for p in panes]
     expected = [pose(rv(p)) for p in panes]
     action('TOGGLE_QUAD', panes[0])
@@ -116,6 +136,7 @@ def suite():
     single = rv(regions()[0])
     check(not single.lock_rotation and not single.show_sync_view and not single.use_box_clip,
           'quad-specific locks survived maximize')
+    check(not single.use_clip_planes, 'quad-derived clipping survived maximize')
     action('TOGGLE_QUAD')
     yield from settle()
     panes = sorted(regions(), key=lambda r: (-r.y, r.x))
@@ -123,9 +144,77 @@ def suite():
           'quad linkage locks were not restored')
     for i, pane in enumerate(panes):
         same(pose(rv(pane)), expected[i], 'linked quad pose restore')
+        same_clipping(clipping(rv(pane)), clip_states[i], f'quad clipping restore {i}')
+    action('TOGGLE_QUAD', panes[0])
+    yield from settle()
+    rv(regions()[0]).view_location = (41, 43, 47)
+    rv(regions()[0]).view_distance = 53
+    action('TOGGLE_QUAD')
+    yield from settle()
+    panes = sorted(regions(), key=lambda r: (-r.y, r.x))
+    check(panes[0].width > panes[0].height, 'clip geometry fixture expects a landscape top pane')
+    # A top view centered at (41,43) with distance 53 spans X [-12,94].
+    # Vertical extent follows its actual quad rectangle; front/Z extent did not change.
+    half_y = 53 * panes[0].height / panes[0].width
+    # Native face order is ymin, xmax, ymax, xmin, with inward-facing normals.
+    refreshed_planes = ((0, 1, 0, half_y - 43), (-1, 0, 0, 94),
+                        (0, -1, 0, 43 + half_y), (1, 0, 0, 12),
+                        clip_states[0][1][4], clip_states[0][1][5])
+    for i in (0, 2):
+        same_clipping(clipping(rv(panes[i])), (True, refreshed_planes), f'navigated quad clip {i}')
+    for i in (1, 2, 3):
+        same(pose(rv(panes[i])), expected[i], f'clip recompute must not synchronize pane {i}')
+    for i in (1, 3):
+        same_clipping(clipping(rv(panes[i])), clip_states[i], f'clip recompute touched independent pane {i}')
+    action('TOGGLE_QUAD', panes[0])
+    yield from settle()
+    rv(regions()[0]).view_location = expected[0][1]
+    rv(regions()[0]).view_distance = expected[0][2]
+    action('TOGGLE_QUAD')
+    yield from settle()
+    panes = sorted(regions(), key=lambda r: (-r.y, r.x))
+    for i, pane in enumerate(panes):
+        same_clipping(clipping(rv(pane)), clip_states[i], f'quad clip geometry restored {i}')
+    # A user can create an independent clip while a former quad-clipped pane is
+    # maximized. Keep it separately from the temporarily hidden quad clip volume.
+    action('TOGGLE_QUAD', panes[0])
+    yield from settle()
+    with bpy.context.temp_override(window=win, area=area, region=regions()[0]):
+        bpy.ops.view3d.clip_border('EXEC_DEFAULT', xmin=90, ymin=80, xmax=240, ymax=210)
+    single_user_clip = clipping(rv(regions()[0]))
+    action('TOGGLE_QUAD')
+    yield from settle()
+    panes = sorted(regions(), key=lambda r: (-r.y, r.x))
+    for i, pane in enumerate(panes):
+        same_clipping(clipping(rv(pane)), clip_states[i], f'quad clip after single-user clip {i}')
+    action('TOGGLE_QUAD', panes[0])
+    yield from settle()
+    same_clipping(clipping(rv(regions()[0])), single_user_clip, 'single-user clip restored')
+    with bpy.context.temp_override(window=win, area=area, region=regions()[0]):
+        bpy.ops.object.mode_set(mode='EDIT')
+    yield from settle()
+    # Edit-mode drawing consumes clipbb through native local-clipping calculation.
+    with bpy.context.temp_override(window=win, area=area, region=regions()[0]):
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.view3d.clip_border('INVOKE_DEFAULT')
+    action('TOGGLE_QUAD')
+    yield from settle()
+    panes = sorted(regions(), key=lambda r: (-r.y, r.x))
+    action('TOGGLE_QUAD', panes[3])
+    yield from settle()
+    same_clipping(clipping(rv(regions()[0])), clip_states[3], 'independent clip while maximized')
+    action('TOGGLE_QUAD')
+    yield from settle()
+    panes = sorted(regions(), key=lambda r: (-r.y, r.x))
+    for i, pane in enumerate(panes):
+        same_clipping(clipping(rv(pane)), clip_states[i], f'independent clipping restore {i}')
+    # Remove only the native independent fixture before later navigation cases.
+    with bpy.context.temp_override(window=win, area=area, region=panes[3]):
+        bpy.ops.view3d.clip_border('INVOKE_DEFAULT')
     rv(panes[0]).show_sync_view = False
     rv(panes[0]).use_box_clip = False
     yield from settle()
+    print('PASS quad clip clearing, per-pane planes, unclipped user pane, independent user clip ownership', flush=True)
     # A menu action must affect the initiating locked pane, never the user pane.
     panes = sorted(regions(), key=lambda r: (-r.y, r.x))
     action('SIDE', panes[0])
