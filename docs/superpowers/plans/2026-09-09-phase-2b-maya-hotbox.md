@@ -426,6 +426,9 @@ $ctestTool = 'C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Commo
 
 扩展原 runner 支持 `--suite`，只接受固定枚举 `hotbox|menus|release|release-cross-window|profiles`（新增导航修复可有独立固定入口），映射到明确测试文件，不接受任意用户脚本路径。默认 hotbox 保留向后兼容。release-cross-window 是延期缺陷的独立诊断，不混入本轮成功汇总。
 布局纯测试覆盖全部规定缩放；GUI 至少覆盖 1.0/2.0 与四角，保存并实际查看截图。低于尺寸下限的 short/hold 分开断言。
+纯布局保留字面几何四角；GUI 使用经事件探针测得的首个实际 WINDOW 内容角像素，记录原生
+边界/重叠区域的未命中证据及最终坐标。私有夹具可隐藏 TOOLS/UI/HEADER/tool_header；另测显示
+时重叠区域不被热盒抢占，不以任意内缩代替内容角点，不修改 WM 或扩大 Space 范围。
 - [ ] **6. 文档和 handoff。** 报告记录源码/上游提交、真实命令、用例数、exe 哈希、已知警告、人工待验收和未接入目录。菜单表只按实际结果更新。人工表至少包括 Space 主目录、RMB 七向、点击式/划选式子菜单、边缘、快速手势、残留释放、三键覆盖、四视图和 W/E/R 回归。加入本次导航修复：右/下拉近、左/上拉远，双轴及透视/正交/四视图；明确指数灵敏度为 AxisMeld 适配而非 Maya 数值一致。清楚区分旧 phase2a-test-install 和新 phase2b-test-install，只提供已核对身份的新 exe。不得把独立跨窗口诊断的失败计入通过项。
 - [ ] **7. 审查后提交交付。** 每项审查加最终整体审查；重大问题按开发技能门禁修复，不靠后续批次掩盖。保留分支和独立 stage，提供 exe 与人工表链接，不自动启动用户 GUI、不合并/推送。只有 B12 人工通过后才写体验验收通过。
 
