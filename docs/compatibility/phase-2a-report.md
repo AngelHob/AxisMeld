@@ -1,6 +1,6 @@
 # Phase 2A 本地验证报告
 
-状态：Task 3 本地实现完成，等待独立任务审查、全分支审查和用户人工验收；不代表批准集成。
+状态：Phase 2A 本地实现、独立任务审查、全分支审查及最终限定复审已完成，最终回归通过；等待用户人工验收，不代表批准集成或发布。
 
 ## 已连接的产品路径
 
@@ -31,7 +31,7 @@
 | 安装脚本来源 | `<staged-exe> -b --factory-startup --python-exit-code 1 --python-expr <path assertions>` | 模块、预设、exe 均来自暂存目录 | `D:/source/AxisMeld-build/phase2a-task3-validation-20260909/installed-script-identity.log` |
 | exe 哈希 | `Get-FileHash <built-exe>,<staged-exe> -Algorithm SHA256` | 两者均为 `35156F750077F5F1C884D81D0B977D2FC1236D9FFB47C2DD7E740F716A865124` | `D:/source/AxisMeld-build/phase2a-task3-validation-20260909/exe-hashes.log` |
 
-这里的 `<staged-exe>` 均为上面的独立可运行文件。持久日志独立于最终会清理的 SDD scratch。
+这里的 `<staged-exe>` 均为上面的独立可运行文件。持久日志独立于 SDD scratch；本次 scratch 保留。
 配置期 whole CTest 仍指向旧的 normal install，因此没有拿它替代上述显式暂存测试。
 
 Task 3 首轮审查补充了“删除唯一 user hotbox 项后，设置层级不得显示空行”的回归。
@@ -87,4 +87,43 @@ Industry Compatible 和 AxisMeld 预设内从未接管的原生区域两种隔�
 夹具留下隐藏四视图布局，使后续旧区域用例失败；补上原生退出四视图的夹具清理后，
 上表最终完整 GUI 通过。该失败日志保留，没有覆盖或误报为最终成功。
 
-本轮只完成最终审查修复及覆盖验证，仍等待控制器的限定复审和用户人工验收；不代表集成批准。
+最终限定复审检查 `1fa54fc0df1..7b9ae7faf16`：全部发现已解决，没有新增 Critical/Important 问题。
+这只批准本轮修复质量，不代表用户人工验收、Phase 1.1 批准或集成批准。
+
+## 控制器最终独立回归与交付
+
+测试源码提交：`7b9ae7faf16aa8fc4cb777e812e207ad82fea86c`；上面的最终 exe 哈希再次核对一致。
+日志目录：`D:/source/AxisMeld-build/phase2a-final-validation-20260909/`。
+
+| 门禁 | 最终结果 | 日志 |
+|---|---|---|
+| 原生状态、身份、轴变换 | CTest 3/3 通过 | `native-final.log` |
+| 纯配置 | 14/14 通过 | `profiles-final.log` |
+| CLI 身份 | exit 0 | `identity-final.log` |
+| portable 路径 | exit 0 | `portable-final.log` |
+| 安装态输入 | 11/11 通过，独占 TEMP/config 且检查 bpy.app.tempdir | `installed-final.log` |
+| 热盒完整 GUI | exit 0，AXISMELD_HOTBOX_EVENTS_PASS | `hotbox-final.log` |
+| 操纵器完整 GUI | exit 0，AXISMELD_MANIPULATOR_EVENTS_PASS | `manipulator-final.log` |
+
+以上合计 9 个验证组通过，不是 Blender 全仓库测试通过，也不能证明主观卡顿已消失。
+旧 `D:/source/AxisMeld-build/install/blender.exe` 未覆盖，SHA256 仍为
+`72DB65EDE53C3E5C724D5ACF33586FF04EEC9C123B5004AAE9D3D365DF481408`。
+保留本地 `axismeld/phase-2a` 分支和工作树；未合并、推送或发布。
+独立测试版首次使用可能需要选择 AxisMeld Maya 2026 预设；人工表仍全部待手测。
+Global 对象缩放保持 Blender 原生行为，无开发计划。
+
+### 实施取舍与代价（按决策顺序）
+
+| 序号 | 取舍 | 代价或风险 |
+|---|---|---|
+| 1 | 原始 exe 缺运行依赖，改用独立安装目录验证 | 额外磁盘和暂存时间，必须核对 exe 身份 |
+| 2 | 热盒使用 Frames 前的专用区域键位映射 | 增加一个需随上游维护的注册接点 |
+| 3 | 修复预设偏好 draw 签名并接入有效用户映射层级 | 增加小范围 Python 设置层维护和回归 |
+| 4 | 交付独立测试版，保护正常安装及偏好 | 用户需打开新路径，可能需首次选预设 |
+| 5 | 边缘保持真实指针手势起点，允许标签裁切 | 边缘文字可读性下降，后续可只调整绘制 |
+| 6 | 恢复视图后复用编辑器私有原生裁剪重算函数 | 增加私有声明接点及裁剪回归风险 |
+| 7 | 裁剪贡献面不全时保留最后有效体积 | 该配置下裁剪暂不跟随导航，恢复贡献面后重算 |
+| 8 | 在真实导航共用入口按预设、缓存和拓扑保护裁剪 | 共享路径多一条件，需持续验证导航及预设隔离 |
+
+清理限制：工具拒绝删除已核对为空的私有输入测试目录，未尝试绕过。
+该空目录和忽略的计划执行记录保留；不影响测试版运行，未删除用户内容。
