@@ -208,6 +208,69 @@ def suite():
     panes = sorted(regions(), key=lambda r: (-r.y, r.x))
     for i, pane in enumerate(panes):
         same_clipping(clipping(rv(pane)), clip_states[i], f'independent clipping restore {i}')
+    # Removing either boundary contributor must retain the last valid clip volume,
+    # not let native box clipping synthesize zero-width bounds from missing axes.
+    for source_index, restore_axis, directions in (
+            (0, 'TOP', ('SIDE', 'FRONT', 'PERSPECTIVE')),
+            (2, 'FRONT', ('SIDE', 'TOP', 'PERSPECTIVE'))):
+        for direction in directions:
+            action(direction, panes[source_index])
+            yield from settle()
+            changed = pose(rv(panes[source_index]))
+            if direction == 'PERSPECTIVE':
+                check(changed[3] == 'PERSP', 'clipped pane perspective action rejected')
+            else:
+                rotation = {'SIDE': (0.5, 0.5, 0.5, 0.5), 'TOP': (1, 0, 0, 0),
+                            'FRONT': (0.70710678, 0.70710678, 0, 0)}[direction]
+                same(changed, (rotation, expected[source_index][1], expected[source_index][2], 'ORTHO'),
+                     f'clipped pane {source_index} {direction}')
+            for i, pane in enumerate(panes):
+                same_clipping(clipping(rv(pane)), clip_states[i],
+                              f'missing contributor {source_index} {direction} pane {i}')
+                if i != source_index:
+                    same(pose(rv(pane)), expected[i], 'clipped axis changed another pose')
+            check([(rv(p).lock_rotation, rv(p).show_sync_view, rv(p).use_box_clip) for p in panes] == locks,
+                  'clipped axis changed quad locks')
+            action('TOGGLE_QUAD', panes[source_index])
+            yield from settle()
+            check(not rv(regions()[0]).use_clip_planes, 'missing contributor maximize retained quad clip')
+            action('TOGGLE_QUAD')
+            yield from settle()
+            panes = sorted(regions(), key=lambda r: (-r.y, r.x))
+            same(pose(rv(panes[source_index])), changed, 'clipped axis lost on quad restore')
+            for i, pane in enumerate(panes):
+                same_clipping(clipping(rv(pane)), clip_states[i], 'missing contributor quad restore')
+            rv(panes[source_index]).view_location = expected[source_index][1]
+            rv(panes[source_index]).view_distance = expected[source_index][2]
+            action(restore_axis, panes[source_index])
+            yield from settle()
+            for i, pane in enumerate(panes):
+                same_clipping(clipping(rv(pane)), clip_states[i], 'boundary contributor restored')
+    action('SIDE', panes[0])
+    rv(panes[0]).view_location = (41, 43, 47)
+    rv(panes[0]).view_distance = 53
+    # With no top/bottom contributor, navigating retains the last valid volume.
+    action('SIDE', panes[0])
+    yield from settle()
+    for i, pane in enumerate(panes):
+        same_clipping(clipping(rv(pane)), clip_states[i], 'incomplete contributor navigation')
+    action('TOP', panes[0])
+    yield from settle()
+    # Once contributors are complete, the earlier literal geometric oracle applies
+    # again; preserving the stale volume forever must fail this check.
+    for i in (0, 2):
+        same_clipping(clipping(rv(panes[i])), (True, refreshed_planes), 'complete contributors recompute')
+    for i in (1, 3):
+        same_clipping(clipping(rv(panes[i])), clip_states[i], 'contributor repair touched independent clip')
+    for i in (1, 2, 3):
+        same(pose(rv(panes[i])), expected[i], 'contributor repair synchronized another pose')
+    rv(panes[0]).view_location = expected[0][1]
+    rv(panes[0]).view_distance = expected[0][2]
+    action('TOP', panes[0])
+    yield from settle()
+    for i, pane in enumerate(panes):
+        same_clipping(clipping(rv(pane)), clip_states[i], 'contributor repair reset')
+    print('PASS clipped directional actions preserve incomplete bounds and recompute restored contributors', flush=True)
     # Remove only the native independent fixture before later navigation cases.
     with bpy.context.temp_override(window=win, area=area, region=panes[3]):
         bpy.ops.view3d.clip_border('INVOKE_DEFAULT')

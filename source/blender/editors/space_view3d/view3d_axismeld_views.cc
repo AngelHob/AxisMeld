@@ -203,12 +203,18 @@ static void refresh_quad_clipping(bContext *C, ViewCache &cache, const bool layo
   if (regions.size() != 4) {
     return;
   }
-  bool has_quad_clip = false;
+  bool has_xy_bounds = false;
+  bool has_z_bounds = false;
   for (const ARegion *region : regions) {
     const auto *rv = static_cast<const RegionView3D *>(region->regiondata);
-    has_quad_clip |= (RV3D_LOCK_FLAGS(rv) & RV3D_BOXCLIP) != 0;
+    if (RV3D_LOCK_FLAGS(rv) & RV3D_BOXCLIP) {
+      has_xy_bounds |= ELEM(rv->view, RV3D_VIEW_TOP, RV3D_VIEW_BOTTOM);
+      has_z_bounds |= ELEM(rv->view, RV3D_VIEW_FRONT, RV3D_VIEW_BACK);
+    }
   }
-  if (!has_quad_clip) {
+  /* Axis actions may remove a boundary contributor while retaining quad locks.
+   * Keep the last valid volume until native clipping can derive all three extents. */
+  if (!has_xy_bounds || !has_z_bounds) {
     return;
   }
   if (layout_changed) {
