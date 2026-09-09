@@ -223,6 +223,10 @@ std::string hit_menu(const MenuLayout &, float x, float y);
 label_widths 以节点 ID 映射逻辑像素宽度；原生在打开/缩放重布局时用 BLF 测量并除 UI scale，
 MenuRect.interactive 对禁用项和分隔项为 false：保留绘制/提示所需 ID，但 hit_menu 不返回它们。
 scroll_offsets 按 root row / menu ID 保存各自偏移；打开或滚动子菜单不得改变祖先标题的位置。
+普通标题路径为 `{titleId,...}`；中央改绑菜单用 `{"center",mappedMenuId,...}` 明确中央锚点。
+首项 center 是内部锚点前缀，不算树层级；真实路径从第二项开始，映射 center root 时为
+`{"center","center"}`。首层仅显示目标菜单 children，滚动 owner 仍为真实 menu ID。
+Task 2 测试 center 样式下普通菜单映射及中央/标题不同锚点；Task 4 使用该路径，不另写布局。
 布局只做保持 open_path 当前父项可见的最小归一化；Task 4 滚动祖先时先收起其更深路径。
 这是未发布内部接口的直接替换，不保留单 int 兼容 wrapper；测试父级锚点和子级滚动相互独立。
 单个实测标签无法完整放入可用宽度时 supported=false；默认目录在支持尺寸仍须完整可达。
