@@ -47,6 +47,12 @@ COMMANDS = MappingProxyType({command.id: command for command in (
             difference='Uses the AxisMeld front orthographic view.'),
     Command('view.top', 'Top View',
             difference='Uses the AxisMeld top orthographic view.'),
+    Command('view.left', 'Left View',
+            difference='Uses the AxisMeld left orthographic view.'),
+    Command('view.back', 'Back View',
+            difference='Uses the AxisMeld back orthographic view.'),
+    Command('view.bottom', 'Bottom View',
+            difference='Uses the AxisMeld bottom orthographic view.'),
 )})
 
 # No approximate stand-in for hold/release behavior or UV/smoothing semantics.

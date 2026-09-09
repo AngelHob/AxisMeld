@@ -32,7 +32,8 @@ class ProfilesTest(unittest.TestCase):
         self.assertEqual(bindings['hotbox.open']['type'], 'SPACE')
         self.assertEqual(bindings['hotbox.open']['value'], 'PRESS')
         self.assertEqual(set(COMMANDS) - set(bindings), {
-            'view.toggle_quad', 'view.perspective', 'view.side', 'view.front', 'view.top'})
+            'view.toggle_quad', 'view.perspective', 'view.side', 'view.front', 'view.top',
+            'view.left', 'view.back', 'view.bottom'})
 
     def test_unbound_menu_command_can_be_remapped_and_hotbox_disabled(self):
         result = resolve_profiles([('user', profile(**{
