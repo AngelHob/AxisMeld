@@ -15,6 +15,7 @@ struct MenuOverlayItem {
   bool hovered;
   bool enabled;
   bool submenu = false;
+  int icon_only = 0;  // ICON_NONE; nonzero requests a native icon-only navigation row.
 };
 
 /** Draw native menu components without registering blocks or input handlers.

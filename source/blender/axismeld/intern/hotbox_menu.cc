@@ -26,10 +26,17 @@ bool interactive(const MenuNode &node)
   return node.enabled && node.kind != MenuKind::Disabled && node.kind != MenuKind::Separator;
 }
 
+bool mapping_list(const std::string &id)
+{
+  return id == "center.controls.buttons.leftmouse" ||
+         id == "center.controls.buttons.middlemouse" || id == "center.controls.buttons.rightmouse";
+}
+
 bool native_list(const std::string &id)
 {
   return id == "views.style" || id == "center.controls.style" || id == "center.controls.rows" ||
-         id == "center.controls.transparency";
+         id == "center.controls.transparency" || id == "center.controls.buttons" ||
+         mapping_list(id);
 }
 
 float child_padding(const MenuNode &node)
@@ -367,9 +374,54 @@ class LayoutBuilder {
       item.x += cx;
       item.y += cy;
       item.native_menu = native_list(item.id);
+      item.native_menu_standalone = item.native_menu;
       result.rects.push_back(item);
     }
     return true;
+  }
+
+  bool native_popup_position(const MenuRect &anchor,
+                             const float desired_width,
+                             const float desired_height,
+                             const bool exclude_origin,
+                             float &x,
+                             float &y) const
+  {
+    x = anchor.x + anchor.width + gap;
+    y = std::clamp(
+        anchor.y + anchor.height - desired_height, margin, height - margin - desired_height);
+    if (x + desired_width <= width - margin) {
+      return true;
+    }
+    x = anchor.x - gap - desired_width;
+    if (x >= margin) {
+      return true;
+    }
+
+    const float origin_x = popup_origin ? (*popup_origin)[0] : center_x;
+    const float origin_y = popup_origin ? (*popup_origin)[1] : center_y;
+    for (const float candidate_y :
+         {anchor.y + anchor.height + gap, anchor.y - gap - desired_height})
+    {
+      if (candidate_y < margin || candidate_y + desired_height > height - margin) {
+        continue;
+      }
+      for (const float candidate_x : {std::clamp(anchor.x, margin, width - margin - desired_width),
+                                      margin,
+                                      width - margin - desired_width})
+      {
+        const float dx = origin_x - std::clamp(origin_x, candidate_x, candidate_x + desired_width);
+        const float dy = origin_y -
+                         std::clamp(origin_y, candidate_y, candidate_y + desired_height);
+        if (exclude_origin && dx * dx + dy * dy <= 12 * 12) {
+          continue;
+        }
+        x = candidate_x;
+        y = candidate_y;
+        return true;
+      }
+    }
+    return false;
   }
 
   void popup(const MenuNode &owner,
@@ -427,50 +479,56 @@ class LayoutBuilder {
     if (native_list(owner.id)) {
       float w = 0;
       for (const MenuNode &node : owner.children) {
-        w = std::max(w, widths.at(node.id) + native_menu_padding);
+        const float item_padding = node.kind == MenuKind::Menu ? native_entry_padding :
+                                                                 native_menu_padding;
+        w = std::max(w, widths.at(node.id) + item_padding);
       }
-      const float h = owner.children.size() * secondary_height;
-      if (w > width - 2 * margin || h > height - 2 * margin) {
+      if (w > width - 2 * margin) {
         result.supported = false;
         return;
       }
-      float x = anchor.x + anchor.width + gap;
-      float y = std::clamp(anchor.y + anchor.height - h, margin, height - margin - h);
-      if (x + w > width - margin) {
-        x = anchor.x - gap - w;
-        if (x < margin) {
-          // Keep the entry fixed and the native blocks separated in narrow panes.
-          bool placed = false;
-          const float origin_x = popup_origin ? (*popup_origin)[0] : center_x;
-          const float origin_y = popup_origin ? (*popup_origin)[1] : center_y;
-          for (const float candidate_y : {anchor.y + anchor.height + gap, anchor.y - gap - h}) {
-            if (candidate_y < margin || candidate_y + h > height - margin || placed) {
-              continue;
-            }
-            for (const float candidate_x :
-                 {std::clamp(anchor.x, margin, width - margin - w), margin, width - margin - w})
-            {
-              const float dx = origin_x - std::clamp(origin_x, candidate_x, candidate_x + w);
-              const float dy = origin_y - std::clamp(origin_y, candidate_y, candidate_y + h);
-              if (owner.id == "views.style" && dx * dx + dy * dy <= 12 * 12) {
-                continue;  // Preserve the real-origin marking return zone.
-              }
-              x = candidate_x;
-              y = candidate_y;
-              placed = true;
-              break;
-            }
-          }
-          if (!placed) {
-            result.supported = false;
-            return;
+
+      const int count = int(owner.children.size());
+      const int minimum_capacity = mapping_list(owner.id) ? 1 : count;
+      for (int capacity = count; capacity >= minimum_capacity; capacity--) {
+        const bool paged = capacity < count;
+        const float h = (capacity + (paged ? 2 : 0)) * secondary_height;
+        if (h > height - 2 * margin) {
+          continue;
+        }
+        float x, y;
+        if (!native_popup_position(anchor, w, h, owner.id == "views.style", x, y)) {
+          continue;
+        }
+
+        int first = paged ? std::min(offset(owner.id, count), count - capacity) : 0;
+        for (int i = 0; i < count; i++) {
+          if (owner.children[i].id == next) {
+            first = std::clamp(first, std::max(0, i - capacity + 1), i);
           }
         }
+        int row = 0;
+        auto add_native_row = [&](const std::string &id, const bool enabled) {
+          result.rects.push_back(
+              {id, x, y + h - (row + 1) * secondary_height, w, secondary_height, depth, enabled});
+          result.rects.back().native_menu = true;
+          row++;
+        };
+        if (paged) {
+          add_native_row("@scroll:" + owner.id + ":previous", first > 0);
+        }
+        for (int i = first; i < first + capacity; i++) {
+          add(owner.children[i], x, y + h - (row + 1) * secondary_height, w, depth);
+          result.rects.back().native_menu = true;
+          row++;
+        }
+        if (paged) {
+          add_native_row("@scroll:" + owner.id + ":next", first + capacity < count);
+        }
+        return;
       }
-      for (int i = 0; i < int(owner.children.size()); i++) {
-        add(owner.children[i], x, y + h - (i + 1) * secondary_height, w, depth);
-        result.rects.back().native_menu = true;
-      }
+
+      result.supported = false;
       return;
     }
     const int count = int(owner.children.size());

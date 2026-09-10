@@ -43,6 +43,28 @@ static const MenuRect *rect(const MenuLayout &layout, const std::string &id)
   return nullptr;
 }
 
+static const std::array<const char *, 13> mapping_suffixes = {
+    "none",
+    "views",
+    "center_recent",
+    "center_controls",
+    "common",
+    "common_select",
+    "common_modify",
+    "pane",
+    "pane_view",
+    "pane_shading",
+    "pane_panels",
+    "pane_panels_views",
+    "modeling",
+};
+
+static bool separated_by(const MenuRect &a, const MenuRect &b, const float distance)
+{
+  return a.x >= b.x + b.width + distance || b.x >= a.x + a.width + distance ||
+         a.y >= b.y + b.height + distance || b.y >= a.y + a.height + distance;
+}
+
 TEST(axismeld_hotbox_menu, RoomierMainTargetsKeepTenPixelGaps)
 {
   const auto snapshot = default_snapshot();
@@ -258,6 +280,205 @@ TEST(axismeld_hotbox_menu, ControlsTransparencyUsesAContiguousNativeMenu)
     EXPECT_EQ(preserved->depth, 0) << original.id;
     EXPECT_FALSE(preserved->native_menu) << original.id;
   }
+}
+
+TEST(axismeld_hotbox_menu, MappingMenusUseContinuousNativeBlocksAtDesktopSize)
+{
+  const auto snapshot = default_snapshot();
+  const auto widths = measured(snapshot);
+  const std::array<const char *, 3> owners = {"center.controls.buttons.leftmouse",
+                                              "center.controls.buttons.middlemouse",
+                                              "center.controls.buttons.rightmouse"};
+  const auto parent = layout_menu(
+      snapshot, 1920, 1080, 960, 540, {"center.controls", "center.controls.buttons"}, {}, widths);
+  ASSERT_TRUE(parent.supported);
+  const MenuRect *previous = nullptr;
+  for (const char *owner : owners) {
+    const auto *item = rect(parent, owner);
+    ASSERT_NE(item, nullptr) << owner;
+    EXPECT_TRUE(item->native_menu);
+    EXPECT_FALSE(item->native_menu_standalone);
+    EXPECT_FLOAT_EQ(item->height, 24);
+    EXPECT_FLOAT_EQ(item->width, widths.at(owner) + 60);
+    if (previous) {
+      EXPECT_FLOAT_EQ(item->x, previous->x);
+      EXPECT_FLOAT_EQ(item->width, previous->width);
+      EXPECT_FLOAT_EQ(previous->y, item->y + 24);
+    }
+    previous = item;
+  }
+
+  for (const char *owner : owners) {
+    SCOPED_TRACE(owner);
+    const auto layout = layout_menu(snapshot,
+                                    1920,
+                                    1080,
+                                    960,
+                                    540,
+                                    {"center.controls", "center.controls.buttons", owner},
+                                    {},
+                                    widths);
+    ASSERT_TRUE(layout.supported);
+    const auto *entry = rect(layout, "center.controls.buttons");
+    ASSERT_NE(entry, nullptr);
+    EXPECT_TRUE(entry->native_menu);
+    EXPECT_TRUE(entry->native_menu_standalone);
+    const auto *button = rect(layout, owner);
+    ASSERT_NE(button, nullptr);
+    EXPECT_TRUE(button->native_menu);
+    EXPECT_FALSE(button->native_menu_standalone);
+    EXPECT_EQ(rect(layout, std::string("@scroll:") + owner + ":previous"), nullptr);
+    EXPECT_EQ(rect(layout, std::string("@scroll:") + owner + ":next"), nullptr);
+
+    const MenuRect *last = nullptr;
+    for (const char *suffix : mapping_suffixes) {
+      const std::string id = std::string(owner) + "." + suffix;
+      const auto *item = rect(layout, id);
+      ASSERT_NE(item, nullptr) << id;
+      EXPECT_TRUE(item->native_menu);
+      EXPECT_FALSE(item->native_menu_standalone);
+      EXPECT_FLOAT_EQ(item->height, 24);
+      EXPECT_FLOAT_EQ(item->width, 120);
+      if (last) {
+        EXPECT_FLOAT_EQ(item->x, last->x);
+        EXPECT_FLOAT_EQ(item->width, last->width);
+        EXPECT_FLOAT_EQ(last->y, item->y + 24);
+      }
+      last = item;
+    }
+  }
+}
+
+TEST(axismeld_hotbox_menu, NarrowMappingPagesReachAllChoicesWithBoundedNativeRows)
+{
+  auto snapshot = default_snapshot();
+  snapshot.center_buttons[2] = "center.controls";
+  const std::array<const char *, 3> owners = {"center.controls.buttons.leftmouse",
+                                              "center.controls.buttons.middlemouse",
+                                              "center.controls.buttons.rightmouse"};
+  for (const bool label_widths : {false, true}) {
+    auto widths = measured(snapshot);
+    if (label_widths) {
+      visit(snapshot.menus,
+            [&](const MenuNode &node) { widths[node.id] = node.label.size() * 7.0f; });
+    }
+    for (const auto size : {std::array<float, 2>{392, 212.5f}, {480, 320}}) {
+      const std::array<std::array<float, 2>, 5> points = {
+          {{size[0] / 2, size[1] / 2}, {0, 0}, {size[0], 0}, {0, size[1]}, {size[0], size[1]}}};
+      for (const auto point : points) {
+        for (const char *owner : owners) {
+          SCOPED_TRACE(testing::Message()
+                       << (label_widths ? "labels" : "independent") << " " << size[0] << "x"
+                       << size[1] << " @ " << point[0] << "," << point[1] << " " << owner);
+          std::set<std::string> reached;
+          std::vector<std::string> first_page;
+          std::vector<std::string> second_page;
+          for (int offset = 0; offset < 13; offset++) {
+            const auto layout = layout_menu(
+                snapshot,
+                size[0],
+                size[1],
+                point[0],
+                point[1],
+                {"center", "center.controls", "center.controls.buttons", owner},
+                {{owner, offset}},
+                widths);
+            ASSERT_TRUE(layout.supported) << "offset=" << offset;
+            for (const MenuRect &item : layout.rects) {
+              if (item.depth == 0) {
+                continue;
+              }
+              EXPECT_GE(item.x, 12) << item.id;
+              EXPECT_GE(item.y, 12) << item.id;
+              EXPECT_LE(item.x + item.width, size[0] - 12) << item.id;
+              EXPECT_LE(item.y + item.height, size[1] - 12) << item.id;
+            }
+            const auto *entry = rect(layout, owner);
+            ASSERT_NE(entry, nullptr);
+            const auto *previous = rect(layout, std::string("@scroll:") + owner + ":previous");
+            const auto *next = rect(layout, std::string("@scroll:") + owner + ":next");
+            ASSERT_NE(previous, nullptr);
+            ASSERT_NE(next, nullptr);
+            EXPECT_FALSE(previous->interactive && offset == 0);
+            EXPECT_FALSE(next->interactive && offset == 12);
+
+            std::vector<const MenuRect *> column{previous};
+            std::vector<std::string> visible;
+            for (const char *suffix : mapping_suffixes) {
+              const std::string id = std::string(owner) + "." + suffix;
+              if (const MenuRect *item = rect(layout, id)) {
+                reached.insert(id);
+                visible.push_back(id);
+                column.push_back(item);
+              }
+            }
+            column.push_back(next);
+            ASSERT_FALSE(visible.empty());
+            if (offset == 0) {
+              first_page = visible;
+            }
+            if (offset == 1) {
+              second_page = visible;
+            }
+            for (int i = 0; i < int(column.size()); i++) {
+              const MenuRect *item = column[i];
+              EXPECT_TRUE(item->native_menu) << item->id;
+              EXPECT_FALSE(item->native_menu_standalone) << item->id;
+              EXPECT_FLOAT_EQ(item->height, 24) << item->id;
+              EXPECT_GE(item->x, 12) << item->id;
+              EXPECT_GE(item->y, 12) << item->id;
+              EXPECT_LE(item->x + item->width, size[0] - 12) << item->id;
+              EXPECT_LE(item->y + item->height, size[1] - 12) << item->id;
+              EXPECT_TRUE(separated_by(*entry, *item, 9.99f)) << item->id;
+              if (i > 0) {
+                EXPECT_FLOAT_EQ(item->x, column[0]->x) << item->id;
+                EXPECT_FLOAT_EQ(item->width, column[0]->width) << item->id;
+                EXPECT_FLOAT_EQ(column[i - 1]->y, item->y + 24) << item->id;
+              }
+            }
+          }
+          EXPECT_EQ(reached.size(), 13);
+          ASSERT_FALSE(first_page.empty());
+          ASSERT_EQ(second_page.size(), first_page.size());
+          EXPECT_EQ(first_page.front(), std::string(owner) + ".none");
+          EXPECT_EQ(second_page.front(), std::string(owner) + ".views");
+        }
+      }
+    }
+  }
+}
+
+TEST(axismeld_hotbox_menu, MappingOffsetsClampAndAncestorOffsetsDoNotHideTheOpenOwner)
+{
+  auto snapshot = default_snapshot();
+  snapshot.center_buttons[2] = "center.controls";
+  const auto widths = measured(snapshot);
+  const std::string owner = "center.controls.buttons.rightmouse";
+  const std::vector<std::string> path = {
+      "center", "center.controls", "center.controls.buttons", owner};
+  const auto first = layout_menu(snapshot, 392, 212.5f, 196, 106.25f, path, {{owner, -9}}, widths);
+  const auto last = layout_menu(snapshot, 392, 212.5f, 196, 106.25f, path, {{owner, 99}}, widths);
+  const auto ancestor = layout_menu(snapshot,
+                                    392,
+                                    212.5f,
+                                    196,
+                                    106.25f,
+                                    path,
+                                    {{"center.controls.buttons", 99}, {owner, 6}},
+                                    widths);
+  ASSERT_TRUE(first.supported);
+  ASSERT_TRUE(last.supported);
+  ASSERT_TRUE(ancestor.supported);
+  const auto *first_previous = rect(first, "@scroll:" + owner + ":previous");
+  const auto *last_next = rect(last, "@scroll:" + owner + ":next");
+  ASSERT_NE(first_previous, nullptr);
+  ASSERT_NE(last_next, nullptr);
+  EXPECT_FALSE(first_previous->interactive);
+  EXPECT_FALSE(last_next->interactive);
+  EXPECT_NE(rect(first, owner + ".none"), nullptr);
+  EXPECT_NE(rect(last, owner + ".modeling"), nullptr);
+  EXPECT_NE(rect(ancestor, owner), nullptr);
+  EXPECT_NE(rect(ancestor, owner + ".common_modify"), nullptr);
 }
 
 TEST(axismeld_hotbox_menu, ShortNativeSettingsListsFitNarrowViewportCornersWithoutDroppingRows)
@@ -483,7 +704,7 @@ TEST(axismeld_hotbox_menu, ViewOverlayUsesFullLabelsAndDisabledNorthEastCamera)
   EXPECT_FLOAT_EQ(perspective->width, widths.at("views.perspective") + 16);
 }
 
-TEST(axismeld_hotbox_menu, ActiveEllipseDoesNotExposeUnderlyingRootHitTargets)
+TEST(axismeld_hotbox_menu, ActiveNativeListDoesNotExposeUnderlyingRootHitTargets)
 {
   const auto snapshot = default_snapshot();
   const auto layout = layout_menu(snapshot,
@@ -498,13 +719,19 @@ TEST(axismeld_hotbox_menu, ActiveEllipseDoesNotExposeUnderlyingRootHitTargets)
   for (const auto &item : layout.rects) {
     if (item.depth == 0) {
       const auto *hit = hit_menu_rect(layout, item.x + item.width / 2, item.y + item.height / 2);
-      EXPECT_TRUE(!hit || hit->depth == 2) << item.id;
+      EXPECT_TRUE(!hit || hit->depth > 0) << item.id;
     }
     else {
-      EXPECT_EQ(item.depth, 2) << item.id;
+      EXPECT_TRUE(item.depth == 1 || item.depth == 2) << item.id;
     }
   }
-  EXPECT_NE(rect(layout, "@back:center.controls.buttons"), nullptr);
+  EXPECT_EQ(rect(layout, "@back:center.controls.buttons"), nullptr);
+  const auto *entry = rect(layout, "center.controls.buttons");
+  const auto *button = rect(layout, "center.controls.buttons.leftmouse");
+  ASSERT_NE(entry, nullptr);
+  ASSERT_NE(button, nullptr);
+  EXPECT_TRUE(entry->native_menu_standalone);
+  EXPECT_FALSE(button->native_menu_standalone);
 }
 
 TEST(axismeld_hotbox_menu, SevenViewsLieOnHorizontalEllipseWithTheOriginalDirections)

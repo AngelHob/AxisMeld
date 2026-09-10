@@ -32,7 +32,8 @@ struct MenuRect {
   bool interactive = true;
   bool direction_label = false;
   bool compact_label = false;
-  bool native_menu = false;  // Contiguous option rows use native menu rendering.
+  bool native_menu = false;             // Contiguous option rows use native menu rendering.
+  bool native_menu_standalone = false;  // Native entry placed on a hotbox, not inside a list.
 };
 struct MenuLayout {
   std::vector<MenuRect> rects;

@@ -241,10 +241,10 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
     const ui::FontStyleDrawParams params{ui::UI_STYLE_TEXT_CENTER, 0, false};
     ui::fontstyle_draw(&style, &text_rect, entry.text.c_str(), entry.text.size(), color, &params);
   }
-  // Menu entries at the same ellipse depth are separate native blocks. A list's leaf
-  // rows stay in one block so their background remains continuous.
+  // Standalone hotbox entries are separate native blocks. Native submenu and leaf rows
+  // stay in one block so their backgrounds remain continuous.
   struct NativeBlock {
-    bool menu_entry;
+    bool standalone;
     std::vector<ui::MenuOverlayItem> items;
   };
   std::map<int, std::vector<NativeBlock>> menu_levels;
@@ -252,10 +252,15 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
     const MenuRect &r = entry.rect;
     if (r.native_menu) {
       const MenuNode *node = hotbox_find_node(data.snapshot.menus, r.id);
-      const bool menu_entry = node && node->kind == MenuKind::Menu;
+      const bool submenu = node && node->kind == MenuKind::Menu;
+      const int icon_only = r.id.starts_with("@scroll:") && r.id.ends_with(":previous") ?
+                                ICON_TRIA_UP :
+                            r.id.starts_with("@scroll:") && r.id.ends_with(":next") ?
+                                ICON_TRIA_DOWN :
+                                ICON_NONE;
       auto &blocks = menu_levels[r.depth];
-      if (menu_entry || blocks.empty() || blocks.back().menu_entry) {
-        blocks.push_back({menu_entry, {}});
+      if (r.native_menu_standalone || blocks.empty() || blocks.back().standalone) {
+        blocks.push_back({r.native_menu_standalone, {}});
       }
       blocks.back().items.push_back({entry.text,
                                      {int(r.x * scale),
@@ -264,7 +269,8 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
                                       int((r.y + r.height) * scale)},
                                      entry.selected,
                                      !entry.disabled,
-                                     menu_entry});
+                                     submenu,
+                                     icon_only});
     }
   }
   for (const auto &[depth, blocks] : menu_levels) {

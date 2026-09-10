@@ -25,7 +25,18 @@ void menu_overlay_draw(const bContext *C, const Span<MenuOverlayItem> items)
   block->aspect = 2.0f / std::abs(region->winx * block->winmat[0][0]);
   block_theme_style_set(block, BLOCK_THEME_STYLE_POPUP);
   for (const MenuOverlayItem &item : items) {
-    Button *button = item.submenu ? uiDefIconTextMenuBut(block,
+    Button *button = item.icon_only ? uiDefIconBut(block,
+                                                   ButtonType::But,
+                                                   item.icon_only,
+                                                   item.rect.xmin,
+                                                   item.rect.ymin,
+                                                   item.rect.xmax - item.rect.xmin,
+                                                   item.rect.ymax - item.rect.ymin,
+                                                   nullptr,
+                                                   0,
+                                                   0,
+                                                   std::nullopt) :
+                     item.submenu   ? uiDefIconTextMenuBut(block,
                                                          nullptr,
                                                          nullptr,
                                                          ICON_NONE,
@@ -35,7 +46,7 @@ void menu_overlay_draw(const bContext *C, const Span<MenuOverlayItem> items)
                                                          item.rect.xmax - item.rect.xmin,
                                                          item.rect.ymax - item.rect.ymin,
                                                          std::nullopt) :
-                                    uiDefBut(block,
+                                      uiDefBut(block,
                                              ButtonType::But,
                                              item.label,
                                              item.rect.xmin,
