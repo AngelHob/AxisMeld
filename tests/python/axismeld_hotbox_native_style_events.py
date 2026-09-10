@@ -298,11 +298,94 @@ def mapping_suite():
 
     def press_tool(key, expected):
         event(key)
+        yield
         event(key, 'RELEASE')
         yield from settle()
         with bpy.context.temp_override(window=win, area=area, region=region):
             actual = bpy.context.workspace.tools.from_space_view3d_mode('OBJECT').idname
         check(actual == expected, f'{key} was stolen after nested mapping exit: {actual}')
+
+    def held_disabled_cancel(boundary, cancel_kind, selected_index):
+        opener = 'MIDDLEMOUSE'
+        reset_settings(opener)
+        _owner, buttons, page = yield from open_mapping(0)
+        if boundary == 'next':
+            while page['first']+page['capacity'] < 13:
+                yield from click(page['next'])
+                page = native_page(buttons['items'][0], MAPPING_LABELS, measure, bounds,
+                                   scale, first=page['first']+1)
+        else:
+            check(boundary == 'previous' and page['first'] == 0,
+                  f'{layout_probe} held cancellation requires a first-page previous')
+        before = settings()['center_buttons']
+        count, setting_count = len(observed), len(settings_observed)
+        ready_path = screenshot(
+            f'mapping-{layout_probe}-held-disabled-{boundary}-{cancel_kind}-ready.png')
+        check_native_page(ready_path, page,
+                          f'{layout_probe} held disabled {boundary} before {cancel_kind}')
+        disabled_point = tuple(int(v) for v in midpoint(page[boundary]))
+        hit_regions = [
+            (candidate.type, candidate.x, candidate.y, candidate.width, candidate.height)
+            for candidate in area.regions
+            if (candidate.x <= disabled_point[0] < candidate.x+candidate.width and
+                candidate.y <= disabled_point[1] < candidate.y+candidate.height)
+        ]
+        check(any(candidate[0] == 'WINDOW' for candidate in hit_regions),
+              f'{layout_probe} disabled {boundary} is outside VIEW_3D WINDOW: '
+              f'{disabled_point!r} in {hit_regions!r}')
+        print('MAPPING_HELD_DISABLED_READY', layout_probe, boundary, cancel_kind,
+              'point', disabled_point, 'area', area.type, 'hit-regions', hit_regions,
+              flush=True)
+        yield from move(page[boundary])
+        event('LEFTMOUSE')
+        yield from settle()
+        check(len(observed) == count and len(settings_observed) == setting_count and
+              settings()['center_buttons'] == before,
+              f'{layout_probe} held disabled {boundary} changed state before cancellation')
+        if cancel_kind == 'space-first':
+            event('SPACE', 'RELEASE')
+            yield from settle()
+            event('LEFTMOUSE', 'RELEASE')
+        else:
+            check(cancel_kind == 'esc', f'unknown held cancellation {cancel_kind!r}')
+            event('ESC')
+            event('ESC', 'RELEASE')
+            yield from settle()
+            event('LEFTMOUSE', 'RELEASE')
+            yield from settle()
+            event('SPACE', 'RELEASE')
+        yield from settle()
+        check(len(observed) == count and len(settings_observed) == setting_count and
+              settings()['center_buttons'] == before,
+              f'{layout_probe} held disabled {boundary} cancellation leaked an outcome')
+        modal_ids = [op.bl_idname for op in win.modal_operators]
+        check(not modal_ids,
+              f'{layout_probe} held {boundary} {cancel_kind} left modal guards {modal_ids!r}')
+        print('MAPPING_HELD_DISABLED_POST_RELEASE', layout_probe, boundary, cancel_kind,
+              'modal=[]', flush=True)
+        # Establish an unambiguous VIEW_3D WINDOW context only after proving no guard remains.
+        event('MOUSEMOVE', 'NOTHING', (cx, cy))
+        yield from settle()
+        for key, expected_tool in (
+                ('W', 'builtin.move'), ('E', 'builtin.rotate'), ('R', 'builtin.scale')):
+            yield from press_tool(key, expected_tool)
+
+        _owner, buttons, fresh = yield from open_mapping(0)
+        fresh_path = screenshot(
+            f'mapping-{layout_probe}-held-disabled-{boundary}-{cancel_kind}-reopened.png')
+        check_native_page(fresh_path, fresh,
+                          f'{layout_probe} reopened after held {boundary} {cancel_kind}')
+        expected = MAPPING_VALUES[selected_index]
+        expected_event_value = 'none' if expected is None else expected
+        yield from click(fresh['items'][selected_index])
+        check(len(observed) == count and len(settings_observed) == setting_count+1 and
+              settings_observed[-1][:2] == ('center.LEFTMOUSE', expected_event_value) and
+              settings()['center_buttons']['LEFTMOUSE'] == expected,
+              f'{layout_probe} held {boundary} {cancel_kind} left residual ownership')
+        yield from close_box()
+        print('MAPPING_HELD_DISABLED_CANCEL', layout_probe, boundary, cancel_kind,
+              'trailing-owner-release no-dispatch no-setting WER reopened-literal', expected,
+              flush=True)
 
     menu_back = bpy.context.preferences.themes[0].user_interface.wcol_menu_back
     normal_menu_background = tuple(menu_back.inner)
@@ -447,6 +530,9 @@ def mapping_suite():
         print('PASS standard mappings: native blocks, all labels, hover, no drift, releases and W/E/R',
               flush=True)
     else:
+        yield from held_disabled_cancel('previous', 'space-first', 2)
+        yield from held_disabled_cancel('next', 'esc', 3)
+
         selected_indices = (11, 12, 9)
         for button_index, selected_index in enumerate(selected_indices):
             opener = MOUSE_BUTTONS[(button_index+1) % len(MOUSE_BUTTONS)]
