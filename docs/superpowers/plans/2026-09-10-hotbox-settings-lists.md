@@ -25,7 +25,7 @@
 Files: `source/blender/axismeld/intern/hotbox_menu.cc`, `source/blender/axismeld/tests/hotbox_menu_test.cc`.
 Consumes `layout_menu(...)`, existing `MenuRect.native_menu` and built-in IDs. No exported API change.
 
-- [ ] Add a GTest for each new path with `default_snapshot()` / `measured(snapshot)` and assert supported layout, native entry and children, 24px row height, common x and adjacent y. Assert original root rectangles remain depth 0/non-native. Example target contract:
+- [x] Add a GTest for each new path with `default_snapshot()` / `measured(snapshot)` and assert supported layout, native entry and children, 24px row height, common x and adjacent y. Assert original root rectangles remain depth 0/non-native. Example target contract:
 
 ```cpp
 const auto layout = layout_menu(snapshot, 1920, 1080, 960, 540,
@@ -42,8 +42,8 @@ EXPECT_FLOAT_EQ(first->x, second->x);
 EXPECT_FLOAT_EQ(first->y, second->y + 24);
 ```
 
-- [ ] Build only `axismeld_hotbox_menu_test`, run new tests and save expected RED; failure must show old ellipse/non-native semantics, not a bad ID.
-- [ ] Introduce one private explicit predicate used by entry width/classification and the continuous-popup branch:
+- [x] Build only `axismeld_hotbox_menu_test`, run new tests and save expected RED; failure must show old ellipse/non-native semantics, not a bad ID.
+- [x] Introduce one private explicit predicate used by entry width/classification and the continuous-popup branch:
 
 ```cpp
 bool native_list(const std::string &id)
@@ -54,8 +54,8 @@ bool native_list(const std::string &id)
 ```
 
   Use it in place of the current two-Style classification. Keep the Views-only origin guard specific to `views.style`.
-- [ ] Add narrow/edge coverage for 3-row and 5-row lists, with either full in-bounds separated placement or explicit unsupported layout at true capacity limits; do not shrink targets or drop choices.
-- [ ] Run the entire native target GREEN. Format only changed C++ files.
+- [x] Add narrow/edge coverage for 3-row and 5-row lists, with either full in-bounds separated placement or explicit unsupported layout at true capacity limits; do not shrink targets or drop choices.
+- [x] Run the entire native target GREEN. Format only changed C++ files.
 
 ## Task 2: Actual settings interactions and visual verification
 
@@ -68,12 +68,13 @@ receive its own native block; leaf items of a single active list still share one
 Keep increasing-depth draw order and native flags; no modal/persistence changes. Add a rendered
 background-gap assertion that would fail when all native entries at one depth share a block.
 
-- [ ] Before edits inspect how each suite derives Controls geometry; expected label padding now includes the native entry icon/arrow reserve for the two new entries.
-- [ ] Generalize the existing Style list fixture into a labels-parameterized native-list helper, leaving `style_list(...)` as a small backwards-compatible wrapper. Test input geometry must reflect declared labels and row count; do not hard-code expected selected setting results into the helper.
-- [ ] Add GUI paths for Menu Rows and Transparency that move through the actual parent, verify native background/hover at 1×/2×, select a different value, then assert runtime/settings state. Demonstrate RED on the baseline stage before reinstalling. Use the current disposable configuration and reset settings between cases.
-- [ ] Rebuild blender + native target, verify idle stage, preserve config, and install to the existing ui-test stage. Run new GUI cases GREEN and actual screenshots; labels must remain readable and all choices reachable.
-- [ ] Run `menus`, `native-style`, `release`, `profiles`, manipulator and relevant quad/overlay/guide regressions serially. A changed click coordinate may be corrected; an expected command or release assertion may not be removed to pass.
-- [ ] Read-only code review, resolve important findings with RED/GREEN; update batch progress and H5-01 with logs, screenshots and exact stage SHA; local checkpoint commit only.
+- [x] Before edits inspect how each suite derives Controls geometry; expected label padding now includes the native entry icon/arrow reserve for the two new entries.
+- [x] Generalize the existing Style list fixture into a labels-parameterized native-list helper, leaving `style_list(...)` as a small backwards-compatible wrapper. Test input geometry must reflect declared labels and row count; do not hard-code expected selected setting results into the helper.
+- [x] Add GUI paths for Menu Rows and Transparency that move through the actual parent, verify native background/hover at 1×/2×, select a different value, then assert runtime/settings state. Demonstrate RED on the baseline stage before reinstalling. Use the current disposable configuration and reset settings between cases.
+- [x] Rebuild blender + native target, verify idle stage, preserve config, and install to the existing ui-test stage. Run new GUI cases GREEN and actual screenshots; labels must remain readable and all choices reachable.
+- [x] Run `menus`, `native-style`, `release`, `profiles`, manipulator and relevant quad/overlay/guide regressions serially. A changed click coordinate may be corrected; an expected command or release assertion may not be removed to pass.
+- [x] Review follow-up: explicitly open Rows and Transparency in an actual narrow pane and a 2x quad pane; generic menus/quad tests do not establish this. Use real font measurements and input, verify owner/list separation, all labels, reachable settings and cleanup. Record actual logical dimensions. If a requested pane genuinely cannot fit, report that limitation rather than turning an arbitrary skip into PASS; do not alter production geometry without the controller assessing the evidence.
+- [x] Read-only code review, resolve important findings with RED/GREEN; update batch progress and H5-01 with logs, screenshots and exact stage SHA; local checkpoint commit only.
 
 ## Exit
 

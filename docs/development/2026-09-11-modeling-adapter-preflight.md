@@ -40,3 +40,8 @@
 5. 所有命令先做真实临时场景测试：Object/mesh Edit、无当前对象、隐藏/不可选、
    多对象编辑、无变化/失败不进 Recent、确认/撤销、热盒退出后 W/E/R。
 6. 此预检不改变计划顺序；先完成短/长设置菜单，时间不足就不启用这些候选。
+7. `scripts/startup/bl_operators/axismeld.py` 的 command/dispatch 包装器只有 INTERNAL，
+   明确由子原生 operator 负责 undo。不要为新建模命令给通用包装器整体加 UNDO，否则会
+   同时改变现有导航/工具命令的撤销语义；应在真实菜单调用后验证一次撤销准确恢复场景。
+   `wm_event_system.cc:1393-1401` 只对声明 UNDO 的 operator 增减嵌套深度，是该设计的源码依据，
+   仍不能代替真实撤销测试。
