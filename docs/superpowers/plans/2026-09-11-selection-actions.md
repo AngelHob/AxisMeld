@@ -1,6 +1,6 @@
 # Selection Actions Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development task-by-task with independent review gates. Task1 and its fix1 scoped review are complete through ee4fcaf04ff; whole-batch final review remains. Do not repeat implementation. This slice was activated only after the mapping final gate passed.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development task-by-task with independent review gates. Task1 and its fix1 scoped review are complete through ee4fcaf04ff; whole-batch final review passed over137c428cf0d..5b89b65311d. Candidate delivered; manual acceptance remains pending. Do not repeat implementation. This slice was activated only after the mapping final gate passed.
 
 **Goal:** Expose three honest, synchronous Blender-native selection actions through AxisMeld's Select hotbox.
 
