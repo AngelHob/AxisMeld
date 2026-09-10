@@ -118,6 +118,47 @@ def suite():
               'unknown selection ID dispatched')
     print('PASS Object eligibility, exact context gates and unknown rejection', flush=True)
 
+    object_selection = {obj.name for obj in bpy.context.selected_objects}
+    hotbox_runtime.recent._items = []
+    hotbox_runtime.recent.record('transform.move')
+    before_recent = hotbox_runtime.recent.items()
+    with override():
+        native_noop = bpy.ops.object.select_all('EXEC_DEFAULT', action='SELECT')
+    check({obj.name for obj in bpy.context.selected_objects} == object_selection and
+          bpy.context.mode == 'OBJECT' and hotbox_runtime.recent.items() == before_recent,
+          'native already-selected Object Select All changed selection, mode or AxisMeld Recent')
+    with override():
+        result = hotbox_runtime.dispatch(bpy.context, 'selection.select_all')
+    check(native_noop == {'FINISHED'} and result == native_noop,
+          f'visible locked-object status changed: native={native_noop}, adapter={result}')
+    check({obj.name for obj in bpy.context.selected_objects} == object_selection and
+          bpy.context.mode == 'OBJECT',
+          'visible locked-object Select All changed selection or mode')
+    check(hotbox_runtime.recent.items() == ('selection.select_all', *before_recent),
+          f'visible locked-object Select All Recent policy changed: {hotbox_runtime.recent.items()!r}')
+    print('PASS selectable Object set already selected plus visible locked object returns FINISHED '
+          'and records Recent', flush=True)
+
+    locked.hide_set(True)
+    object_selection = {obj.name for obj in bpy.context.selected_objects}
+    hotbox_runtime.recent._items = []
+    hotbox_runtime.recent.record('transform.rotate')
+    before_recent = hotbox_runtime.recent.items()
+    with override():
+        native_noop = bpy.ops.object.select_all('EXEC_DEFAULT', action='SELECT')
+    check({obj.name for obj in bpy.context.selected_objects} == object_selection and
+          bpy.context.mode == 'OBJECT' and hotbox_runtime.recent.items() == before_recent,
+          'native all-visible-selected Object Select All changed selection, mode or Recent')
+    with override():
+        result = hotbox_runtime.dispatch(bpy.context, 'selection.select_all')
+    check(native_noop == {'CANCELLED'} and result == native_noop,
+          f'all-visible-selected Object status changed: native={native_noop}, adapter={result}')
+    check({obj.name for obj in bpy.context.selected_objects} == object_selection and
+          bpy.context.mode == 'OBJECT' and hotbox_runtime.recent.items() == before_recent,
+          'all-visible-selected Object Select All changed selection, mode or Recent')
+    print('PASS all-visible-selected Object native CANCELLED and unchanged selection/mode/Recent',
+          flush=True)
+
     clear_scene()
     with override():
         native_noop = bpy.ops.object.select_all('EXEC_DEFAULT', action='SELECT')
@@ -158,6 +199,37 @@ def suite():
         elements.ensure_lookup_table()
         check(not elements[0].select and all(element.select for element in elements[1:] if not element.hide),
               f'{collection_name} hidden component was selected or visible component omitted')
+
+    bpy.context.tool_settings.mesh_select_mode = (False, False, True)
+    with override():
+        bpy.ops.mesh.reveal(select=False)
+        bpy.ops.mesh.select_all(action='SELECT')
+    bm = bmesh.from_edit_mesh(component.data)
+    bm.faces.ensure_lookup_table()
+    edit_selection = {face.index for face in bm.faces if face.select}
+    check(edit_selection == set(range(len(bm.faces))), 'failed to establish all-selected Edit fixture')
+    hotbox_runtime.recent._items = []
+    hotbox_runtime.recent.record('transform.scale')
+    before_recent = hotbox_runtime.recent.items()
+    with override():
+        native_noop = bpy.ops.mesh.select_all('EXEC_DEFAULT', action='SELECT')
+    bm = bmesh.from_edit_mesh(component.data)
+    bm.faces.ensure_lookup_table()
+    check({face.index for face in bm.faces if face.select} == edit_selection and
+          bpy.context.mode == 'EDIT_MESH' and hotbox_runtime.recent.items() == before_recent,
+          'native already-selected Edit Select All changed selection, mode or AxisMeld Recent')
+    with override():
+        result = hotbox_runtime.dispatch(bpy.context, 'selection.select_all')
+    bm = bmesh.from_edit_mesh(component.data)
+    bm.faces.ensure_lookup_table()
+    check(native_noop == {'FINISHED'} and result == native_noop,
+          f'already-selected Edit status changed: native={native_noop}, adapter={result}')
+    check({face.index for face in bm.faces if face.select} == edit_selection and
+          bpy.context.mode == 'EDIT_MESH',
+          'already-selected Edit Select All changed selection or mode')
+    check(hotbox_runtime.recent.items() == ('selection.select_all', *before_recent),
+          f'already-selected Edit Select All Recent policy changed: {hotbox_runtime.recent.items()!r}')
+    print('PASS already-selected Edit native FINISHED and observable Recent policy', flush=True)
     with override():
         bpy.ops.mesh.reveal(select=False)
         bpy.ops.object.mode_set(mode='OBJECT')

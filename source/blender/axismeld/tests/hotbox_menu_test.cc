@@ -561,9 +561,11 @@ TEST(axismeld_hotbox_menu, FullNativeMappingListsDoNotDriftAndLegacyEllipsesStay
   ASSERT_TRUE(ellipse.supported);
   EXPECT_EQ(ellipse.native_scroll_bounds.find("common.select"),
             ellipse.native_scroll_bounds.end());
-  EXPECT_EQ(menu_scroll_offset_transition(ellipse, "common.select", 3, 1, 5), 4);
-  EXPECT_EQ(menu_scroll_offset_transition(ellipse, "common.select", 4, 1, 5), 4);
-  EXPECT_EQ(menu_scroll_offset_transition(ellipse, "common.select", 0, -1, 5), 0);
+  EXPECT_EQ(menu_scroll_offset_transition(ellipse, "common.select", 3, 1, 8), 4);
+  EXPECT_EQ(menu_scroll_offset_transition(ellipse, "common.select", 4, 1, 8), 5);
+  EXPECT_EQ(menu_scroll_offset_transition(ellipse, "common.select", 6, 1, 8), 7);
+  EXPECT_EQ(menu_scroll_offset_transition(ellipse, "common.select", 7, 1, 8), 7);
+  EXPECT_EQ(menu_scroll_offset_transition(ellipse, "common.select", 0, -1, 8), 0);
 }
 
 TEST(axismeld_hotbox_menu, ShortNativeSettingsListsFitNarrowViewportCornersWithoutDroppingRows)
