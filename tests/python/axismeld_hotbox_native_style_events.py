@@ -168,6 +168,7 @@ def mapping_suite():
     hotbox_runtime.apply_setting = observed_setting
 
     opener_button = [None]
+    controls_first = [0]
 
     def reset_settings(opener=None):
         hotbox_user.unlink(missing_ok=True)
@@ -176,22 +177,22 @@ def mapping_suite():
         hotbox_runtime.reload_settings(bpy.context, session={
             'schema_version': 1, 'settings': session_settings})
 
-    def open_buttons():
-        event('MOUSEMOVE', 'NOTHING', (cx, cy))
-        event('SPACE')
-        yield from settle(8)
+    def enter_buttons():
         if layout_probe == 'standard':
             yield from click(control)
             controls_anchor = control
         else:
             check(opener_button[0] in MOUSE_BUTTONS,
                   f'{layout_probe} mapping suite requires a center Controls opener')
+            event('MOUSEMOVE', 'NOTHING', (cx, cy))
+            yield from settle()
             event(opener_button[0])
             yield
             event(opener_button[0], 'RELEASE')
             yield from settle()
             controls_anchor = center
-        controls_page = ellipse_page(controls_anchor, CONTROL_LABELS, measure, bounds, scale)
+        controls_page = ellipse_page(controls_anchor, CONTROL_LABELS, measure, bounds, scale,
+                                     first=controls_first[0])
         while controls_page['items'][3] is None:
             count, setting_count = len(observed), len(settings_observed)
             yield from click(controls_page['next'])
@@ -199,11 +200,19 @@ def mapping_suite():
                   'Controls navigation reached a command or setting dispatcher')
             controls_page = ellipse_page(controls_anchor, CONTROL_LABELS, measure, bounds, scale,
                                          first=controls_page['first']+1)
+        controls_first[0] = controls_page['first']
         controls = controls_page['items']
         yield from click(controls[3])
         buttons = native_page(controls[3], BUTTON_LABELS, measure, bounds, scale,
                               submenu_indices=range(3))
         return controls[3], buttons
+
+    def open_buttons():
+        event('MOUSEMOVE', 'NOTHING', (cx, cy))
+        event('SPACE')
+        yield from settle(8)
+        controls_first[0] = 0
+        return (yield from enter_buttons())
 
     def open_mapping(button_index, first=0):
         owner, buttons = yield from open_buttons()
@@ -263,6 +272,30 @@ def mapping_suite():
               f'{receipt} did not render the expected continuous native page')
         check_labels(path, page, MAPPING_LABELS, receipt)
 
+    def prove_enabled_step(button_index, buttons, page, direction, receipt):
+        delta = 1 if direction == 'next' else -1
+        control_rect = page[direction]
+        target = native_page(buttons['items'][button_index], MAPPING_LABELS, measure, bounds,
+                             scale, first=page['first']+delta)
+        exposed_index = (target['first']+target['capacity']-1 if delta > 0 else target['first'])
+        expected = MAPPING_VALUES[exposed_index]
+        expected_event_value = 'none' if expected is None else expected
+        count, setting_count = len(observed), len(settings_observed)
+        yield from click(control_rect)
+        path = screenshot(
+            f'mapping-{layout_probe}-{MOUSE_BUTTONS[button_index].lower()}-{receipt}.png')
+        check_native_page(path, target, f'{layout_probe} {receipt}')
+        check(len(observed) == count and len(settings_observed) == setting_count,
+              f'{layout_probe} {receipt} navigation reached a dispatcher')
+        yield from click(target['items'][exposed_index])
+        check(len(observed) == count and len(settings_observed) == setting_count+1 and
+              settings_observed[-1][:2] == (
+                  f'center.{MOUSE_BUTTONS[button_index]}', expected_event_value) and
+              settings()['center_buttons'][MOUSE_BUTTONS[button_index]] == expected,
+              f'{layout_probe} {receipt} did not expose literal {expected!r}')
+        print('MAPPING_ENABLED_AFTER_DISABLED', layout_probe, BUTTON_LABELS[button_index],
+              direction, 'first', target['first'], 'literal', expected, flush=True)
+
     def press_tool(key, expected):
         event(key)
         event(key, 'RELEASE')
@@ -310,7 +343,7 @@ def mapping_suite():
         check(page['capacity'] == 13 and page['previous'] is None and page['next'] is None,
               'standard mapping list must show all 13 choices without pagination')
         normal_path = screenshot('mapping-standard-left-full.png')
-        check_labels(normal_path, page, MAPPING_LABELS, 'standard full mapping list')
+        check_native_page(normal_path, page, 'standard full mapping list')
         yield from move(page['items'][9])
         hover_path = screenshot('mapping-standard-left-hover.png')
         normal_image, normal_pixels, normal_width = image_pixels(normal_path)
@@ -447,6 +480,11 @@ def mapping_suite():
                   f'{layout_probe} disabled previous arrow applied a setting')
             print('MAPPING_DISABLED_BOUNDARY', layout_probe, 'previous',
                   'press=page non-owner=page owner-release=page no-setting', flush=True)
+            yield from prove_enabled_step(button_index, _buttons, page, 'next',
+                                          'enabled-next-after-disabled-previous')
+            yield from close_box()
+            reset_settings(opener)
+            _owner, _buttons, page = yield from open_mapping(button_index)
             visible = set()
             while True:
                 path = screenshot(
@@ -491,13 +529,22 @@ def mapping_suite():
                   f'{layout_probe} disabled next arrow applied a setting')
             print('MAPPING_DISABLED_BOUNDARY', layout_probe, 'next',
                   'press=page non-owner=page owner-release=page no-setting', flush=True)
-            # The owner release must clear its ownership while leaving enabled navigation usable.
-            yield from click(page['previous'])
-            page = native_page(_buttons['items'][button_index], MAPPING_LABELS, measure,
-                               bounds, scale, first=page['first']-1)
-            yield from click(page['next'])
-            page = native_page(_buttons['items'][button_index], MAPPING_LABELS, measure,
-                               bounds, scale, first=page['first']+1)
+            yield from prove_enabled_step(button_index, _buttons, page, 'previous',
+                                          'enabled-previous-after-disabled-next')
+            yield from close_box()
+            reset_settings(opener)
+            if button_index == 0:
+                # Keep an unaffected Controls route in the private user layer before this
+                # hotbox starts, so sibling literal submission can refresh and re-enter it.
+                real_apply_setting(bpy.context, f'center.{opener}', 'center.controls')
+                check(opener == 'MIDDLEMOUSE' and
+                      settings()['center_buttons'][opener] == 'center.controls',
+                      f'{layout_probe} could not prepare persistent Controls opener')
+            _owner, _buttons, page = yield from open_mapping(button_index)
+            while page['first']+page['capacity'] < 13:
+                yield from click(page['next'])
+                page = native_page(_buttons['items'][button_index], MAPPING_LABELS, measure,
+                                   bounds, scale, first=page['first']+1)
 
             if button_index == 0:
                 last_first = page['first']
@@ -512,7 +559,45 @@ def mapping_suite():
                                             measure, bounds, scale, first=last_first-1)
                 check(reversed_page['first'] == last_first-1,
                       f'{layout_probe} fixture did not define a one-item tail reversal')
-                screenshot(f'mapping-{layout_probe}-wheel-last-reversed.png')
+                reversed_path = screenshot(f'mapping-{layout_probe}-wheel-last-reversed.png')
+                check_native_page(reversed_path, reversed_page,
+                                  f'{layout_probe} tail-wheel reversed owner page')
+
+                # Per-owner offsets must remain independent inside this exact hotbox session.
+                # Switch to an untouched sibling without releasing Space, prove its disabled
+                # previous boundary and first literal, then re-enter through the unaffected
+                # middle-button opener and prove the original owner's retained page.
+                sibling_index = 2
+                yield from click(_buttons['items'][sibling_index])
+                sibling_page = native_page(_buttons['items'][sibling_index], MAPPING_LABELS,
+                                           measure, bounds, scale)
+                sibling_path = screenshot(f'mapping-{layout_probe}-wheel-sibling-first.png')
+                check_native_page(sibling_path, sibling_page,
+                                  f'{layout_probe} untouched sibling first page')
+                count, setting_count = len(observed), len(settings_observed)
+                yield from click(sibling_page['previous'])
+                sibling_boundary = screenshot(
+                    f'mapping-{layout_probe}-wheel-sibling-disabled-previous.png')
+                check_native_page(sibling_boundary, sibling_page,
+                                  f'{layout_probe} sibling disabled previous page')
+                check(len(observed) == count and len(settings_observed) == setting_count,
+                      f'{layout_probe} sibling disabled previous changed a setting')
+                yield from click(sibling_page['items'][0])
+                check(len(observed) == count and len(settings_observed) == setting_count+1 and
+                      settings_observed[-1][:2] == ('center.RIGHTMOUSE', 'none') and
+                      settings()['center_buttons']['RIGHTMOUSE'] is None,
+                      f'{layout_probe} sibling first row was not literal None')
+                check(settings()['center_buttons'][opener] == 'center.controls',
+                      f'{layout_probe} sibling setting changed the unaffected opener')
+
+                _owner, retained_buttons = yield from enter_buttons()
+                yield from click(retained_buttons['items'][button_index])
+                reversed_page = native_page(retained_buttons['items'][button_index],
+                                            MAPPING_LABELS, measure, bounds, scale,
+                                            first=last_first-1)
+                retained_path = screenshot(f'mapping-{layout_probe}-wheel-owner-retained.png')
+                check_native_page(retained_path, reversed_page,
+                                  f'{layout_probe} original owner retained wheel page')
                 first_index = reversed_page['first']
                 expected = MAPPING_VALUES[first_index]
                 expected_event_value = 'none' if expected is None else expected
@@ -522,9 +607,18 @@ def mapping_suite():
                       settings_observed[-1][:2] == ('center.LEFTMOUSE', expected_event_value) and
                       settings()['center_buttons']['LEFTMOUSE'] == expected,
                       f'{layout_probe} tail wheel reversal did not move visible first row by one')
+                real_apply_setting(bpy.context, 'center.RIGHTMOUSE', 'views')
+                real_apply_setting(bpy.context, f'center.{opener}', 'views')
+                check(settings()['center_buttons']['RIGHTMOUSE'] == 'views' and
+                      settings()['center_buttons'][opener] == 'views',
+                      f'{layout_probe} could not remove private sibling/opener setup')
                 print('MAPPING_TAIL_WHEEL', layout_probe, 'capacity', page['capacity'],
                       'excess_down', 20, 'last_first', last_first,
-                      'reversed_first', first_index, 'literal', expected, flush=True)
+                      'reversed_first', first_index, 'literal', expected,
+                      'sibling_first', 0, 'owner_retained', first_index, flush=True)
+                print('MAPPING_SIBLING_OFFSET', layout_probe,
+                      'same-session first=0 previous=disabled literal=None owner=retained',
+                      first_index, flush=True)
             else:
                 expected = MAPPING_VALUES[selected_index]
                 expected_event_value = 'none' if expected is None else expected
