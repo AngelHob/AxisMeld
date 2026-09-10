@@ -1,6 +1,6 @@
 # Selection Actions Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development task-by-task with independent review gates. This is a prepared candidate only. Do not dispatch implementation before the mapping-list slice passes and the controller confirms enough time before 04:23 +08 consolidation.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development task-by-task with independent review gates. Task1 and its fix1 scoped review are complete through ee4fcaf04ff; whole-batch final review remains. Do not repeat implementation. This slice was activated only after the mapping final gate passed.
 
 **Goal:** Expose three honest, synchronous Blender-native selection actions through AxisMeld's Select hotbox.
 
@@ -42,7 +42,7 @@ This is one end-to-end task because a callable registry without its adapter/real
 
 **Interfaces:** Existing `available(context, command)` returns `(bool, reason)` and `run(context, command, *, invoke=True)` returns the native operator result. No signature changes. Private `_selection_operation(context, command)` returns `(bpy operator, properties dict)` or None. Runner `--suite selection` uses the new script and requires `AXISMELD_SELECTION_EVENTS_PASS`. New catalog IDs are `common.select.all`, `common.select.grow`, `common.select.shrink`.
 
-- [ ] Add registry/contract RED tests. Assert exact Select command order, complete unbound set, unchanged old baseline, adapted status, non-empty specific differences, replay/close policy and unknown-ID rejection. Example independent literals:
+- [x] Add registry/contract RED tests. Assert exact Select command order, complete unbound set, unchanged old baseline, adapted status, non-empty specific differences, replay/close policy and unknown-ID rejection. Example independent literals:
 
 ```python
 expected = ('selection.select_all', 'selection.grow', 'selection.shrink')
@@ -64,9 +64,9 @@ for identifier in expected:
   Preserve the unknown-ID close safety case and separate parser rejection checks. This existing-policy
   assertion is expected to pass before registration; the registration/parser tests provide RED.
 
-- [ ] Run pure Python tests and the targeted native parser test before production edits; save missing-ID RED. CMake target `editor_hotbox_hotbox_model_test` is verified from the generated `.vcxproj` and CTest file. Build that Release target and run `D:/source/AxisMeld-build/bin/tests/Release/editor_hotbox_hotbox_model_test.exe`. Record exact command and native RED output.
+- [x] Run pure Python tests and the targeted native parser test before production edits; save missing-ID RED. CMake target `editor_hotbox_hotbox_model_test` is verified from the generated `.vcxproj` and CTest file. Build that Release target and run `D:/source/AxisMeld-build/bin/tests/Release/editor_hotbox_hotbox_model_test.exe`. Record exact command and native RED output.
 
-- [ ] Create the isolated selection suite and runner route before production changes. Begin with installed native metadata/availability assertions so the old stage fails with a specific missing action assertion, not an import exception. Keep the no-source-module-injection rule; adding the tests directory solely for geometry fixture imports is allowed.
+- [x] Create the isolated selection suite and runner route before production changes. Begin with installed native metadata/availability assertions so the old stage fails with a specific missing action assertion, not an import exception. Keep the no-source-module-injection rule; adding the tests directory solely for geometry fixture imports is allowed.
 
 ```python
 from axismeld.commands import COMMANDS
@@ -75,7 +75,7 @@ check('selection.select_all' in COMMANDS, 'installed Select All action missing')
 
   Preserve existing runner timeout, private config, disabled preference save and failure detection. Run the stage's `--suite selection` once for installed RED. Factory test scenes only.
 
-- [ ] Add three metadata rows with explicit differences from the spec. Append the three catalog leaves after Face and add exact IDs to both independent allowlists and the close/replay set. Do not unify allowlists into a generic registry-derived acceptance path.
+- [x] Add three metadata rows with explicit differences from the spec. Append the three catalog leaves after Face and add exact IDs to both independent allowlists and the close/replay set. Do not unify allowlists into a generic registry-derived acceptance path.
 
 ```python
 _command('common.select.all', 'Select All', 'selection.select_all')
@@ -83,7 +83,7 @@ _command('common.select.grow', 'Grow Selection', 'selection.grow')
 _command('common.select.shrink', 'Shrink Selection', 'selection.shrink')
 ```
 
-- [ ] Replace the prefix gate with an exact set of the existing mode commands. Route new commands through one small helper that resolves the operator/properties for current Object/EDIT_MESH, shared by available and run so the poll target cannot diverge. For Grow/Shrink outside EDIT_MESH return an unavailable reason; for Select All without active object allow object.select_all.poll() to decide. Run uses EXEC_DEFAULT regardless of invoke.
+- [x] Replace the prefix gate with an exact set of the existing mode commands. Route new commands through one small helper that resolves the operator/properties for current Object/EDIT_MESH, shared by available and run so the poll target cannot diverge. For Grow/Shrink outside EDIT_MESH return an unavailable reason; for Select All without active object allow object.select_all.poll() to decide. Run uses EXEC_DEFAULT regardless of invoke.
 
 ```python
 SELECTION_ACTIONS = {'selection.select_all', 'selection.grow', 'selection.shrink'}
@@ -109,7 +109,7 @@ def _selection_operation(context, command):
 
   Existing tools, views, hotbox and component-switch paths remain unchanged. Never catch a native failure and turn it into FINISHED.
 
-- [ ] Complete real scene assertions in the new suite. Use independent expected object names/mesh component sets, not a result-generated expectation. Cover:
+- [x] Complete real scene assertions in the new suite. Use independent expected object names/mesh component sets, not a result-generated expectation. Cover:
   - Object no active selection: visible Mesh, Empty and Camera become selected; hidden and hide_select objects do not.
   - Object all selected and empty scene: dispatch returns the actual native no-op status and does not falsely create a success record. Mesh Edit no-op FINISHED follows existing Recent behavior.
   - Mesh Edit vertex/edge/face select-all, hidden components excluded, multi-object unique-data/shared-data cases, mode preserved.
@@ -128,13 +128,13 @@ expected_grown_faces = {6, 7, 8, 11, 12, 13, 16, 17, 18}
 expected_shrunk_faces = {12}
 ```
 
-- [ ] Update Select-menu coordinate fixtures in the existing menu suite to the exact new eight labels, including separator. Keep every prior mode-switch, close, non-owner release and context assertion. Do not change unrelated menu fixtures or native list geometry.
+- [x] Update Select-menu coordinate fixtures in the existing menu suite to the exact new eight labels, including separator. Keep every prior mode-switch, close, non-owner release and context assertion. Do not change unrelated menu fixtures or native list geometry.
 
-- [ ] Run pure tests GREEN; build blender, native menu layout and parser test targets, then targeted CTest5. Generated menu fixture comes from `source/blender/axismeld/tests/hotbox_menu_fixture.py` through CMake; do not edit the generated header. Save logs before installation.
+- [x] Run pure tests GREEN; build blender, native menu layout and parser test targets, then targeted CTest5. Generated menu fixture comes from `source/blender/axismeld/tests/hotbox_menu_fixture.py` through CMake; do not edit the generated header. Save logs before installation.
 
-- [ ] Verify no user Blender occupies the stage; verify portable relative paths/hashes against the batch backup; install only into existing stage. Run selection suite GREEN and inspect representative screenshots; run menus, hotbox, native-style, mappings standard/narrow/quad, release, profiles and manipulator serially, plus pure tests and targeted CTest. Report exact results and stage/build hash match. Do not run known deferred cross-window tests as a misleading completion gate.
+- [x] Verify no user Blender occupies the stage; verify portable relative paths/hashes against the batch backup; install only into existing stage. Run selection suite GREEN and inspect representative screenshots; run menus, hotbox, native-style, mappings standard/narrow/quad, release, profiles and manipulator serially, plus pure tests and targeted CTest. Report exact results and stage/build hash match. Do not run known deferred cross-window tests as a misleading completion gate.
 
-- [ ] Self-review, local commit only owned files, and report source identity, native/pure/installed RED/GREEN, exact operator results/undo evidence, logs, artifacts and adapted differences. The controller performs independent task/final review and adds H5-08 to the consolidated manual table only after completion.
+- [x] Self-review, local commit only owned files, and report source identity, native/pure/installed RED/GREEN, exact operator results/undo evidence, logs, artifacts and adapted differences. The controller performs independent task/final review and adds H5-08 to the consolidated manual table only after completion.
 
 ## Controller activation and stop rules
 
