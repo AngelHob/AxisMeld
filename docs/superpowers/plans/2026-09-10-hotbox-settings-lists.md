@@ -60,7 +60,13 @@ bool native_list(const std::string &id)
 ## Task 2: Actual settings interactions and visual verification
 
 Files: `tests/python/axismeld_hotbox_geometry_fixture.py`, `tests/python/axismeld_hotbox_native_style_events.py`,
-`tests/python/axismeld_hotbox_menu_events.py`; production renderer only if a concrete failing test requires it.
+`tests/python/axismeld_hotbox_menu_events.py`, and `source/blender/editors/space_view3d/view3d_axismeld_hotbox_draw.cc`.
+
+With three native submenu entries now occupying the same Controls ellipse depth, grouping native
+items by depth alone would draw one large background through the ring. Each Menu-kind entry must
+receive its own native block; leaf items of a single active list still share one continuous block.
+Keep increasing-depth draw order and native flags; no modal/persistence changes. Add a rendered
+background-gap assertion that would fail when all native entries at one depth share a block.
 
 - [ ] Before edits inspect how each suite derives Controls geometry; expected label padding now includes the native entry icon/arrow reserve for the two new entries.
 - [ ] Generalize the existing Style list fixture into a labels-parameterized native-list helper, leaving `style_list(...)` as a small backwards-compatible wrapper. Test input geometry must reflect declared labels and row count; do not hard-code expected selected setting results into the helper.

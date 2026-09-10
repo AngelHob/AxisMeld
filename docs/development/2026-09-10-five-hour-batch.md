@@ -88,10 +88,17 @@ GUI：`tests/python/axismeld_hotbox_ui_runner.py --blender <stage exe> --suite n
 | 批次 | 状态 | 结果 / 下一步 |
 |---|---|---|
 | 0：准备 | 完成 | 读取现有实现和范围；复用工作树；起始纯测试通过；定时续作与集中验收表已建立 |
-| 1：短设置列表原生菜单 | 待实施 | 从 Menu Rows / Transparency 开始，执行下面链接的独立小计划 |
+| 1：短设置列表原生菜单 | 进行中 | 几何实现与测试由 settings_geometry 执行；GUI 输入/渲染准备就绪，未安装新程序 |
 | 2：映射列表及交互回归 | 未开始 | 只有批次 1 通过后细化，不提前宣称完成 |
 | 3：常用建模适配 | 未开始、时间允许才做 | 先能力/语义与数据安全审查，逐命令完成测试再接通菜单 |
 | 4：收尾 | 未开始 | 04:23 起集中回归，04:53 截止；停止自动化并交付统一报告 |
 
 **下一步明确入口：** [短设置列表计划](../superpowers/plans/2026-09-10-hotbox-settings-lists.md)。
 先读取该计划涉及实现和测试，再按 TDD 执行，不再次要求用户单独确认视觉偏好。
+
+现场补充：本批开始时再次备份并核对了 6 个 portable 文件，路径为
+`D:/source/AxisMeld-build/preserved-test-configs/2026-09-11-batch5h/phase2b-ui-test-install/portable`。
+短菜单计划的 SDD 续作记录位于 `.superpowers/sdd/2026-09-10-hotbox-settings-lists/progress.md`，
+不得与其他旧计划的 ledger 混用。新增同层原生入口需要各自背景，已先更新 Task 2 设计。
+
+后续选择适配的本机证据与约束见 [预检](2026-09-11-modeling-adapter-preflight.md)。
