@@ -502,7 +502,7 @@ def suite():
 
     # Measured public labels provide input positions only; all effects below are literal.
     sys.path.insert(0, str(Path(__file__).parent))
-    from axismeld_hotbox_geometry_fixture import ellipse_page, style_list
+    from axismeld_hotbox_geometry_fixture import ellipse_page, native_list, style_list
     blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
     icon_labels = {'AxisMeld', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls',
                    'Wireframe', 'Solid', 'Perspective View', 'Right View', 'Bottom View',
@@ -526,9 +526,14 @@ def suite():
         x, y, w, h = rect
         return x+w/2, y+h/2
     def page(anchor, labels, first=0):
-        if labels == ['Zones and Menu Rows', 'Zones Only', 'Center Zone Only']:
-            return {'items': style_list(anchor, label_width,
-                                       (region.x, region.y, region.width, region.height), scale)}
+        native_labels = (
+            ['Zones and Menu Rows', 'Zones Only', 'Center Zone Only'],
+            ['Show Common Menus', 'Show Pane Specific Menus', 'Show Modeling'],
+            ['0%', '25%', '50%', '75%', '100%'],
+        )
+        if labels in native_labels:
+            return {'items': native_list(anchor, labels, label_width,
+                                        (region.x, region.y, region.width, region.height), scale)}
         views = bool(labels and labels[0] == 'Perspective View')
         measure = (lambda label: blf.dimensions(0, label)[0] / scale) if views else label_width
         return ellipse_page(anchor, labels, measure,
@@ -1029,6 +1034,37 @@ def suite():
     check(len(observed) == count, 'hidden row still dispatched after immediate style rebuild')
     yield from close_box()
     reset_hotbox_settings()
+    # The two other short settings lists use their actual Controls parents and setting leaves.
+    yield from open_box()
+    yield from click(midpoint(controls))
+    yield from click(midpoint(control_items[0]))
+    row_items = popup(control_items[0],
+                      ['Show Common Menus', 'Show Pane Specific Menus', 'Show Modeling'])
+    screenshot('menus-rows-open.png')
+    yield from click(midpoint(row_items[2]))
+    with bpy.context.temp_override(window=win, area=area, region=region):
+        check(json.loads(hotbox_runtime.snapshot(bpy.context))['settings']['rows'] ==
+              ['common', 'pane'], 'actual Menu Rows leaf did not update settings')
+    check(settings_observed[-1][:2] == ('row.modeling', 'toggle'),
+          'actual Menu Rows leaf bypassed shared settings dispatch')
+    yield from close_box()
+    reset_hotbox_settings()
+
+    yield from open_box()
+    yield from click(midpoint(controls))
+    yield from click(midpoint(control_items[2]))
+    transparency_items = popup(control_items[2], ['0%', '25%', '50%', '75%', '100%'])
+    screenshot('menus-transparency-open.png')
+    yield from click(midpoint(transparency_items[3]))
+    with bpy.context.temp_override(window=win, area=area, region=region):
+        check(json.loads(hotbox_runtime.snapshot(bpy.context))['settings']['transparency'] == 75,
+              'actual Transparency leaf did not update settings')
+    check(settings_observed[-1][:2] == ('transparency', '75'),
+          'actual Transparency leaf bypassed shared settings dispatch')
+    yield from close_box()
+    reset_hotbox_settings()
+    print('PASS visible Menu Rows and Transparency lists changed shared runtime settings', flush=True)
+
     # Configure the same center-button model through the visible Controls tree.
     yield from open_box()
     yield from click(midpoint(controls))

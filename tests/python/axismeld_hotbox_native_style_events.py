@@ -14,12 +14,15 @@ root = Path(os.environ['AXISMELD_TEST_ROOT']).resolve()
 if not Path(bpy.app.tempdir).resolve().is_relative_to(root):
     raise RuntimeError('Only the isolated GUI runner may run this test')
 sys.path.insert(0, str(Path(__file__).parent))
-from axismeld_hotbox_geometry_fixture import ellipse_page, style_list
+from axismeld_hotbox_geometry_fixture import ellipse_page, native_list
 from axismeld import hotbox_runtime
 
 bpy.context.preferences.use_preferences_save = False
 bpy.context.preferences.view.show_splash = False
 artifacts = Path(os.environ.get('AXISMELD_TEST_ARTIFACTS', root))
+STYLE_LABELS = ('Zones and Menu Rows', 'Zones Only', 'Center Zone Only')
+ROW_LABELS = ('Show Common Menus', 'Show Pane Specific Menus', 'Show Modeling')
+TRANSPARENCY_LABELS = ('0%', '25%', '50%', '75%', '100%')
 
 
 def check(value, message):
@@ -79,19 +82,29 @@ def suite():
             return blf.dimensions(0, label)[0] / scale
         center_width = (measure('AxisMeld') + 60)*scale
         center = (cx-center_width/2, cy-19*scale, center_width, 38*scale)
-        for entry in ('views', 'controls'):
+        cases = (
+            ('style-views', None, STYLE_LABELS, 1),
+            ('style-controls', 1, STYLE_LABELS, 1),
+            ('rows-controls', 0, ROW_LABELS, 2),
+            ('transparency-controls', 2, TRANSPARENCY_LABELS, 3),
+        )
+        for entry, controls_index, labels, selected_index in cases:
             theme.wcol_menu_back.inner = normal_background
             hotbox_runtime.reload_settings(bpy.context, session={
-                'schema_version': 1, 'settings': {'style': 'rows'}})
+                'schema_version': 1, 'settings': {
+                    'style': 'rows', 'transparency': 25,
+                    'rows': ['common', 'pane', 'modeling'],
+                }})
             event('MOUSEMOVE', 'NOTHING', (cx, cy))
             event('SPACE')
             yield from settle(8)
-            if entry == 'views':
+            native_siblings = ()
+            if controls_index is None:
                 event('RIGHTMOUSE')
                 yield from settle()
                 ring = ellipse_page(center, [], measure, bounds, scale, views=True)
-                style_anchor = ring['items'][8]
-                yield from move(style_anchor)
+                list_anchor = ring['items'][8]
+                yield from move(list_anchor)
             else:
                 control_width = (measure('Hotbox Controls') + 60)*scale
                 control = (center[0]+center[2]+83.6*scale, cy-19*scale,
@@ -99,10 +112,11 @@ def suite():
                 yield from click(control)
                 ring = ellipse_page(control, ['Menu Rows', 'Hotbox Style', 'Transparency',
                                                'Center Mouse Buttons'], measure, bounds, scale)
-                style_anchor = ring['items'][1]
-                yield from click(style_anchor)
-            choices = style_list(style_anchor, measure, bounds, scale,
-                                 marking_origin=(cx, cy) if entry == 'views' else None)
+                native_siblings = tuple(ring['items'][:3])
+                list_anchor = ring['items'][controls_index]
+                yield from click(list_anchor)
+            choices = native_list(list_anchor, labels, measure, bounds, scale,
+                                  marking_origin=(cx, cy) if controls_index is None else None)
             screenshot(f'native-style-{entry}-{requested_scale}-normal.png')
             theme.wcol_menu_back.inner = (.8, .12, .04, 1)
             area.tag_redraw()
@@ -115,8 +129,14 @@ def suite():
                        for yy in range(int(y-3*scale), int(y-scale))
                        for xx in range(int(x+6*scale), int(x+12*scale))]
             check(samples and all(r > .7 and g < .2 and b < .1 for r, g, b in samples),
-                  f'{entry} {requested_scale}x native menu background missing or discontinuous')
-            ex, ey, ew, eh = style_anchor
+                   f'{entry} {requested_scale}x native menu background missing or discontinuous')
+            for label, (lx, ly, lw, lh) in zip(labels, choices):
+                ink = sum(min(pixels[(yy*width+xx)*4:(yy*width+xx)*4+3]) > .55
+                          for yy in range(int(ly+3*scale), int(ly+lh-3*scale))
+                          for xx in range(int(lx+3*scale), int(lx+lw-3*scale)))
+                check(ink > 2*scale*scale,
+                      f'{entry} {requested_scale}x missing readable label {label!r}')
+            ex, ey, ew, eh = list_anchor
             entry_background = [pixels[(yy*width+xx)*4:(yy*width+xx)*4+3]
                                 for yy in range(int(ey+4*scale), int(ey+6*scale))
                                 for xx in range(int(ex+5*scale), int(ex+8*scale))]
@@ -134,17 +154,56 @@ def suite():
             gap_rgb = pixels[(int(between_y)*width+int(between_x))*4:][:3]
             check(not (gap_rgb[0] > .7 and gap_rgb[1] < .2 and gap_rgb[2] < .1),
                   'entry and submenu incorrectly share a background spanning their gap')
+            if native_siblings:
+                left = int(min(r[0] for r in native_siblings))
+                right = int(max(r[0]+r[2] for r in native_siblings))
+                bottom = int(min(r[1] for r in native_siblings))
+                top = int(max(r[1]+r[3] for r in native_siblings))
+                excluded = (*ring['items'], *choices)
+                gap_samples = []
+                for yy in range(bottom, top):
+                    for xx in range(left, right):
+                        if any(rx-2*scale <= xx <= rx+rw+2*scale and
+                               ry-2*scale <= yy <= ry+rh+2*scale
+                               for rx, ry, rw, rh in excluded):
+                            continue
+                        gap_samples.append(pixels[(yy*width+xx)*4:(yy*width+xx)*4+3])
+                red_gap = sum(r > .7 and g < .2 and b < .1 for r, g, b in gap_samples)
+                check(gap_samples and red_gap < max(3, len(gap_samples)//100),
+                      f'{entry} {requested_scale}x sibling native entries share one background')
             bpy.data.images.remove(image)
-            yield from move(choices[1])
-            screenshot(f'native-style-{entry}-{requested_scale}-hover.png')
-            event('RIGHTMOUSE' if entry == 'views' else 'LEFTMOUSE',
-                  'RELEASE' if entry == 'views' else 'PRESS')
-            if entry == 'controls':
+            yield from move(choices[selected_index])
+            hover_path = screenshot(f'native-style-{entry}-{requested_scale}-hover.png')
+            hover_image = bpy.data.images.load(str(hover_path), check_existing=False)
+            hover_pixels, hover_width = list(hover_image.pixels), hover_image.size[0]
+            hx, hy, hw, hh = choices[selected_index]
+            hover_changed = sum(
+                sum(abs(a-b) for a, b in zip(
+                    pixels[(yy*width+xx)*4:(yy*width+xx)*4+3],
+                    hover_pixels[(yy*hover_width+xx)*4:(yy*hover_width+xx)*4+3])) > .12
+                for yy in range(int(hy+3*scale), int(hy+hh-3*scale))
+                for xx in range(int(hx+3*scale), int(hx+hw-3*scale)))
+            check(hover_changed > 8*scale*scale,
+                  f'{entry} {requested_scale}x native hover did not render')
+            bpy.data.images.remove(hover_image)
+            event('RIGHTMOUSE' if controls_index is None else 'LEFTMOUSE',
+                  'RELEASE' if controls_index is None else 'PRESS')
+            if controls_index is not None:
                 event('LEFTMOUSE', 'RELEASE')
             yield from settle()
             with bpy.context.temp_override(window=win, area=area, region=region):
                 settings = json.loads(hotbox_runtime.snapshot(bpy.context))['settings']
-            check(settings['style'] == 'zones', f'{entry} {requested_scale}x setting not applied')
+            if entry.startswith('style'):
+                check(settings['style'] == 'zones',
+                      f'{entry} {requested_scale}x style setting not applied')
+            elif entry.startswith('rows'):
+                check(settings['rows'] == ['common', 'pane'] and
+                      hotbox_runtime.current_settings()['rows'] == ['common', 'pane'],
+                      f'{entry} {requested_scale}x row toggle not applied')
+            else:
+                check(settings['transparency'] == 75 and
+                      hotbox_runtime.current_settings()['transparency'] == 75,
+                      f'{entry} {requested_scale}x transparency setting not applied')
             event('SPACE', 'RELEASE')
             yield from settle()
             check(not win.screen.is_animation_playing, 'native menu leaked Space release')

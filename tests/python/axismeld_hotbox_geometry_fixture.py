@@ -55,11 +55,13 @@ def view_page(anchor, labels, measure, bounds, scale):
     raise AssertionError(f'view fixture cannot fit in {bounds!r}')
 
 
-def style_list(anchor, measure, bounds, scale=1, marking_origin=None):
+def native_list(anchor, labels, measure, bounds, scale=1, marking_origin=None):
+    if not labels:
+        raise AssertionError('Native list requires at least one label')
     ax, ay, aw, ah = (v / scale for v in anchor)
     bx, by, bw, bh = (v / scale for v in bounds)
-    w = max(measure(label) for label in ('Zones and Menu Rows', 'Zones Only', 'Center Zone Only')) + 40
-    h = 3*24
+    w = max(measure(label) for label in labels) + 40
+    h = len(labels)*24
     x = ax+aw+10 if ax+aw+10+w <= bx+bw-12 else ax-10-w
     y = max(by+12, min(ay+ah-h, by+bh-12-h))
     if x < bx+12:
@@ -75,9 +77,15 @@ def style_list(anchor, measure, bounds, scale=1, marking_origin=None):
                         continue
                 positions.append((cx, cy))
         if not positions:
-            raise AssertionError(f'Style list cannot fit without covering its entry in {bounds!r}')
+            raise AssertionError(f'Native list cannot fit without covering its entry in {bounds!r}')
         x, y = positions[0]
-    return [(x*scale, (y+h-(i+1)*24)*scale, w*scale, 24*scale) for i in range(3)]
+    return [(x*scale, (y+h-(i+1)*24)*scale, w*scale, 24*scale)
+            for i in range(len(labels))]
+
+
+def style_list(anchor, measure, bounds, scale=1, marking_origin=None):
+    return native_list(anchor, ('Zones and Menu Rows', 'Zones Only', 'Center Zone Only'),
+                       measure, bounds, scale, marking_origin)
 
 
 def ellipse_page(anchor, labels, measure, bounds, scale=1, first=0, views=False):
@@ -85,7 +93,8 @@ def ellipse_page(anchor, labels, measure, bounds, scale=1, first=0, views=False)
         return view_page(anchor, labels, measure, bounds, scale)
     ax, ay, aw, ah = (v / scale for v in anchor)
     bx, by, bw, bh = (v / scale for v in bounds)
-    widths = [measure(label) + (60 if label == 'Hotbox Style' else 16) for label in labels]
+    native_entries = {'Menu Rows', 'Hotbox Style', 'Transparency'}
+    widths = [measure(label) + (60 if label in native_entries else 16) for label in labels]
     center_width = aw
     choices = []
     for capacity in range(min(len(labels), 8), 0, -1):
