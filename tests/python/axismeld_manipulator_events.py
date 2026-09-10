@@ -12,6 +12,7 @@ import sys
 import traceback
 
 import bpy
+import blf
 from bpy_extras.view3d_utils import location_3d_to_region_2d
 from mathutils import Quaternion, Vector
 
@@ -22,6 +23,8 @@ bpy.context.preferences.use_preferences_save = False
 test_root = Path(os.environ['AXISMELD_TEST_ROOT']).resolve()
 if not Path(bpy.app.tempdir).resolve().is_relative_to(test_root):
     raise RuntimeError('GUI test requires an isolated Blender temporary directory')
+sys.path.insert(0, str(Path(__file__).parent))
+from axismeld_hotbox_geometry_fixture import ellipse_page
 
 
 def check(condition, message):
@@ -244,8 +247,17 @@ def suite():
     event('RIGHTMOUSE', 'RELEASE')
     yield from settle()
     # Move is the north item of the three-command elliptical Modify menu.
-    event('MOUSEMOVE', 'NOTHING', x=menu_origin[0],
-          y=menu_origin[1] + 80 * bpy.context.preferences.system.ui_scale)
+    scale = bpy.context.preferences.system.ui_scale
+    blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
+    def measure(label):
+        return blf.dimensions(0, label)[0] / scale
+    center_width = (measure('AxisMeld') + 60) * scale
+    anchor = (menu_origin[0] - center_width / 2, menu_origin[1] - 19 * scale,
+              center_width, 38 * scale)
+    move_rect = ellipse_page(anchor, ['Move Tool', 'Rotate Tool', 'Scale Tool'], measure,
+                             (region.x, region.y, region.width, region.height), scale)['items'][0]
+    event('MOUSEMOVE', 'NOTHING', x=round(move_rect[0] + move_rect[2] / 2),
+          y=round(move_rect[1] + move_rect[3] / 2))
     yield from settle()
     yield from click()
     event('SPACE', 'RELEASE')

@@ -24,13 +24,13 @@ def view_page(anchor, labels, measure, bounds, scale):
             clear = True
             for w, (nx, ny) in zip(widths, slots):
                 x, y = nx*1.7*ry-w/2, ny*ry-12
-                clear &= all(x+w+9.999 <= ox or ox+ow+9.999 <= x or
-                             y+24+9.999 <= oy or oy+oh+9.999 <= y
+                clear &= all(x+w+3.999 <= ox or ox+ow+3.999 <= x or
+                             y+24+3.999 <= oy or oy+oh+3.999 <= y
                              for ox, oy, ow, oh in rectangles)
                 rectangles.append((x, y, w, 24))
             if not compact:
-                w = measure('Hotbox Style') + 16
-                rectangles.append((-w/2, min(r[1] for r in rectangles)-34, w, 24))
+                w = measure('Hotbox Style') + 60
+                rectangles.append((-w/2, min(r[1] for r in rectangles)-28, w, 24))
             left = min(r[0] for r in rectangles)
             right = max(r[0]+r[2] for r in rectangles)
             bottom = min(r[1] for r in rectangles)
@@ -55,13 +55,28 @@ def view_page(anchor, labels, measure, bounds, scale):
     raise AssertionError(f'view fixture cannot fit in {bounds!r}')
 
 
-def style_list(anchor, measure, bounds, scale=1):
+def style_list(anchor, measure, bounds, scale=1, marking_origin=None):
     ax, ay, aw, ah = (v / scale for v in anchor)
     bx, by, bw, bh = (v / scale for v in bounds)
     w = max(measure(label) for label in ('Zones and Menu Rows', 'Zones Only', 'Center Zone Only')) + 40
     h = 3*24
-    x = ax+aw+10 if ax+aw+10+w <= bx+bw-12 else max(bx+12, ax-10-w)
+    x = ax+aw+10 if ax+aw+10+w <= bx+bw-12 else ax-10-w
     y = max(by+12, min(ay+ah-h, by+bh-12-h))
+    if x < bx+12:
+        positions = []
+        for cy in (ay+ah+10, ay-10-h):
+            for cx in (max(bx+12, min(ax, bx+bw-12-w)), bx+12, bx+bw-12-w):
+                if cy < by+12 or cy+h > by+bh-12:
+                    continue
+                if marking_origin:
+                    ox, oy = (v/scale for v in marking_origin)
+                    dx, dy = ox-max(cx, min(ox, cx+w)), oy-max(cy, min(oy, cy+h))
+                    if dx*dx+dy*dy <= 12*12:
+                        continue
+                positions.append((cx, cy))
+        if not positions:
+            raise AssertionError(f'Style list cannot fit without covering its entry in {bounds!r}')
+        x, y = positions[0]
     return [(x*scale, (y+h-(i+1)*24)*scale, w*scale, 24*scale) for i in range(3)]
 
 
@@ -70,7 +85,7 @@ def ellipse_page(anchor, labels, measure, bounds, scale=1, first=0, views=False)
         return view_page(anchor, labels, measure, bounds, scale)
     ax, ay, aw, ah = (v / scale for v in anchor)
     bx, by, bw, bh = (v / scale for v in bounds)
-    widths = [measure(label) + 16 for label in labels]
+    widths = [measure(label) + (60 if label == 'Hotbox Style' else 16) for label in labels]
     center_width = aw
     choices = []
     for capacity in range(min(len(labels), 8), 0, -1):
@@ -89,8 +104,8 @@ def ellipse_page(anchor, labels, measure, bounds, scale=1, first=0, views=False)
                 w = 38 if index < 0 else max(widths)
                 candidate = (nx*1.7*ry-w/2, ny*ry-12, w, 24)
                 x, y, w, h = candidate
-                clear &= all(x+w+9.999 <= ox or ox+ow+9.999 <= x or
-                             y+h+9.999 <= oy or oy+oh+9.999 <= y
+                clear &= all(x+w+3.999 <= ox or ox+ow+3.999 <= x or
+                             y+h+3.999 <= oy or oy+oh+3.999 <= y
                              for ox, oy, ow, oh in rectangles)
                 rectangles.append(candidate)
             left = min(r[0] for r in rectangles)

@@ -26,3 +26,27 @@ Tests cover compact secondary hit areas, unchanged primary geometry, native Styl
 theme rendering and contiguous rows, selection/cancel/backtracking, complete main
 rows, 1x/2x and quad panes, W/E/R and owned-release cleanup. Reuse existing stages
 and preserve a rollback executable. No push or publication.
+
+## Approved follow-up: native entry and tighter ring
+
+The user approved making both Hotbox Style entry buttons native menu items too:
+left-aligned labels, native background/hover and a right-side submenu arrow. The
+entry and child list must render as separate native blocks, never one bounding
+background spanning the empty space between levels. Native entry widths reserve
+room for the arrow; other ring target sizes and fonts do not change.
+
+Separate secondary minimum clearance from the primary 10px gap: use 4 logical
+pixels for ring collision clearance and the Style tail gap. This contracts the
+ellipse without shrinking its 24px targets, preserving the 38px primary anchor,
+83.6px central side gaps and the real marking origin. Four pixels is our first
+reference-image adaptation, not a claim about Maya's fixed internal metrics.
+Keep ordinary menu popup separation and all owned-release behavior unchanged.
+Verify visible near-center targets, no overlaps, native arrows, separated menu
+backgrounds, both entry paths at 1x/2x, quad panes and W/E/R after hotbox exit.
+
+In narrow panes, try the child menu to the right, then left. If neither side fits
+without covering its entry, place it above or below with the same 10px separation;
+keep the entry stationary and clamp only the popup's orthogonal coordinate. If no
+placement fits, report an unsupported layout instead of overlapping the entry.
+For Views, try alternate horizontal alignments that also avoid the real marking
+origin's 12px return zone; never change the modal return-zone priority to fit a menu.

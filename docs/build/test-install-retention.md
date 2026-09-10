@@ -11,6 +11,12 @@
 
 ## 2026-09-10 清理
 
+最新原生 Style 入口／4px 二级间距更新继续复用 `phase2b-ui-test-install`，未新增
+完整程序副本。安装前确认 Blender 未运行，6 个 portable 文件已备份至
+`D:/source/AxisMeld-build/preserved-test-configs/2026-09-10-tight-entry/phase2b-ui-test-install/portable`。
+本次不修改个人配置（当前用户已将 hotbox settings 清为空对象），安装后逐文件哈希
+与该备份一致；不把此前报告中的 rows 恢复操作再次套用。回退目录保持不变。
+
 紧凑二级／原生 Style 更新继续复用 `phase2b-ui-test-install`，确认旧用户进程退出后再安装。
 最新 6 个 portable 文件备份至
 `D:/source/AxisMeld-build/preserved-test-configs/2026-09-10-compact/phase2b-ui-test-install/portable`，

@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later */
 #include <algorithm>
 #include <cstring>
+#include <map>
 
 #include "BLF_api.hh"
 #include "DNA_theme_types.h"
@@ -240,20 +241,26 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
     const ui::FontStyleDrawParams params{ui::UI_STYLE_TEXT_CENTER, 0, false};
     ui::fontstyle_draw(&style, &text_rect, entry.text.c_str(), entry.text.size(), color, &params);
   }
-  std::vector<ui::MenuOverlayItem> menu_items;
+  // Each active level is a distinct menu block. Combining a parent entry and its
+  // offset child list would paint one large background over the gap between them.
+  std::map<int, std::vector<ui::MenuOverlayItem>> menu_levels;
   for (const Entry &entry : entries) {
     const MenuRect &r = entry.rect;
     if (r.native_menu) {
-      menu_items.push_back({entry.text,
-                            {int(r.x * scale),
-                             int((r.x + r.width) * scale),
-                             int(r.y * scale),
-                             int((r.y + r.height) * scale)},
-                            entry.selected,
-                            !entry.disabled});
+      const MenuNode *node = hotbox_find_node(data.snapshot.menus, r.id);
+      menu_levels[r.depth].push_back({entry.text,
+                                      {int(r.x * scale),
+                                       int((r.x + r.width) * scale),
+                                       int(r.y * scale),
+                                       int((r.y + r.height) * scale)},
+                                      entry.selected,
+                                      !entry.disabled,
+                                      node && node->kind == MenuKind::Menu});
     }
   }
-  ui::menu_overlay_draw(C, menu_items);
+  for (const auto &[depth, items] : menu_levels) {
+    ui::menu_overlay_draw(C, items);
+  }
   if (!data.marking) {
     const MenuNode *hover = hotbox_find_node(data.snapshot.menus, data.hover_id);
     if (hover && !hover->reason.empty()) {

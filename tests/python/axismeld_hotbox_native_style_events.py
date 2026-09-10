@@ -64,6 +64,9 @@ def suite():
 
     theme = bpy.context.preferences.themes[0].user_interface
     normal_background = tuple(theme.wcol_menu_back.inner)
+    # Native hover derives from inner/text, not the pressed-selection color used
+    # by the old custom hotbox entry. Make the latter unmistakably different.
+    theme.wcol_menu_item.inner_sel = (1, 0, 1, 1)
     for requested_scale in (1.0, 2.0):
         bpy.context.preferences.view.ui_scale = requested_scale
         yield from settle(8)
@@ -98,7 +101,8 @@ def suite():
                                                'Center Mouse Buttons'], measure, bounds, scale)
                 style_anchor = ring['items'][1]
                 yield from click(style_anchor)
-            choices = style_list(style_anchor, measure, bounds, scale)
+            choices = style_list(style_anchor, measure, bounds, scale,
+                                 marking_origin=(cx, cy) if entry == 'views' else None)
             screenshot(f'native-style-{entry}-{requested_scale}-normal.png')
             theme.wcol_menu_back.inner = (.8, .12, .04, 1)
             area.tag_redraw()
@@ -112,6 +116,24 @@ def suite():
                        for xx in range(int(x+6*scale), int(x+12*scale))]
             check(samples and all(r > .7 and g < .2 and b < .1 for r, g, b in samples),
                   f'{entry} {requested_scale}x native menu background missing or discontinuous')
+            ex, ey, ew, eh = style_anchor
+            entry_background = [pixels[(yy*width+xx)*4:(yy*width+xx)*4+3]
+                                for yy in range(int(ey+4*scale), int(ey+6*scale))
+                                for xx in range(int(ex+5*scale), int(ex+8*scale))]
+            check(entry_background and all(max(rgb)-min(rgb) < .08 and max(rgb) < .6
+                                          for rgb in entry_background),
+                  f'{entry} {requested_scale}x entry still uses a hotbox selection background')
+            # In the menu-sized entry, the slot beyond the text contains a submenu arrow.
+            arrow_ink = sum(min(pixels[(yy*width+xx)*4:(yy*width+xx)*4+3]) > .65
+                            for yy in range(int(ey+eh/2-5*scale), int(ey+eh/2+5*scale))
+                            for xx in range(int(ex+ew-18*scale), int(ex+ew-4*scale)))
+            check(arrow_ink > 3*scale*scale,
+                  f'{entry} {requested_scale}x native submenu arrow missing')
+            between_x = ex+ew+5*scale if choices[0][0] > ex else ex-5*scale
+            between_y = ey+eh/2
+            gap_rgb = pixels[(int(between_y)*width+int(between_x))*4:][:3]
+            check(not (gap_rgb[0] > .7 and gap_rgb[1] < .2 and gap_rgb[2] < .1),
+                  'entry and submenu incorrectly share a background spanning their gap')
             bpy.data.images.remove(image)
             yield from move(choices[1])
             screenshot(f'native-style-{entry}-{requested_scale}-hover.png')

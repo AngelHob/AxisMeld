@@ -15,13 +15,25 @@ constexpr float margin = 12.0f;
 constexpr float padding = 40.0f;
 constexpr float secondary_height = 24.0f;
 constexpr float secondary_padding = 16.0f;
+constexpr float secondary_gap = 4.0f;
 constexpr float native_menu_padding = 40.0f;
+constexpr float native_entry_padding = 60.0f;  // Native submenu icon/arrow and text padding.
 constexpr float scroll_width = 38.0f;
 constexpr float row_step = row_height + gap;
 
 bool interactive(const MenuNode &node)
 {
   return node.enabled && node.kind != MenuKind::Disabled && node.kind != MenuKind::Separator;
+}
+
+bool native_entry(const std::string &id)
+{
+  return id == "views.style" || id == "center.controls.style";
+}
+
+float child_padding(const MenuNode &node)
+{
+  return native_entry(node.id) ? native_entry_padding : secondary_padding;
 }
 
 const MenuNode *find_node(const std::vector<MenuNode> &nodes, const std::string &id)
@@ -59,6 +71,7 @@ class LayoutBuilder {
   const std::vector<std::string> &path;
   const std::unordered_map<std::string, int> &offsets;
   const std::unordered_map<std::string, float> &widths;
+  const std::array<float, 2> *popup_origin;
 
   int offset(const std::string &owner, const int count) const
   {
@@ -302,10 +315,10 @@ class LayoutBuilder {
                                  item.direction,
                                  compact};
         for (const MenuRect &other : local) {
-          clear &= candidate.x + candidate.width + gap <= other.x ||
-                   other.x + other.width + gap <= candidate.x ||
-                   candidate.y + candidate.height + gap <= other.y ||
-                   other.y + other.height + gap <= candidate.y;
+          clear &= candidate.x + candidate.width + secondary_gap <= other.x ||
+                   other.x + other.width + secondary_gap <= candidate.x ||
+                   candidate.y + candidate.height + secondary_gap <= other.y ||
+                   other.y + other.height + secondary_gap <= candidate.y;
         }
         local.push_back(candidate);
         left = std::min(left, candidate.x);
@@ -314,9 +327,13 @@ class LayoutBuilder {
         top = std::max(top, candidate.y + candidate.height);
       }
       if (tail) {
-        const float w = widths.at(tail->id) + secondary_padding;
-        local.push_back(
-            {tail->id, -w / 2, bottom - gap - secondary_height, w, secondary_height, depth});
+        const float w = widths.at(tail->id) + child_padding(*tail);
+        local.push_back({tail->id,
+                         -w / 2,
+                         bottom - secondary_gap - secondary_height,
+                         w,
+                         secondary_height,
+                         depth});
         bottom = local.back().y;
         left = std::min(left, -w / 2);
         right = std::max(right, w / 2);
@@ -348,6 +365,7 @@ class LayoutBuilder {
       }
       item.x += cx;
       item.y += cy;
+      item.native_menu = native_entry(item.id);
       result.rects.push_back(item);
     }
     return true;
@@ -415,10 +433,39 @@ class LayoutBuilder {
         result.supported = false;
         return;
       }
-      const float x = anchor.x + anchor.width + gap + w <= width - margin ?
-                          anchor.x + anchor.width + gap :
-                          std::max(margin, anchor.x - gap - w);
-      const float y = std::clamp(anchor.y + anchor.height - h, margin, height - margin - h);
+      float x = anchor.x + anchor.width + gap;
+      float y = std::clamp(anchor.y + anchor.height - h, margin, height - margin - h);
+      if (x + w > width - margin) {
+        x = anchor.x - gap - w;
+        if (x < margin) {
+          // Keep the entry fixed and the native blocks separated in narrow panes.
+          bool placed = false;
+          const float origin_x = popup_origin ? (*popup_origin)[0] : center_x;
+          const float origin_y = popup_origin ? (*popup_origin)[1] : center_y;
+          for (const float candidate_y : {anchor.y + anchor.height + gap, anchor.y - gap - h}) {
+            if (candidate_y < margin || candidate_y + h > height - margin || placed) {
+              continue;
+            }
+            for (const float candidate_x :
+                 {std::clamp(anchor.x, margin, width - margin - w), margin, width - margin - w})
+            {
+              const float dx = origin_x - std::clamp(origin_x, candidate_x, candidate_x + w);
+              const float dy = origin_y - std::clamp(origin_y, candidate_y, candidate_y + h);
+              if (owner.id == "views.style" && dx * dx + dy * dy <= 12 * 12) {
+                continue;  // Preserve the real-origin marking return zone.
+              }
+              x = candidate_x;
+              y = candidate_y;
+              placed = true;
+              break;
+            }
+          }
+          if (!placed) {
+            result.supported = false;
+            return;
+          }
+        }
+      }
       for (int i = 0; i < int(owner.children.size()); i++) {
         add(owner.children[i], x, y + h - (i + 1) * secondary_height, w, depth);
         result.rects.back().native_menu = true;
@@ -428,7 +475,7 @@ class LayoutBuilder {
     const int count = int(owner.children.size());
     float reference_width = 0;
     for (const MenuNode &node : owner.children) {
-      reference_width = std::max(reference_width, widths.at(node.id) + secondary_padding);
+      reference_width = std::max(reference_width, widths.at(node.id) + child_padding(node));
     }
     for (int capacity = std::min(count, 8); capacity >= 1; capacity--) {
       const bool paged = count > capacity;
@@ -446,7 +493,7 @@ class LayoutBuilder {
       for (int i = first; i < first + capacity; i++) {
         const MenuNode &node = owner.children[i];
         items.push_back(
-            {&node, node.id, widths.at(node.id) + secondary_padding, 0, 0, interactive(node)});
+            {&node, node.id, widths.at(node.id) + child_padding(node), 0, 0, interactive(node)});
       }
       if (paged) {
         items.push_back({nullptr,
@@ -501,8 +548,15 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
   }
   // A central invocation does not scroll a duplicate title into view on its ordinary main row.
   const std::vector<std::string> row_path = central_path ? std::vector<std::string>{} : open_path;
-  LayoutBuilder build{
-      {{}, true}, width, height, center_x, center_y, row_path, scroll_offsets, label_widths};
+  LayoutBuilder build{{{}, true},
+                      width,
+                      height,
+                      center_x,
+                      center_y,
+                      row_path,
+                      scroll_offsets,
+                      label_widths,
+                      popup_origin};
   if (const MenuNode *center = find_node(snapshot.menus, "views")) {
     const float w = label_widths.at(center->id) + padding;
     build.add(*center,

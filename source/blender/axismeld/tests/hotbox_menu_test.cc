@@ -135,7 +135,7 @@ TEST(axismeld_hotbox_menu, CompactSecondaryHitTargetsDoNotInheritPrimaryPadding)
       }
       EXPECT_FLOAT_EQ(item.height, 24);
       if (!item.id.starts_with("@")) {
-        EXPECT_FLOAT_EQ(item.width, widths.at(item.id) + 16) << item.id;
+        EXPECT_FLOAT_EQ(item.width, widths.at(item.id) + (item.native_menu ? 60 : 16)) << item.id;
       }
       const float x = item.x + item.width / 2, y = item.y + item.height / 2;
       const auto *hit = hit_menu_rect(layout, x, y);
@@ -173,6 +173,95 @@ TEST(axismeld_hotbox_menu, BothStyleDirectoriesUseContiguousMenuRows)
   }
 }
 
+TEST(axismeld_hotbox_menu, NarrowStylePopupDoesNotCoverItsEntry)
+{
+  const auto snapshot = default_snapshot();
+  for (const float width : {392.0f, 340.0f}) {
+    for (const float offset : {0.0f, 30.0f}) {
+      const std::array<float, 2> origin{width / 2 + offset, 105};
+      const auto layout = layout_menu(snapshot,
+                                      width,
+                                      210,
+                                      width / 2,
+                                      105,
+                                      {"center", "views", "views.style"},
+                                      {},
+                                      measured(snapshot),
+                                      offset == 0 ? nullptr : &origin);
+      ASSERT_TRUE(layout.supported);
+      const auto *entry = rect(layout, "views.style");
+      ASSERT_NE(entry, nullptr);
+      EXPECT_EQ(hit_menu(layout, entry->x + entry->width / 2, entry->y + 12), entry->id);
+      for (const char *suffix : {".rows", ".zones", ".center"}) {
+        const auto *item = rect(layout, std::string("views.style") + suffix);
+        ASSERT_NE(item, nullptr);
+        EXPECT_GE(item->x, 12);
+        EXPECT_LE(item->x + item->width, width - 12);
+        EXPECT_GE(item->y, 12);
+        EXPECT_LE(item->y + item->height, 198);
+        const float dx = origin[0] - std::clamp(origin[0], item->x, item->x + item->width);
+        const float dy = 105 - std::clamp(105.0f, item->y, item->y + item->height);
+        EXPECT_GT(dx * dx + dy * dy, 12 * 12) << "Style must not cover the marking return zone";
+        EXPECT_TRUE(item->x >= entry->x + entry->width + 9.99f ||
+                    entry->x >= item->x + item->width + 9.99f ||
+                    item->y >= entry->y + entry->height + 9.99f ||
+                    entry->y >= item->y + item->height + 9.99f);
+        EXPECT_EQ(hit_menu(layout, item->x + item->width / 2, item->y + 12), item->id);
+      }
+    }
+  }
+}
+
+TEST(axismeld_hotbox_menu, TighterViewRingExposesNearerTargetsWithoutOverlap)
+{
+  const auto snapshot = default_snapshot();
+  const auto layout = layout_menu(
+      snapshot, 1920, 1080, 960, 540, {"center", "views"}, {}, measured(snapshot));
+  ASSERT_TRUE(layout.supported);
+  // A shorter horizontal reach must acquire the now-visible Right View button,
+  // not remain in the old ring's empty corridor.
+  EXPECT_EQ(hit_menu(layout, 1050, 540), "views.side");
+  const auto *style = rect(layout, "views.style"), *front = rect(layout, "views.front");
+  ASSERT_NE(style, nullptr);
+  ASSERT_NE(front, nullptr);
+  EXPECT_NEAR(front->y - style->y - style->height, 4.0f, .01f);
+  for (const auto &item : layout.rects) {
+    if (item.depth != 1) {
+      continue;
+    }
+    for (const auto &other : layout.rects) {
+      if (&item == &other || other.depth != 1) {
+        continue;
+      }
+      EXPECT_TRUE(
+          item.x + item.width + 3.99f <= other.x || other.x + other.width + 3.99f <= item.x ||
+          item.y + item.height + 3.99f <= other.y || other.y + other.height + 3.99f <= item.y)
+          << item.id << " / " << other.id;
+    }
+  }
+}
+
+TEST(axismeld_hotbox_menu, StyleEntriesUseNativeMenuTargetsWhileViewActionsStayHotbox)
+{
+  const auto snapshot = default_snapshot();
+  for (const std::vector<std::string> path :
+       {std::vector<std::string>{"center", "views", "views.style"},
+        std::vector<std::string>{"center.controls", "center.controls.style"}})
+  {
+    const auto layout = layout_menu(snapshot, 1920, 1080, 960, 540, path, {}, measured(snapshot));
+    ASSERT_TRUE(layout.supported);
+    const auto *entry = rect(layout, path.back());
+    ASSERT_NE(entry, nullptr);
+    EXPECT_TRUE(entry->native_menu);
+    EXPECT_FLOAT_EQ(entry->height, 24);
+    for (const auto &item : layout.rects) {
+      if (item.direction_label || item.depth == 0) {
+        EXPECT_FALSE(item.native_menu);
+      }
+    }
+  }
+}
+
 TEST(axismeld_hotbox_menu, ViewOverlayRetainsParentWithoutSecondaryCenterOrRootHits)
 {
   const auto snapshot = default_snapshot();
@@ -194,7 +283,7 @@ TEST(axismeld_hotbox_menu, ViewOverlayRetainsParentWithoutSecondaryCenterOrRootH
   const auto *style = rect(views, "views.style"), *front = rect(views, "views.front");
   ASSERT_NE(style, nullptr);
   ASSERT_NE(front, nullptr);
-  EXPECT_LE(style->y + style->height + 9.99f, front->y);
+  EXPECT_LE(style->y + style->height + 3.99f, front->y);
   EXPECT_EQ(rect(views, "@back:views"), nullptr);
 }
 
@@ -384,11 +473,12 @@ TEST(axismeld_hotbox_menu, QuadSevenViewsAndCompactRootGroupsRemainReachable)
     EXPECT_LE(item.y + item.height, 210);
     if (item.direction_label) {
       count++;
-      EXPECT_EQ(hit_menu(views, item.x + item.width / 2, item.y + item.height / 2), item.id);
+      EXPECT_EQ(hit_menu(views, item.x + item.width / 2, item.y + item.height / 2),
+                item.interactive ? item.id : "");
     }
   }
-  EXPECT_EQ(count, 7);
-  EXPECT_EQ(rect(views, "views.style"), nullptr);
+  EXPECT_EQ(count, 8);  // The tighter ring now fits the complete overlay in this fixture.
+  EXPECT_NE(rect(views, "views.style"), nullptr);
   EXPECT_EQ(rect(views, "@back:views"), nullptr);
   EXPECT_NE(rect(views, "views"), nullptr);
   std::set<std::string> groups;

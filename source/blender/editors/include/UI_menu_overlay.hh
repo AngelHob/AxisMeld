@@ -14,6 +14,7 @@ struct MenuOverlayItem {
   rcti rect;  // Region pixel coordinates, in the caller's pixel-space projection.
   bool hovered;
   bool enabled;
+  bool submenu = false;
 };
 
 /** Draw native menu components without registering blocks or input handlers.
