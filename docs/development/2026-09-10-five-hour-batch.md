@@ -94,8 +94,8 @@ GUI：`tests/python/axismeld_hotbox_ui_runner.py --blender <stage exe> --suite n
 | 0：准备 | 完成 | 读取现有实现和范围；复用工作树；起始纯测试通过；定时续作与集中验收表已建立 |
 | 1：短设置列表原生菜单 | 完成，待最终统一手测 | 1a61bb81f3c / 45e9357edbf / 8965cbe5c58；33 原生布局、40 Python、5 CTest 及实际 GUI 矩阵通过；窄窗和 2× quad 新列表补测经复核；最终独立审查通过，无阻断项 |
 | 2：映射列表及交互回归 | 完成，终审修订复核通过，待统一手测 | 生产8341fdac9b0、测试86aa564a5d6；38 原生、40 Python、5 CTest及实际 GUI 矩阵通过。禁用箭头 held Space-first/Esc 补测通过；原始渲染 RED 例外与极窄工具横条重叠已披露 |
-| 3：常用建模适配 | 启动最小三个选择动作 | Select All / Grow / Shrink，原生 adapted、默认不绑键；需真实撤销、安装回归和独立审查 |
-| 4：收尾 | 未开始 | 04:23 起集中回归，04:53 截止；停止自动化并交付统一报告 |
+| 3：常用建模适配 | 实现和任务复核通过，整批终审中 | 生产837f1af156d、测试ee4fcaf04ff；三动作原生adapted、默认不绑键，实际撤销/no-op/个人配置验证完成 |
+| 4：收尾 | 已提前开始，不再开新功能 | 整批终审范围137c428cf0d..5b89b65311d；最新41Python、5CTest、navigation/view-lock通过；04:53前交付并停用自动化 |
 
 **下一步明确入口：** [选择动作计划](../superpowers/plans/2026-09-11-selection-actions.md)。
 映射列表所有审查门禁已关闭；读取新计划对应 ledger，不能重复执行前两批。
