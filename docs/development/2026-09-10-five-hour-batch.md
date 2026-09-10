@@ -89,12 +89,13 @@ GUI：`tests/python/axismeld_hotbox_ui_runner.py --blender <stage exe> --suite n
 |---|---|---|
 | 0：准备 | 完成 | 读取现有实现和范围；复用工作树；起始纯测试通过；定时续作与集中验收表已建立 |
 | 1：短设置列表原生菜单 | 完成，待最终统一手测 | 1a61bb81f3c / 45e9357edbf / 8965cbe5c58；33 原生布局、40 Python、5 CTest 及实际 GUI 矩阵通过；窄窗和 2× quad 新列表补测经复核；最终独立审查通过，无阻断项 |
-| 2：映射列表及交互回归 | 计划准备完成，未实施 | 当前补测期间只准备文档；批次 1 终审通过后才执行，不提前修改生产代码 |
+| 2：映射列表及交互回归 | 进行中 | 批次 1 终审通过后启动；mapping_geometry 执行原生分组与分页任务，BASE 8a26036ef2f，当前测试安装保持短菜单基线 |
 | 3：常用建模适配 | 未开始、时间允许才做 | 先能力/语义与数据安全审查，逐命令完成测试再接通菜单 |
 | 4：收尾 | 未开始 | 04:23 起集中回归，04:53 截止；停止自动化并交付统一报告 |
 
-**下一步明确入口：** [短设置列表计划](../superpowers/plans/2026-09-10-hotbox-settings-lists.md)。
-先读取该计划涉及实现和测试，再按 TDD 执行，不再次要求用户单独确认视觉偏好。
+**下一步明确入口：** [映射列表计划](../superpowers/plans/2026-09-11-hotbox-mapping-lists.md)。
+原生任务正在 `.superpowers/sdd/2026-09-11-hotbox-mapping-lists/` 运行；读取对应 ledger 和报告，
+不要再次执行已完成的短菜单任务，也不要重复派发正在运行的 worker。正常视觉偏好仍集中审核。
 
 现场补充：本批开始时再次备份并核对了 6 个 portable 文件，路径为
 `D:/source/AxisMeld-build/preserved-test-configs/2026-09-11-batch5h/phase2b-ui-test-install/portable`。
