@@ -204,9 +204,11 @@ static void refresh_quad_clipping(bContext *C, ViewCache &cache, const bool layo
     return;
   }
   if (layout_changed) {
-    /* Native duplicates still have the single-view rectangle until layout is updated. */
-    ED_area_tag_region_size_update(area, regions[0]);
-    ED_area_update_region_sizes(CTX_wm_manager(C), CTX_wm_window(C), area);
+    /* Fresh quad regions need default gizmo/tool handlers before editor keymaps.
+     * The resize-only initializer installs editor handlers first, letting ordinary
+     * selection/translation swallow axis clicks and drags in the new panes. Full
+     * initialization also obtains the rectangles required by clipping below. */
+    ED_area_init(C, CTX_wm_window(C), area);
   }
   /* Unlike quadview_update/boxview_sync, this does not overwrite other slots' poses.
    * Native clipping writes only BOXCLIP panes; independent border clipping is left intact. */

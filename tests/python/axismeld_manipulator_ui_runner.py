@@ -10,6 +10,8 @@ import tempfile
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--blender', required=True)
+parser.add_argument('--debug-handlers', action='store_true',
+                    help='Include native event-handler routing in the isolated test output')
 args = parser.parse_args()
 startup = None
 if sys.platform == 'win32':
@@ -22,7 +24,8 @@ with tempfile.TemporaryDirectory(prefix='axismeld-ui-') as directory:
     env['TEMP'] = env['TMP'] = env['TMPDIR'] = directory
     env['AXISMELD_TEST_ROOT'] = directory
     result = subprocess.run(
-        [args.blender, '--factory-startup', '--enable-event-simulate', '--python-exit-code', '1', '--python',
+        [args.blender, *(['--debug-handlers'] if args.debug_handlers else []),
+         '--factory-startup', '--enable-event-simulate', '--python-exit-code', '1', '--python',
          str(Path(__file__).with_name('axismeld_manipulator_events.py'))],
         env=env, startupinfo=startup, capture_output=True, timeout=180)
     sys.stdout.buffer.write(result.stdout)

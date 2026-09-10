@@ -93,10 +93,167 @@ def suite():
                     return
         raise AssertionError(f'{tool}: no selectable native handle found')
 
+    def axis_component_count(tool, before, after):
+        if tool == 'rotate':
+            # Equivalent Euler representations can change three values for a
+            # single-axis rotation past 180 degrees. Check the actual pose delta.
+            delta = after.to_quaternion() @ before.to_quaternion().conjugated()
+            axis, angle = delta.to_axis_angle()
+            return sum(abs(component) > 1e-5 for component in axis) if abs(angle) > 1e-5 else 0
+        return sum(abs(a - b) > 1e-5 for a, b in zip(before, after))
+
+    def find_quad_handle(center, label):
+        # Quad panes have different poses. Reacquire after transforms instead of
+        # assuming that a previous screen point still hits a native axis.
+        for radius in range(24, 145, 8):
+            for angle in range(0, 360, 30):
+                radians = math.radians(angle)
+                event('MOUSEMOVE', 'NOTHING',
+                      x=region.x + center.x + radius * math.cos(radians),
+                      y=region.y + center.y + radius * math.sin(radians))
+                yield from settle(2)
+                with bpy.context.temp_override(window=win, area=area, region=region):
+                    if bpy.ops.axismeld.axis_select.poll():
+                        return
+        raise AssertionError(f'{label}: no selectable native axis')
+
     yield from settle(10)
     event('MOUSEMOVE', 'NOTHING')
     yield from settle()
     yield from key('ESC')
+    # B12-11: a tool-only factory test missed the hotbox -> manipulator boundary.
+    # Start Move, perform a real central view gesture, then test E/R and actual axes
+    # without reloading the preset or forcing a tool with a Python operator.
+    yield from key('W')
+    yield from settle(5)
+    initial_center = location_3d_to_region_2d(region, rv3d, Vector((0, 0, 0)))
+    yield from find_handle('move', initial_center)
+    yield from click()
+    event('SPACE')
+    yield from settle(15)
+    event('RIGHTMOUSE')
+    yield
+    event('MOUSEMOVE', 'NOTHING', x=pos[0] - 90, y=pos[1])
+    yield
+    event('RIGHTMOUSE', 'RELEASE')
+    yield from settle()
+    event('SPACE', 'RELEASE')
+    yield from settle(5)
+    from axismeld import hotbox_runtime
+    check(hotbox_runtime.recent.items()[:1] == ('view.top',),
+          'real central hotbox Top gesture did not execute')
+    # Do not refresh object transforms, force dependency updates, undo, or reload
+    # settings before this check: those can conceal stale gizmo/tool state.
+    for tool, hotkey in [('move', 'W'), ('rotate', 'E'), ('scale', 'R')]:
+        yield from key(hotkey)
+        yield from settle(5)
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            actual_tool = bpy.context.workspace.tools.from_space_view3d_mode(bpy.context.mode).idname
+            check(actual_tool == f'builtin.{tool}',
+                  f'hotbox boundary {hotkey}: expected {tool}, actual {actual_tool}')
+        yield from find_handle(tool, initial_center)
+        yield from click()
+        event('MOUSEMOVE', 'NOTHING', x=region.x + initial_center.x + 250,
+              y=region.y + initial_center.y - 160)
+        yield from settle()
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            check(bpy.ops.axismeld.axis_drag.poll(), f'hotbox boundary {tool}: axis not armed')
+    print('PASS hotbox immediate W/E/R and real axis clicks without scene refresh/undo', flush=True)
+    yield from key('SPACE')
+    yield from settle(5)
+    check(len(space.region_quadviews) == 4, 'hotbox short tap did not enter quad view')
+    # Remain in quad view: a round trip to single view hides per-region tool state.
+    for pane_index, pane in enumerate(r for r in area.regions if r.type == 'WINDOW'):
+        region = pane
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            pane_view = bpy.context.region_data
+        pane_center = location_3d_to_region_2d(region, pane_view, obj.location)
+        event('MOUSEMOVE', 'NOTHING', x=region.x + region.width // 2,
+              y=region.y + region.height // 2)
+        yield from settle()
+        for tool, hotkey in [('move', 'W'), ('rotate', 'E'), ('scale', 'R')]:
+            yield from key(hotkey)
+            yield from settle(5)
+            with bpy.context.temp_override(window=win, area=area, region=region):
+                actual_tool = bpy.context.workspace.tools.from_space_view3d_mode(bpy.context.mode).idname
+                check(actual_tool == f'builtin.{tool}',
+                      f'quad pane {pane_index} {hotkey}: actual tool {actual_tool}')
+            yield from find_quad_handle(pane_center, f'quad pane {pane_index} {tool}')
+            yield from click()
+            event('MOUSEMOVE', 'NOTHING', x=region.x + region.width - 45,
+                  y=region.y + region.height - 65)
+            yield from settle()
+            with bpy.context.temp_override(window=win, area=area, region=region):
+                check(bpy.ops.axismeld.axis_drag.poll(),
+                      f'quad pane {pane_index} {tool}: axis not armed')
+            before_quad = (obj.location.copy(), obj.rotation_euler.copy(), obj.scale.copy())
+            yield from drag('MIDDLEMOUSE')
+            after_quad = (obj.location.copy(), obj.rotation_euler.copy(), obj.scale.copy())
+            changed = [any(abs(a - b) > 1e-5 for a, b in zip(old, new))
+                       for old, new in zip(before_quad, after_quad)]
+            expected = [tool == 'move', tool == 'rotate', tool == 'scale']
+            check(changed == expected,
+                  f'quad pane {pane_index} {tool}: changed location/rotation/scale {changed}')
+            target_index = expected.index(True)
+            check(axis_component_count(tool, before_quad[target_index],
+                                       after_quad[target_index]) == 1,
+                  f'quad pane {pane_index} {tool}: MMB did not constrain to one axis: {after_quad}')
+            # Restore fixture only after observing the real transform type.
+            obj.location, obj.rotation_euler, obj.scale = before_quad
+            yield from settle(3)
+            yield from find_quad_handle(pane_center, f'quad pane {pane_index} {tool} direct drag')
+            yield from drag('LEFTMOUSE')
+            direct_quad = (obj.location.copy(), obj.rotation_euler.copy(), obj.scale.copy())
+            changed = [any(abs(a - b) > 1e-5 for a, b in zip(old, new))
+                       for old, new in zip(before_quad, direct_quad)]
+            check(changed == expected,
+                  f'quad pane {pane_index} {tool}: direct drag changed transform type {changed}')
+            check(axis_component_count(tool, before_quad[target_index],
+                                       direct_quad[target_index]) == 1,
+                  f'quad pane {pane_index} {tool}: direct drag did not constrain to one axis: {direct_quad}')
+            obj.location, obj.rotation_euler, obj.scale = before_quad
+            yield from settle(3)
+            print(f'PASS quad pane {pane_index}: {tool} click/MMB and direct axis transforms', flush=True)
+    # The source WINDOW may be replaced by the native single/quad transition.
+    region = next(r for r in area.regions if r.type == 'WINDOW')
+    event('MOUSEMOVE', 'NOTHING', x=region.x + region.width // 2,
+          y=region.y + region.height // 2)
+    yield from settle()
+    yield from key('SPACE')
+    yield from settle(5)
+    check(not space.region_quadviews, 'hotbox short tap did not maximize a pane')
+    region = next(r for r in area.regions if r.type == 'WINDOW')
+    rv3d = space.region_3d
+    rv3d.view_rotation = Quaternion((1, 0, 0, 0))
+    rv3d.view_perspective = 'ORTHO'
+    rv3d.view_location = (0, 0, 0)
+    rv3d.view_distance = 10
+    # Use the public per-button mapping so the tool menu can be opened without
+    # depending on the presentation of the outer Common menu row.
+    with bpy.context.temp_override(window=win, area=area, region=region):
+        hotbox_runtime.reload_settings(bpy.context, session={
+            'schema_version': 1, 'settings': {
+                'center_buttons': {'RIGHTMOUSE': 'common.modify'}}})
+    menu_origin = (region.x + region.width // 2, region.y + region.height // 2)
+    event('MOUSEMOVE', 'NOTHING', x=menu_origin[0], y=menu_origin[1])
+    yield from settle()
+    event('SPACE')
+    yield from settle(15)
+    event('RIGHTMOUSE')
+    yield
+    event('RIGHTMOUSE', 'RELEASE')
+    yield from settle()
+    event('MOUSEMOVE', 'NOTHING', x=menu_origin[0] + 100 * bpy.context.preferences.system.ui_scale,
+          y=menu_origin[1])
+    yield from settle()
+    yield from click()
+    event('SPACE', 'RELEASE')
+    yield from settle(5)
+    with bpy.context.temp_override(window=win, area=area, region=region):
+        check(hotbox_runtime.recent.items()[:1] == ('transform.move',),
+              'real hotbox Move menu item was not executed')
+        hotbox_runtime.reload_settings(bpy.context, session={'schema_version': 1, 'settings': {}})
+    print('TEST_BOUNDARY hotbox Top/quad/Move menu before W/E/R/axis', flush=True)
     for tool, hotkey in [('move', 'W'), ('rotate', 'E'), ('scale', 'R')]:
         with bpy.context.temp_override(window=win, area=area, region=region):
             obj.location = (0, 0, 0)
