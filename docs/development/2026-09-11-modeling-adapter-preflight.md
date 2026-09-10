@@ -13,6 +13,8 @@
 - `defaultRunTimeCommands.mel:1673-1697`：Select All 使用 Maya 选择上下文工具；Select None
   不只是简单清空组件选中，它还经过选择模式切换；Invert Selection 进入专门选择过程。
 - `defaultRunTimeCommands.mel:10996-11017`：Grow/Shrink 分别使用多边形选择遍历。
+- 同文件 `:2039-2065`：Duplicate、Duplicate Special、Duplicate With Transform 是不同入口；
+  普通 Duplicate 不应混同自动重复上次变换。`buildEditMenu.mel:567` / `:594` 也分别列出它们。
 
 本地 Blender：
 
