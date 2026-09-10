@@ -14,8 +14,8 @@ root = Path(os.environ['AXISMELD_TEST_ROOT']).resolve()
 if not Path(bpy.app.tempdir).resolve().is_relative_to(root):
     raise RuntimeError('Only the isolated GUI runner may run this test')
 sys.path.insert(0, str(Path(__file__).parent))
-from axismeld_hotbox_geometry_fixture import ellipse_page, native_list
-from axismeld import hotbox_runtime
+from axismeld_hotbox_geometry_fixture import ellipse_page, native_list, native_page
+from axismeld import hotbox_runtime, runtime
 
 bpy.context.preferences.use_preferences_save = False
 bpy.context.preferences.view.show_splash = False
@@ -23,6 +23,15 @@ artifacts = Path(os.environ.get('AXISMELD_TEST_ARTIFACTS', root))
 STYLE_LABELS = ('Zones and Menu Rows', 'Zones Only', 'Center Zone Only')
 ROW_LABELS = ('Show Common Menus', 'Show Pane Specific Menus', 'Show Modeling')
 TRANSPARENCY_LABELS = ('0%', '25%', '50%', '75%', '100%')
+CONTROL_LABELS = ('Menu Rows', 'Hotbox Style', 'Transparency', 'Center Mouse Buttons')
+BUTTON_LABELS = ('Left Mouse Button', 'Middle Mouse Button', 'Right Mouse Button')
+MAPPING_LABELS = ('Disabled', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls',
+                  'Common', 'Select', 'Modify', 'Current Pane', 'Pane View', 'Pane Shading',
+                  'Panels', 'Panel Views', 'Modeling')
+MAPPING_VALUES = (None, 'views', 'center.recent', 'center.controls', 'common',
+                  'common.select', 'common.modify', 'pane', 'pane.view', 'pane.shading',
+                  'pane.panels', 'pane.panels.views', 'modeling')
+MOUSE_BUTTONS = ('LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE')
 
 
 def check(value, message):
@@ -33,6 +42,554 @@ def check(value, message):
 def settle(count=4):
     for _ in range(count):
         yield
+
+
+def mapping_suite():
+    """Actual Center Mouse Buttons lists, pagination, release ownership and persistence."""
+    win = bpy.context.window
+    area = next(a for a in win.screen.areas if a.type == 'VIEW_3D')
+    region = next(r for r in area.regions if r.type == 'WINDOW')
+    preset = next(Path(p) / 'AxisMeld_Maya_2026.py' for p in bpy.utils.preset_paths('keyconfig')
+                  if (Path(p) / 'AxisMeld_Maya_2026.py').exists())
+    bpy.utils.keyconfig_set(str(preset))
+    position = [0, 0]
+
+    def event(kind, value='PRESS', point=None):
+        if point is not None:
+            position[:] = [int(v) for v in point]
+        win.event_simulate(type=kind, value=value, x=position[0], y=position[1])
+
+    def midpoint(rect):
+        check(rect is not None, 'mapping input attempted an off-page row')
+        return rect[0]+rect[2]/2, rect[1]+rect[3]/2
+
+    def move(rect):
+        event('MOUSEMOVE', 'NOTHING', midpoint(rect))
+        yield from settle()
+
+    def click(rect):
+        yield from move(rect)
+        event('LEFTMOUSE')
+        yield
+        event('LEFTMOUSE', 'RELEASE')
+        yield from settle()
+
+    def screenshot(name):
+        path = artifacts / name
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            bpy.ops.screen.screenshot(filepath=str(path))
+        print('SCREENSHOT', path, flush=True)
+        return path
+
+    layout_probe = os.environ.get('AXISMELD_TEST_NATIVE_LIST_LAYOUT', 'standard')
+    if layout_probe == 'narrow':
+        bpy.context.preferences.view.ui_scale = 1.0
+        yield from settle(8)
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            bpy.ops.screen.area_split(direction='VERTICAL', factor=.25)
+        yield from settle(8)
+        area = min((a for a in win.screen.areas if a.type == 'VIEW_3D'), key=lambda a: a.width)
+        region = next(r for r in area.regions if r.type == 'WINDOW')
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            bpy.ops.screen.area_split(direction='HORIZONTAL', factor=.42)
+        yield from settle(8)
+        area = min((a for a in win.screen.areas if a.type == 'VIEW_3D' and a.width < 500),
+                   key=lambda a: a.height)
+        region = next(r for r in area.regions if r.type == 'WINDOW')
+        # The shared short-list narrow pane is tall enough for thirteen 24px rows.
+        # Split only this disposable pane once more so the mapping list must paginate.
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            bpy.ops.screen.area_split(direction='HORIZONTAL', factor=.75)
+        yield from settle(8)
+        area = max((a for a in win.screen.areas
+                    if a.type == 'VIEW_3D' and a.width < 500 and 240 <= a.height < 320),
+                   key=lambda a: a.height)
+        region = next(r for r in area.regions if r.type == 'WINDOW')
+        area.spaces.active.show_region_toolbar = False
+        yield from settle(8)
+    elif layout_probe == 'quad':
+        bpy.context.preferences.view.ui_scale = 2.0
+        yield from settle(8)
+        area.spaces.active.show_region_toolbar = False
+        area.spaces.active.show_region_ui = False
+        area.spaces.active.show_region_header = False
+        area.spaces.active.show_region_tool_header = False
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            bpy.ops.view3d.axismeld_view(action='TOGGLE_QUAD')
+        yield from settle(8)
+        region = min((r for r in area.regions if r.type == 'WINDOW'), key=lambda r: (r.y, r.x))
+    elif layout_probe != 'standard':
+        raise AssertionError(f'Unknown mapping list layout probe {layout_probe!r}')
+    else:
+        bpy.context.preferences.view.ui_scale = 1.0
+        yield from settle(8)
+        region = next(r for r in area.regions if r.type == 'WINDOW')
+
+    scale = bpy.context.preferences.system.ui_scale
+    logical_width, logical_height = region.width/scale, region.height/scale
+    if layout_probe == 'narrow':
+        check(360 <= logical_width < 430 and 240 <= logical_height < 320,
+              f'narrow mapping probe outside bounded dimensions: {logical_width}x{logical_height}')
+    elif layout_probe == 'quad':
+        check(360 <= logical_width < 430 and 200 <= logical_height < 260,
+              f'2x quad mapping probe outside bounded dimensions: {logical_width}x{logical_height}')
+    print('MAPPING_LIST_LAYOUT', layout_probe, 'scale', scale, 'logical', logical_width,
+          logical_height, 'physical', region.width, region.height, 'origin', region.x, region.y,
+          flush=True)
+    cx, cy = region.x+region.width/2, region.y+region.height/2
+    bounds = (region.x, region.y, region.width, region.height)
+    blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
+    icon_labels = {'AxisMeld', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls'}
+
+    def measure(label):
+        return blf.dimensions(0, label)[0] / scale + (20 if label in icon_labels else 0)
+
+    center_width = (measure('AxisMeld')+40)*scale
+    center = (cx-center_width/2, cy-19*scale, center_width, 38*scale)
+    control_width = (measure('Hotbox Controls')+40)*scale
+    control = (center[0]+center[2]+83.6*scale, cy-19*scale, control_width, 38*scale)
+    hotbox_user = runtime.profile_directory() / 'hotbox_user.json'
+    observed = []
+    settings_observed = []
+    real_dispatch = hotbox_runtime.dispatch
+    real_apply_setting = hotbox_runtime.apply_setting
+
+    def observed_dispatch(context, command):
+        result = real_dispatch(context, command)
+        observed.append((command, result))
+        return result
+
+    def observed_setting(context, setting, value):
+        result = real_apply_setting(context, setting, value)
+        settings_observed.append((setting, value, result))
+        return result
+
+    hotbox_runtime.dispatch = observed_dispatch
+    hotbox_runtime.apply_setting = observed_setting
+
+    opener_button = [None]
+
+    def reset_settings(opener=None):
+        hotbox_user.unlink(missing_ok=True)
+        opener_button[0] = opener
+        session_settings = ({'center_buttons': {opener: 'center.controls'}} if opener else {})
+        hotbox_runtime.reload_settings(bpy.context, session={
+            'schema_version': 1, 'settings': session_settings})
+
+    def open_buttons():
+        event('MOUSEMOVE', 'NOTHING', (cx, cy))
+        event('SPACE')
+        yield from settle(8)
+        if layout_probe == 'standard':
+            yield from click(control)
+            controls_anchor = control
+        else:
+            check(opener_button[0] in MOUSE_BUTTONS,
+                  f'{layout_probe} mapping suite requires a center Controls opener')
+            event(opener_button[0])
+            yield
+            event(opener_button[0], 'RELEASE')
+            yield from settle()
+            controls_anchor = center
+        controls_page = ellipse_page(controls_anchor, CONTROL_LABELS, measure, bounds, scale)
+        while controls_page['items'][3] is None:
+            count, setting_count = len(observed), len(settings_observed)
+            yield from click(controls_page['next'])
+            check(len(observed) == count and len(settings_observed) == setting_count,
+                  'Controls navigation reached a command or setting dispatcher')
+            controls_page = ellipse_page(controls_anchor, CONTROL_LABELS, measure, bounds, scale,
+                                         first=controls_page['first']+1)
+        controls = controls_page['items']
+        yield from click(controls[3])
+        buttons = native_page(controls[3], BUTTON_LABELS, measure, bounds, scale,
+                              submenu_indices=range(3))
+        return controls[3], buttons
+
+    def open_mapping(button_index, first=0):
+        owner, buttons = yield from open_buttons()
+        yield from click(buttons['items'][button_index])
+        page = native_page(buttons['items'][button_index], MAPPING_LABELS, measure, bounds, scale,
+                           first=first)
+        return owner, buttons, page
+
+    def close_box():
+        event('SPACE', 'RELEASE')
+        yield from settle()
+
+    def settings():
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            return json.loads(hotbox_runtime.snapshot(bpy.context))['settings']
+
+    def image_pixels(path):
+        image = bpy.data.images.load(str(path), check_existing=False)
+        return image, list(image.pixels), image.size[0]
+
+    def check_labels(path, page, labels, receipt):
+        image, pixels, width = image_pixels(path)
+        try:
+            for index, rect in enumerate(page['items']):
+                if rect is None:
+                    continue
+                x, y, w, h = rect
+                ink = sum(min(pixels[(yy*width+xx)*4:(yy*width+xx)*4+3]) > .55
+                          for yy in range(int(y+3*scale), int(y+h-3*scale))
+                          for xx in range(int(x+3*scale), int(x+w-3*scale)))
+                check(ink > 2*scale*scale, f'{receipt} missing readable label {labels[index]!r}')
+        finally:
+            bpy.data.images.remove(image)
+
+    def native_page_red_ratio(path, page):
+        rows = ([page['previous']] if page['previous'] else [])
+        rows += [rect for rect in page['items'] if rect is not None]
+        rows += ([page['next']] if page['next'] else [])
+        rows.sort(key=lambda rect: rect[1], reverse=True)
+        check(rows, 'native page has no rows')
+        for upper, lower in zip(rows, rows[1:]):
+            check(abs(upper[1]-(lower[1]+lower[3])) < .1,
+                  'native page rows are not a continuous 24px column')
+        image, pixels, width = image_pixels(path)
+        try:
+            samples = []
+            for x, y, w, h in rows:
+                samples.extend(pixels[(yy*width+xx)*4:(yy*width+xx)*4+3]
+                               for yy in range(int(y+4*scale), int(y+h-4*scale))
+                               for xx in range(int(x+5*scale), int(x+9*scale)))
+            return sum(r > .7 and g < .2 and b < .1 for r, g, b in samples) / len(samples)
+        finally:
+            bpy.data.images.remove(image)
+
+    def check_native_page(path, page, receipt):
+        check(native_page_red_ratio(path, page) > .6,
+              f'{receipt} did not render the expected continuous native page')
+        check_labels(path, page, MAPPING_LABELS, receipt)
+
+    def press_tool(key, expected):
+        event(key)
+        event(key, 'RELEASE')
+        yield from settle()
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            actual = bpy.context.workspace.tools.from_space_view3d_mode('OBJECT').idname
+        check(actual == expected, f'{key} was stolen after nested mapping exit: {actual}')
+
+    menu_back = bpy.context.preferences.themes[0].user_interface.wcol_menu_back
+    normal_menu_background = tuple(menu_back.inner)
+    menu_back.inner = (.8, .12, .04, 1)
+    reset_settings()
+    if layout_probe == 'standard':
+        owner, buttons = yield from open_buttons()
+        button_path = screenshot('mapping-standard-button-block.png')
+        image, pixels, width = image_pixels(button_path)
+        try:
+            rows = [buttons['items'][i] for i in range(3)]
+            check(all(rect is not None for rect in rows), 'standard mapping submenu dropped a mouse row')
+            for upper, lower in zip(rows, rows[1:]):
+                check(abs(upper[1]-(lower[1]+lower[3])) < .1,
+                      'mouse submenu rows are not one continuous 24px block')
+                samples = [pixels[(yy*width+xx)*4:(yy*width+xx)*4+3]
+                           for yy in range(int(lower[1]+lower[3]-2*scale),
+                                           int(lower[1]+lower[3]+2*scale))
+                           for xx in range(int(lower[0]+5*scale), int(lower[0]+9*scale))]
+                check(samples and sum(r > .7 and g < .2 and b < .1
+                                      for r, g, b in samples) > len(samples)*.6,
+                      'mouse submenu background is not continuous across rows')
+            for index, (x, y, w, h) in enumerate(rows):
+                arrow_ink = sum(min(pixels[(yy*width+xx)*4:(yy*width+xx)*4+3]) > .65
+                                for yy in range(int(y+h/2-5*scale), int(y+h/2+5*scale))
+                                for xx in range(int(x+w-18*scale), int(x+w-4*scale)))
+                check(arrow_ink > 3*scale*scale,
+                      f'{BUTTON_LABELS[index]} native submenu arrow missing')
+            ox, oy, ow, oh = owner
+            bx, by, bw, bh = rows[0]
+            separated = (bx >= ox+ow+9.99*scale or ox >= bx+bw+9.99*scale or
+                         by >= oy+oh+9.99*scale or oy >= by+bh+9.99*scale)
+            check(separated, 'Center Mouse Buttons owner and submenu are below 10px separation')
+        finally:
+            bpy.data.images.remove(image)
+        yield from click(buttons['items'][0])
+        page = native_page(buttons['items'][0], MAPPING_LABELS, measure, bounds, scale)
+        check(page['capacity'] == 13 and page['previous'] is None and page['next'] is None,
+              'standard mapping list must show all 13 choices without pagination')
+        normal_path = screenshot('mapping-standard-left-full.png')
+        check_labels(normal_path, page, MAPPING_LABELS, 'standard full mapping list')
+        yield from move(page['items'][9])
+        hover_path = screenshot('mapping-standard-left-hover.png')
+        normal_image, normal_pixels, normal_width = image_pixels(normal_path)
+        hover_image, hover_pixels, hover_width = image_pixels(hover_path)
+        try:
+            x, y, w, h = page['items'][9]
+            changed = sum(sum(abs(a-b) for a, b in zip(
+                              normal_pixels[(yy*normal_width+xx)*4:(yy*normal_width+xx)*4+3],
+                              hover_pixels[(yy*hover_width+xx)*4:(yy*hover_width+xx)*4+3])) > .12
+                          for yy in range(int(y+3*scale), int(y+h-3*scale))
+                          for xx in range(int(x+3*scale), int(x+w-3*scale)))
+            check(changed > 8*scale*scale, 'standard mapping row did not render native hover')
+        finally:
+            bpy.data.images.remove(normal_image)
+            bpy.data.images.remove(hover_image)
+        for _ in range(5):
+            event('WHEELDOWNMOUSE')
+        for _ in range(3):
+            event('WHEELUPMOUSE')
+        yield from settle()
+        count, setting_count = len(observed), len(settings_observed)
+        yield from click(page['items'][0])
+        check(len(observed) == count and len(settings_observed) == setting_count+1 and
+              settings_observed[-1][:2] == ('center.LEFTMOUSE', 'none') and
+              settings()['center_buttons']['LEFTMOUSE'] is None,
+              'full mapping list drifted under wheel or selected a non-literal first row')
+        yield from close_box()
+
+        for button_index, selected_index, expected in ((1, 4, 'common'), (2, 9, 'pane.shading')):
+            _owner, _buttons, page = yield from open_mapping(button_index)
+            count, setting_count = len(observed), len(settings_observed)
+            yield from click(page['items'][selected_index])
+            check(len(observed) == count and len(settings_observed) == setting_count+1 and
+                  settings_observed[-1][:2] == (f'center.{MOUSE_BUTTONS[button_index]}', expected) and
+                  settings()['center_buttons'][MOUSE_BUTTONS[button_index]] == expected,
+                  f'{BUTTON_LABELS[button_index]} did not apply literal {expected!r}')
+            yield from close_box()
+        expected_user = {'schema_version': 1, 'settings': {'center_buttons': {
+            'LEFTMOUSE': None, 'MIDDLEMOUSE': 'common', 'RIGHTMOUSE': 'pane.shading'}}}
+        check(json.loads(hotbox_user.read_text(encoding='utf-8')) == expected_user,
+              'standard mappings did not write the exact delta-only user JSON')
+        hotbox_runtime.reload_settings(bpy.context, session={'schema_version': 1, 'settings': {}})
+        check(settings()['center_buttons'] == {
+            'LEFTMOUSE': None, 'MIDDLEMOUSE': 'common', 'RIGHTMOUSE': 'pane.shading'},
+            'standard mappings did not reload from the persisted user layer')
+        _owner, _buttons, _page = yield from open_mapping(2)
+        check(settings()['center_buttons']['RIGHTMOUSE'] == 'pane.shading',
+              'reopened nested mapping lost persisted Right Mouse setting')
+        yield from close_box()
+
+        # Held leaf selection owns its release; another mouse release cannot commit it.
+        reset_settings()
+        _owner, _buttons, page = yield from open_mapping(0)
+        yield from move(page['items'][6])
+        count, setting_count = len(observed), len(settings_observed)
+        event('LEFTMOUSE')
+        yield
+        event('RIGHTMOUSE', 'RELEASE')
+        yield from settle()
+        check(len(observed) == count and len(settings_observed) == setting_count,
+              'non-owning release committed held mapping selection')
+        event('LEFTMOUSE', 'RELEASE')
+        yield from settle()
+        check(len(observed) == count and len(settings_observed) == setting_count+1 and
+              settings_observed[-1][:2] == ('center.LEFTMOUSE', 'common.modify'),
+              'owning release did not commit held mapping selection')
+        yield from close_box()
+        yield from press_tool('W', 'builtin.move')
+
+        reset_settings()
+        _owner, _buttons, page = yield from open_mapping(1)
+        yield from move(page['items'][10])
+        count, setting_count = len(observed), len(settings_observed)
+        event('LEFTMOUSE')
+        yield
+        event('SPACE', 'RELEASE')
+        yield from settle()
+        event('LEFTMOUSE', 'RELEASE')
+        yield from settle()
+        check(len(observed) == count and len(settings_observed) == setting_count and
+              settings()['center_buttons']['MIDDLEMOUSE'] == 'views',
+              'Space-first release committed a held mapping')
+        yield from press_tool('E', 'builtin.rotate')
+
+        reset_settings()
+        _owner, _buttons, page = yield from open_mapping(2)
+        yield from move(page['items'][12])
+        count, setting_count = len(observed), len(settings_observed)
+        event('LEFTMOUSE')
+        yield
+        event('ESC')
+        event('ESC', 'RELEASE')
+        event('LEFTMOUSE', 'RELEASE')
+        event('SPACE', 'RELEASE')
+        yield from settle()
+        check(len(observed) == count and len(settings_observed) == setting_count and
+              settings()['center_buttons']['RIGHTMOUSE'] == 'views',
+              'Esc committed a held mapping')
+        yield from press_tool('R', 'builtin.scale')
+        check(not observed, 'mapping-only suite reached the command dispatcher')
+        print('PASS standard mappings: native blocks, all labels, hover, no drift, releases and W/E/R',
+              flush=True)
+    else:
+        selected_indices = (11, 12, 9)
+        for button_index, selected_index in enumerate(selected_indices):
+            opener = MOUSE_BUTTONS[(button_index+1) % len(MOUSE_BUTTONS)]
+            reset_settings(opener)
+            _owner, _buttons, page = yield from open_mapping(button_index)
+            check(1 < page['capacity'] < 13 and page['previous'] is not None and page['next'] is not None,
+                  f'{layout_probe} mapping page did not expose bounded navigation')
+            initial = settings()['center_buttons'][MOUSE_BUTTONS[button_index]]
+            count, setting_count = len(observed), len(settings_observed)
+            yield from move(page['previous'])
+            event('LEFTMOUSE')
+            yield from settle()
+            if button_index == 0:
+                pressed = screenshot(f'mapping-{layout_probe}-disabled-previous-press.png')
+                check(native_page_red_ratio(pressed, page) > .6,
+                      f'{layout_probe} disabled previous press prematurely left its page')
+            check(len(observed) == count and len(settings_observed) == setting_count,
+                  f'{layout_probe} disabled previous press applied a setting')
+            event('RIGHTMOUSE', 'RELEASE')
+            yield from settle()
+            check(len(observed) == count and len(settings_observed) == setting_count,
+                  f'{layout_probe} non-owner release changed disabled previous ownership')
+            event('LEFTMOUSE', 'RELEASE')
+            yield from settle()
+            if button_index == 0:
+                released = screenshot(f'mapping-{layout_probe}-disabled-previous-release.png')
+                check(native_page_red_ratio(released, page) > .6,
+                      f'{layout_probe} disabled previous owner release lost the leaf page')
+            check(len(observed) == count and len(settings_observed) == setting_count and
+                  settings()['center_buttons'][MOUSE_BUTTONS[button_index]] == initial,
+                  f'{layout_probe} disabled previous arrow applied a setting')
+            print('MAPPING_DISABLED_BOUNDARY', layout_probe, 'previous',
+                  'press=page non-owner=page owner-release=page no-setting', flush=True)
+            visible = set()
+            while True:
+                path = screenshot(
+                    f'mapping-{layout_probe}-{MOUSE_BUTTONS[button_index].lower()}-page-{page["first"]}.png')
+                check_native_page(
+                    path, page,
+                    f'{layout_probe} {BUTTON_LABELS[button_index]} page {page["first"]}')
+                visible.update(i for i, rect in enumerate(page['items']) if rect is not None)
+                if page['first'] + page['capacity'] == 13:
+                    break
+                before_settings = settings()['center_buttons'][MOUSE_BUTTONS[button_index]]
+                count, setting_count = len(observed), len(settings_observed)
+                yield from click(page['next'])
+                check(len(observed) == count and len(settings_observed) == setting_count and
+                      settings()['center_buttons'][MOUSE_BUTTONS[button_index]] == before_settings,
+                      f'{layout_probe} navigation release selected the newly exposed row')
+                page = native_page(_buttons['items'][button_index], MAPPING_LABELS, measure, bounds,
+                                   scale, first=page['first']+1)
+            check(visible == set(range(13)),
+                  f'{layout_probe} {BUTTON_LABELS[button_index]} did not expose all 13 choices')
+            count, setting_count = len(observed), len(settings_observed)
+            yield from move(page['next'])
+            event('LEFTMOUSE')
+            yield from settle()
+            if button_index == 0:
+                pressed = screenshot(f'mapping-{layout_probe}-disabled-next-press.png')
+                check(native_page_red_ratio(pressed, page) > .6,
+                      f'{layout_probe} disabled next press prematurely left its page')
+            check(len(observed) == count and len(settings_observed) == setting_count,
+                  f'{layout_probe} disabled next press applied a setting')
+            event('RIGHTMOUSE', 'RELEASE')
+            yield from settle()
+            check(len(observed) == count and len(settings_observed) == setting_count,
+                  f'{layout_probe} non-owner release changed disabled next ownership')
+            event('LEFTMOUSE', 'RELEASE')
+            yield from settle()
+            if button_index == 0:
+                released = screenshot(f'mapping-{layout_probe}-disabled-next-release.png')
+                check(native_page_red_ratio(released, page) > .6,
+                      f'{layout_probe} disabled next owner release lost the leaf page')
+            check(len(observed) == count and len(settings_observed) == setting_count,
+                  f'{layout_probe} disabled next arrow applied a setting')
+            print('MAPPING_DISABLED_BOUNDARY', layout_probe, 'next',
+                  'press=page non-owner=page owner-release=page no-setting', flush=True)
+            # The owner release must clear its ownership while leaving enabled navigation usable.
+            yield from click(page['previous'])
+            page = native_page(_buttons['items'][button_index], MAPPING_LABELS, measure,
+                               bounds, scale, first=page['first']-1)
+            yield from click(page['next'])
+            page = native_page(_buttons['items'][button_index], MAPPING_LABELS, measure,
+                               bounds, scale, first=page['first']+1)
+
+            if button_index == 0:
+                last_first = page['first']
+                yield from move(page['items'][selected_index])
+                for _ in range(20):
+                    event('WHEELDOWNMOUSE')
+                yield from settle()
+                screenshot(f'mapping-{layout_probe}-wheel-last-excess.png')
+                event('WHEELUPMOUSE')
+                yield from settle()
+                reversed_page = native_page(_buttons['items'][button_index], MAPPING_LABELS,
+                                            measure, bounds, scale, first=last_first-1)
+                check(reversed_page['first'] == last_first-1,
+                      f'{layout_probe} fixture did not define a one-item tail reversal')
+                screenshot(f'mapping-{layout_probe}-wheel-last-reversed.png')
+                first_index = reversed_page['first']
+                expected = MAPPING_VALUES[first_index]
+                expected_event_value = 'none' if expected is None else expected
+                count, setting_count = len(observed), len(settings_observed)
+                yield from click(reversed_page['items'][first_index])
+                check(len(observed) == count and len(settings_observed) == setting_count+1 and
+                      settings_observed[-1][:2] == ('center.LEFTMOUSE', expected_event_value) and
+                      settings()['center_buttons']['LEFTMOUSE'] == expected,
+                      f'{layout_probe} tail wheel reversal did not move visible first row by one')
+                print('MAPPING_TAIL_WHEEL', layout_probe, 'capacity', page['capacity'],
+                      'excess_down', 20, 'last_first', last_first,
+                      'reversed_first', first_index, 'literal', expected, flush=True)
+            else:
+                expected = MAPPING_VALUES[selected_index]
+                expected_event_value = 'none' if expected is None else expected
+                count, setting_count = len(observed), len(settings_observed)
+                yield from click(page['items'][selected_index])
+                check(len(observed) == count and len(settings_observed) == setting_count+1 and
+                      settings_observed[-1][:2] == (
+                          f'center.{MOUSE_BUTTONS[button_index]}', expected_event_value) and
+                      settings()['center_buttons'][MOUSE_BUTTONS[button_index]] == expected,
+                      f'{layout_probe} {BUTTON_LABELS[button_index]} scrolled literal not applied')
+            yield from close_box()
+            expected_value = settings()['center_buttons'][MOUSE_BUTTONS[button_index]]
+            expected_user = {'schema_version': 1, 'settings': {'center_buttons': {
+                MOUSE_BUTTONS[button_index]: expected_value}}}
+            check(json.loads(hotbox_user.read_text(encoding='utf-8')) == expected_user,
+                  f'{layout_probe} mapping did not write one-button delta JSON')
+            hotbox_runtime.reload_settings(bpy.context,
+                                           session={'schema_version': 1, 'settings': {}})
+            check(settings()['center_buttons'][MOUSE_BUTTONS[button_index]] == expected_value,
+                  f'{layout_probe} mapping did not reload persisted value')
+            opener_button[0] = opener
+            hotbox_runtime.reload_settings(bpy.context, session={
+                'schema_version': 1, 'settings': {
+                    'center_buttons': {opener: 'center.controls'}}})
+            _owner, _buttons, _page = yield from open_mapping(button_index)
+            check(settings()['center_buttons'][MOUSE_BUTTONS[button_index]] == expected_value,
+                  f'{layout_probe} reopened mapping lost persisted value')
+            yield from close_box()
+
+        # First-page excess upward wheel, then one downward event must expose literal `views`.
+        reset_settings('LEFTMOUSE')
+        _owner, _buttons, page = yield from open_mapping(2)
+        yield from move(page['items'][0])
+        for _ in range(20):
+            event('WHEELUPMOUSE')
+        yield from settle()
+        event('WHEELDOWNMOUSE')
+        yield from settle()
+        first_reversed = native_page(_buttons['items'][2], MAPPING_LABELS, measure, bounds,
+                                     scale, first=1)
+        count, setting_count = len(observed), len(settings_observed)
+        yield from click(first_reversed['items'][1])
+        check(len(observed) == count and len(settings_observed) == setting_count+1 and
+              settings_observed[-1][:2] == ('center.RIGHTMOUSE', 'views') and
+              settings()['center_buttons']['RIGHTMOUSE'] == 'views',
+              f'{layout_probe} first-page wheel reversal was not exactly one item')
+        yield from close_box()
+        check(not observed, f'{layout_probe} mapping navigation reached command dispatcher')
+        print('PASS', layout_probe,
+              'all mapping literals visible; real controls, wheel bounds, persistence and owner settings',
+              flush=True)
+
+    menu_back.inner = normal_menu_background
+    area.tag_redraw()
+    yield from settle()
+    if layout_probe == 'standard':
+        reset_settings()
+    else:
+        reset_settings('LEFTMOUSE')
+    _owner, _buttons, _page = yield from open_mapping(2)
+    screenshot(f'mapping-{layout_probe}-normal-theme.png')
+    yield from close_box()
+    hotbox_runtime.dispatch = real_dispatch
+    hotbox_runtime.apply_setting = real_apply_setting
+    print('AXISMELD_HOTBOX_MAPPING_LISTS_PASS', flush=True)
 
 
 def suite():
@@ -133,9 +690,14 @@ def suite():
             yield from settle()
             event('RIGHTMOUSE', 'RELEASE')
             yield from settle()
-            controls = ellipse_page(center, control_labels, measure, bounds, scale)['items']
-            yield from click(controls[index])
-            return controls[index], native_list(controls[index], labels, measure, bounds, scale)
+            controls_page = ellipse_page(center, control_labels, measure, bounds, scale)
+            while controls_page['items'][index] is None:
+                yield from click(controls_page['next'])
+                controls_page = ellipse_page(center, control_labels, measure, bounds, scale,
+                                             first=controls_page['first']+1)
+            owner = controls_page['items'][index]
+            yield from click(owner)
+            return owner, native_list(owner, labels, measure, bounds, scale)
 
         cases = (
             ('rows', 0, ROW_LABELS,
@@ -345,7 +907,7 @@ def suite():
     print('AXISMELD_HOTBOX_NATIVE_STYLE_PASS', flush=True)
 
 
-steps = suite()
+steps = (mapping_suite() if os.environ.get('AXISMELD_TEST_SUITE') == 'mappings' else suite())
 
 
 def tick():

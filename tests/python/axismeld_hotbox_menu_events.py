@@ -502,7 +502,7 @@ def suite():
 
     # Measured public labels provide input positions only; all effects below are literal.
     sys.path.insert(0, str(Path(__file__).parent))
-    from axismeld_hotbox_geometry_fixture import ellipse_page, native_list, style_list
+    from axismeld_hotbox_geometry_fixture import ellipse_page, native_list, native_page, style_list
     blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
     icon_labels = {'AxisMeld', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls',
                    'Wireframe', 'Solid', 'Perspective View', 'Right View', 'Bottom View',
@@ -531,9 +531,21 @@ def suite():
             ['Show Common Menus', 'Show Pane Specific Menus', 'Show Modeling'],
             ['0%', '25%', '50%', '75%', '100%'],
         )
+        button_labels = ['Left Mouse Button', 'Middle Mouse Button', 'Right Mouse Button']
+        mapping_labels = ['Disabled', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls',
+                          'Common', 'Select', 'Modify', 'Current Pane', 'Pane View',
+                          'Pane Shading', 'Panels', 'Panel Views', 'Modeling']
         if labels in native_labels:
             return {'items': native_list(anchor, labels, label_width,
                                         (region.x, region.y, region.width, region.height), scale)}
+        if labels == button_labels:
+            return native_page(anchor, labels, label_width,
+                               (region.x, region.y, region.width, region.height), scale,
+                               first=first, submenu_indices=range(3))
+        if labels == mapping_labels:
+            return native_page(anchor, labels, label_width,
+                               (region.x, region.y, region.width, region.height), scale,
+                               first=first)
         views = bool(labels and labels[0] == 'Perspective View')
         measure = (lambda label: blf.dimensions(0, label)[0] / scale) if views else label_width
         return ellipse_page(anchor, labels, measure,

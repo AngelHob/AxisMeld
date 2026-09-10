@@ -360,6 +360,10 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
       data.navigation_consumed = true;
       scroll_control(data, item);
     }
+    else if (!rect.interactive && rect.native_menu && rect.id.starts_with("@scroll:")) {
+      /* Disabled native navigation still owns its press/release without changing the page. */
+      data.navigation_consumed = true;
+    }
     else if (item.starts_with("@back:")) {
       data.navigation_consumed = true;
       back_to_parent(data, item.substr(6));

@@ -55,17 +55,24 @@ def view_page(anchor, labels, measure, bounds, scale):
     raise AssertionError(f'view fixture cannot fit in {bounds!r}')
 
 
-def native_list(anchor, labels, measure, bounds, scale=1, marking_origin=None):
+def native_page(anchor, labels, measure, bounds, scale=1, marking_origin=None, first=0,
+                submenu_indices=()):
     if not labels:
         raise AssertionError('Native list requires at least one label')
     ax, ay, aw, ah = (v / scale for v in anchor)
     bx, by, bw, bh = (v / scale for v in bounds)
-    w = max(measure(label) for label in labels) + 40
-    h = len(labels)*24
-    x = ax+aw+10 if ax+aw+10+w <= bx+bw-12 else ax-10-w
-    y = max(by+12, min(ay+ah-h, by+bh-12-h))
-    if x < bx+12:
-        positions = []
+    submenu_indices = frozenset(submenu_indices)
+    w = max(measure(label) + (60 if i in submenu_indices else 40)
+            for i, label in enumerate(labels))
+
+    def position(h):
+        x = ax+aw+10
+        y = max(by+12, min(ay+ah-h, by+bh-12-h))
+        if x+w <= bx+bw-12:
+            return x, y
+        x = ax-10-w
+        if x >= bx+12:
+            return x, y
         for cy in (ay+ah+10, ay-10-h):
             for cx in (max(bx+12, min(ax, bx+bw-12-w)), bx+12, bx+bw-12-w):
                 if cy < by+12 or cy+h > by+bh-12:
@@ -75,12 +82,37 @@ def native_list(anchor, labels, measure, bounds, scale=1, marking_origin=None):
                     dx, dy = ox-max(cx, min(ox, cx+w)), oy-max(cy, min(oy, cy+h))
                     if dx*dx+dy*dy <= 12*12:
                         continue
-                positions.append((cx, cy))
-        if not positions:
-            raise AssertionError(f'Native list cannot fit without covering its entry in {bounds!r}')
-        x, y = positions[0]
-    return [(x*scale, (y+h-(i+1)*24)*scale, w*scale, 24*scale)
-            for i in range(len(labels))]
+                return cx, cy
+        return None
+
+    for capacity in range(len(labels), 0, -1):
+        paged = capacity < len(labels)
+        h = (capacity + (2 if paged else 0))*24
+        if h > bh-24:
+            continue
+        origin = position(h)
+        if origin is None:
+            continue
+        x, y = origin
+        offset = min(max(first, 0), len(labels)-capacity) if paged else 0
+        items = [None]*len(labels)
+        row = 0
+        previous = next_row = None
+        if paged:
+            previous = (x*scale, (y+h-(row+1)*24)*scale, w*scale, 24*scale)
+            row += 1
+        for index in range(offset, offset+capacity):
+            items[index] = (x*scale, (y+h-(row+1)*24)*scale, w*scale, 24*scale)
+            row += 1
+        if paged:
+            next_row = (x*scale, (y+h-(row+1)*24)*scale, w*scale, 24*scale)
+        return {'items': items, 'previous': previous, 'next': next_row,
+                'capacity': capacity, 'first': offset}
+    raise AssertionError(f'Native list cannot fit without covering its entry in {bounds!r}')
+
+
+def native_list(anchor, labels, measure, bounds, scale=1, marking_origin=None):
+    return native_page(anchor, labels, measure, bounds, scale, marking_origin)['items']
 
 
 def style_list(anchor, measure, bounds, scale=1, marking_origin=None):
@@ -93,7 +125,7 @@ def ellipse_page(anchor, labels, measure, bounds, scale=1, first=0, views=False)
         return view_page(anchor, labels, measure, bounds, scale)
     ax, ay, aw, ah = (v / scale for v in anchor)
     bx, by, bw, bh = (v / scale for v in bounds)
-    native_entries = {'Menu Rows', 'Hotbox Style', 'Transparency'}
+    native_entries = {'Menu Rows', 'Hotbox Style', 'Transparency', 'Center Mouse Buttons'}
     widths = [measure(label) + (60 if label in native_entries else 16) for label in labels]
     center_width = aw
     choices = []
