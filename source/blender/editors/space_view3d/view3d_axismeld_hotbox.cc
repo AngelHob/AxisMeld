@@ -398,7 +398,7 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
     return OPERATOR_RUNNING_MODAL;
   }
   if (ISMOUSE_MOTION(event->type) && data.active_mouse && !data.open_path.empty() && node &&
-      node->kind == MenuKind::Menu && !(data.marking && item == "views.style"))
+      node->kind == MenuKind::Menu)
   {
     open_menu(data, rect);
   }
@@ -434,12 +434,18 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
   {
     if (data.marking) {
       const float dx = x - data.origin[0], dy = y - data.origin[1];
+      if (dx * dx + dy * dy <= 12 * 12 && data.open_path.size() > 2) {
+        // Returning to the real gesture origin backs out of Style without releasing
+        // the owner. A new outward stroke can select a view in the same gesture.
+        data.open_path.resize(2);
+        hotbox_layout(data);
+      }
       // Real-origin dead zone wins first. Outside it, visible targets keep their semantics
       // even after inward placement; only untargeted space uses the original direction sectors.
-      // The central Style affordance is transparent during this original marking gesture.
-      // It can be entered with a fresh click after releasing and latching the views ring.
-      data.candidate = hover && item != "views.style" ? HotboxAction::None :
-                                                        hotbox_direction(dx, dy, 12);
+      // Only untargeted space in the view ring uses sectors. Style and its submenu
+      // own their real rectangles; the retained first level never participates in hits.
+      data.candidate = hover || data.open_path.size() > 2 ? HotboxAction::None :
+                                                            hotbox_direction(dx, dy, 12);
       data.pending_leaf = dx * dx + dy * dy <= 12 * 12 ? "" :
                           node && (rect.direction_label || node->kind == MenuKind::Setting) ?
                                                          item :
@@ -451,8 +457,8 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
     }
     if (event->type == data.active_mouse && event->val == KM_RELEASE) {
       data.active_mouse = 0;
-      if ((!node || node->kind != MenuKind::Menu) && !item.starts_with("@scroll:") &&
-          !item.starts_with("@back:"))
+      if (data.marking || ((!node || node->kind != MenuKind::Menu) &&
+                           !item.starts_with("@scroll:") && !item.starts_with("@back:")))
       {
         data.open_path.clear();
       }

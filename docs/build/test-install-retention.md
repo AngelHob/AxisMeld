@@ -11,6 +11,11 @@
 
 ## 2026-09-10 清理
 
+后续二级叠加修复继续复用 `phase2b-ui-test-install`，覆盖前确认其未运行。最新
+`portable` 的 6 个文件备份至
+`D:/source/AxisMeld-build/preserved-test-configs/2026-09-10-overlay/phase2b-ui-test-install/portable`，
+逐文件 SHA-256 校验。`phase2b-roomy-test-install` 保持不变，无新增完整安装目录。
+
 本日后续参考图修复复用了未运行的 `phase2b-ui-test-install` 作为新测试版；正在运行的
 `phase2b-roomy-test-install` 原样保留为回退版。覆盖前，旧 ui 版 `portable` 的 5 个文件
 已复制到 `D:/source/AxisMeld-build/preserved-test-configs/2026-09-10-reference/phase2b-ui-test-install/portable`

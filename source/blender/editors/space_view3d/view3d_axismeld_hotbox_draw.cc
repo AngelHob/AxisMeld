@@ -74,10 +74,15 @@ void hotbox_measure(HotboxVisual &data)
   auto measure = [&](auto &&self, const std::vector<MenuNode> &nodes) -> void {
     for (const MenuNode &node : nodes) {
       const bool view_label = node.id.starts_with("views.") && node.kind == MenuKind::Command;
-      const std::string_view label = view_label ? hotbox_view_short_label(node.command) :
-                                                  node.label;
+      const std::string_view label = node.label;
       data.label_widths[node.id] = BLF_width(font, label.data(), label.size()) / data.scale +
                                    (!view_label && menu_icon(node) != ICON_NONE ? 20.0f : 0.0f);
+      if (view_label) {
+        const auto compact = hotbox_view_short_label(node.command);
+        data.label_widths["@compact:" + node.id] = BLF_width(
+                                                       font, compact.data(), compact.size()) /
+                                                   data.scale;
+      }
       self(self, node.children);
     }
   };
@@ -86,18 +91,16 @@ void hotbox_measure(HotboxVisual &data)
 
 void hotbox_layout(HotboxVisual &data)
 {
+  const std::array<float, 2> origin = {data.origin[0], data.origin[1]};
   data.menu_layout = layout_menu(data.snapshot,
                                  data.width,
                                  data.height,
-                                 data.marking ? data.origin[0] : data.center[0],
-                                 data.marking ? data.origin[1] : data.center[1],
+                                 data.center[0],
+                                 data.center[1],
                                  data.open_path,
                                  data.scroll_offsets,
-                                 data.label_widths);
-  if (data.marking) {
-    // Direction labels and Style now share the same ellipse geometry as ordinary menu hits.
-    std::erase_if(data.menu_layout.rects, [](const MenuRect &rect) { return rect.depth == 0; });
-  }
+                                 data.label_widths,
+                                 data.marking ? &origin : nullptr);
 }
 
 void hotbox_draw(const HotboxVisual &data)
@@ -114,7 +117,7 @@ void hotbox_draw(const HotboxVisual &data)
       const bool back = rect.id.starts_with("@back:");
       const MenuNode *node = hotbox_find_node(data.snapshot.menus,
                                               back ? rect.id.substr(6) : rect.id);
-      const std::string label = rect.direction_label ?
+      const std::string label = rect.compact_label ?
                                     std::string(hotbox_view_short_label(node->command)) :
                                 node                           ? node->label :
                                 rect.id.ends_with(":previous") ? "<" :
@@ -122,9 +125,6 @@ void hotbox_draw(const HotboxVisual &data)
       bool selected = data.hover_id == rect.id && data.hover_depth == rect.depth;
       if (data.marking && rect.direction_label) {
         selected = data.pending_leaf == rect.id;
-      }
-      if (data.marking && rect.id == "views.style") {
-        selected = false;
       }
       entries.push_back({rect,
                          label,
@@ -192,30 +192,32 @@ void hotbox_draw(const HotboxVisual &data)
                               (r.y + r.height / 2) * scale,
                               (r.y + r.height / 2 + 1) * scale};
       ui::draw_roundbox_4fv(&separator, true, 0, line);
-    }
-  }
-  for (const Entry &entry : entries) {
-    const MenuRect &r = entry.rect;
-    // Alpha is the chosen menu transparency, not permission for obscured menu text to bleed
-    // through. Higher-depth rectangles already own these pixels for hit testing.
-    const bool occluded = std::any_of(entries.begin(), entries.end(), [&](const Entry &other) {
-      const MenuRect &s = other.rect;
-      return s.depth > r.depth && r.x < s.x + s.width && r.x + r.width > s.x &&
-             r.y < s.y + s.height && r.y + r.height > s.y;
-    });
-    if (occluded || entry.separator) {
       continue;
     }
-    const uiWidgetColors &colors = r.depth > 0 ? theme.wcol_menu_item : theme.wcol_menu;
+    const float text_width = BLF_width(font, entry.text.c_str(), entry.text.size());
+    const float icon_width = entry.icon != ICON_NONE ? 20 * scale : 0;
+    const float left = (r.x + r.width / 2) * scale - (text_width + icon_width) / 2;
+    // Occlude the label, not its padded button. Otherwise a few covered padding pixels
+    // erase an entirely visible parent label. Covered labels must not bleed through a
+    // translucent child and make its view name unreadable.
+    const float label_height = std::max(float(BLF_height_max(font)),
+                                        entry.icon != ICON_NONE ? 16 * scale : 0.0f);
+    const float label_bottom = (r.y + r.height / 2) * scale - label_height / 2;
+    const bool occluded = std::any_of(entries.begin(), entries.end(), [&](const Entry &other) {
+      const MenuRect &s = other.rect;
+      return s.depth > r.depth && left < (s.x + s.width) * scale &&
+             left + text_width + icon_width > s.x * scale &&
+             label_bottom < (s.y + s.height) * scale && label_bottom + label_height > s.y * scale;
+    });
+    if (occluded) {
+      continue;
+    }
     uchar color[4];
     std::memcpy(color, entry.selected && !entry.disabled ? colors.text_sel : colors.text, 4);
     // Native menu items retain their theme foreground RGB and halve disabled text alpha.
     if (entry.disabled) {
       color[3] /= 2;
     }
-    const float text_width = BLF_width(font, entry.text.c_str(), entry.text.size());
-    const float icon_width = entry.icon != ICON_NONE ? 20 * scale : 0;
-    const float left = (r.x + r.width / 2) * scale - (text_width + icon_width) / 2;
     if (entry.icon != ICON_NONE) {
       ui::icon_draw_ex(left,
                        (r.y + (r.height - 16) / 2) * scale,

@@ -63,7 +63,7 @@ def _setting(identifier, label, setting, value):
 def _view_items(prefix):
     items = (
         ('perspective', 'Perspective View', 'view.perspective', True),
-        ('side', 'Side View', 'view.side', True),
+        ('side', 'Right View', 'view.side', True),
         ('bottom', 'Bottom View', 'view.bottom', True),
         ('front', 'Front View', 'view.front', True),
         ('back', 'Back View', 'view.back', True),
@@ -158,7 +158,8 @@ def _catalog():
     ))
 
     views_children = _view_items('views')
-    views_children.extend((_separator('views.separator.style'), _style_menu('views.style')))
+    views_children.extend((_separator('views.separator.style'), _style_menu('views.style'),
+                           _disabled('views.camera', 'New Camera')))
     controls = _menu('center.controls', 'Hotbox Controls', (
         _menu('center.controls.rows', 'Menu Rows', (
             _setting('center.controls.rows.common', 'Show Common Menus', 'row.common', 'toggle'),

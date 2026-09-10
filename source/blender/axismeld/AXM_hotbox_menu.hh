@@ -31,10 +31,12 @@ struct MenuRect {
   int depth;
   bool interactive = true;
   bool direction_label = false;
+  bool compact_label = false;
 };
 struct MenuLayout {
   std::vector<MenuRect> rects;
   bool supported;
+  int hit_depth = 0;  // Lower layers remain visible but cannot acquire input.
 };
 
 /* Logical pixel coordinates, bottom-left origin. All nodes require measured label widths.
@@ -44,6 +46,7 @@ struct MenuLayout {
  * Offsets are first child indices, keyed independently by row/menu ID; absent means zero.
  * Layout-only @scroll:<owner>:previous/next and @back:<owner> IDs navigate, never dispatch.
  * The visible central button can extend inward at edges. Gesture origins remain caller-owned.
+ * popup_origin optionally positions the view overlay without moving its retained first level.
  */
 MenuLayout layout_menu(const MenuSnapshot &snapshot,
                        float width,
@@ -52,11 +55,12 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
                        float center_y,
                        const std::vector<std::string> &open_path,
                        const std::unordered_map<std::string, int> &scroll_offsets,
-                       const std::unordered_map<std::string, float> &label_widths);
+                       const std::unordered_map<std::string, float> &label_widths,
+                       const std::array<float, 2> *popup_origin = nullptr);
 std::string hit_menu(const MenuLayout &layout, float x, float y);
 /* Includes disabled/separator occlusion and preserves the exact visible occurrence/depth. */
 const MenuRect *hit_menu_rect(const MenuLayout &layout, float x, float y);
 bool hotbox_command_closes(std::string_view command);
-/* Short, unambiguous labels for the view ring; full catalog labels remain unchanged. */
+/* Compact view labels used only when full labels and the Style tail cannot fit. */
 std::string_view hotbox_view_short_label(std::string_view command);
 }  // namespace blender::axismeld

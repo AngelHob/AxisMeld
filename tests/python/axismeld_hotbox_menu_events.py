@@ -153,6 +153,77 @@ def suite():
         failures.append(f'Space main Common directory missing: changed pixels={changed}')
     bpy.data.images.remove(before)
     bpy.data.images.remove(after)
+    if os.environ.get('AXISMELD_TEST_OVERLAY'):
+        event('SPACE', 'RELEASE')
+        yield from settle()
+        for requested_scale in (1.0, 2.0):
+            bpy.context.preferences.view.ui_scale = requested_scale
+            yield from settle(8)
+            scale = bpy.context.preferences.system.ui_scale
+            region = next(r for r in area.regions if r.type == 'WINDOW')
+            cx, cy = region.x + region.width // 2, region.y + region.height // 2
+            event('MOUSEMOVE', 'NOTHING', cx, cy)
+            yield from settle()
+            event('SPACE')
+            yield from settle(8)
+            main = screenshot(f'overlay-{requested_scale}-main.png')
+            blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
+            span = sum(blf.dimensions(0, label)[0]/scale + 40 for label in
+                       ('File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows')) + 60
+            def difference(first, second, bounds):
+                images = [bpy.data.images.load(str(p), check_existing=False) for p in (first, second)]
+                pixels = [list(im.pixels) for im in images]
+                w = images[0].size[0]
+                x0, y0, x1, y1 = (int(v) for v in bounds)
+                changed = sum(sum(abs(pixels[0][(y*w+x)*4+k]-pixels[1][(y*w+x)*4+k])
+                                  for k in range(3)) > .08
+                              for y in range(y0, y1) for x in range(x0, x1))
+                for im in images:
+                    bpy.data.images.remove(im)
+                return changed
+            # A known, unoccluded portion of the first-level File title must not disappear
+            # or move with an off-center RMB origin.
+            sample = (cx-span*scale/2+8*scale, cy+90*scale,
+                      cx-span*scale/2+24*scale, cy+102*scale)
+            event('MOUSEMOVE', 'NOTHING', cx+12*scale, cy)
+            event('RIGHTMOUSE')
+            yield from settle()
+            held = screenshot(f'overlay-{requested_scale}-held.png')
+            check(difference(main, held, sample) == 0,
+                  f'{requested_scale}x first-level File disappeared or shifted behind secondary')
+            edit_left = cx-span*scale/2 + blf.dimensions(0, 'File')[0] + 50*scale
+            check(difference(main, held, (edit_left+15*scale, cy+91*scale,
+                                          edit_left+35*scale, cy+101*scale)) == 0,
+                  'partial button overlap erased unoccluded first-level Edit text')
+            event('LEFTMOUSE', 'RELEASE')
+            yield from settle()
+            other = screenshot(f'overlay-{requested_scale}-other-release.png')
+            check(difference(held, other, (cx-220*scale, cy-170*scale,
+                                           cx+220*scale, cy+170*scale)) == 0,
+                  'non-owning release changed the overlay')
+            event('RIGHTMOUSE', 'RELEASE')
+            event('MOUSEMOVE', 'NOTHING', cx, cy)
+            yield from settle()
+            returned = screenshot(f'overlay-{requested_scale}-returned.png')
+            check(difference(main, returned, (region.x, region.y, region.x+region.width,
+                                              region.y+region.height)) == 0,
+                  'neutral owner release did not restore the same live first-level hotbox')
+            # Re-entry without releasing Space proves that the original modal survives.
+            event('RIGHTMOUSE')
+            yield from settle()
+            event('MOUSEMOVE', 'NOTHING', cx+90*scale, cy)
+            event('RIGHTMOUSE', 'RELEASE')
+            yield from settle()
+            with bpy.context.temp_override(window=win, area=area, region=region):
+                rv = bpy.context.region_data
+                check(rv.view_perspective == 'ORTHO' and
+                      abs(abs(sum(a*b for a,b in zip(rv.view_rotation, (.5,.5,.5,.5))))-1) < 1e-5,
+                      'repeat entry failed to dispatch Right View')
+            event('SPACE', 'RELEASE')
+            yield from settle()
+        print('PASS retained parent, fixed root, owned neutral release and repeat view entry at 1x/2x', flush=True)
+        print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
+        return
     if os.environ.get('AXISMELD_TEST_DRAG_GUIDE'):
         event('SPACE', 'RELEASE')
         yield from settle()
@@ -317,8 +388,8 @@ def suite():
         (90, -90, 'view.bottom', (0, 1, 0, 0)),
         (0, 90, 'view.perspective', None),
     )
-    # Real mouse motion crosses the central Style rectangle before reaching a sector.
-    # A single large synthetic jump cannot catch a central hover stealing this gesture.
+    # Continuous motion crosses the retained first-level center before reaching a sector.
+    # A single large synthetic jump cannot catch an underlying hover stealing the gesture.
     for requested_scale in (1.0, 2.0):
         bpy.context.preferences.view.ui_scale = requested_scale
         yield from settle(8)
@@ -428,10 +499,10 @@ def suite():
 
     # Measured public labels provide input positions only; all effects below are literal.
     sys.path.insert(0, str(Path(__file__).parent))
-    from axismeld_hotbox_geometry_fixture import ellipse_page
+    from axismeld_hotbox_geometry_fixture import ellipse_page, style_list
     blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
     icon_labels = {'AxisMeld', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls',
-                   'Wireframe', 'Solid', 'Perspective View', 'Side View', 'Bottom View',
+                   'Wireframe', 'Solid', 'Perspective View', 'Right View', 'Bottom View',
                    'Front View', 'Back View', 'Top View', 'Left View', 'Vertex', 'Edge', 'Face'}
     def label_width(label):
         native_icon = label in icon_labels or label.startswith(('Entry ', 'Parent ', 'Child '))
@@ -452,9 +523,11 @@ def suite():
         x, y, w, h = rect
         return x+w/2, y+h/2
     def page(anchor, labels, first=0):
-        return ellipse_page(anchor, labels, label_width,
+        views = bool(labels and labels[0] == 'Perspective View')
+        measure = (lambda label: blf.dimensions(0, label)[0] / scale) if views else label_width
+        return ellipse_page(anchor, labels, measure,
                             (region.x, region.y, region.width, region.height), scale, first,
-                            views=bool(labels and labels[0] == 'Perspective View'))
+                            views=views)
     def popup(anchor, labels, first=0):
         return page(anchor, labels, first)['items']
     if os.environ.get('AXISMELD_TEST_NAVIGATION_PROBE') == 'quad':
@@ -475,7 +548,7 @@ def suite():
               'actual quad must exercise compact logical geometry at 2x')
         anchor = (cx-(label_width('AxisMeld')+40)*scale/2, cy-19*scale,
                   (label_width('AxisMeld')+40)*scale, 38*scale)
-        labels = ['Perspective View', 'Side View', 'Bottom View', 'Front View',
+        labels = ['Perspective View', 'Right View', 'Bottom View', 'Front View',
                   'Back View', 'Top View', 'Left View', '', 'Hotbox Style']
         for index, command in enumerate(('view.perspective', 'view.side', 'view.bottom',
                                           'view.front', 'view.back', 'view.top', 'view.left')):
@@ -532,7 +605,7 @@ def suite():
         yield from settle(8)
         cx, cy = region.x+2, region.y+2
         anchor = (region.x, region.y, (label_width('AxisMeld')+40)*scale, 38*scale)
-        labels = ['Perspective View', 'Side View', 'Bottom View', 'Front View',
+        labels = ['Perspective View', 'Right View', 'Bottom View', 'Front View',
                   'Back View', 'Top View', 'Left View', '', 'Hotbox Style']
         if os.environ.get('AXISMELD_TEST_NAVIGATION_PROBE') == 'latch':
             hotbox_runtime.reload_settings(bpy.context, session={
@@ -747,7 +820,7 @@ def suite():
     yield from click(midpoint(root_items[1]))
     yield from settle()
     screenshot('menus-center-root-duplicate-views.png')
-    view_items = popup(root_items[1], ['Perspective View', 'Side View', 'Bottom View', 'Front View',
+    view_items = popup(root_items[1], ['Perspective View', 'Right View', 'Bottom View', 'Front View',
                                      'Back View', 'Top View', 'Left View', '', 'Hotbox Style'])
     yield from click(midpoint(view_items[5]))
     check(observed[-1][0] == 'view.top' and current_pose()[1] == 'ORTHO',
@@ -843,27 +916,23 @@ def suite():
           flush=True)
     reset_hotbox_settings()
 
-    # Original marking passes through Style. Release first, then a fresh Style press may
-    # enter its ordinary directory and retain held-drag-to-setting behavior.
+    # Style is a tail of the held overlay. Do not release the owning RMB to enter it.
     yield from open_box()
     event('RIGHTMOUSE')
     yield
-    central_list = popup(center, ['Perspective View', 'Side View', 'Bottom View', 'Front View',
+    central_list = popup(center, ['Perspective View', 'Right View', 'Bottom View', 'Front View',
                                   'Back View', 'Top View', 'Left View', '', 'Hotbox Style'])
-    event('RIGHTMOUSE', 'RELEASE')
-    yield from settle()
     yield from move(midpoint(central_list[8]))
-    event('LEFTMOUSE')
-    yield
-    central_styles = popup(central_list[8], ['Zones and Menu Rows', 'Zones Only', 'Center Zone Only'])
+    central_styles = style_list(central_list[8], label_width,
+                               (region.x, region.y, region.width, region.height), scale)
     yield from move(midpoint(central_styles[1]))
     screenshot('menus-fresh-style-drag-candidate.png')
     count = len(observed)
-    event('LEFTMOUSE', 'RELEASE')
+    event('RIGHTMOUSE', 'RELEASE')
     yield from settle()
     with bpy.context.temp_override(window=win, area=area, region=region):
         check(json.loads(hotbox_runtime.snapshot(bpy.context))['settings']['style'] == 'zones' and
-              len(observed) == count, 'fresh Style title drag must select its setting')
+              len(observed) == count, 'held Style tail/list must select its setting')
     yield from close_box()
     reset_hotbox_settings()
 
@@ -871,18 +940,57 @@ def suite():
     event('RIGHTMOUSE')
     yield
     count = len(observed)
+    yield from move(midpoint(central_list[8]))
+    yield from move(midpoint(central_styles[1]))
+    yield from move((cx, cy))
     event('RIGHTMOUSE', 'RELEASE')
     yield from settle()
-    check(len(observed) == count, 'Style parent release executed a directional command')
-    yield from click(midpoint(central_list[8]))
-    yield from click(midpoint(central_styles[1]))
     with bpy.context.temp_override(window=win, area=area, region=region):
-        check(json.loads(hotbox_runtime.snapshot(bpy.context))['settings']['style'] == 'zones' and
-              len(observed) == count, 'fresh Style title click must support subsequent leaf click')
+        check(json.loads(hotbox_runtime.snapshot(bpy.context))['settings']['style'] == 'rows' and
+              len(observed) == count, 'return from Style to neutral center must cancel without latching')
     yield from close_box()
     reset_hotbox_settings()
 
-    # Actual settings leaves use the native bridge and rebuild the same live hotbox.
+    # Backtracking must restore view sectors without needing a fresh mouse press.
+    yield from open_box()
+    event('RIGHTMOUSE')
+    yield
+    count = len(observed)
+    yield from move(midpoint(central_list[8]))
+    yield from move((cx, cy))
+    yield from move((cx+15*scale, cy))
+    event('RIGHTMOUSE', 'RELEASE')
+    yield from settle()
+    check(len(observed) == count+1 and observed[-1] == ('view.side', {'FINISHED'}),
+          'Style -> center -> short Right gesture did not restore view sectors')
+    yield from close_box()
+
+    yield from open_box()
+    event('RIGHTMOUSE')
+    yield
+    count, settings_count = len(observed), len(settings_observed)
+    yield from move(midpoint(central_list[9]))
+    event('RIGHTMOUSE', 'RELEASE')
+    yield from settle()
+    check(len(observed) == count and len(settings_observed) == settings_count,
+          'disabled New Camera must neither dispatch nor fall back to a direction')
+    yield from close_box()
+
+    yield from open_box()
+    event('RIGHTMOUSE')
+    yield
+    yield from move(midpoint(central_list[8]))
+    yield from move(midpoint(central_styles[1]))
+    event('SPACE', 'RELEASE')
+    yield from settle()
+    event('RIGHTMOUSE', 'RELEASE')
+    yield from settle()
+    check(len(observed) == count and len(settings_observed) == settings_count and
+          not win.screen.is_animation_playing,
+          'Space release in Style must cancel without applying a setting or leaking playback')
+    print('PASS held Style selection, center backtracking, disabled New Camera and Space cleanup', flush=True)
+
+    # Ordinary Controls settings still rebuild the same live hotbox through the native bridge.
     control_width = (label_width('Hotbox Controls') + 40)*scale
     controls = (center[0]+center[2]+83.6*scale, cy-19*scale, control_width, 38*scale)
     control_items = popup(controls, ['Menu Rows', 'Hotbox Style', 'Transparency',

@@ -261,9 +261,11 @@ class LayoutBuilder {
                const int depth,
                const std::vector<EllipseItem> &items,
                const float reference_width,
-               const MenuNode *center_node = nullptr)
+               const MenuNode *tail = nullptr,
+               const bool view_ring = false,
+               const bool compact = false)
   {
-    const float center_width = center_node ? widths.at(center_node->id) + padding : anchor.width;
+    const float center_width = anchor.width;
     std::vector<MenuRect> local;
     float left = 0, right = 0, bottom = 0, top = 0;
     bool found = false;
@@ -271,7 +273,7 @@ class LayoutBuilder {
     for (float ry = 24; ry < height; ry += 1) {
       const float rx = 1.7f * ry;
       local.clear();
-      const MenuRect center = {center_node ? center_node->id : "@back:" + owner.id,
+      const MenuRect center = {"@back:" + owner.id,
                                -center_width / 2,
                                -row_height / 2,
                                center_width,
@@ -292,7 +294,8 @@ class LayoutBuilder {
                                  row_height,
                                  depth,
                                  item.enabled,
-                                 item.direction};
+                                 item.direction,
+                                 compact};
         for (const MenuRect &other : local) {
           clear &= candidate.x + candidate.width + gap <= other.x ||
                    other.x + other.width + gap <= candidate.x ||
@@ -304,6 +307,13 @@ class LayoutBuilder {
         right = std::max(right, candidate.x + candidate.width);
         bottom = std::min(bottom, candidate.y);
         top = std::max(top, candidate.y + candidate.height);
+      }
+      if (tail) {
+        const float w = widths.at(tail->id) + padding;
+        local.push_back({tail->id, -w / 2, bottom - gap - row_height, w, row_height, depth});
+        bottom = local.back().y;
+        left = std::min(left, -w / 2);
+        right = std::max(right, w / 2);
       }
       if (right - left > width - 2 * margin || top - bottom > height - 2 * margin) {
         break;
@@ -320,12 +330,12 @@ class LayoutBuilder {
         anchor.x + anchor.width / 2, margin - left, width - margin - right);
     const float cy = std::clamp(
         anchor.y + anchor.height / 2, margin - bottom, height - margin - top);
-    // Only the active secondary ring remains. Its center restores the exact parent path/page,
-    // avoiding unreadable overlapping rings in small quad panes.
+    // Ordinary directories retain one active ring and explicit Back/page navigation.
+    // The root remains a draw-only background; the Views ring has no center control.
     std::erase_if(result.rects, [](const MenuRect &item) { return item.depth > 0; });
-    for (int i = 0; i < int(local.size()); i++) {
+    for (int i = view_ring ? 1 : 0; i < int(local.size()); i++) {
       MenuRect item = local[i];
-      if (i > 0) {
+      if (i > 0 && i <= int(items.size())) {
         const float natural_width = items[i - 1].width;
         item.x += (item.width - natural_width) / 2;
         item.width = natural_width;
@@ -352,7 +362,7 @@ class LayoutBuilder {
         return;
       }
       constexpr float diagonal = 0.70710678118f;
-      const std::array<std::pair<const char *, std::array<float, 2>>, 7> directions = {{
+      const std::array<std::pair<const char *, std::array<float, 2>>, 8> directions = {{
           {"views.perspective", {0, 1}},
           {"views.side", {1, 0}},
           {"views.front", {0, -1}},
@@ -360,6 +370,7 @@ class LayoutBuilder {
           {"views.left", {-diagonal, diagonal}},
           {"views.back", {-diagonal, -diagonal}},
           {"views.bottom", {diagonal, -diagonal}},
+          {"views.camera", {diagonal, diagonal}},
       }};
       std::vector<EllipseItem> items;
       for (const auto &[id, position] : directions) {
@@ -373,7 +384,38 @@ class LayoutBuilder {
                            true});
         }
       }
-      result.supported &= items.size() == 7 && ellipse(owner, anchor, depth, items, 0, style);
+      if (ellipse(owner, anchor, depth, items, 0, style, true)) {
+        return;
+      }
+      // Small panes retain the established seven-direction gestures, not tiny targets.
+      std::erase_if(items, [](const EllipseItem &item) { return item.id == "views.camera"; });
+      for (EllipseItem &item : items) {
+        const auto short_width = widths.find("@compact:" + item.id);
+        if (short_width != widths.end()) {
+          item.width = short_width->second + padding;
+        }
+      }
+      result.supported &= items.size() == 7 &&
+                          ellipse(owner, anchor, depth, items, 0, nullptr, true, true);
+      return;
+    }
+    if (owner.id == "views.style") {
+      float w = 0;
+      for (const MenuNode &node : owner.children) {
+        w = std::max(w, widths.at(node.id) + padding);
+      }
+      const float h = owner.children.size() * row_step - gap;
+      if (w > width - 2 * margin || h > height - 2 * margin) {
+        result.supported = false;
+        return;
+      }
+      const float x = anchor.x + anchor.width + gap + w <= width - margin ?
+                          anchor.x + anchor.width + gap :
+                          std::max(margin, anchor.x - gap - w);
+      const float y = std::clamp(anchor.y + row_height - h, margin, height - margin - h);
+      for (int i = 0; i < int(owner.children.size()); i++) {
+        add(owner.children[i], x, y + h - row_height - i * row_step, w, depth);
+      }
       return;
     }
     const int count = int(owner.children.size());
@@ -428,7 +470,8 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
                        const float center_y,
                        const std::vector<std::string> &open_path,
                        const std::unordered_map<std::string, int> &scroll_offsets,
-                       const std::unordered_map<std::string, float> &label_widths)
+                       const std::unordered_map<std::string, float> &label_widths,
+                       const std::array<float, 2> *popup_origin)
 {
   if (!std::isfinite(width) || !std::isfinite(height) || !std::isfinite(center_x) ||
       !std::isfinite(center_y) || width < 340 || height < 200 || center_x < 0 ||
@@ -567,8 +610,13 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
     if (!node || !anchor || !interactive(*node) || node->kind != MenuKind::Menu) {
       break;
     }
+    MenuRect popup_anchor = *anchor;
+    if (popup_origin && node->id == "views") {
+      popup_anchor.x = (*popup_origin)[0] - anchor->width / 2;
+      popup_anchor.y = (*popup_origin)[1] - anchor->height / 2;
+    }
     build.popup(*node,
-                *anchor,
+                popup_anchor,
                 index - first + 1,
                 index + 1 < int(open_path.size()) ? open_path[index + 1] : "");
     previous = node;
@@ -580,9 +628,8 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
                        build.result.rects.end(),
                        [](const MenuRect &item) { return item.depth > 0; }))
   {
-    // The active ring owns both presentation and hits, including its empty gaps. Returning
-    // through its center reconstructs the previous page; no hidden root can steal a hover.
-    std::erase_if(build.result.rects, [](const MenuRect &item) { return item.depth == 0; });
+    // Retain the first-level background without allowing it to steal a secondary gesture.
+    build.result.hit_depth = 1;
   }
   return build.result;
 }
@@ -600,8 +647,8 @@ const MenuRect *hit_menu_rect(const MenuLayout &layout, const float x, const flo
   }
   const MenuRect *hit = nullptr;
   for (const MenuRect &item : layout.rects) {
-    if (x >= item.x && x <= item.x + item.width && y >= item.y && y <= item.y + item.height &&
-        (!hit || item.depth >= hit->depth))
+    if (item.depth >= layout.hit_depth && x >= item.x && x <= item.x + item.width && y >= item.y &&
+        y <= item.y + item.height && (!hit || item.depth >= hit->depth))
     {
       hit = &item;
     }

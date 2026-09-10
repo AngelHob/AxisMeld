@@ -119,6 +119,80 @@ TEST(axismeld_hotbox_menu, SecondaryCommandsOccupyAnEllipseInsteadOfAColumn)
   EXPECT_GE(centers_y.size(), 3);
 }
 
+TEST(axismeld_hotbox_menu, ViewOverlayRetainsParentWithoutSecondaryCenterOrRootHits)
+{
+  const auto snapshot = default_snapshot();
+  const auto widths = measured(snapshot);
+  const auto main = layout_menu(snapshot, 1920, 1080, 960, 540, {}, {}, widths);
+  const auto views = layout_menu(snapshot, 1920, 1080, 960, 540, {"center", "views"}, {}, widths);
+  ASSERT_TRUE(views.supported);
+  const auto *parent = rect(views, "views");
+  ASSERT_NE(parent, nullptr);
+  EXPECT_EQ(parent->depth, 0);
+  EXPECT_FLOAT_EQ(parent->x, rect(main, "views")->x);
+  EXPECT_FLOAT_EQ(parent->y, rect(main, "views")->y);
+  EXPECT_EQ(hit_menu_rect(views, 960, 540), nullptr);
+  for (const auto &item : main.rects) {
+    ASSERT_NE(rect(views, item.id), nullptr) << item.id;
+    EXPECT_FLOAT_EQ(rect(views, item.id)->x, item.x);
+    EXPECT_FLOAT_EQ(rect(views, item.id)->y, item.y);
+  }
+  const auto *style = rect(views, "views.style"), *front = rect(views, "views.front");
+  ASSERT_NE(style, nullptr);
+  ASSERT_NE(front, nullptr);
+  EXPECT_LE(style->y + style->height + 9.99f, front->y);
+  EXPECT_EQ(rect(views, "@back:views"), nullptr);
+}
+
+TEST(axismeld_hotbox_menu, ViewStyleOpensAParentRetainingVerticalList)
+{
+  const auto snapshot = default_snapshot();
+  const auto layout = layout_menu(
+      snapshot, 1920, 1080, 960, 540, {"center", "views", "views.style"}, {}, measured(snapshot));
+  ASSERT_TRUE(layout.supported);
+  const auto *style = rect(layout, "views.style"), *rows = rect(layout, "views.style.rows"),
+             *zones = rect(layout, "views.style.zones"),
+             *center = rect(layout, "views.style.center");
+  ASSERT_NE(style, nullptr);
+  ASSERT_NE(rows, nullptr);
+  ASSERT_NE(zones, nullptr);
+  ASSERT_NE(center, nullptr);
+  EXPECT_GE(rows->x, style->x + style->width);
+  EXPECT_FLOAT_EQ(rows->x, zones->x);
+  EXPECT_FLOAT_EQ(rows->x, center->x);
+  EXPECT_GT(rows->y, zones->y);
+  EXPECT_GT(zones->y, center->y);
+  EXPECT_NE(rect(layout, "views.front"), nullptr);
+  EXPECT_EQ(rect(layout, "@back:views.style"), nullptr);
+}
+
+TEST(axismeld_hotbox_menu, ViewOverlayUsesFullLabelsAndDisabledNorthEastCamera)
+{
+  const auto snapshot = default_snapshot();
+  auto widths = measured(snapshot);
+  visit(snapshot.menus, [&](const MenuNode &node) { widths[node.id] = node.label.size() * 7.0f; });
+  const std::array<float, 2> origin = {972, 544};
+  const auto layout = layout_menu(
+      snapshot, 1920, 1080, 960, 540, {"center", "views"}, {}, widths, &origin);
+  ASSERT_TRUE(layout.supported);
+  const auto *root = rect(layout, "views"), *camera = rect(layout, "views.camera");
+  ASSERT_NE(root, nullptr);
+  ASSERT_NE(camera, nullptr);
+  EXPECT_FLOAT_EQ(root->x + root->width / 2, 960);
+  EXPECT_FLOAT_EQ(root->y + root->height / 2, 540);
+  EXPECT_GT(camera->x + camera->width / 2, origin[0]);
+  EXPECT_GT(camera->y + camera->height / 2, origin[1]);
+  EXPECT_FALSE(camera->interactive);
+  EXPECT_TRUE(
+      hit_menu(layout, camera->x + camera->width / 2, camera->y + camera->height / 2).empty());
+  for (const auto &item : layout.rects) {
+    EXPECT_FALSE(item.compact_label);
+  }
+  const auto *perspective = rect(layout, "views.perspective");
+  ASSERT_NE(perspective, nullptr);
+  EXPECT_FLOAT_EQ(perspective->width, widths.at("views.perspective") + 40);
+}
+
 TEST(axismeld_hotbox_menu, ActiveEllipseDoesNotExposeUnderlyingRootHitTargets)
 {
   const auto snapshot = default_snapshot();
@@ -132,7 +206,13 @@ TEST(axismeld_hotbox_menu, ActiveEllipseDoesNotExposeUnderlyingRootHitTargets)
                                   measured(snapshot));
   ASSERT_TRUE(layout.supported);
   for (const auto &item : layout.rects) {
-    EXPECT_EQ(item.depth, 2) << item.id;
+    if (item.depth == 0) {
+      const auto *hit = hit_menu_rect(layout, item.x + item.width / 2, item.y + item.height / 2);
+      EXPECT_TRUE(!hit || hit->depth == 2) << item.id;
+    }
+    else {
+      EXPECT_EQ(item.depth, 2) << item.id;
+    }
   }
   EXPECT_NE(rect(layout, "@back:center.controls.buttons"), nullptr);
 }
@@ -254,6 +334,9 @@ TEST(axismeld_hotbox_menu, QuadSevenViewsAndCompactRootGroupsRemainReachable)
     }
   }
   EXPECT_EQ(count, 7);
+  EXPECT_EQ(rect(views, "views.style"), nullptr);
+  EXPECT_EQ(rect(views, "@back:views"), nullptr);
+  EXPECT_NE(rect(views, "views"), nullptr);
   std::set<std::string> groups;
   for (int page = 0; page < 4; page++) {
     const auto main = layout_menu(snapshot, 392, 210, 196, 105, {}, {{"@main", page}}, widths);
@@ -480,8 +563,10 @@ TEST(axismeld_hotbox_menu, ScrollingChildrenKeepsRootAndRestoresTheParentPage)
     ASSERT_NE(b, nullptr);
     EXPECT_EQ(a->x, b->x);
     EXPECT_EQ(a->y, b->y);
-    EXPECT_EQ(rect(opened, id), nullptr);
-    EXPECT_EQ(rect(scrolled, id), nullptr);
+    ASSERT_NE(rect(opened, id), nullptr);
+    ASSERT_NE(rect(scrolled, id), nullptr);
+    EXPECT_EQ(rect(opened, id)->depth, 0);
+    EXPECT_EQ(rect(scrolled, id)->depth, 0);
   }
   const auto *a = rect(opened, "@back:pane.panels.views"),
              *b = rect(scrolled, "@back:pane.panels.views");
@@ -699,8 +784,8 @@ TEST(axismeld_hotbox_menu, TheSameMenuUsesAnExplicitTitleOrCentralAnchor)
   ASSERT_NE(origin_a, nullptr);
   ASSERT_NE(origin_b, nullptr);
   EXPECT_NE(origin_a->y, origin_b->y);
-  EXPECT_EQ(rect(title, "views"), nullptr);
-  EXPECT_EQ(rect(central, "views"), nullptr);
+  EXPECT_NE(rect(title, "views"), nullptr);
+  EXPECT_NE(rect(central, "views"), nullptr);
 }
 
 TEST(axismeld_hotbox_menu, CenterRootMappingIsNotMistakenForAPathCycle)
