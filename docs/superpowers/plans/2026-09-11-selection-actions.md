@@ -33,7 +33,7 @@ This is one end-to-end task because a callable registry without its adapter/real
 - Modify `scripts/modules/axismeld/hotbox_runtime.py`: independent supported-command allowlist only.
 - Modify `source/blender/editors/space_view3d/view3d_axismeld_hotbox_model.cc`: exact native allowlist only.
 - Test `source/blender/editors/space_view3d/tests/hotbox_model_test.cc`.
-- Test `source/blender/axismeld/tests/hotbox_menu_test.cc`: explicit new-ID close-before assertions only.
+- Test `source/blender/axismeld/tests/hotbox_menu_test.cc`: explicit new-ID close-before assertions, plus existing Select ellipse child-count5→8 to follow the new catalog; preserve all ellipse/back/spacing assertions.
 - Test `tests/python/axismeld_hotbox_catalog_test.py`.
 - Test `tests/python/axismeld_input_test.py`.
 - Create `tests/python/axismeld_selection_events.py`: focused real scene/GUI result suite, not an expansion of the large generic menu suite.
