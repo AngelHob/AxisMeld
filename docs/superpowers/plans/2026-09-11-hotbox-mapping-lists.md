@@ -15,7 +15,7 @@
 - Primary height 38, central side gaps 83.6, secondary height 24, secondary gap 4, popup separation 10 logical px unchanged.
 - Preserve the parent hotbox and immediate owner entry. Retain the Views real-origin 12px exclusion and all existing short-list behavior.
 - Add only `center.controls.buttons`, `center.controls.buttons.leftmouse`, `center.controls.buttons.middlemouse`, `center.controls.buttons.rightmouse` to explicit native-list classification.
-- All 13 existing choices and default mappings remain unchanged. No JSON schema, configuration file format, keymap or modal input changes.
+- All 13 existing choices and default mappings remain unchanged. No JSON schema, configuration file format or keymap changes. The only permitted modal edit is Task 1 review-fix normalization of native mapping scroll offsets; no handler, ownership or release changes.
 - The three mouse-button submenu rows form one native block with submenu arrows. Their final setting leaves form one continuous native block.
 - Full list when it fits. Only the 13-choice mapping lists can paginate; use 24px up/down navigation rows and at least one choice, with disabled boundary arrows. Scroll one item per existing offset action.
 - Navigation uses existing `@scroll:<owner>:previous/next` IDs and never reaches the command/setting dispatcher. Existing wheel and release ownership remain the implementation.
@@ -32,6 +32,7 @@
 - Modify `source/blender/editors/include/UI_menu_overlay.hh`.
 - Modify `source/blender/editors/interface/interface_menu_overlay.cc`.
 - Test `source/blender/axismeld/tests/hotbox_menu_test.cc`.
+- Review-fix only: `source/blender/editors/space_view3d/view3d_axismeld_hotbox.cc` scroll offset calculation.
 
 **Interfaces:** Keep `layout_menu(...)` signature. Append defaulted fields, not serialized settings:
 
@@ -110,6 +111,26 @@ const int first = paged ? std::min(offset(owner.id, count), count - capacity) : 
 - [ ] Display native navigation with Blender `ICON_TRIA_UP` / `ICON_TRIA_DOWN`, not textual angle brackets. Pass `icon_only` only for native `@scroll` rows; ordinary native mapping leaves must keep their labels even when `menu_icon()` would return an icon. All other menu overlays keep icon_only=0. In the draw-only adapter, nonzero `icon_only` selects `uiDefIconBut(... ButtonType::But, item.icon_only, ...)`; otherwise preserve the existing submenu/text constructors. Hover/disabled flags apply uniformly. No handlers or callbacks.
 
 - [ ] Run all native layout tests GREEN, format only changed C++, and build `blender` plus the native target. Do not install yet: Task 2 needs the old short-menu stage for a GUI RED. Self-review and local commit only owned files; report exact interface decisions, test logs and any unresolved placement limitations.
+
+### Task 1 review correction: wheel-tail normalization
+
+Independent review of `b93e8266e77` found a deterministic contract defect: displayed first index clamps
+to `count-capacity`, but `scroll_owner()` stores up to `count-1`. For capacity5/count13, repeated down
+can store12 while displaying8; a single up then still displays8. This is not a user preference.
+
+- [ ] Add RED tests for the offset transition that the real event path will call: capacity greater than1,
+  repeated down at the tail, one up moving exactly one visible row; first-page reverse boundary; stale
+  negative/oversized offsets; full-list wheel no drift; legacy ellipse behavior preserved.
+- [ ] Publish native mapping page scroll bounds/effective first through the pure layout result, or an
+  equivalently small shared pure helper; use the same tested transition from `scroll_owner()`.
+  Normalize against the displayed page before applying delta. Do not independently recompute capacity
+  from viewport size in the event code, duplicate mapping ID classification there, or scan user geometry.
+- [ ] Limit extra public C++ layout state to this scroll calculation. No JSON or new input state, handlers,
+  release/press ownership, global guards or persistence changes. Legacy ellipse offsets retain their
+  existing behavior. Existing descendants-close behavior on owner scroll remains intact.
+- [ ] Re-run the covering native tests and build blender, still no install/GUI. Report exact event callsite
+  integration and RED/GREEN; Task 2 must additionally verify the same contract with real mouse wheel
+  events in actual paged panes before the whole slice is complete.
 
 ## Task 2: Actual nested menus, scrolling and persistence
 

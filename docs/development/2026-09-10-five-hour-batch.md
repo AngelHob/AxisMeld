@@ -89,7 +89,7 @@ GUI：`tests/python/axismeld_hotbox_ui_runner.py --blender <stage exe> --suite n
 |---|---|---|
 | 0：准备 | 完成 | 读取现有实现和范围；复用工作树；起始纯测试通过；定时续作与集中验收表已建立 |
 | 1：短设置列表原生菜单 | 完成，待最终统一手测 | 1a61bb81f3c / 45e9357edbf / 8965cbe5c58；33 原生布局、40 Python、5 CTest 及实际 GUI 矩阵通过；窄窗和 2× quad 新列表补测经复核；最终独立审查通过，无阻断项 |
-| 2：映射列表及交互回归 | 进行中 | 批次 1 终审通过后启动；mapping_geometry 执行原生分组与分页任务，BASE 8a26036ef2f，当前测试安装保持短菜单基线 |
+| 2：映射列表及交互回归 | 进行中 | b93e8266e77 原生分页 36/36、构建通过；独立审查发现尾页 offset 累积，原作者按修订范围修复；当前测试安装仍保持短菜单基线 |
 | 3：常用建模适配 | 未开始、时间允许才做 | 先能力/语义与数据安全审查，逐命令完成测试再接通菜单 |
 | 4：收尾 | 未开始 | 04:23 起集中回归，04:53 截止；停止自动化并交付统一报告 |
 
@@ -103,5 +103,7 @@ GUI：`tests/python/axismeld_hotbox_ui_runner.py --blender <stage exe> --suite n
 不得与其他旧计划的 ledger 混用。新增同层原生入口需要各自背景，已先更新 Task 2 设计。
 
 后续选择适配的本机证据与约束见 [预检](2026-09-11-modeling-adapter-preflight.md)。
+最小三个选择动作的 [候选设计](../design/2026-09-11-selection-actions-candidate.md) 已准备，
+尚未启动实现；先完成映射菜单与交互修复，截止时间不因新增候选顺延。
 长映射列表的现状与分页/背景分组约束见 [预检](2026-09-11-mapping-list-preflight.md)，尚未实施。
 后续书面步骤见 [映射列表计划](../superpowers/plans/2026-09-11-hotbox-mapping-lists.md)。
