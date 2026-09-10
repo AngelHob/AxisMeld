@@ -18,19 +18,19 @@ def view_page(anchor, labels, measure, bounds, scale):
         names = (['Persp', 'Side', 'Bottom', 'Front', 'Back', 'Top', 'Left'] if compact else
                  ['Perspective View', 'Right View', 'Bottom View', 'Front View',
                   'Back View', 'Top View', 'Left View', 'New Camera'])
-        widths = [measure(label) + 40 for label in names]
+        widths = [measure(label) + 16 for label in names]
         for ry in range(24, int(bh)):
             rectangles = [(-aw/2, -19, aw, 38)]  # Reserved hole, never a secondary button.
             clear = True
             for w, (nx, ny) in zip(widths, slots):
-                x, y = nx*1.7*ry-w/2, ny*ry-19
+                x, y = nx*1.7*ry-w/2, ny*ry-12
                 clear &= all(x+w+9.999 <= ox or ox+ow+9.999 <= x or
-                             y+38+9.999 <= oy or oy+oh+9.999 <= y
+                             y+24+9.999 <= oy or oy+oh+9.999 <= y
                              for ox, oy, ow, oh in rectangles)
-                rectangles.append((x, y, w, 38))
+                rectangles.append((x, y, w, 24))
             if not compact:
-                w = measure('Hotbox Style') + 40
-                rectangles.append((-w/2, min(r[1] for r in rectangles)-48, w, 38))
+                w = measure('Hotbox Style') + 16
+                rectangles.append((-w/2, min(r[1] for r in rectangles)-34, w, 24))
             left = min(r[0] for r in rectangles)
             right = max(r[0]+r[2] for r in rectangles)
             bottom = min(r[1] for r in rectangles)
@@ -59,10 +59,10 @@ def style_list(anchor, measure, bounds, scale=1):
     ax, ay, aw, ah = (v / scale for v in anchor)
     bx, by, bw, bh = (v / scale for v in bounds)
     w = max(measure(label) for label in ('Zones and Menu Rows', 'Zones Only', 'Center Zone Only')) + 40
-    h = 3*48-10
+    h = 3*24
     x = ax+aw+10 if ax+aw+10+w <= bx+bw-12 else max(bx+12, ax-10-w)
-    y = max(by+12, min(ay+38-h, by+bh-12-h))
-    return [(x*scale, (y+h-38-i*48)*scale, w*scale, 38*scale) for i in range(3)]
+    y = max(by+12, min(ay+ah-h, by+bh-12-h))
+    return [(x*scale, (y+h-(i+1)*24)*scale, w*scale, 24*scale) for i in range(3)]
 
 
 def ellipse_page(anchor, labels, measure, bounds, scale=1, first=0, views=False):
@@ -70,7 +70,7 @@ def ellipse_page(anchor, labels, measure, bounds, scale=1, first=0, views=False)
         return view_page(anchor, labels, measure, bounds, scale)
     ax, ay, aw, ah = (v / scale for v in anchor)
     bx, by, bw, bh = (v / scale for v in bounds)
-    widths = [measure(label) + 40 for label in labels]
+    widths = [measure(label) + 16 for label in labels]
     center_width = aw
     choices = []
     for capacity in range(min(len(labels), 8), 0, -1):
@@ -83,11 +83,11 @@ def ellipse_page(anchor, labels, measure, bounds, scale=1, first=0, views=False)
         choices.append((indices, slots, paged, offset, capacity))
     for indices, slots, paged, offset, capacity in choices:
         for ry in range(24, int(bh)):
-            rectangles = [(-center_width/2, -19, center_width, 38)]
+            rectangles = [(-center_width/2, -12, center_width, 24)]
             clear = True
             for index, (nx, ny) in zip(indices, slots):
                 w = 38 if index < 0 else max(widths)
-                candidate = (nx*1.7*ry-w/2, ny*ry-19, w, 38)
+                candidate = (nx*1.7*ry-w/2, ny*ry-12, w, 24)
                 x, y, w, h = candidate
                 clear &= all(x+w+9.999 <= ox or ox+ow+9.999 <= x or
                              y+h+9.999 <= oy or oy+oh+9.999 <= y

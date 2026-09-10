@@ -11,6 +11,12 @@
 
 ## 2026-09-10 清理
 
+紧凑二级／原生 Style 更新继续复用 `phase2b-ui-test-install`，确认旧用户进程退出后再安装。
+最新 6 个 portable 文件备份至
+`D:/source/AxisMeld-build/preserved-test-configs/2026-09-10-compact/phase2b-ui-test-install/portable`，
+复制后逐文件 SHA-256 校验。仅按用户要求把 `hotbox_user.json` 的 style 从 zones 恢复为 rows，
+其他配置保持不变；`phase2b-roomy-test-install` 未覆盖，无新增整套测试安装目录。
+
 后续二级叠加修复继续复用 `phase2b-ui-test-install`，覆盖前确认其未运行。最新
 `portable` 的 6 个文件备份至
 `D:/source/AxisMeld-build/preserved-test-configs/2026-09-10-overlay/phase2b-ui-test-install/portable`，

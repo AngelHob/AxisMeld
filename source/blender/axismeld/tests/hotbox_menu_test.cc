@@ -108,7 +108,7 @@ TEST(axismeld_hotbox_menu, SecondaryCommandsOccupyAnEllipseInsteadOfAColumn)
     if (item.depth != 1 || item.id.starts_with("@back:")) {
       continue;
     }
-    EXPECT_GE(item.height, 38.0f);
+    EXPECT_FLOAT_EQ(item.height, 24.0f);
     centers_x.insert(item.x + item.width / 2);
     centers_y.insert(item.y + item.height / 2);
     children++;
@@ -117,6 +117,60 @@ TEST(axismeld_hotbox_menu, SecondaryCommandsOccupyAnEllipseInsteadOfAColumn)
   EXPECT_NE(rect(layout, "@back:common.select"), nullptr);
   EXPECT_GE(centers_x.size(), 3);
   EXPECT_GE(centers_y.size(), 3);
+}
+
+TEST(axismeld_hotbox_menu, CompactSecondaryHitTargetsDoNotInheritPrimaryPadding)
+{
+  const auto snapshot = default_snapshot();
+  const auto widths = measured(snapshot);
+  for (const std::vector<std::string> path :
+       {std::vector<std::string>{"center", "views"}, std::vector<std::string>{"common.select"}})
+  {
+    const auto layout = layout_menu(snapshot, 1920, 1080, 960, 540, path, {}, widths);
+    ASSERT_TRUE(layout.supported);
+    for (const auto &item : layout.rects) {
+      if (item.depth == 0) {
+        EXPECT_FLOAT_EQ(item.height, 38);
+        continue;
+      }
+      EXPECT_FLOAT_EQ(item.height, 24);
+      if (!item.id.starts_with("@")) {
+        EXPECT_FLOAT_EQ(item.width, widths.at(item.id) + 16) << item.id;
+      }
+      const float x = item.x + item.width / 2, y = item.y + item.height / 2;
+      const auto *hit = hit_menu_rect(layout, x, y);
+      ASSERT_NE(hit, nullptr);
+      EXPECT_EQ(hit->id, item.id);
+      const auto *outside = hit_menu_rect(layout, x, item.y + 25);
+      EXPECT_TRUE(!outside || outside->id != item.id);
+    }
+  }
+}
+
+TEST(axismeld_hotbox_menu, BothStyleDirectoriesUseContiguousMenuRows)
+{
+  const auto snapshot = default_snapshot();
+  for (const std::vector<std::string> path :
+       {std::vector<std::string>{"center", "views", "views.style"},
+        std::vector<std::string>{"center.controls", "center.controls.style"}})
+  {
+    const auto layout = layout_menu(snapshot, 1920, 1080, 960, 540, path, {}, measured(snapshot));
+    ASSERT_TRUE(layout.supported);
+    const auto *rows = rect(layout, path.back() + ".rows"),
+               *zones = rect(layout, path.back() + ".zones"),
+               *center = rect(layout, path.back() + ".center");
+    ASSERT_NE(rows, nullptr);
+    ASSERT_NE(zones, nullptr);
+    ASSERT_NE(center, nullptr);
+    for (const MenuRect *item : {rows, zones, center}) {
+      EXPECT_TRUE(item->native_menu);
+      EXPECT_FLOAT_EQ(item->height, 24);
+    }
+    EXPECT_FLOAT_EQ(rows->x, zones->x);
+    EXPECT_FLOAT_EQ(rows->y, zones->y + zones->height);
+    EXPECT_FLOAT_EQ(zones->y, center->y + center->height);
+    EXPECT_EQ(rect(layout, "@back:" + path.back()), nullptr);
+  }
 }
 
 TEST(axismeld_hotbox_menu, ViewOverlayRetainsParentWithoutSecondaryCenterOrRootHits)
@@ -190,7 +244,7 @@ TEST(axismeld_hotbox_menu, ViewOverlayUsesFullLabelsAndDisabledNorthEastCamera)
   }
   const auto *perspective = rect(layout, "views.perspective");
   ASSERT_NE(perspective, nullptr);
-  EXPECT_FLOAT_EQ(perspective->width, widths.at("views.perspective") + 40);
+  EXPECT_FLOAT_EQ(perspective->width, widths.at("views.perspective") + 16);
 }
 
 TEST(axismeld_hotbox_menu, ActiveEllipseDoesNotExposeUnderlyingRootHitTargets)
@@ -292,7 +346,7 @@ TEST(axismeld_hotbox_menu, QuadAtTwoTimesScalePagesSecondaryWithoutShrinking)
     ASSERT_TRUE(layout.supported) << page;
     int visible_children = 0;
     for (const auto &item : layout.rects) {
-      EXPECT_GE(item.height, 38);
+      EXPECT_FLOAT_EQ(item.height, item.depth ? 24 : 38);
       EXPECT_GE(item.x, 0);
       EXPECT_GE(item.y, 0);
       EXPECT_LE(item.x + item.width, 392);
@@ -323,7 +377,7 @@ TEST(axismeld_hotbox_menu, QuadSevenViewsAndCompactRootGroupsRemainReachable)
   ASSERT_TRUE(views.supported);
   int count = 0;
   for (const auto &item : views.rects) {
-    EXPECT_GE(item.height, 38);
+    EXPECT_FLOAT_EQ(item.height, item.depth ? 24 : 38);
     EXPECT_GE(item.x, 0);
     EXPECT_GE(item.y, 0);
     EXPECT_LE(item.x + item.width, 392);

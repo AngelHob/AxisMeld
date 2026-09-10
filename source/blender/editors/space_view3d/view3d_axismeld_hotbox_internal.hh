@@ -33,7 +33,7 @@ struct HotboxVisual {
 };
 void hotbox_measure(HotboxVisual &data);
 void hotbox_layout(HotboxVisual &data);
-void hotbox_draw(const HotboxVisual &data);
+void hotbox_draw(const bContext *C, const HotboxVisual &data);
 }  // namespace blender::axismeld
 
 namespace blender {

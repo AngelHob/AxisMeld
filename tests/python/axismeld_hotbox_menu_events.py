@@ -64,6 +64,9 @@ def suite():
         # Deliberately distinctive native theme, scoped to this disposable process.
         bpy.context.preferences.themes[0].user_interface.wcol_menu.inner = (.8, .12, .04, 1)
         bpy.context.preferences.themes[0].user_interface.wcol_menu.inner_sel = (.8, .12, .04, 1)
+    native_style_probe = bool(os.environ.get('AXISMELD_TEST_NATIVE_STYLE'))
+    if native_style_probe:
+        bpy.context.preferences.themes[0].user_interface.wcol_menu_back.inner = (.8, .12, .04, 1)
 
     def event(kind, value='PRESS', x=None, y=None):
         if x is not None:
@@ -523,6 +526,9 @@ def suite():
         x, y, w, h = rect
         return x+w/2, y+h/2
     def page(anchor, labels, first=0):
+        if labels == ['Zones and Menu Rows', 'Zones Only', 'Center Zone Only']:
+            return {'items': style_list(anchor, label_width,
+                                       (region.x, region.y, region.width, region.height), scale)}
         views = bool(labels and labels[0] == 'Perspective View')
         measure = (lambda label: blf.dimensions(0, label)[0] / scale) if views else label_width
         return ellipse_page(anchor, labels, measure,
@@ -925,6 +931,19 @@ def suite():
     yield from move(midpoint(central_list[8]))
     central_styles = style_list(central_list[8], label_width,
                                (region.x, region.y, region.width, region.height), scale)
+    if native_style_probe:
+        path = screenshot('menus-native-style-background.png')
+        image = bpy.data.images.load(str(path), check_existing=False)
+        pixels, image_width = list(image.pixels), image.size[0]
+        x, y, w, h = central_styles[0]
+        # Ordinary menus have one uninterrupted background between rows, including
+        # outside the text. Old floating cards expose the viewport in this strip.
+        samples = [pixels[(yy*image_width+xx)*4:(yy*image_width+xx)*4+3]
+                   for yy in range(int(y-3*scale), int(y-scale))
+                   for xx in range(int(x+6*scale), int(x+12*scale))]
+        check(samples and all(r > .7 and g < .2 and b < .1 for r, g, b in samples),
+              'Style must render a continuous opaque native menu background between rows')
+        bpy.data.images.remove(image)
     yield from move(midpoint(central_styles[1]))
     screenshot('menus-fresh-style-drag-candidate.png')
     count = len(observed)

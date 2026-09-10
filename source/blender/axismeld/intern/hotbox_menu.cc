@@ -13,6 +13,9 @@ constexpr float gap = 10.0f;
 constexpr float center_gap = 2.2f * row_height;
 constexpr float margin = 12.0f;
 constexpr float padding = 40.0f;
+constexpr float secondary_height = 24.0f;
+constexpr float secondary_padding = 16.0f;
+constexpr float native_menu_padding = 40.0f;
 constexpr float scroll_width = 38.0f;
 constexpr float row_step = row_height + gap;
 
@@ -75,7 +78,8 @@ class LayoutBuilder {
 
   void add(const MenuNode &node, float x, float y, float w, int depth)
   {
-    result.rects.push_back({node.id, x, y, w, row_height, depth, interactive(node)});
+    result.rects.push_back(
+        {node.id, x, y, w, depth ? secondary_height : row_height, depth, interactive(node)});
   }
 
   void control(const std::string &owner,
@@ -266,6 +270,7 @@ class LayoutBuilder {
                const bool compact = false)
   {
     const float center_width = anchor.width;
+    const float center_height = view_ring ? row_height : secondary_height;
     std::vector<MenuRect> local;
     float left = 0, right = 0, bottom = 0, top = 0;
     bool found = false;
@@ -275,9 +280,9 @@ class LayoutBuilder {
       local.clear();
       const MenuRect center = {"@back:" + owner.id,
                                -center_width / 2,
-                               -row_height / 2,
+                               -center_height / 2,
                                center_width,
-                               row_height,
+                               center_height,
                                depth};
       local.push_back(center);
       bool clear = true;
@@ -289,9 +294,9 @@ class LayoutBuilder {
         const float fit_width = item.node && !item.direction ? reference_width : item.width;
         const MenuRect candidate{item.id,
                                  item.nx * rx - fit_width / 2,
-                                 item.ny * ry - row_height / 2,
+                                 item.ny * ry - secondary_height / 2,
                                  fit_width,
-                                 row_height,
+                                 secondary_height,
                                  depth,
                                  item.enabled,
                                  item.direction,
@@ -309,8 +314,9 @@ class LayoutBuilder {
         top = std::max(top, candidate.y + candidate.height);
       }
       if (tail) {
-        const float w = widths.at(tail->id) + padding;
-        local.push_back({tail->id, -w / 2, bottom - gap - row_height, w, row_height, depth});
+        const float w = widths.at(tail->id) + secondary_padding;
+        local.push_back(
+            {tail->id, -w / 2, bottom - gap - secondary_height, w, secondary_height, depth});
         bottom = local.back().y;
         left = std::min(left, -w / 2);
         right = std::max(right, w / 2);
@@ -377,7 +383,7 @@ class LayoutBuilder {
         if (const MenuNode *node = find_node(owner.children, id)) {
           items.push_back({node,
                            id,
-                           widths.at(id) + padding,
+                           widths.at(id) + secondary_padding,
                            position[0],
                            position[1],
                            interactive(*node),
@@ -392,19 +398,19 @@ class LayoutBuilder {
       for (EllipseItem &item : items) {
         const auto short_width = widths.find("@compact:" + item.id);
         if (short_width != widths.end()) {
-          item.width = short_width->second + padding;
+          item.width = short_width->second + secondary_padding;
         }
       }
       result.supported &= items.size() == 7 &&
                           ellipse(owner, anchor, depth, items, 0, nullptr, true, true);
       return;
     }
-    if (owner.id == "views.style") {
+    if (owner.id == "views.style" || owner.id == "center.controls.style") {
       float w = 0;
       for (const MenuNode &node : owner.children) {
-        w = std::max(w, widths.at(node.id) + padding);
+        w = std::max(w, widths.at(node.id) + native_menu_padding);
       }
-      const float h = owner.children.size() * row_step - gap;
+      const float h = owner.children.size() * secondary_height;
       if (w > width - 2 * margin || h > height - 2 * margin) {
         result.supported = false;
         return;
@@ -412,16 +418,17 @@ class LayoutBuilder {
       const float x = anchor.x + anchor.width + gap + w <= width - margin ?
                           anchor.x + anchor.width + gap :
                           std::max(margin, anchor.x - gap - w);
-      const float y = std::clamp(anchor.y + row_height - h, margin, height - margin - h);
+      const float y = std::clamp(anchor.y + anchor.height - h, margin, height - margin - h);
       for (int i = 0; i < int(owner.children.size()); i++) {
-        add(owner.children[i], x, y + h - row_height - i * row_step, w, depth);
+        add(owner.children[i], x, y + h - (i + 1) * secondary_height, w, depth);
+        result.rects.back().native_menu = true;
       }
       return;
     }
     const int count = int(owner.children.size());
     float reference_width = 0;
     for (const MenuNode &node : owner.children) {
-      reference_width = std::max(reference_width, widths.at(node.id) + padding);
+      reference_width = std::max(reference_width, widths.at(node.id) + secondary_padding);
     }
     for (int capacity = std::min(count, 8); capacity >= 1; capacity--) {
       const bool paged = count > capacity;
@@ -438,7 +445,8 @@ class LayoutBuilder {
       }
       for (int i = first; i < first + capacity; i++) {
         const MenuNode &node = owner.children[i];
-        items.push_back({&node, node.id, widths.at(node.id) + padding, 0, 0, interactive(node)});
+        items.push_back(
+            {&node, node.id, widths.at(node.id) + secondary_padding, 0, 0, interactive(node)});
       }
       if (paged) {
         items.push_back({nullptr,

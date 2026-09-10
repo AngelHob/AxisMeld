@@ -8,6 +8,7 @@
 #include "GPU_immediate.hh"
 #include "GPU_state.hh"
 #include "UI_interface_c.hh"
+#include "UI_menu_overlay.hh"
 #include "UI_resources.hh"
 #include "view3d_axismeld_hotbox_internal.hh"
 
@@ -103,7 +104,7 @@ void hotbox_layout(HotboxVisual &data)
                                  data.marking ? &origin : nullptr);
 }
 
-void hotbox_draw(const HotboxVisual &data)
+void hotbox_draw(const bContext *C, const HotboxVisual &data)
 {
   struct Entry {
     MenuRect rect;
@@ -164,6 +165,9 @@ void hotbox_draw(const HotboxVisual &data)
   ui::draw_roundbox_corner_set(ui::CNR_ALL);
   for (const Entry &entry : entries) {
     const MenuRect &r = entry.rect;
+    if (r.native_menu) {
+      continue;
+    }
     const bool selected = entry.selected && !entry.disabled;
     const uiWidgetColors &colors = r.depth > 0 ? theme.wcol_menu_item : theme.wcol_menu;
     const uchar *inner = selected    ? colors.inner_sel :
@@ -236,6 +240,20 @@ void hotbox_draw(const HotboxVisual &data)
     const ui::FontStyleDrawParams params{ui::UI_STYLE_TEXT_CENTER, 0, false};
     ui::fontstyle_draw(&style, &text_rect, entry.text.c_str(), entry.text.size(), color, &params);
   }
+  std::vector<ui::MenuOverlayItem> menu_items;
+  for (const Entry &entry : entries) {
+    const MenuRect &r = entry.rect;
+    if (r.native_menu) {
+      menu_items.push_back({entry.text,
+                            {int(r.x * scale),
+                             int((r.x + r.width) * scale),
+                             int(r.y * scale),
+                             int((r.y + r.height) * scale)},
+                            entry.selected,
+                            !entry.disabled});
+    }
+  }
+  ui::menu_overlay_draw(C, menu_items);
   if (!data.marking) {
     const MenuNode *hover = hotbox_find_node(data.snapshot.menus, data.hover_id);
     if (hover && !hover->reason.empty()) {

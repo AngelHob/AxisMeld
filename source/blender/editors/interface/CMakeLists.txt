@@ -43,6 +43,7 @@ set(SRC
   interface_icons.cc
   interface_icons_event.cc
   interface_layout.cc
+  interface_menu_overlay.cc
   interface_ops.cc
   interface_ops_color.cc
   interface_panel.cc

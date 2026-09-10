@@ -32,6 +32,7 @@ struct MenuRect {
   bool interactive = true;
   bool direction_label = false;
   bool compact_label = false;
+  bool native_menu = false;  // Contiguous option rows use native menu rendering.
 };
 struct MenuLayout {
   std::vector<MenuRect> rects;

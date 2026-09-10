@@ -85,7 +85,7 @@ static void draw(const bContext *C, ARegion *region, void *customdata)
 {
   const auto &data = *static_cast<HotboxData *>(customdata);
   if (source_live(C, data) && region == data.region && CTX_wm_window(C) == data.window) {
-    hotbox_draw(data);
+    hotbox_draw(C, data);
   }
 }
 
