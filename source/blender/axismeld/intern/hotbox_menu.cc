@@ -26,14 +26,15 @@ bool interactive(const MenuNode &node)
   return node.enabled && node.kind != MenuKind::Disabled && node.kind != MenuKind::Separator;
 }
 
-bool native_entry(const std::string &id)
+bool native_list(const std::string &id)
 {
-  return id == "views.style" || id == "center.controls.style";
+  return id == "views.style" || id == "center.controls.style" || id == "center.controls.rows" ||
+         id == "center.controls.transparency";
 }
 
 float child_padding(const MenuNode &node)
 {
-  return native_entry(node.id) ? native_entry_padding : secondary_padding;
+  return native_list(node.id) ? native_entry_padding : secondary_padding;
 }
 
 const MenuNode *find_node(const std::vector<MenuNode> &nodes, const std::string &id)
@@ -365,7 +366,7 @@ class LayoutBuilder {
       }
       item.x += cx;
       item.y += cy;
-      item.native_menu = native_entry(item.id);
+      item.native_menu = native_list(item.id);
       result.rects.push_back(item);
     }
     return true;
@@ -423,7 +424,7 @@ class LayoutBuilder {
                           ellipse(owner, anchor, depth, items, 0, nullptr, true, true);
       return;
     }
-    if (owner.id == "views.style" || owner.id == "center.controls.style") {
+    if (native_list(owner.id)) {
       float w = 0;
       for (const MenuNode &node : owner.children) {
         w = std::max(w, widths.at(node.id) + native_menu_padding);

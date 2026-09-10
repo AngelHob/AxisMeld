@@ -173,6 +173,153 @@ TEST(axismeld_hotbox_menu, BothStyleDirectoriesUseContiguousMenuRows)
   }
 }
 
+TEST(axismeld_hotbox_menu, ControlsRowsUsesAContiguousNativeMenu)
+{
+  const auto snapshot = default_snapshot();
+  const auto widths = measured(snapshot);
+  const auto root = layout_menu(snapshot, 1920, 1080, 960, 540, {}, {}, widths);
+  const auto layout = layout_menu(
+      snapshot, 1920, 1080, 960, 540, {"center.controls", "center.controls.rows"}, {}, widths);
+  ASSERT_TRUE(root.supported);
+  ASSERT_TRUE(layout.supported);
+  const auto *entry = rect(layout, "center.controls.rows");
+  ASSERT_NE(entry, nullptr);
+  EXPECT_TRUE(entry->native_menu);
+  EXPECT_FLOAT_EQ(entry->height, 24);
+  EXPECT_FLOAT_EQ(entry->width, widths.at("center.controls.rows") + 60);
+  const std::array<const char *, 3> ids = {
+      "center.controls.rows.common", "center.controls.rows.pane", "center.controls.rows.modeling"};
+  const auto *first = rect(layout, ids.front());
+  ASSERT_NE(first, nullptr);
+  const MenuRect *previous = nullptr;
+  for (const char *id : ids) {
+    const auto *item = rect(layout, id);
+    ASSERT_NE(item, nullptr) << id;
+    EXPECT_TRUE(item->native_menu);
+    EXPECT_FLOAT_EQ(item->height, 24);
+    EXPECT_FLOAT_EQ(item->x, first->x);
+    if (previous) {
+      EXPECT_FLOAT_EQ(previous->y, item->y + 24);
+    }
+    previous = item;
+  }
+  EXPECT_EQ(rect(layout, "@back:center.controls.rows"), nullptr);
+  for (const MenuRect &original : root.rects) {
+    const auto *preserved = rect(layout, original.id);
+    ASSERT_NE(preserved, nullptr) << original.id;
+    EXPECT_EQ(preserved->depth, 0) << original.id;
+    EXPECT_FALSE(preserved->native_menu) << original.id;
+  }
+}
+
+TEST(axismeld_hotbox_menu, ControlsTransparencyUsesAContiguousNativeMenu)
+{
+  const auto snapshot = default_snapshot();
+  const auto widths = measured(snapshot);
+  const auto root = layout_menu(snapshot, 1920, 1080, 960, 540, {}, {}, widths);
+  const auto layout = layout_menu(snapshot,
+                                  1920,
+                                  1080,
+                                  960,
+                                  540,
+                                  {"center.controls", "center.controls.transparency"},
+                                  {},
+                                  widths);
+  ASSERT_TRUE(root.supported);
+  ASSERT_TRUE(layout.supported);
+  const auto *entry = rect(layout, "center.controls.transparency");
+  ASSERT_NE(entry, nullptr);
+  EXPECT_TRUE(entry->native_menu);
+  EXPECT_FLOAT_EQ(entry->height, 24);
+  EXPECT_FLOAT_EQ(entry->width, widths.at("center.controls.transparency") + 60);
+  const std::array<const char *, 5> ids = {"center.controls.transparency.0",
+                                           "center.controls.transparency.25",
+                                           "center.controls.transparency.50",
+                                           "center.controls.transparency.75",
+                                           "center.controls.transparency.100"};
+  const auto *first = rect(layout, ids.front());
+  ASSERT_NE(first, nullptr);
+  const MenuRect *previous = nullptr;
+  for (const char *id : ids) {
+    const auto *item = rect(layout, id);
+    ASSERT_NE(item, nullptr) << id;
+    EXPECT_TRUE(item->native_menu);
+    EXPECT_FLOAT_EQ(item->height, 24);
+    EXPECT_FLOAT_EQ(item->x, first->x);
+    if (previous) {
+      EXPECT_FLOAT_EQ(previous->y, item->y + 24);
+    }
+    previous = item;
+  }
+  EXPECT_EQ(rect(layout, "@back:center.controls.transparency"), nullptr);
+  for (const MenuRect &original : root.rects) {
+    const auto *preserved = rect(layout, original.id);
+    ASSERT_NE(preserved, nullptr) << original.id;
+    EXPECT_EQ(preserved->depth, 0) << original.id;
+    EXPECT_FALSE(preserved->native_menu) << original.id;
+  }
+}
+
+TEST(axismeld_hotbox_menu, ShortNativeSettingsListsFitNarrowViewportCornersWithoutDroppingRows)
+{
+  auto snapshot = default_snapshot();
+  snapshot.center_buttons[2] = "center.controls";
+  const auto widths = measured(snapshot);
+  const std::array<std::pair<const char *, std::vector<const char *>>, 2> lists = {{
+      {"center.controls.rows",
+       {"center.controls.rows.common",
+        "center.controls.rows.pane",
+        "center.controls.rows.modeling"}},
+      {"center.controls.transparency",
+       {"center.controls.transparency.0",
+        "center.controls.transparency.25",
+        "center.controls.transparency.50",
+        "center.controls.transparency.75",
+        "center.controls.transparency.100"}},
+  }};
+  for (const auto &[owner, ids] : lists) {
+    for (const auto point : {std::array<float, 2>{0, 0}, {392, 0}, {0, 210}, {392, 210}}) {
+      SCOPED_TRACE(testing::Message() << owner << " @ " << point[0] << "," << point[1]);
+      const auto layout = layout_menu(snapshot,
+                                      392,
+                                      210,
+                                      point[0],
+                                      point[1],
+                                      {"center", "center.controls", owner},
+                                      {},
+                                      widths);
+      ASSERT_TRUE(layout.supported);
+      const auto *entry = rect(layout, owner);
+      ASSERT_NE(entry, nullptr);
+      EXPECT_TRUE(entry->native_menu);
+      EXPECT_FLOAT_EQ(entry->height, 24);
+      EXPECT_FLOAT_EQ(entry->width, widths.at(owner) + 60);
+      const auto *first = rect(layout, ids.front());
+      ASSERT_NE(first, nullptr);
+      const MenuRect *previous = nullptr;
+      for (const char *id : ids) {
+        const auto *item = rect(layout, id);
+        ASSERT_NE(item, nullptr) << id;
+        EXPECT_TRUE(item->native_menu);
+        EXPECT_FLOAT_EQ(item->height, 24);
+        EXPECT_GE(item->x, 12);
+        EXPECT_GE(item->y, 12);
+        EXPECT_LE(item->x + item->width, 380);
+        EXPECT_LE(item->y + item->height, 198);
+        EXPECT_FLOAT_EQ(item->x, first->x);
+        if (previous) {
+          EXPECT_FLOAT_EQ(previous->y, item->y + 24);
+        }
+        EXPECT_TRUE(item->x >= entry->x + entry->width + 9.99f ||
+                    entry->x >= item->x + item->width + 9.99f ||
+                    item->y >= entry->y + entry->height + 9.99f ||
+                    entry->y >= item->y + item->height + 9.99f);
+        previous = item;
+      }
+    }
+  }
+}
+
 TEST(axismeld_hotbox_menu, NarrowStylePopupDoesNotCoverItsEntry)
 {
   const auto snapshot = default_snapshot();
