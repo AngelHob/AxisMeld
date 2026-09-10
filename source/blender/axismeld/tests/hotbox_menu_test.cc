@@ -4,6 +4,7 @@
 #include <cmath>
 #include <functional>
 #include <limits>
+#include <map>
 #include <set>
 
 #include "AXM_hotbox_menu.hh"
@@ -279,6 +280,52 @@ TEST(axismeld_hotbox_menu, FullSizeRowsKeepCanonicalVerticalOrderAndCentralSibli
   EXPECT_EQ(controls->y, center->y);
   EXPECT_LT(recent->x, center->x);
   EXPECT_GT(controls->x, center->x);
+}
+
+TEST(axismeld_hotbox_menu, StandardMainCompositionTapersAroundItsWidestCentralRow)
+{
+  const auto snapshot = default_snapshot();
+  auto widths = measured(snapshot);
+  // Independently bounded label measurements: all default siblings fit a desktop viewport.
+  visit(snapshot.menus, [&](const MenuNode &node) { widths[node.id] = node.label.size() * 7.0f; });
+  const auto layout = layout_menu(snapshot, 1920, 1080, 960, 540, {}, {}, widths);
+  ASSERT_TRUE(layout.supported);
+  const auto *center = rect(layout, "views");
+  ASSERT_NE(center, nullptr);
+  std::map<float, std::array<float, 2>> spans;
+  for (const MenuRect &item : layout.rects) {
+    ASSERT_EQ(item.depth, 0);
+    EXPECT_FALSE(item.id.starts_with("@scroll:"));
+    auto [span, inserted] = spans.try_emplace(item.y, std::array<float, 2>{item.x, item.x + item.width});
+    if (!inserted) {
+      span->second[0] = std::min(span->second[0], item.x);
+      span->second[1] = std::max(span->second[1], item.x + item.width);
+    }
+    EXPECT_EQ(hit_menu_rect(layout, item.x + item.width / 2, item.y + item.height / 2)->id,
+              item.id);
+  }
+  ASSERT_EQ(spans.size(), 5);
+  std::vector<float> row_widths;
+  for (const auto &[y, span] : spans) {
+    EXPECT_NEAR((span[0] + span[1]) / 2, 960, 0.01);
+    row_widths.push_back(span[1] - span[0]);
+  }
+  EXPECT_LT(row_widths[0], row_widths[1]);
+  EXPECT_LT(row_widths[1], row_widths[2]);
+  EXPECT_GT(row_widths[2], row_widths[3]);
+  EXPECT_GT(row_widths[3], row_widths[4]);
+  const auto &modeling = snapshot.menus.back().children;
+  const MenuRect *previous = nullptr;
+  for (const auto &node : modeling) {
+    const auto *item = rect(layout, node.id);
+    ASSERT_NE(item, nullptr) << node.id;
+    EXPECT_LT(item->y, center->y);
+    if (previous) {
+      EXPECT_TRUE(item->y < previous->y ||
+                  (item->y == previous->y && item->x >= previous->x + previous->width));
+    }
+    previous = item;
+  }
 }
 
 TEST(axismeld_hotbox_menu, InwardRowsKeepCanonicalOrderAtTrueCorners)

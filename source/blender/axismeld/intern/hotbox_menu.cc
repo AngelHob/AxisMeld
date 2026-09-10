@@ -87,6 +87,72 @@ class LayoutBuilder {
         {"@scroll:" + owner + ":" + direction, x, y, w, row_height, depth, enabled});
   }
 
+  bool oval_main(const MenuSnapshot &snapshot)
+  {
+    if (snapshot.style != "rows" || snapshot.rows.size() != 3) {
+      return false;
+    }
+    const MenuNode *common = find_node(snapshot.menus, "common");
+    const MenuNode *pane = find_node(snapshot.menus, "pane");
+    const MenuNode *central = find_node(snapshot.menus, "center");
+    const MenuNode *modeling = find_node(snapshot.menus, "modeling");
+    const MenuRect *anchor = rect("views");
+    if (!common || !pane || !central || central->children.size() != 3 || !modeling ||
+        modeling->children.size() < 2 || !anchor)
+    {
+      return false;
+    }
+    const MenuRect center = *anchor;
+    const int split = (int(modeling->children.size()) + 1) / 2;
+    std::array<std::vector<const MenuNode *>, 4> rows;
+    for (const auto &node : common->children) {
+      rows[0].push_back(&node);
+    }
+    for (const auto &node : pane->children) {
+      rows[1].push_back(&node);
+    }
+    for (int i = 0; i < int(modeling->children.size()); i++) {
+      rows[i < split ? 2 : 3].push_back(&modeling->children[i]);
+    }
+    const std::array<float, 4> taper = {0.72f, 0.92f, 0.92f, 0.64f};
+    const std::array<float, 4> y_offset = {64, 32, -32, -64};
+    std::array<float, 4> natural{};
+    float span = center.width + 2 * (gap + padding +
+                                      std::max(widths.at(central->children.front().id),
+                                               widths.at(central->children.back().id)));
+    for (int i = 0; i < 4; i++) {
+      if (rows[i].empty()) {
+        return false;
+      }
+      natural[i] = -gap;
+      for (const MenuNode *node : rows[i]) {
+        natural[i] += widths.at(node->id) + padding + gap;
+      }
+      span = std::max(span, natural[i] / taper[i]);
+    }
+    // A real oval envelope around the invocation point. Compact/edge layouts retain the
+    // bounded paged rows below; never move the central hit target away from the press.
+    if (center_x - span / 2 < margin || center_x + span / 2 > width - margin ||
+        center.y - 64 < margin || center.y + 64 + row_height > height - margin)
+    {
+      return false;
+    }
+    const float side_width = (span - center.width) / 2 - gap;
+    add(central->children.front(), center.x - gap - side_width, center.y, side_width, 0);
+    add(central->children.back(), center.x + center.width + gap, center.y, side_width, 0);
+    for (int i = 0; i < 4; i++) {
+      const float row_width = span * taper[i];
+      const float extra = (row_width - natural[i]) / rows[i].size();
+      float x = center_x - row_width / 2;
+      for (const MenuNode *node : rows[i]) {
+        const float w = widths.at(node->id) + padding + extra;
+        add(*node, x, center.y + y_offset[i], w, 0);
+        x += w + gap;
+      }
+    }
+    return true;
+  }
+
   std::vector<float> free_rows(const int count) const
   {
     std::vector<float> rows;
@@ -250,78 +316,80 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
               w,
               0);
   }
-  bool normal_rows = true;
-  if (const MenuRect *anchor = build.rect("views")) {
-    const MenuNode *central = find_node(snapshot.menus, "center");
-    if (central && central->children.size() == 3 && snapshot.style != "center") {
-      normal_rows = anchor->x - gap - label_widths.at(central->children.front().id) - padding >=
-                        margin &&
-                    anchor->x + anchor->width + gap +
-                            label_widths.at(central->children.back().id) + padding <=
-                        width - margin;
-    }
-    if (snapshot.style == "rows") {
-      for (const std::string &row : snapshot.rows) {
-        const float y = anchor->y + (row == "common" ? 64 : row == "pane" ? 32 : -32);
-        normal_rows &= y >= 0 && y + row_height <= height;
+  if (!build.oval_main(snapshot)) {
+    bool normal_rows = true;
+    if (const MenuRect *anchor = build.rect("views")) {
+      const MenuNode *central = find_node(snapshot.menus, "center");
+      if (central && central->children.size() == 3 && snapshot.style != "center") {
+        normal_rows = anchor->x - gap - label_widths.at(central->children.front().id) - padding >=
+                          margin &&
+                      anchor->x + anchor->width + gap +
+                              label_widths.at(central->children.back().id) + padding <=
+                          width - margin;
       }
-    }
-  }
-  std::vector<std::pair<const MenuNode *, std::vector<const MenuNode *>>> rows;
-  for (const MenuNode &group : snapshot.menus) {
-    const bool central = group.id == "center";
-    if (!central &&
-        (snapshot.style != "rows" ||
-         std::find(snapshot.rows.begin(), snapshot.rows.end(), group.id) == snapshot.rows.end()))
-    {
-      continue;
-    }
-    if (central && snapshot.style == "center") {
-      continue;
-    }
-    std::vector<const MenuNode *> nodes;
-    for (const MenuNode &node : group.children) {
-      if (node.id != "views") {
-        nodes.push_back(&node);
-      }
-    }
-    if (normal_rows && central && nodes.size() == 2) {
-      // Keep the normal three-button central row whenever the fixed anchor leaves room.
-      if (const MenuRect *anchor = build.rect("views")) {
-        const MenuRect center = *anchor;
-        const float left_width = label_widths.at(nodes[0]->id) + padding;
-        const float right_width = label_widths.at(nodes[1]->id) + padding;
-        if (center.x - gap - left_width >= margin &&
-            center.x + center.width + gap + right_width <= width - margin)
-        {
-          build.add(*nodes[0], center.x - gap - left_width, center.y, left_width, 0);
-          build.add(*nodes[1], center.x + center.width + gap, center.y, right_width, 0);
-          continue;
+      if (snapshot.style == "rows") {
+        for (const std::string &row : snapshot.rows) {
+          const float y = anchor->y + (row == "common" ? 64 : row == "pane" ? 32 : -32);
+          normal_rows &= y >= 0 && y + row_height <= height;
         }
       }
     }
-    if (!nodes.empty()) {
-      rows.push_back({&group, std::move(nodes)});
+    std::vector<std::pair<const MenuNode *, std::vector<const MenuNode *>>> rows;
+    for (const MenuNode &group : snapshot.menus) {
+      const bool central = group.id == "center";
+      if (!central &&
+          (snapshot.style != "rows" ||
+           std::find(snapshot.rows.begin(), snapshot.rows.end(), group.id) == snapshot.rows.end()))
+      {
+        continue;
+      }
+      if (central && snapshot.style == "center") {
+        continue;
+      }
+      std::vector<const MenuNode *> nodes;
+      for (const MenuNode &node : group.children) {
+        if (node.id != "views") {
+          nodes.push_back(&node);
+        }
+      }
+      if (normal_rows && central && nodes.size() == 2) {
+        // Keep the normal three-button central row whenever the fixed anchor leaves room.
+        if (const MenuRect *anchor = build.rect("views")) {
+          const MenuRect center = *anchor;
+          const float left_width = label_widths.at(nodes[0]->id) + padding;
+          const float right_width = label_widths.at(nodes[1]->id) + padding;
+          if (center.x - gap - left_width >= margin &&
+              center.x + center.width + gap + right_width <= width - margin)
+          {
+            build.add(*nodes[0], center.x - gap - left_width, center.y, left_width, 0);
+            build.add(*nodes[1], center.x + center.width + gap, center.y, right_width, 0);
+            continue;
+          }
+        }
+      }
+      if (!nodes.empty()) {
+        rows.push_back({&group, std::move(nodes)});
+      }
     }
-  }
-  std::vector<float> row_positions;
-  if (normal_rows) {
-    const MenuRect *center = build.rect("views");
-    const float row_origin = center ? center->y : center_y - row_height / 2;
-    for (const auto &row : rows) {
-      row_positions.push_back(row_origin + (row.first->id == "common" ? 64 :
-                                            row.first->id == "pane"   ? 32 :
-                                                                        -32));
+    std::vector<float> row_positions;
+    if (normal_rows) {
+      const MenuRect *center = build.rect("views");
+      const float row_origin = center ? center->y : center_y - row_height / 2;
+      for (const auto &row : rows) {
+        row_positions.push_back(row_origin + (row.first->id == "common" ? 64 :
+                                              row.first->id == "pane"   ? 32 :
+                                                                          -32));
+      }
     }
-  }
-  else {
-    row_positions = build.free_rows(int(rows.size()));
-  }
-  if (row_positions.size() != rows.size()) {
-    return {{}, false};
-  }
-  for (int i = 0; i < int(rows.size()); i++) {
-    build.row(*rows[i].first, rows[i].second, row_positions[i]);
+    else {
+      row_positions = build.free_rows(int(rows.size()));
+    }
+    if (row_positions.size() != rows.size()) {
+      return {{}, false};
+    }
+    for (int i = 0; i < int(rows.size()); i++) {
+      build.row(*rows[i].first, rows[i].second, row_positions[i]);
+    }
   }
   const MenuNode *previous = nullptr;
   const int first = central_path ? 1 : 0;

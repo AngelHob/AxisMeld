@@ -43,9 +43,27 @@ def suite():
     preset = next(Path(p) / 'AxisMeld_Maya_2026.py' for p in bpy.utils.preset_paths('keyconfig')
                   if (Path(p) / 'AxisMeld_Maya_2026.py').exists())
     bpy.utils.keyconfig_set(str(preset))
+    if os.environ.get('AXISMELD_TEST_FONT_POINTS'):
+        bpy.context.preferences.ui_styles[0].widget.points = float(os.environ['AXISMELD_TEST_FONT_POINTS'])
+    icon_probe = bool(os.environ.get('AXISMELD_TEST_ICON_SCALE_PROBE'))
+    if icon_probe:
+        bpy.context.preferences.view.ui_scale = 2.0
     yield from settle(8)
     cx, cy = region.x + region.width // 2, region.y + region.height // 2
     position = [cx, cy]
+    theme_probe = bool(os.environ.get('AXISMELD_TEST_THEME_PROBE'))
+    alpha_probe = bool(os.environ.get('AXISMELD_TEST_ICON_ALPHA_PROBE'))
+    if alpha_probe:
+        colors = bpy.context.preferences.themes[0].user_interface.wcol_menu
+        colors.inner = colors.inner_sel = (0, 0, 0, 1)
+        colors.text = colors.text_sel = (1, 1, 1)
+        from axismeld import hotbox_runtime
+        hotbox_runtime.reload_settings(bpy.context, session={
+            'schema_version': 1, 'settings': {'transparency': 0}})
+    if theme_probe:
+        # Deliberately distinctive native theme, scoped to this disposable process.
+        bpy.context.preferences.themes[0].user_interface.wcol_menu.inner = (.8, .12, .04, 1)
+        bpy.context.preferences.themes[0].user_interface.wcol_menu.inner_sel = (.8, .12, .04, 1)
 
     def event(kind, value='PRESS', x=None, y=None):
         if x is not None:
@@ -72,6 +90,59 @@ def suite():
     scale = bpy.context.preferences.system.ui_scale
     a, b = list(before.pixels), list(after.pixels)
     width = after.size[0]
+    if alpha_probe:
+        blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
+        common_labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
+        span = (sum(blf.dimensions(0, text)[0]/scale + 24 for text in common_labels) + 24) / .72
+        center_width = blf.dimensions(0, 'AxisMeld')[0]/scale + 44
+        side_width = (span - center_width)/2 - 4
+        recent_center = cx - (center_width/2 + 4 + side_width/2)*scale
+        text_width = blf.dimensions(0, 'Recent Commands')[0]
+        left = recent_center - (text_width + 20*scale)/2
+        def foreground_peak(x0, x1):
+            return max(min(b[(y*width+x)*4:(y*width+x)*4+3])
+                       for y in range(int(cy-6*scale), int(cy+6*scale))
+                       for x in range(int(x0), int(x1)))
+        icon_peak = foreground_peak(left, left + 16*scale)
+        text_peak = foreground_peak(left + 20*scale, left + 20*scale + text_width)
+        check(icon_peak >= text_peak*.8,
+              f'disabled icon alpha applied twice: icon={icon_peak}, text={text_peak}')
+        event('SPACE', 'RELEASE')
+        yield from settle()
+        print('PASS disabled icon and text use the same single theme-alpha attenuation', flush=True)
+        print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
+        return
+    if icon_probe:
+        blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
+        left = cx - (blf.dimensions(0, 'AxisMeld')[0] + 20 * scale) / 2
+        # At 2x the upper half of the center icon must contain rendered foreground.
+        # An unscaled 16px icon sits entirely below this band in its reserved 32px slot.
+        icon_pixels = 0
+        for y in range(int(cy + 2 * scale), int(cy + 7 * scale)):
+            for x in range(int(left), int(left + 16 * scale)):
+                i = (y * width + x) * 4
+                icon_pixels += min(b[i:i+3]) > .65 and sum(abs(a[i+k] - b[i+k]) for k in range(3)) > .3
+        check(icon_pixels > 5, f'2x native icon did not scale into its slot: {icon_pixels}')
+        event('SPACE', 'RELEASE')
+        yield from settle()
+        print('PASS 2x native semantic icon occupies the scaled slot', flush=True)
+        print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
+        return
+    if theme_probe:
+        themed_pixels = 0
+        for y in range(int(cy - 80 * scale), int(cy + 80 * scale)):
+            for x in range(int(cx - 100 * scale), int(cx + 100 * scale)):
+                i = (y * width + x) * 4
+                red, green, blue = b[i:i+3]
+                themed_pixels += (red > green * 3 and red > blue * 3 and
+                                  sum(abs(a[i+k] - b[i+k]) for k in range(3)) > .2)
+        check(themed_pixels > 1500 * scale * scale,
+              f'menu must use native theme background, changed red pixels={themed_pixels}')
+        print('PASS hotbox uses native theme menu background', flush=True)
+        event('SPACE', 'RELEASE')
+        yield from settle()
+        print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
+        return
     changed = 0
     for y in range(int(cy + 55 * scale), int(cy + 73 * scale)):
         for x in range(int(cx - 170 * scale), int(cx + 170 * scale)):
@@ -98,6 +169,9 @@ def suite():
     yield from settle()
     check(not failures, '\n'.join(failures))
     print('PASS actual Space main directory screenshot and RMB NW native Left view', flush=True)
+    if os.environ.get('AXISMELD_TEST_VISUAL_ONLY'):
+        print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
+        return
 
     from axismeld import hotbox_runtime, runtime
     from axismeld.commands import COMMANDS
@@ -216,11 +290,22 @@ def suite():
 
     # Independent measured coordinates for the normal centered row and right-hand popup.
     # This does not import/reimplement the production layout or query test-only native state.
-    blf.size(0, 12 * scale)
+    blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
+    icon_labels = {'AxisMeld', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls',
+                   'Wireframe', 'Solid', 'Perspective View', 'Side View', 'Bottom View',
+                   'Front View', 'Back View', 'Top View', 'Left View', 'Vertex', 'Edge', 'Face'}
     def label_width(label):
-        return blf.dimensions(0, label)[0] / scale
+        return blf.dimensions(0, label)[0] / scale + (20 if label in icon_labels else 0)
+    common_labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
+    # Desktop fixture: the seven natural Common buttons determine the upper taper.
+    # Expected row spans are independently specified by the approved envelope ratios.
+    common_span = sum(label_width(label) + 24 for label in common_labels) + 24
+    center_span = common_span / .72
     def row_title(labels, index, dy):
         widths = [label_width(label) + 24 for label in labels]
+        if dy == 32:
+            extra = (common_span * (.92 / .72) - sum(widths) - 4*(len(widths)-1)) / len(widths)
+            widths = [width + extra for width in widths]
         start = cx / scale - (sum(widths) + 4 * (len(widths)-1)) / 2
         x = start + sum(widths[:index]) + 4 * index
         return (x * scale, cy + (dy-14) * scale, widths[index] * scale, 28 * scale)
@@ -487,7 +572,7 @@ def suite():
     reset_hotbox_settings()
 
     # Actual settings leaves use the native bridge and rebuild the same live hotbox.
-    control_width = (label_width('Hotbox Controls')+24)*scale
+    control_width = ((center_span - center[2]/scale)/2 - 4)*scale
     controls = (center[0]+center[2]+4*scale, cy-14*scale, control_width, 28*scale)
     control_items = popup(controls, ['Menu Rows', 'Hotbox Style', 'Transparency',
                                      'Center Mouse Buttons'])
@@ -532,7 +617,7 @@ def suite():
 
     # A successful leaf is visible and replayable through the session-only Recent menu.
     recent_command = hotbox_runtime.recent.items()[0]
-    recent_width = (label_width('Recent Commands')+24)*scale
+    recent_width = ((center_span - center[2]/scale)/2 - 4)*scale
     recent_rect = (center[0]-4*scale-recent_width, cy-14*scale, recent_width, 28*scale)
     yield from open_box()
     yield from click(midpoint(recent_rect))
@@ -568,7 +653,11 @@ def suite():
         check(abs(scale-requested_scale) < .05, 'UI scaling fixture did not apply')
         print('SCALE_RECT', requested_scale, 'area', area.x, area.y, area.width, area.height,
               'region', region.x, region.y, region.width, region.height, flush=True)
-        blf.size(0, 12*scale)
+        blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
+        yield from open_box()
+        yield from settle(20)
+        screenshot(f'menus-scale-{requested_scale}-center-main.png')
+        yield from close_box()
         if requested_scale == 2.0:
             # A receipt-only F14 diagnostic identifies the native visual region. Product
             # acceptance below still uses untouched actual Space preset bindings.
@@ -654,7 +743,7 @@ def suite():
     bpy.context.preferences.view.ui_scale = 1.0
     yield from settle(8)
     scale = bpy.context.preferences.system.ui_scale
-    blf.size(0, 12*scale)
+    blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
     print('PASS B9 all four corners: scales1/1.25/1.5 literal; scale2 measured content boundary', flush=True)
 
     # Native malformed snapshot must cancel without leaving a handler that steals the next Space.

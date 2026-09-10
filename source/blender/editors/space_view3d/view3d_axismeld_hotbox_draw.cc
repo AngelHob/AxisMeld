@@ -4,11 +4,53 @@
 #include <cstring>
 
 #include "BLF_api.hh"
-#include "GPU_immediate.hh"
+#include "DNA_theme_types.h"
 #include "GPU_state.hh"
+#include "UI_interface_c.hh"
+#include "UI_resources.hh"
 #include "view3d_axismeld_hotbox_internal.hh"
 
 namespace blender::axismeld {
+namespace {
+int menu_icon(const MenuNode &node)
+{
+  if (node.id == "views" || node.value == "views") {
+    return ICON_ORIENTATION_GLOBAL;
+  }
+  if (node.id == "center.recent" || node.value == "center.recent") {
+    return ICON_RECOVER_LAST;
+  }
+  if (node.id == "center.controls" || node.value == "center.controls") {
+    return ICON_PREFERENCES;
+  }
+  if (node.command == "view.wireframe") {
+    return ICON_SHADING_WIRE;
+  }
+  if (node.command == "view.shaded") {
+    return ICON_SHADING_SOLID;
+  }
+  if (node.command == "view.perspective") {
+    return ICON_VIEW_PERSPECTIVE;
+  }
+  if (node.command == "view.side" || node.command == "view.bottom" ||
+      node.command == "view.front" || node.command == "view.back" ||
+      node.command == "view.top" || node.command == "view.left")
+  {
+    return ICON_VIEW_ORTHO;
+  }
+  if (node.command == "selection.vertex_mode") {
+    return ICON_VERTEXSEL;
+  }
+  if (node.command == "selection.edge_mode") {
+    return ICON_EDGESEL;
+  }
+  if (node.command == "selection.face_mode") {
+    return ICON_FACESEL;
+  }
+  return ICON_NONE;
+}
+}  // namespace
+
 const MenuNode *hotbox_find_node(const std::vector<MenuNode> &nodes, const std::string_view id)
 {
   for (const MenuNode &node : nodes) {
@@ -25,12 +67,13 @@ const MenuNode *hotbox_find_node(const std::vector<MenuNode> &nodes, const std::
 void hotbox_measure(HotboxVisual &data)
 {
   data.label_widths.clear();
-  const int font = BLF_default();
-  BLF_size(font, 12 * data.scale);
+  const uiFontStyle &style = ui::style_get_dpi()->widget;
+  ui::fontstyle_set(&style);
+  const int font = style.uifont_id;
   auto measure = [&](auto &&self, const std::vector<MenuNode> &nodes) -> void {
     for (const MenuNode &node : nodes) {
       data.label_widths[node.id] = BLF_width(font, node.label.c_str(), node.label.size()) /
-                                   data.scale;
+                                   data.scale + (menu_icon(node) != ICON_NONE ? 20.0f : 0.0f);
       self(self, node.children);
     }
   };
@@ -61,6 +104,7 @@ void hotbox_draw(const HotboxVisual &data)
     MenuRect rect;
     std::string text;
     bool selected, disabled, separator;
+    int icon = ICON_NONE;
   };
   std::vector<Entry> entries;
   if (data.marking) {
@@ -118,7 +162,8 @@ void hotbox_draw(const HotboxVisual &data)
                          node->label,
                          d.action != HotboxAction::None && data.candidate == d.action,
                          !node->enabled,
-                         false});
+                         false,
+                         menu_icon(*node)});
     }
   }
   {
@@ -129,34 +174,48 @@ void hotbox_draw(const HotboxVisual &data)
                          label,
                          data.hover_id == rect.id && data.hover_depth == rect.depth,
                          !rect.interactive,
-                         node && node->kind == MenuKind::Separator});
+                         node && node->kind == MenuKind::Separator,
+                         node ? menu_icon(*node) : ICON_NONE});
     }
   }
   const float scale = data.scale;
-  const int font = BLF_default();
-  BLF_size(font, 12 * scale);
+  const uiFontStyle &style = ui::style_get_dpi()->widget;
+  ui::fontstyle_set(&style);
+  const int font = style.uifont_id;
+  const ThemeUI &theme = ui::theme::theme_get()->tui;
   GPU_blend(GPU_BLEND_ALPHA);
-  const uint pos = GPU_vertformat_attr_add(
-      immVertexFormat(), "pos", gpu::VertAttrType::SFLOAT_32_32);
-  immBindBuiltinProgram(GPU_SHADER_3D_UNIFORM_COLOR);
+  ui::draw_roundbox_corner_set(ui::CNR_ALL);
   for (const Entry &entry : entries) {
     const MenuRect &r = entry.rect;
     const bool selected = entry.selected && !entry.disabled;
-    immUniformColor4f(selected ? .17f : .055f,
-                      selected ? .40f : .055f,
-                      selected ? .26f : .065f,
-                      1 - data.snapshot.transparency / 100.0f);
-    immRectf(pos, r.x * scale, r.y * scale, (r.x + r.width) * scale, (r.y + r.height) * scale);
+    const uiWidgetColors &colors = r.depth > 0 ? theme.wcol_menu_item : theme.wcol_menu;
+    const uchar *inner = selected ? colors.inner_sel :
+                                   r.depth > 0 ? theme.wcol_menu_back.inner : colors.inner;
+    const uchar *outline = selected ? colors.outline_sel : colors.outline;
+    float background[4], border[4];
+    for (int i = 0; i < 4; i++) {
+      background[i] = inner[i] / 255.0f;
+      border[i] = outline[i] / 255.0f;
+    }
+    background[3] *= 1 - data.snapshot.transparency / 100.0f;
+    border[3] *= 1 - data.snapshot.transparency / 100.0f;
+    const rctf bounds = {
+        r.x * scale, (r.x + r.width) * scale, r.y * scale, (r.y + r.height) * scale};
+    ui::draw_roundbox_4fv_ex(
+        &bounds, background, nullptr, 1.0f, border, scale, colors.roundness * 20 * scale);
     if (entry.separator) {
-      immUniformColor4f(.4f, .4f, .4f, .8f);
-      immRectf(pos,
-               (r.x + 6) * scale,
-               (r.y + 14) * scale,
-               (r.x + r.width - 6) * scale,
-               (r.y + 15) * scale);
+      float line[4];
+      for (int i = 0; i < 4; i++) {
+        line[i] = colors.text[i] / 255.0f;
+      }
+      line[3] *= 0.3f;
+      const rctf separator = {(r.x + 6) * scale,
+                              (r.x + r.width - 6) * scale,
+                              (r.y + 14) * scale,
+                              (r.y + 15) * scale};
+      ui::draw_roundbox_4fv(&separator, true, 0, line);
     }
   }
-  immUnbindProgram();
   for (const Entry &entry : entries) {
     const MenuRect &r = entry.rect;
     // Alpha is the chosen menu transparency, not permission for obscured menu text to bleed
@@ -166,19 +225,41 @@ void hotbox_draw(const HotboxVisual &data)
       return s.depth > r.depth && r.x < s.x + s.width && r.x + r.width > s.x &&
              r.y < s.y + s.height && r.y + r.height > s.y;
     });
-    if (occluded) {
+    if (occluded || entry.separator) {
       continue;
     }
-    const float brightness = entry.disabled ? .54f : .95f;
-    BLF_color4f(font, brightness, brightness, brightness, 1);
-    const float width = BLF_width(font, entry.text.c_str(), entry.text.size());
-    BLF_position(font, (r.x + r.width / 2) * scale - width / 2, (r.y + 10) * scale, 0);
-    BLF_draw(font, entry.text.c_str(), entry.text.size());
+    const uiWidgetColors &colors = r.depth > 0 ? theme.wcol_menu_item : theme.wcol_menu;
+    uchar color[4];
+    std::memcpy(color, entry.selected && !entry.disabled ? colors.text_sel : colors.text, 4);
+    // Native menu items retain their theme foreground RGB and halve disabled text alpha.
+    if (entry.disabled) {
+      color[3] /= 2;
+    }
+    const float text_width = BLF_width(font, entry.text.c_str(), entry.text.size());
+    const float icon_width = entry.icon != ICON_NONE ? 20 * scale : 0;
+    const float left = (r.x + r.width / 2) * scale - (text_width + icon_width) / 2;
+    if (entry.icon != ICON_NONE) {
+      ui::icon_draw_ex(left,
+                       (r.y + 6) * scale,
+                       entry.icon,
+                       1.0f / scale,
+                       1.0f,
+                       0.0f,
+                       color,
+                       false,
+                       nullptr);
+    }
+    const rcti text_rect = {int(left + icon_width),
+                            int(left + icon_width + text_width + 1),
+                            int(r.y * scale),
+                            int((r.y + r.height) * scale)};
+    const ui::FontStyleDrawParams params{ui::UI_STYLE_TEXT_CENTER, 0, false};
+    ui::fontstyle_draw(&style, &text_rect, entry.text.c_str(), entry.text.size(), color, &params);
   }
   if (!data.marking) {
     const MenuNode *hover = hotbox_find_node(data.snapshot.menus, data.hover_id);
     if (hover && !hover->reason.empty()) {
-      BLF_color4f(font, 1, .8f, .5f, 1);
+      BLF_color4ubv(font, theme.wcol_menu_back.text);
       BLF_position(font, 12 * scale, 12 * scale, 0);
       BLF_draw(font, hover->reason.c_str(), hover->reason.size());
     }
