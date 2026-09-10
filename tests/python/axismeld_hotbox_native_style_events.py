@@ -70,6 +70,141 @@ def suite():
     # Native hover derives from inner/text, not the pressed-selection color used
     # by the old custom hotbox entry. Make the latter unmistakably different.
     theme.wcol_menu_item.inner_sel = (1, 0, 1, 1)
+    layout_probe = os.environ.get('AXISMELD_TEST_NATIVE_LIST_LAYOUT')
+    if layout_probe:
+        if layout_probe == 'narrow':
+            bpy.context.preferences.view.ui_scale = 1.0
+            yield from settle(8)
+            region = next(r for r in area.regions if r.type == 'WINDOW')
+            with bpy.context.temp_override(window=win, area=area, region=region):
+                bpy.ops.screen.area_split(direction='VERTICAL', factor=.25)
+            yield from settle(8)
+            area = min((a for a in win.screen.areas if a.type == 'VIEW_3D'), key=lambda a: a.width)
+            region = next(r for r in area.regions if r.type == 'WINDOW')
+            with bpy.context.temp_override(window=win, area=area, region=region):
+                bpy.ops.screen.area_split(direction='HORIZONTAL', factor=.42)
+            yield from settle(8)
+            area = min((a for a in win.screen.areas if a.type == 'VIEW_3D' and a.width < 500),
+                       key=lambda a: a.height)
+            region = next(r for r in area.regions if r.type == 'WINDOW')
+        elif layout_probe == 'quad':
+            bpy.context.preferences.view.ui_scale = 2.0
+            yield from settle(8)
+            area.spaces.active.show_region_toolbar = False
+            area.spaces.active.show_region_ui = False
+            area.spaces.active.show_region_header = False
+            area.spaces.active.show_region_tool_header = False
+            region = next(r for r in area.regions if r.type == 'WINDOW')
+            with bpy.context.temp_override(window=win, area=area, region=region):
+                bpy.ops.view3d.axismeld_view(action='TOGGLE_QUAD')
+            yield from settle(8)
+            region = min((r for r in area.regions if r.type == 'WINDOW'), key=lambda r: (r.y, r.x))
+        else:
+            raise AssertionError(f'Unknown native list layout probe {layout_probe!r}')
+
+        scale = bpy.context.preferences.system.ui_scale
+        logical_width, logical_height = region.width/scale, region.height/scale
+        if layout_probe == 'narrow':
+            check(360 <= logical_width < 430 and 320 <= logical_height < 420,
+                  f'narrow probe outside bounded dimensions: {logical_width}x{logical_height}')
+        else:
+            check(360 <= logical_width < 430 and 200 <= logical_height < 260,
+                  f'2x quad probe outside bounded dimensions: {logical_width}x{logical_height}')
+        print('NATIVE_LIST_LAYOUT', layout_probe, 'scale', scale, 'logical', logical_width,
+              logical_height, 'physical', region.width, region.height, 'origin', region.x, region.y,
+              flush=True)
+        print('NATIVE_LIST_INPUT', layout_probe,
+              'SPACE press -> center RIGHTMOUSE center.controls -> LEFTMOUSE parent/leaf',
+              flush=True)
+        cx, cy = region.x+region.width/2, region.y+region.height/2
+        bounds = (region.x, region.y, region.width, region.height)
+        blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
+        def measure(label):
+            return blf.dimensions(0, label)[0] / scale
+        center_width = (measure('AxisMeld') + 60)*scale
+        center = (cx-center_width/2, cy-19*scale, center_width, 38*scale)
+        control_labels = ['Menu Rows', 'Hotbox Style', 'Transparency', 'Center Mouse Buttons']
+
+        def open_list(index, labels):
+            event('MOUSEMOVE', 'NOTHING', (cx, cy))
+            event('SPACE')
+            yield from settle(8)
+            event('RIGHTMOUSE')
+            yield from settle()
+            event('RIGHTMOUSE', 'RELEASE')
+            yield from settle()
+            controls = ellipse_page(center, control_labels, measure, bounds, scale)['items']
+            yield from click(controls[index])
+            return controls[index], native_list(controls[index], labels, measure, bounds, scale)
+
+        cases = (
+            ('rows', 0, ROW_LABELS,
+             (('common', ['pane', 'modeling']),
+              ('pane', ['common', 'modeling']),
+              ('modeling', ['common', 'pane']))),
+            ('transparency', 2, TRANSPARENCY_LABELS,
+             ((0, 0), (25, 25), (50, 50), (75, 75), (100, 100))),
+        )
+        for name, controls_index, labels, options in cases:
+            for selected_index, (selected, expected) in enumerate(options):
+                initial_transparency = 50 if name == 'transparency' and selected == 25 else 25
+                hotbox_runtime.reload_settings(bpy.context, session={
+                    'schema_version': 1, 'settings': {
+                        'style': 'rows', 'transparency': initial_transparency,
+                        'rows': ['common', 'pane', 'modeling'],
+                        'center_buttons': {'RIGHTMOUSE': 'center.controls'},
+                    }})
+                with bpy.context.temp_override(window=win, area=area, region=region):
+                    before = json.loads(hotbox_runtime.snapshot(bpy.context))['settings']
+                check(before['center_buttons']['RIGHTMOUSE'] == 'center.controls',
+                      f'{layout_probe} {name} input mapping was not applied')
+                owner, choices = yield from open_list(controls_index, labels)
+                check(len(choices) == len(labels) and all(
+                    x >= region.x and y >= region.y and x+w <= region.x+region.width and
+                    y+h <= region.y+region.height for x, y, w, h in choices),
+                    f'{layout_probe} {name} did not expose every list row inside the real pane')
+                ox, oy, ow, oh = owner
+                list_left = min(r[0] for r in choices)
+                list_right = max(r[0]+r[2] for r in choices)
+                list_bottom = min(r[1] for r in choices)
+                list_top = max(r[1]+r[3] for r in choices)
+                check(list_left >= ox+ow+9.99*scale or ox >= list_right+9.99*scale or
+                      list_bottom >= oy+oh+9.99*scale or oy >= list_top+9.99*scale,
+                      f'{layout_probe} {name} owner/list separation is below 10 logical pixels')
+                open_path = screenshot(
+                    f'native-list-{layout_probe}-{name}-{selected_index}-open.png')
+                image = bpy.data.images.load(str(open_path), check_existing=False)
+                pixels, width = list(image.pixels), image.size[0]
+                for label, (x, y, w, h) in zip(labels, choices):
+                    ink = sum(min(pixels[(yy*width+xx)*4:(yy*width+xx)*4+3]) > .55
+                              for yy in range(int(y+3*scale), int(y+h-3*scale))
+                              for xx in range(int(x+3*scale), int(x+w-3*scale)))
+                    check(ink > 2*scale*scale,
+                          f'{layout_probe} {name} missing readable label {label!r}')
+                bpy.data.images.remove(image)
+                yield from move(choices[selected_index])
+                screenshot(f'native-list-{layout_probe}-{name}-{selected_index}-hover.png')
+                event('LEFTMOUSE')
+                event('LEFTMOUSE', 'RELEASE')
+                yield from settle()
+                with bpy.context.temp_override(window=win, area=area, region=region):
+                    after = json.loads(hotbox_runtime.snapshot(bpy.context))['settings']
+                if name == 'rows':
+                    check(after['rows'] == expected,
+                          f'{layout_probe} Rows choice {selected!r} was not reachable')
+                else:
+                    check(after['transparency'] == expected,
+                          f'{layout_probe} Transparency choice {selected!r} was not reachable')
+                event('SPACE', 'RELEASE')
+                yield from settle()
+                check(not win.screen.is_animation_playing,
+                      f'{layout_probe} {name} leaked Space release')
+                print('NATIVE_LIST_SETTING', layout_probe, name, selected, 'expected', expected,
+                      flush=True)
+        print('AXISMELD_HOTBOX_NATIVE_LIST_LAYOUT_PASS', layout_probe, flush=True)
+        print('AXISMELD_HOTBOX_NATIVE_STYLE_PASS', flush=True)
+        return
+
     for requested_scale in (1.0, 2.0):
         bpy.context.preferences.view.ui_scale = requested_scale
         yield from settle(8)
