@@ -30,6 +30,13 @@
   门禁的候选，不需要为此遍历整个网格；其与选择模式、多对象编辑的组合仍须测试。
 - 同文件 `:5017` / `:5066`：select_more/select_less 为编辑网格操作，`use_face_step` 默认 true；
   不应无说明地宣称与 Maya 的点/边/面遍历完全一致。
+- `editmesh_utils.cc:417-460` 与 `bmesh/operators/bmo_utils.cc:280-410`：Face 模式且 Face Step=true
+  时扩展/收缩依据共顶点的相邻面，包含对角面，不是仅共享边。选用 5×5 四边面片、中心面12
+  扩展至 `{6,7,8,11,12,13,16,17,18}`、再收缩至 `{12}` 作为独立预期；3×3 面片一旦全部选中，
+  边界行为不能用来证明同样的收缩结果。
+- `bmesh/intern/bmesh_uvselect.cc:337`：上述工具经 `EDBM_uvselect_clear` 使 UV 选择同步有效标记
+  失效，以网格选择作为后续同步来源；不是删除 UV 图层或清空 UV 坐标。测试应验证坐标不变，
+  但不能承诺独立 UV 选择状态完全不受原生选择同步影响。
 - `source/blender/editors/object/object_add.cc:5155`：object.duplicate 为 EXEC + UNDO，linked 默认 false；
   复制不是自动进入平移的同义词，多对象、共享数据/材质及撤销结果应单独验证。
 
@@ -53,6 +60,10 @@
    同时改变现有导航/工具命令的撤销语义；应在真实菜单调用后验证一次撤销准确恢复场景。
    `wm_event_system.cc:1393-1401` 只对声明 UNDO 的 operator 增减嵌套深度，是该设计的源码依据，
    仍不能代替真实撤销测试。
+8. `source/blender/axismeld/intern/hotbox_menu.cc:798-813` 的原生 close-before 规则只允许明确
+   列出的即时视图命令保持热盒，其余 ID 默认先关闭；新增三个选择 ID 无需改这里的生产逻辑。
+   原生 `RestrictedClosePolicyUsesLiteralCommandIdentities` 应追加三个准确 ID 作为契约测试，
+   与 parser 的未知命令拒绝保持独立，不把“默认先关闭”误解成“允许执行任意命令”。
 
 ## 尚待后续切片明确的边界
 

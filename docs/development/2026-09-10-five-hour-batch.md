@@ -83,18 +83,22 @@ GUI：`tests/python/axismeld_hotbox_ui_runner.py --blender <stage exe> --suite n
 `AXISMELD_TEST_OVERLAY=1`、`AXISMELD_TEST_DRAG_GUIDE=1`、`AXISMELD_TEST_NAVIGATION_PROBE=quad`。
 日志统一 `D:/source/AxisMeld-build/batch5h-<slice>-<check>.log`，最终报告不得引用中间失败构建冒充最新成果。
 
+最终主控还应在 GUI worker 交还独占权后串行运行 `axismeld_navigation_ui_runner.py`
+的默认导航与 `--suite view-lock`，对应 H5-06；已有测试明确断言右/下拉近、左/上拉远，
+以及固定视图的 tumble 锁定且 pan/dolly 保持。不要只凭历史通过记录写成当前安装已验证。
+
 ## 进度（每次实际执行后更新）
 
 | 批次 | 状态 | 结果 / 下一步 |
 |---|---|---|
 | 0：准备 | 完成 | 读取现有实现和范围；复用工作树；起始纯测试通过；定时续作与集中验收表已建立 |
 | 1：短设置列表原生菜单 | 完成，待最终统一手测 | 1a61bb81f3c / 45e9357edbf / 8965cbe5c58；33 原生布局、40 Python、5 CTest 及实际 GUI 矩阵通过；窄窗和 2× quad 新列表补测经复核；最终独立审查通过，无阻断项 |
-| 2：映射列表及交互回归 | 进行中 | b93e8266e77 原生分页 36/36、构建通过；独立审查发现尾页 offset 累积，原作者按修订范围修复；当前测试安装仍保持短菜单基线 |
+| 2：映射列表及交互回归 | 实现及自动化完成，审查中 | b93e8266e77 + 871911034b1 + 8341fdac9b0；38 原生、40 Python、5 CTest，标准/窄窗/四视图实际映射及既有 GUI 矩阵通过。原始渲染 RED 夹具无效已披露；禁用箭头独立 RED/GREEN 有效 |
 | 3：常用建模适配 | 未开始、时间允许才做 | 先能力/语义与数据安全审查，逐命令完成测试再接通菜单 |
 | 4：收尾 | 未开始 | 04:23 起集中回归，04:53 截止；停止自动化并交付统一报告 |
 
 **下一步明确入口：** [映射列表计划](../superpowers/plans/2026-09-11-hotbox-mapping-lists.md)。
-原生任务正在 `.superpowers/sdd/2026-09-11-hotbox-mapping-lists/` 运行；读取对应 ledger 和报告，
+独立审查在 `.superpowers/sdd/2026-09-11-hotbox-mapping-lists/` 进行；读取对应 ledger 和报告，
 不要再次执行已完成的短菜单任务，也不要重复派发正在运行的 worker。正常视觉偏好仍集中审核。
 
 现场补充：本批开始时再次备份并核对了 6 个 portable 文件，路径为
@@ -105,5 +109,8 @@ GUI：`tests/python/axismeld_hotbox_ui_runner.py --blender <stage exe> --suite n
 后续选择适配的本机证据与约束见 [预检](2026-09-11-modeling-adapter-preflight.md)。
 最小三个选择动作的 [候选设计](../design/2026-09-11-selection-actions-candidate.md) 已准备，
 尚未启动实现；先完成映射菜单与交互修复，截止时间不因新增候选顺延。
-长映射列表的现状与分页/背景分组约束见 [预检](2026-09-11-mapping-list-preflight.md)，尚未实施。
+长映射列表的实现前快照、分页/背景分组约束和 GUI 诊断修订见 [预检](2026-09-11-mapping-list-preflight.md)。
 后续书面步骤见 [映射列表计划](../superpowers/plans/2026-09-11-hotbox-mapping-lists.md)。
+
+02:29 主控追加检查：当前 build/stage SHA256 为34CCA824…F8603BE7A；portable6/6无差异，
+fallback不变。当前安装的 navigation、view-lock 两套私有 GUI 测试均通过；不等同人工手感验收。

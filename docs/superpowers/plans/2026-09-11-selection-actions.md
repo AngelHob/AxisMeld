@@ -33,6 +33,7 @@ This is one end-to-end task because a callable registry without its adapter/real
 - Modify `scripts/modules/axismeld/hotbox_runtime.py`: independent supported-command allowlist only.
 - Modify `source/blender/editors/space_view3d/view3d_axismeld_hotbox_model.cc`: exact native allowlist only.
 - Test `source/blender/editors/space_view3d/tests/hotbox_model_test.cc`.
+- Test `source/blender/axismeld/tests/hotbox_menu_test.cc`: explicit new-ID close-before assertions only.
 - Test `tests/python/axismeld_hotbox_catalog_test.py`.
 - Test `tests/python/axismeld_input_test.py`.
 - Create `tests/python/axismeld_selection_events.py`: focused real scene/GUI result suite, not an expansion of the large generic menu suite.
@@ -56,6 +57,12 @@ for identifier in expected:
 ```
 
   Expand the existing full set assertion in `axismeld_input_test.py`, do not replace it with a subset assertion. Add native snapshot cases using existing snapshot(...) helper and literal command-node JSON for each new ID; assert parsed IDs and continued rejection of `selection.unknown` with atomic output preservation.
+
+  Native `hotbox_command_closes()` already defaults all non-immediate-view commands to true
+  (`hotbox_menu.cc:798-813`); no production policy edit is needed. Add the three new literal IDs to
+  `RestrictedClosePolicyUsesLiteralCommandIdentities` so native close-before behavior is explicit.
+  Preserve the unknown-ID close safety case and separate parser rejection checks. This existing-policy
+  assertion is expected to pass before registration; the registration/parser tests provide RED.
 
 - [ ] Run pure Python tests and the targeted native parser test before production edits; save missing-ID RED. CMake target `editor_hotbox_hotbox_model_test` is verified from the generated `.vcxproj` and CTest file. Build that Release target and run `D:/source/AxisMeld-build/bin/tests/Release/editor_hotbox_hotbox_model_test.exe`. Record exact command and native RED output.
 
@@ -103,10 +110,20 @@ def _selection_operation(context, command):
   - Object no active selection: visible Mesh, Empty and Camera become selected; hidden and hide_select objects do not.
   - Object all selected and empty scene: dispatch returns the actual native no-op status and does not falsely create a success record. Mesh Edit no-op FINISHED follows existing Recent behavior.
   - Mesh Edit vertex/edge/face select-all, hidden components excluded, multi-object unique-data/shared-data cases, mode preserved.
-  - A hand-built 3×3 quad patch with known face indices: grow center face4 to the expected adjacency set; shrink that region back to the expected interior. Verify exact sets against source-supported native face adjacency, and independently verify one undo restores each pre-action selection. If native topology semantics differ from the candidate expectation, document the source/result and choose an equally explicit known topology instead of reading expected from actual results.
+  - A hand-built 5×5 quad patch with row-major face indices: grow center face12 to literal `{6,7,8,11,12,13,16,17,18}`, then shrink that region to literal `{12}`. Face Step=true includes vertex-connected diagonal faces (`bmo_utils.cc:280-410`), not just edge neighbors. Independently verify one undo restores each pre-action selection. Verify mesh counts/coordinates and UV coordinates equal the known initial fixture; native UV-selection sync invalidation is allowed and must not be mistaken for UV-coordinate mutation.
   - Object Grow/Shrink gray-disabled with reason and direct dispatch CANCELLED; wrong editor and unknown ID remain unavailable.
   - Each action via real held/clicked hotbox events, menu closes, correct result, Recent ID, W/E/R tools immediately correct; a canceled gesture changes neither scene nor Recent.
   - One new command mapped only in private user profile, saved/reloaded and effective; all default keys and no-key metadata remain unchanged.
+
+  The face-grid fixture is independent of the operators under test:
+
+```python
+vertices = [(float(x), float(y), 0.0) for y in range(6) for x in range(6)]
+faces = [(y*6+x, y*6+x+1, (y+1)*6+x+1, (y+1)*6+x)
+         for y in range(5) for x in range(5)]
+expected_grown_faces = {6, 7, 8, 11, 12, 13, 16, 17, 18}
+expected_shrunk_faces = {12}
+```
 
 - [ ] Update Select-menu coordinate fixtures in the existing menu suite to the exact new eight labels, including separator. Keep every prior mode-switch, close, non-owner release and context assertion. Do not change unrelated menu fixtures or native list geometry.
 
