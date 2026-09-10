@@ -93,13 +93,13 @@ GUI：`tests/python/axismeld_hotbox_ui_runner.py --blender <stage exe> --suite n
 |---|---|---|
 | 0：准备 | 完成 | 读取现有实现和范围；复用工作树；起始纯测试通过；定时续作与集中验收表已建立 |
 | 1：短设置列表原生菜单 | 完成，待最终统一手测 | 1a61bb81f3c / 45e9357edbf / 8965cbe5c58；33 原生布局、40 Python、5 CTest 及实际 GUI 矩阵通过；窄窗和 2× quad 新列表补测经复核；最终独立审查通过，无阻断项 |
-| 2：映射列表及交互回归 | 实现及自动化完成，审查中 | b93e8266e77 + 871911034b1 + 8341fdac9b0；38 原生、40 Python、5 CTest，标准/窄窗/四视图实际映射及既有 GUI 矩阵通过。原始渲染 RED 夹具无效已披露；禁用箭头独立 RED/GREEN 有效 |
-| 3：常用建模适配 | 未开始、时间允许才做 | 先能力/语义与数据安全审查，逐命令完成测试再接通菜单 |
+| 2：映射列表及交互回归 | 完成，终审修订复核通过，待统一手测 | 生产8341fdac9b0、测试86aa564a5d6；38 原生、40 Python、5 CTest及实际 GUI 矩阵通过。禁用箭头 held Space-first/Esc 补测通过；原始渲染 RED 例外与极窄工具横条重叠已披露 |
+| 3：常用建模适配 | 启动最小三个选择动作 | Select All / Grow / Shrink，原生 adapted、默认不绑键；需真实撤销、安装回归和独立审查 |
 | 4：收尾 | 未开始 | 04:23 起集中回归，04:53 截止；停止自动化并交付统一报告 |
 
-**下一步明确入口：** [映射列表计划](../superpowers/plans/2026-09-11-hotbox-mapping-lists.md)。
-独立审查在 `.superpowers/sdd/2026-09-11-hotbox-mapping-lists/` 进行；读取对应 ledger 和报告，
-不要再次执行已完成的短菜单任务，也不要重复派发正在运行的 worker。正常视觉偏好仍集中审核。
+**下一步明确入口：** [选择动作计划](../superpowers/plans/2026-09-11-selection-actions.md)。
+映射列表所有审查门禁已关闭；读取新计划对应 ledger，不能重复执行前两批。
+正常视觉偏好仍集中审核，04:23 收尾及04:53最终截止不顺延。
 
 现场补充：本批开始时再次备份并核对了 6 个 portable 文件，路径为
 `D:/source/AxisMeld-build/preserved-test-configs/2026-09-11-batch5h/phase2b-ui-test-install/portable`。
@@ -108,7 +108,7 @@ GUI：`tests/python/axismeld_hotbox_ui_runner.py --blender <stage exe> --suite n
 
 后续选择适配的本机证据与约束见 [预检](2026-09-11-modeling-adapter-preflight.md)。
 最小三个选择动作的 [候选设计](../design/2026-09-11-selection-actions-candidate.md) 已准备，
-尚未启动实现；先完成映射菜单与交互修复，截止时间不因新增候选顺延。
+现已在映射菜单终审关闭后启动最小范围；截止时间不因新增候选顺延。
 长映射列表的实现前快照、分页/背景分组约束和 GUI 诊断修订见 [预检](2026-09-11-mapping-list-preflight.md)。
 后续书面步骤见 [映射列表计划](../superpowers/plans/2026-09-11-hotbox-mapping-lists.md)。
 
