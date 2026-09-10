@@ -243,8 +243,9 @@ def suite():
     yield
     event('RIGHTMOUSE', 'RELEASE')
     yield from settle()
-    event('MOUSEMOVE', 'NOTHING', x=menu_origin[0] + 100 * bpy.context.preferences.system.ui_scale,
-          y=menu_origin[1])
+    # Move is the north item of the three-command elliptical Modify menu.
+    event('MOUSEMOVE', 'NOTHING', x=menu_origin[0],
+          y=menu_origin[1] + 80 * bpy.context.preferences.system.ui_scale)
     yield from settle()
     yield from click()
     event('SPACE', 'RELEASE')

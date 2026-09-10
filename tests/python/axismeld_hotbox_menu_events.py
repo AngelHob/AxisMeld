@@ -83,7 +83,7 @@ def suite():
     event('SPACE')
     yield from settle(8)
     path = screenshot('menus-main.png')
-    # Common row is at center + 64 logical pixels. A broad strip must visibly change;
+    # Common row is at center + 96 logical pixels. A broad strip must visibly change;
     # the old fixed four labels never draw there. Compare real rendered pixels.
     before = bpy.data.images.load(str(before_path), check_existing=False)
     after = bpy.data.images.load(str(path), check_existing=False)
@@ -93,10 +93,10 @@ def suite():
     if alpha_probe:
         blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
         common_labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
-        span = (sum(blf.dimensions(0, text)[0]/scale + 24 for text in common_labels) + 24) / .72
-        center_width = blf.dimensions(0, 'AxisMeld')[0]/scale + 44
-        side_width = (span - center_width)/2 - 4
-        recent_center = cx - (center_width/2 + 4 + side_width/2)*scale
+        span = (sum(blf.dimensions(0, text)[0]/scale + 40 for text in common_labels) + 60) / .72
+        center_width = blf.dimensions(0, 'AxisMeld')[0]/scale + 60
+        side_width = (span - center_width)/2 - 10
+        recent_center = cx - (center_width/2 + 10 + side_width/2)*scale
         text_width = blf.dimensions(0, 'Recent Commands')[0]
         left = recent_center - (text_width + 20*scale)/2
         def foreground_peak(x0, x1):
@@ -144,7 +144,7 @@ def suite():
         print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
         return
     changed = 0
-    for y in range(int(cy + 55 * scale), int(cy + 73 * scale)):
+    for y in range(int(cy + 87 * scale), int(cy + 105 * scale)):
         for x in range(int(cx - 170 * scale), int(cx + 170 * scale)):
             i = (y * width + x) * 4
             changed += sum(abs(a[i + k] - b[i + k]) for k in range(3)) > .08
@@ -187,6 +187,13 @@ def suite():
         observed.append((command, result))
         return result
     hotbox_runtime.dispatch = observed_dispatch
+    settings_observed = []
+    real_apply_setting = hotbox_runtime.apply_setting
+    def observed_setting(context, setting, value):
+        result = real_apply_setting(context, setting, value)
+        settings_observed.append((setting, value, result))
+        return result
+    hotbox_runtime.apply_setting = observed_setting
 
     def locate(x=None, y=None):
         x, y = (cx, cy) if x is None else (x, y)
@@ -227,6 +234,47 @@ def suite():
         (90, -90, 'view.bottom', (0, 1, 0, 0)),
         (0, 90, 'view.perspective', None),
     )
+    # Real mouse motion crosses the central Style rectangle before reaching a sector.
+    # A single large synthetic jump cannot catch a central hover stealing this gesture.
+    for requested_scale in (1.0, 2.0):
+        bpy.context.preferences.view.ui_scale = requested_scale
+        yield from settle(8)
+        scale = bpy.context.preferences.system.ui_scale
+        for dx, dy, command, rotation in directions:
+            yield from open_box()
+            count, setting_count = len(observed), len(settings_observed)
+            event('RIGHTMOUSE')
+            yield
+            for distance in (1, 3, 6, 10, 15, 30, 50, 70, 90):
+                event('MOUSEMOVE', 'NOTHING', cx+dx/90*distance*scale, cy+dy/90*distance*scale)
+                yield
+            event('RIGHTMOUSE', 'RELEASE')
+            yield from settle()
+            check(len(observed) == count+1 and observed[-1] == (command, {'FINISHED'}) and
+                  len(settings_observed) == setting_count,
+                  f'segmented 1/3/6/10/15/30/50/70/90 motion at {scale}x stole {command}')
+            yield from close_box()
+        yield from open_box()
+        count, setting_count = len(observed), len(settings_observed)
+        event('RIGHTMOUSE')
+        yield
+        for distance in (1, 3, 6, 10, 15):
+            event('MOUSEMOVE', 'NOTHING', cx+distance*scale, cy)
+            yield
+        screenshot(f'menus-segmented-near-side-{scale}.png')
+        event('RIGHTMOUSE', 'RELEASE')
+        yield from settle()
+        check(len(observed) == count+1 and observed[-1] == ('view.side', {'FINISHED'}) and
+              len(settings_observed) == setting_count,
+              f'15 logical pixels at {scale}x must select Side outside the 12px dead zone')
+        yield from close_box()
+    bpy.context.preferences.view.ui_scale = 1.0
+    yield from settle(8)
+    scale = bpy.context.preferences.system.ui_scale
+    print('PASS segmented seven-direction motion and near 15px Side at 1x/2x', flush=True)
+    if os.environ.get('AXISMELD_TEST_SEGMENTED_PROBE'):
+        print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
+        return
     for button in ('RIGHTMOUSE', 'LEFTMOUSE', 'MIDDLEMOUSE'):
         for dx, dy, command, rotation in directions:
             yield from open_box()
@@ -252,6 +300,7 @@ def suite():
         yield from open_box()
         original = current_pose()
         count = len(observed)
+        setting_count = len(settings_observed)
         event('RIGHTMOUSE')
         yield
         event('MOUSEMOVE', 'NOTHING', cx + dx * scale, cy + dy * scale)
@@ -259,6 +308,12 @@ def suite():
         event('RIGHTMOUSE', 'RELEASE')
         yield from close_box()
         check(len(observed) == count and current_pose() == original, 'NE/deadzone executed')
+        check(len(settings_observed) == setting_count, 'NE/deadzone submitted a setting')
+    if os.environ.get('AXISMELD_TEST_DEADZONE_PROBE'):
+        print('PASS deadzone/NE dispatched neither commands nor settings; 21 direction positive controls',
+              flush=True)
+        print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
+        return
     for cancel in ('SPACE', 'ESC'):
         yield from open_box()
         count = len(observed)
@@ -288,42 +343,210 @@ def suite():
     yield from close_box()
     check(len(observed) == count + 1 and observed[-1][0] == 'view.left', 'owning mouse lost candidate')
 
-    # Independent measured coordinates for the normal centered row and right-hand popup.
-    # This does not import/reimplement the production layout or query test-only native state.
+    # Measured public labels provide input positions only; all effects below are literal.
+    sys.path.insert(0, str(Path(__file__).parent))
+    from axismeld_hotbox_geometry_fixture import ellipse_page
     blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
     icon_labels = {'AxisMeld', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls',
                    'Wireframe', 'Solid', 'Perspective View', 'Side View', 'Bottom View',
                    'Front View', 'Back View', 'Top View', 'Left View', 'Vertex', 'Edge', 'Face'}
     def label_width(label):
-        return blf.dimensions(0, label)[0] / scale + (20 if label in icon_labels else 0)
+        native_icon = label in icon_labels or label.startswith(('Entry ', 'Parent ', 'Child '))
+        return blf.dimensions(0, label)[0] / scale + (20 if native_icon else 0)
     common_labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
-    # Desktop fixture: the seven natural Common buttons determine the upper taper.
-    # Expected row spans are independently specified by the approved envelope ratios.
-    common_span = sum(label_width(label) + 24 for label in common_labels) + 24
+    common_span = sum(label_width(label) + 40 for label in common_labels) + 60
     center_span = common_span / .72
     def row_title(labels, index, dy):
-        widths = [label_width(label) + 24 for label in labels]
-        if dy == 32:
-            extra = (common_span * (.92 / .72) - sum(widths) - 4*(len(widths)-1)) / len(widths)
+        widths = [label_width(label) + 40 for label in labels]
+        if dy == 48:
+            extra = (common_span * (.92 / .72) - sum(widths) - 10*(len(widths)-1)) / len(widths)
             widths = [width + extra for width in widths]
-        start = cx / scale - (sum(widths) + 4 * (len(widths)-1)) / 2
-        x = start + sum(widths[:index]) + 4 * index
-        return (x * scale, cy + (dy-14) * scale, widths[index] * scale, 28 * scale)
+        start = cx / scale - (sum(widths) + 10 * (len(widths)-1)) / 2
+        x = start + sum(widths[:index]) + 10 * index
+        return (x * scale, cy + (dy-19) * scale, widths[index] * scale, 38 * scale)
     def midpoint(rect):
+        check(rect is not None, 'input attempted an off-page item')
         x, y, w, h = rect
         return x+w/2, y+h/2
-    def popup(anchor, labels):
-        x, y, w, h = anchor
-        width = (max(label_width(label) for label in labels) + 24) * scale
-        px = x+w+4*scale
-        if px+width > region.x+region.width-8*scale:
-            px = x-4*scale-width
-        px = max(region.x+8*scale, min(px, region.x+region.width-8*scale-width))
-        height = len(labels)*28*scale
-        bottom = max(region.y+8*scale, min(y+h-height, region.y+region.height-8*scale-height))
-        return [(px, bottom+height-(i+1)*28*scale, width, 28*scale) for i in range(len(labels))]
+    def page(anchor, labels, first=0):
+        return ellipse_page(anchor, labels, label_width,
+                            (region.x, region.y, region.width, region.height), scale, first,
+                            views=bool(labels and labels[0] == 'Perspective View'))
+    def popup(anchor, labels, first=0):
+        return page(anchor, labels, first)['items']
+    if os.environ.get('AXISMELD_TEST_NAVIGATION_PROBE') == 'quad':
+        bpy.context.preferences.view.ui_scale = 2.0
+        yield from settle(8)
+        scale = bpy.context.preferences.system.ui_scale
+        blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
+        area.spaces.active.show_region_toolbar = False
+        area.spaces.active.show_region_header = False
+        area.spaces.active.show_region_tool_header = False
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            bpy.ops.view3d.axismeld_view(action='TOGGLE_QUAD')
+        yield from settle(8)
+        region = next(r for r in area.regions if r.type == 'WINDOW')
+        cx, cy = region.x+region.width//2, region.y+region.height//2
+        print('ROOMY_QUAD_2X', region.width/scale, region.height/scale, flush=True)
+        check(340 <= region.width/scale < 480 and 200 <= region.height/scale < 320,
+              'actual quad must exercise compact logical geometry at 2x')
+        anchor = (cx-(label_width('AxisMeld')+40)*scale/2, cy-19*scale,
+                  (label_width('AxisMeld')+40)*scale, 38*scale)
+        labels = ['Perspective View', 'Side View', 'Bottom View', 'Front View',
+                  'Back View', 'Top View', 'Left View', '', 'Hotbox Style']
+        for index, command in enumerate(('view.perspective', 'view.side', 'view.bottom',
+                                          'view.front', 'view.back', 'view.top', 'view.left')):
+            yield from open_box()
+            if index == 0:
+                screenshot('menus-quad-2x-compact-main.png')
+            event('RIGHTMOUSE')
+            yield
+            positions = popup(anchor, labels)
+            yield from move(midpoint(positions[index]))
+            if index == 0:
+                screenshot('menus-quad-2x-seven-views.png')
+            count = len(observed)
+            event('RIGHTMOUSE', 'RELEASE')
+            yield from settle()
+            check(len(observed) == count+1 and observed[-1] == (command, {'FINISHED'}),
+                  '2x quad visible button ' + command)
+            yield from close_box()
+        original_snapshot = hotbox_runtime.snapshot
+        def quad_snapshot(context):
+            value = json.loads(original_snapshot(context))
+            value['settings']['center_buttons']['RIGHTMOUSE'] = 'common.select'
+            value['menus'][0]['children'][3]['children'] = [
+                dict(id=f'quad.{i}', kind='command', label=f'Entry {i:02}',
+                     command='view.top' if i == 17 else 'view.front', enabled=True,
+                     reason='', children=[]) for i in range(18)]
+            return json.dumps(value)
+        hotbox_runtime.snapshot = quad_snapshot
+        yield from open_box()
+        event('RIGHTMOUSE')
+        yield
+        event('RIGHTMOUSE', 'RELEASE')
+        yield from settle()
+        labels = [f'Entry {i:02}' for i in range(18)]
+        current = page(anchor, labels)
+        check(current['capacity'] < 8, 'quad overflow must reduce capacity, never target size')
+        screenshot('menus-quad-2x-page-first.png')
+        while current['first'] + current['capacity'] < 18:
+            yield from click(midpoint(current['next']))
+            current = page(anchor, labels, current['first']+1)
+        screenshot('menus-quad-2x-page-last.png')
+        count = len(observed)
+        yield from click(midpoint(current['items'][17]))
+        check(len(observed) == count+1 and observed[-1] == ('view.top', {'FINISHED'}),
+              '2x quad long ellipse final page leaf')
+        yield from close_box()
+        print('PASS actual 2x quad: all seven visible views and final long-menu page', flush=True)
+        print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
+        return
+    if os.environ.get('AXISMELD_TEST_NAVIGATION_PROBE') in {'corner', 'latch'}:
+        area.spaces.active.show_region_toolbar = False
+        area.spaces.active.show_region_header = False
+        area.spaces.active.show_region_tool_header = False
+        yield from settle(8)
+        cx, cy = region.x+2, region.y+2
+        anchor = (region.x, region.y, (label_width('AxisMeld')+40)*scale, 38*scale)
+        labels = ['Perspective View', 'Side View', 'Bottom View', 'Front View',
+                  'Back View', 'Top View', 'Left View', '', 'Hotbox Style']
+        if os.environ.get('AXISMELD_TEST_NAVIGATION_PROBE') == 'latch':
+            hotbox_runtime.reload_settings(bpy.context, session={
+                'schema_version': 1, 'settings': {'center_buttons': {'RIGHTMOUSE': 'pane.shading'}}})
+            yield from open_box()
+            event('RIGHTMOUSE')
+            yield
+            event('RIGHTMOUSE', 'RELEASE')
+            yield from settle()
+            choices = popup(anchor, ['Wireframe', 'Solid'])
+            count = len(observed)
+            yield from click(midpoint(choices[1]))
+            check(len(observed) == count+1 and observed[-1] == ('view.shaded', {'FINISHED'}),
+                  'stationary mapped-menu release at the corner reclassified the rebuilt ring')
+            yield from close_box()
+            print('PASS stationary corner menu entry latches, next fresh leaf click executes', flush=True)
+            print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
+            return
+        yield from open_box()
+        event('RIGHTMOUSE')
+        yield
+        positions = popup(anchor, labels)
+        yield from move(midpoint(positions[5]))
+        screenshot('menus-corner-visible-top.png')
+        count = len(observed)
+        event('RIGHTMOUSE', 'RELEASE')
+        yield from settle()
+        check(len(observed) == count+1 and observed[-1] == ('view.top', {'FINISHED'}),
+              'visible corner Top button dispatched its displaced origin sector instead of Top')
+        yield from close_box()
+        print('PASS inward-clamped visible Top button dispatches Top', flush=True)
+        print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
+        return
+    if os.environ.get('AXISMELD_TEST_NAVIGATION_PROBE'):
+        original_snapshot = hotbox_runtime.snapshot
+        def navigation_snapshot(context):
+            value = json.loads(original_snapshot(context))
+            value['settings']['center_buttons']['RIGHTMOUSE'] = 'common.select'
+            if os.environ.get('AXISMELD_TEST_NAVIGATION_PROBE') == 'title':
+                value['settings']['center_buttons']['RIGHTMOUSE'] = 'center.controls'
+            if os.environ.get('AXISMELD_TEST_NAVIGATION_PROBE') == 'gap':
+                value['settings']['style'] = 'center'
+            value['menus'][0]['children'][3]['children'] = [
+                dict(id=f'nav.{i}', kind='command', label=f'Entry {i:02}',
+                     command='view.top' if i == 17 else 'view.front', enabled=True,
+                     reason='', children=[]) for i in range(18)]
+            return json.dumps(value)
+        hotbox_runtime.snapshot = navigation_snapshot
+        anchor = (cx-(label_width('AxisMeld')+40)*scale/2, cy-19*scale,
+                  (label_width('AxisMeld')+40)*scale, 38*scale)
+        labels = [f'Entry {i:02}' for i in range(18)]
+        yield from open_box()
+        event('RIGHTMOUSE')
+        yield
+        event('RIGHTMOUSE', 'RELEASE')
+        yield from settle()
+        if os.environ.get('AXISMELD_TEST_NAVIGATION_PROBE') == 'title':
+            controls = popup(anchor, ['Menu Rows', 'Hotbox Style', 'Transparency',
+                                       'Center Mouse Buttons'])
+            yield from click(midpoint(controls[1]))
+            choices = popup(controls[1], ['Zones and Menu Rows', 'Zones Only', 'Center Zone Only'])
+            yield from click(midpoint(choices[2]))
+            check(hotbox_runtime.current_settings()['style'] == 'center',
+                  'latched child-directory click bounced immediately through its new Back control')
+            yield from close_box()
+            print('PASS latched child directory click enters and its setting leaf executes', flush=True)
+            print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
+            return
+        current = page(anchor, labels)
+        if os.environ.get('AXISMELD_TEST_NAVIGATION_PROBE') == 'gap':
+            gap_point = (cx, cy+25*scale)
+            count = len(observed)
+            yield from move(gap_point)
+            event('LEFTMOUSE')
+            yield
+            yield from move((gap_point[0]+350*scale, gap_point[1]))
+            event('LEFTMOUSE', 'RELEASE')
+            yield from settle()
+            check(len(observed) == count, 'active ellipse gap incorrectly restarted center marking')
+            yield from close_box()
+            print('PASS active-ring gap cannot restart center-only marking', flush=True)
+            print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
+            return
+        while current['first'] + current['capacity'] < 18:
+            yield from click(midpoint(current['next']))
+            current = page(anchor, labels, current['first']+1)
+        screenshot('menus-next-terminal-page.png')
+        count = len(observed)
+        yield from click(midpoint(current['items'][17]))
+        check(len(observed) == count+1 and observed[-1] == ('view.top', {'FINISHED'}),
+              'Next becoming disabled on press discarded the menu before its final leaf')
+        yield from close_box()
+        print('PASS terminal Next press/release retains the final page and dispatches its leaf', flush=True)
+        print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
+        return
     pane_labels = ['View', 'Shading', 'Lighting', 'Show', 'Renderer', 'Panels']
-    shading = row_title(pane_labels, 1, 32)
+    shading = row_title(pane_labels, 1, 48)
     shading_items = popup(shading, ['Wireframe', 'Solid'])
     review_failures = []
     # Releasing anywhere except a title/parent must discard the old executable popup.
@@ -334,7 +557,7 @@ def suite():
           common[0]['id'] == 'common.file' and not common[0]['enabled'],
           'disabled cancellation fixture must address the actual seven-item public File row')
     for target, point in (('blank', (cx-300*scale, cy-180*scale)),
-                          ('disabled', midpoint(row_title(common_labels, 0, 64)))):
+                          ('disabled', midpoint(row_title(common_labels, 0, 96)))):
         yield from open_box()
         yield from move(midpoint(shading))
         event('LEFTMOUSE')
@@ -374,14 +597,14 @@ def suite():
     # A disabled File title must neither dispatch nor turn the gesture into a tap.
     yield from open_box()
     count = len(observed)
-    yield from click(midpoint(row_title(common_labels, 0, 64)))
+    yield from click(midpoint(row_title(common_labels, 0, 96)))
     screenshot('menus-disabled-file-reason.png')
     yield from close_box()
     check(len(observed) == count and len([r for r in area.regions if r.type == 'WINDOW']) == 1,
           'disabled title executed or became tap')
 
     # Close-before mode command: no stale draw pointer and no residual Space playback.
-    select = row_title(common_labels, 3, 64)
+    select = row_title(common_labels, 3, 96)
     select_items = popup(select, ['Object / Component', '', 'Vertex', 'Edge', 'Face'])
     yield from open_box()
     yield from move(midpoint(select))
@@ -398,7 +621,7 @@ def suite():
         bpy.ops.object.mode_set(mode='OBJECT')
     yield from settle()
 
-    panels = row_title(pane_labels, 5, 32)
+    panels = row_title(pane_labels, 5, 48)
     panel_items = popup(panels, ['Views', '', 'Single / Quad View'])
     yield from open_box()
     yield from click(midpoint(panels))
@@ -419,8 +642,8 @@ def suite():
     def settings(mapping):
         hotbox_runtime.reload_settings(bpy.context, session={
             'schema_version': 1, 'settings': {'center_buttons': {'RIGHTMOUSE': mapping}}})
-    center = (cx-(label_width('AxisMeld')+24)*scale/2, cy-14*scale,
-              (label_width('AxisMeld')+24)*scale, 28*scale)
+    center = (cx-(label_width('AxisMeld')+40)*scale/2, cy-19*scale,
+              (label_width('AxisMeld')+40)*scale, 38*scale)
     settings('pane.shading')
     yield from open_box()
     event('RIGHTMOUSE')
@@ -438,7 +661,7 @@ def suite():
     event('RIGHTMOUSE', 'RELEASE')
     yield from settle()
     root_items = popup(center, ['Recent Commands', 'AxisMeld', 'Hotbox Controls'])
-    yield from move(midpoint(root_items[1]))
+    yield from click(midpoint(root_items[1]))
     yield from settle()
     screenshot('menus-center-root-duplicate-views.png')
     view_items = popup(root_items[1], ['Perspective View', 'Side View', 'Bottom View', 'Front View',
@@ -537,48 +760,53 @@ def suite():
           flush=True)
     reset_hotbox_settings()
 
-    # The central marking menu's appended Style list wins over the directional sector.
+    # Original marking passes through Style. Release first, then a fresh Style press may
+    # enter its ordinary directory and retain held-drag-to-setting behavior.
     yield from open_box()
     event('RIGHTMOUSE')
     yield
     central_list = popup(center, ['Perspective View', 'Side View', 'Bottom View', 'Front View',
                                   'Back View', 'Top View', 'Left View', '', 'Hotbox Style'])
+    event('RIGHTMOUSE', 'RELEASE')
+    yield from settle()
     yield from move(midpoint(central_list[8]))
+    event('LEFTMOUSE')
+    yield
     central_styles = popup(central_list[8], ['Zones and Menu Rows', 'Zones Only', 'Center Zone Only'])
     yield from move(midpoint(central_styles[1]))
-    screenshot('menus-marking-style-candidate.png')
+    screenshot('menus-fresh-style-drag-candidate.png')
     count = len(observed)
-    event('RIGHTMOUSE', 'RELEASE')
+    event('LEFTMOUSE', 'RELEASE')
     yield from settle()
     with bpy.context.temp_override(window=win, area=area, region=region):
         check(json.loads(hotbox_runtime.snapshot(bpy.context))['settings']['style'] == 'zones' and
-              len(observed) == count, 'marking Style list must win over direction inference')
+              len(observed) == count, 'fresh Style title drag must select its setting')
     yield from close_box()
     reset_hotbox_settings()
 
     yield from open_box()
     event('RIGHTMOUSE')
     yield
-    yield from move(midpoint(central_list[8]))
     count = len(observed)
     event('RIGHTMOUSE', 'RELEASE')
     yield from settle()
     check(len(observed) == count, 'Style parent release executed a directional command')
+    yield from click(midpoint(central_list[8]))
     yield from click(midpoint(central_styles[1]))
     with bpy.context.temp_override(window=win, area=area, region=region):
         check(json.loads(hotbox_runtime.snapshot(bpy.context))['settings']['style'] == 'zones' and
-              len(observed) == count, 'marking Style parent must support click browsing')
+              len(observed) == count, 'fresh Style title click must support subsequent leaf click')
     yield from close_box()
     reset_hotbox_settings()
 
     # Actual settings leaves use the native bridge and rebuild the same live hotbox.
-    control_width = ((center_span - center[2]/scale)/2 - 4)*scale
-    controls = (center[0]+center[2]+4*scale, cy-14*scale, control_width, 28*scale)
+    control_width = ((center_span - center[2]/scale)/2 - 10)*scale
+    controls = (center[0]+center[2]+10*scale, cy-19*scale, control_width, 38*scale)
     control_items = popup(controls, ['Menu Rows', 'Hotbox Style', 'Transparency',
                                      'Center Mouse Buttons'])
     yield from open_box()
     yield from click(midpoint(controls))
-    yield from move(midpoint(control_items[1]))
+    yield from click(midpoint(control_items[1]))
     style_items = popup(control_items[1], ['Zones and Menu Rows', 'Zones Only', 'Center Zone Only'])
     yield from click(midpoint(style_items[2]))
     with bpy.context.temp_override(window=win, area=area, region=region):
@@ -601,7 +829,11 @@ def suite():
     mapping_labels = ['Disabled', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls',
                       'Common', 'Select', 'Modify', 'Current Pane', 'Pane View',
                       'Pane Shading', 'Panels', 'Panel Views', 'Modeling']
-    mapping_items = popup(button_items[2], mapping_labels)
+    mapping_page = page(button_items[2], mapping_labels)
+    while mapping_page['items'][9] is None:
+        yield from click(midpoint(mapping_page['next']))
+        mapping_page = page(button_items[2], mapping_labels, mapping_page['first'] + 1)
+    mapping_items = mapping_page['items']
     screenshot('menus-controls-center-button-open.png')
     yield from click(midpoint(mapping_items[9]))
     with bpy.context.temp_override(window=win, area=area, region=region):
@@ -617,8 +849,8 @@ def suite():
 
     # A successful leaf is visible and replayable through the session-only Recent menu.
     recent_command = hotbox_runtime.recent.items()[0]
-    recent_width = ((center_span - center[2]/scale)/2 - 4)*scale
-    recent_rect = (center[0]-4*scale-recent_width, cy-14*scale, recent_width, 28*scale)
+    recent_width = ((center_span - center[2]/scale)/2 - 10)*scale
+    recent_rect = (center[0]-10*scale-recent_width, cy-19*scale, recent_width, 38*scale)
     yield from open_box()
     yield from click(midpoint(recent_rect))
     recent_labels = [COMMANDS[command].label for command in hotbox_runtime.recent.items()]
@@ -782,18 +1014,18 @@ def suite():
     area.spaces.active.show_region_toolbar = False
     yield from open_box()
     screenshot('menus-small-row-first.png')
-    # First Modeling page is hand calculated from measured public labels, with two 24px controls.
+    # First Modeling page is hand calculated from measured public labels, with two 38px controls.
     modeling_labels = ['Mesh', 'Edit Mesh', 'Mesh Tools', 'Mesh Display', 'Curves', 'Surfaces',
                        'Deform', 'UV', 'Generate']
-    room = region.width/scale - 16 - 56
+    room = region.width/scale - 24 - 96
     used = 0
     for label in modeling_labels:
-        width = label_width(label)+24
+        width = label_width(label)+40
         if used+width > room:
             break
-        used += width+4
-    total = used-4+56
-    next_point = (cx+(total/2-12)*scale, cy-32*scale)
+        used += width+10
+    total = used-10+96
+    next_point = (cx+(total/2-19)*scale, cy-48*scale)
     count = len(observed)
     yield from click(next_point)
     screenshot('menus-small-row-scrolled.png')
@@ -823,51 +1055,38 @@ def suite():
     yield
     event('RIGHTMOUSE', 'RELEASE')
     yield from settle()
-    center = (cx-(label_width('AxisMeld')+24)*scale/2, cy-14*scale,
-              (label_width('AxisMeld')+24)*scale, 28*scale)
-    capacity = int((region.height/scale-16)/28)-2
-    def overflow_page(anchor, labels, first=0):
-        labels = ['<']+labels[first:first+capacity]+['>']
-        return popup(anchor, labels)
+    center = (cx-(label_width('AxisMeld')+40)*scale/2, cy-19*scale,
+              (label_width('AxisMeld')+40)*scale, 38*scale)
     parent_labels = ['Nested Entries']+[f'Parent {i:02}' for i in range(17)]
-    parent_rects = overflow_page(center, parent_labels)
-    child_anchor = parent_rects[1]
-    yield from move(midpoint(child_anchor))
+    parent_page = page(center, parent_labels)
+    child_anchor = parent_page['items'][0]
+    yield from click(midpoint(child_anchor))
     child_labels = [f'Child {i:02}' for i in range(18)]
-    child_rects = overflow_page(child_anchor, child_labels)
+    child_page = page(child_anchor, child_labels)
     screenshot('menus-small-parent-child-first.png')
-    # Wheel over only the child owner; parent position must still accept its same title.
-    for _ in range(18-capacity):
-        yield from move(midpoint(child_rects[-1]))
-        event('WHEELDOWNMOUSE')
-        yield
-        event('WHEELDOWNMOUSE', 'RELEASE')
-        yield
-    yield from settle()
+    while child_page['first'] + child_page['capacity'] < 18:
+        yield from click(midpoint(child_page['next']))
+        child_page = page(child_anchor, child_labels, child_page['first']+1)
     screenshot('menus-small-child-scrolled.png')
-    yield from move(midpoint(child_anchor))
-    screenshot('menus-small-return-parent.png')
-    # Scroll ancestor: deeper popup closes before its anchor moves.
-    yield from move(midpoint(parent_rects[-1]))
-    event('WHEELDOWNMOUSE')
-    yield
-    event('WHEELDOWNMOUSE', 'RELEASE')
-    yield from settle()
-    screenshot('menus-small-ancestor-scrolled.png')
     count = len(observed)
-    yield from click(midpoint(child_rects[-2]))
-    check(len(observed) == count, 'scrolling ancestor left executable deeper child rectangles')
-    # The blank release above cancels browsing; explicitly reopen the same owner.
+    yield from click(midpoint(child_page['back']))
+    check(len(observed) == count, 'Back release dispatched a newly exposed parent leaf')
+    screenshot('menus-small-return-parent.png')
+    yield from click(midpoint(parent_page['next']))
+    parent_page = page(center, parent_labels, 1)
+    screenshot('menus-small-ancestor-scrolled.png')
+    yield from click(midpoint(parent_page['items'][1]))
+    check(len(observed) == count+1 and observed[-1] == ('view.side', {'FINISHED'}),
+          'parent page did not own its real leaf after returning from nested ellipse')
     yield from click((cx, cy), 'RIGHTMOUSE')
-    yield from move(midpoint(parent_rects[-1]))
-    event('WHEELUPMOUSE')
-    yield
-    event('WHEELUPMOUSE', 'RELEASE')
-    yield from settle()
-    yield from move(midpoint(child_anchor))
-    yield from click(midpoint(child_rects[-2]))
-    check(len(observed) == count+1 and observed[-1][0] == 'view.top',
-          'independent child scroll offset did not survive ancestor navigation')
+    yield from click(midpoint(parent_page['previous']))
+    parent_page = page(center, parent_labels)
+    child_anchor = parent_page['items'][0]
+    yield from click(midpoint(child_anchor))
+    count = len(observed)
+    yield from click(midpoint(child_page['items'][17]))
+    check(len(observed) == count+1 and observed[-1] == ('view.top', {'FINISHED'}),
+          'independent child page did not survive parent back/forward navigation')
     yield from close_box()
     hotbox_runtime.snapshot = real_snapshot
     print('PASS B9 actual small viewport, row controls and nested per-owner scrolling', flush=True)
@@ -879,13 +1098,13 @@ def suite():
             region = next(r for r in area.regions if r.type == 'WINDOW')
         with bpy.context.temp_override(window=win, area=area, region=region):
             bpy.ops.screen.area_split(direction='VERTICAL' if dimension == 'width' else 'HORIZONTAL',
-                                      factor=.5 if dimension == 'width' else .25)
+                                      factor=.5 if dimension == 'width' else .18)
         yield from settle(8)
         candidates = [a for a in win.screen.areas if a.type == 'VIEW_3D']
         area = min(candidates, key=lambda a: a.width if dimension == 'width' else a.height)
         region = next(r for r in area.regions if r.type == 'WINDOW')
-        check((region.width/scale < 480 and region.height/scale >= 320) if dimension == 'width'
-              else (region.height/scale < 320 and region.width/scale >= 480),
+        check((region.width/scale < 340 and region.height/scale >= 200) if dimension == 'width'
+              else (region.height/scale < 200 and region.width/scale >= 340),
               f'unsupported {dimension} fixture must isolate one limit: {region.width}x{region.height}')
         print('UNSUPPORTED_VIEWPORT', dimension, region.x, region.y, region.width, region.height, flush=True)
         cx, cy = region.x+region.width//2, region.y+region.height//2
@@ -921,6 +1140,7 @@ def suite():
     check(not review_failures, '\n'.join(review_failures))
     print('PASS review regression: ordinary cancellation and unsupported width/height tap/hold', flush=True)
     hotbox_runtime.dispatch = real_dispatch
+    hotbox_runtime.apply_setting = real_apply_setting
     print('PASS B2/B3/B4/B8 cancel, two buttons, disabled, mode cleanup, center remaps', flush=True)
     print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
 

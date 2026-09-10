@@ -127,6 +127,7 @@ struct ViewPose {
     view = direction;
     roll = RV3D_VIEW_AXIS_ROLL_0;
     persp = RV3D_ORTHO;
+    lock |= RV3D_LOCK_ROTATION;
     ED_view3d_quat_from_axis_view(view, roll, quat);
   }
 };
@@ -153,8 +154,12 @@ struct ViewSlot {
       single_clipping = pose.clipping;
     }
     if (preserve_quad_locks) {
-      pose.lock = lock;
-      pose.runtime_lock = runtime_lock;
+      /* Quad linking/clipping is suspended while maximized. Rotation ownership
+       * follows the current view: an explicit Perspective switch must stay free
+       * when the pane returns to quad view. */
+      pose.lock = (lock & ~RV3D_LOCK_ROTATION) | (rv.viewlock & RV3D_LOCK_ROTATION);
+      pose.runtime_lock = (runtime_lock & ~RV3D_LOCK_ROTATION) |
+                          (rv.runtime_viewlock & RV3D_LOCK_ROTATION);
       pose.quad_lock = quad_lock;
     }
     if (rv.persp == RV3D_PERSP) {
@@ -297,6 +302,11 @@ static bool toggle_quad(bContext *C, ViewCache &cache)
                      ELEM(rv.view, RV3D_VIEW_LEFT, RV3D_VIEW_RIGHT) ? 2 :
                                                                       3;
     cache.slots[cache.selected].capture(rv, true);
+    /* A native or loaded axis view can predate AxisMeld's fixed-view policy.
+     * Establish it when entering our first quad, without locking user ortho. */
+    if (rv.persp == RV3D_ORTHO && RV3D_VIEW_IS_AXIS(rv.view)) {
+      cache.slots[cache.selected].pose.lock |= RV3D_LOCK_ROTATION;
+    }
     cache.initialized = true;
   }
   PointerRNA props = WM_operator_properties_create("SCREEN_OT_region_quadview");
@@ -312,8 +322,8 @@ static bool toggle_quad(bContext *C, ViewCache &cache)
     RegionView3D &rv = *static_cast<RegionView3D *>(regions[0]->regiondata);
     cache.slots[cache.selected].pose.apply(rv);
     cache.slots[cache.selected].single_clipping.apply(rv);
-    rv.viewlock &= ~(RV3D_LOCK_ROTATION | RV3D_BOXVIEW | RV3D_BOXCLIP);
-    rv.runtime_viewlock &= ~(RV3D_LOCK_ROTATION | RV3D_BOXVIEW | RV3D_BOXCLIP);
+    rv.viewlock &= ~(RV3D_BOXVIEW | RV3D_BOXCLIP);
+    rv.runtime_viewlock &= ~(RV3D_BOXVIEW | RV3D_BOXCLIP);
   }
   else if (regions.size() == 4) {
     for (int i = 0; i < 4; i++) {
@@ -408,6 +418,8 @@ bool axismeld_view_action(bContext *C, wmOperator *op, const HotboxAction action
     }
     next.persp = RV3D_PERSP;
     next.view = RV3D_VIEW_USER;
+    next.lock &= ~RV3D_LOCK_ROTATION;
+    next.runtime_lock &= ~RV3D_LOCK_ROTATION;
   }
   else if (ELEM(action, HotboxAction::Side, HotboxAction::Front, HotboxAction::Top)) {
     next.axis(action == HotboxAction::Side  ? RV3D_VIEW_RIGHT :

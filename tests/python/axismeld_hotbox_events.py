@@ -108,6 +108,9 @@ def suite():
     geometry = (tuple(tuple(row) for row in cube.matrix_world),
                 tuple(tuple(v.co) for v in cube.data.vertices), tuple(o.name for o in bpy.context.selected_objects))
     original = ((0.820473, 0.424708, -0.175920, -0.339851), (2.25, -3.5, 1.75), 17.0, 'PERSP')
+    # End the preceding fixed-axis adapter fixture through the real view action,
+    # clearing its rotation policy before creating the free Perspective fixture.
+    action('PERSPECTIVE')
     view = rv(regions()[0])
     view.view_rotation = Quaternion(original[0]).normalized()
     view.view_location = original[1]
@@ -162,8 +165,8 @@ def suite():
     action('TOGGLE_QUAD', panes[0])
     yield from settle()
     single = rv(regions()[0])
-    check(not single.lock_rotation and not single.show_sync_view and not single.use_box_clip,
-          'quad-specific locks survived maximize')
+    check(single.lock_rotation == locks[0][0] and not single.show_sync_view and not single.use_box_clip,
+          'maximize must retain rotation policy but suspend quad linkage/clipping')
     check(not single.use_clip_planes, 'quad-derived clipping survived maximize')
     action('TOGGLE_QUAD')
     yield from settle()
@@ -257,8 +260,10 @@ def suite():
                               f'missing contributor {source_index} {direction} pane {i}')
                 if i != source_index:
                     same(pose(rv(pane)), expected[i], 'clipped axis changed another pose')
-            check([(rv(p).lock_rotation, rv(p).show_sync_view, rv(p).use_box_clip) for p in panes] == locks,
-                  'clipped axis changed quad locks')
+            direction_locks = list(locks)
+            direction_locks[source_index] = (direction != 'PERSPECTIVE', *locks[source_index][1:])
+            check([(rv(p).lock_rotation, rv(p).show_sync_view, rv(p).use_box_clip) for p in panes] == direction_locks,
+                  'view choice must update only its rotation policy, preserving quad linkage/clipping')
             action('TOGGLE_QUAD', panes[source_index])
             yield from settle()
             check(not rv(regions()[0]).use_clip_planes, 'missing contributor maximize retained quad clip')
@@ -737,6 +742,7 @@ def suite():
     fresh_scene = bpy.data.scenes.new('hotbox empty scene')
     win.scene = fresh_scene
     yield from settle()
+    action('PERSPECTIVE')
     view = rv(regions()[0])
     view.view_rotation = Quaternion((0.8, 0.3, 0.2, 0.1)).normalized()
     view.view_perspective = 'ORTHO'
@@ -747,6 +753,8 @@ def suite():
     yield from settle()
     panes = sorted(regions(), key=lambda r: (-r.y, r.x))
     same(pose(rv(panes[1])), arbitrary, 'arbitrary user ortho after scene invalidation')
+    with bpy.context.temp_override(window=win, area=area, region=panes[1]):
+        check(bpy.ops.view3d.rotate.poll(), 'first quad incorrectly locked arbitrary USER ortho')
     for pane in panes:
         check(tuple(rv(pane).view_location) == (31, 32, 33), 'old scene hidden pose survived')
     action('TOGGLE_QUAD', panes[1])
@@ -768,6 +776,9 @@ def suite():
     win.scene = original_scene
     yield from settle()
     # External native topology changes must discard old hidden AxisMeld slots.
+    # Native quad copies the source into its user pane, including an explicit
+    # lock. Establish a free source before checking native free-user exit policy.
+    action('PERSPECTIVE')
     with bpy.context.temp_override(window=win, area=area, region=regions()[0]):
         bpy.ops.screen.region_quadview()
     yield from settle()
@@ -781,6 +792,8 @@ def suite():
     for index, pane in enumerate(sorted(regions(), key=lambda r: (-r.y, r.x))):
         check(abs(rv(pane).view_distance - (61 + index)) < 1e-5, 'manual quad reused stale hidden pose')
     panes = sorted(regions(), key=lambda r: (-r.y, r.x))
+    check(not rv(panes[1]).lock_rotation,
+          'native default exit fixture must have an unlocked user pane')
     native_user = pose(rv(panes[1]))
     with bpy.context.temp_override(window=win, area=area, region=panes[0]):
         bpy.ops.screen.region_quadview()
@@ -907,6 +920,7 @@ def suite():
                        tuple(tuple(v.co) for v in cube.data.vertices), tuple(o.name for o in bpy.context.selected_objects)),
           'view operations changed geometry or selection')
     # Save only the currently visible single pane. Hidden runtime slots must not cross reload.
+    action('TOP')
     view = rv(regions()[0])
     view.view_location = (301, 302, 303)
     view.view_distance = 304
@@ -920,6 +934,8 @@ def suite():
     space = area.spaces.active
     check(len(regions()) == 1, 'save/reopen layout changed')
     same(pose(rv(regions()[0])), saved, 'save/reopen pose')
+    with bpy.context.temp_override(window=win, area=area, region=regions()[0]):
+        check(not bpy.ops.view3d.rotate.poll(), 'save/reopen lost fixed-view rotation lock')
     action('TOGGLE_QUAD')
     yield from settle()
     for pane in regions():

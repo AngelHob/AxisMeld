@@ -30,6 +30,7 @@ struct MenuRect {
   float x, y, width, height;
   int depth;
   bool interactive = true;
+  bool direction_label = false;
 };
 struct MenuLayout {
   std::vector<MenuRect> rects;
@@ -41,7 +42,7 @@ struct MenuLayout {
  * {"center", mapped_menu_id, ...} explicitly anchors a configured menu at the central button;
  * this leading center is an anchor marker, not a parent node (even for {"center", "center"}).
  * Offsets are first child indices, keyed independently by row/menu ID; absent means zero.
- * Layout-only @scroll:<owner>:previous/next IDs navigate; they are never commands.
+ * Layout-only @scroll:<owner>:previous/next and @back:<owner> IDs navigate, never dispatch.
  * The visible central button can extend inward at edges. Gesture origins remain caller-owned.
  */
 MenuLayout layout_menu(const MenuSnapshot &snapshot,
@@ -56,4 +57,6 @@ std::string hit_menu(const MenuLayout &layout, float x, float y);
 /* Includes disabled/separator occlusion and preserves the exact visible occurrence/depth. */
 const MenuRect *hit_menu_rect(const MenuLayout &layout, float x, float y);
 bool hotbox_command_closes(std::string_view command);
+/* Short, unambiguous labels for the view ring; full catalog labels remain unchanged. */
+std::string_view hotbox_view_short_label(std::string_view command);
 }  // namespace blender::axismeld

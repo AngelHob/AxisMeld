@@ -72,8 +72,10 @@ void hotbox_measure(HotboxVisual &data)
   const int font = style.uifont_id;
   auto measure = [&](auto &&self, const std::vector<MenuNode> &nodes) -> void {
     for (const MenuNode &node : nodes) {
-      data.label_widths[node.id] = BLF_width(font, node.label.c_str(), node.label.size()) /
-                                   data.scale + (menu_icon(node) != ICON_NONE ? 20.0f : 0.0f);
+      const bool view_label = node.id.starts_with("views.") && node.kind == MenuKind::Command;
+      const std::string_view label = view_label ? hotbox_view_short_label(node.command) : node.label;
+      data.label_widths[node.id] = BLF_width(font, label.data(), label.size()) / data.scale +
+                                   (!view_label && menu_icon(node) != ICON_NONE ? 20.0f : 0.0f);
       self(self, node.children);
     }
   };
@@ -85,16 +87,14 @@ void hotbox_layout(HotboxVisual &data)
   data.menu_layout = layout_menu(data.snapshot,
                                  data.width,
                                  data.height,
-                                 data.center[0],
-                                 data.center[1],
+                                 data.marking ? data.origin[0] : data.center[0],
+                                 data.marking ? data.origin[1] : data.center[1],
                                  data.open_path,
                                  data.scroll_offsets,
                                  data.label_widths);
   if (data.marking) {
-    // Reuse the layout engine's appended-list anchor and nested popup rectangles. The seven
-    // view leaves are sectors while marking, so their rectangular list counterparts are hidden.
-    std::erase_if(data.menu_layout.rects,
-                  [](const MenuRect &rect) { return rect.id != "views.style" && rect.depth < 2; });
+    // Direction labels and Style now share the same ellipse geometry as ordinary menu hits.
+    std::erase_if(data.menu_layout.rects, [](const MenuRect &rect) { return rect.depth == 0; });
   }
 }
 
@@ -107,75 +107,25 @@ void hotbox_draw(const HotboxVisual &data)
     int icon = ICON_NONE;
   };
   std::vector<Entry> entries;
-  if (data.marking) {
-    struct Direction {
-      const char *id;
-      float x, y;
-      HotboxAction action;
-    };
-    const Direction directions[] = {{"views", 0, 0, HotboxAction::None},
-                                    {"views.perspective", 0, 64, HotboxAction::Perspective},
-                                    {"views.side", 1, 0, HotboxAction::Side},
-                                    {"views.front", 0, -64, HotboxAction::Front},
-                                    {"views.top", -1, 0, HotboxAction::Top},
-                                    {"views.left", -1, 64, HotboxAction::Left},
-                                    {"views.back", -1, -64, HotboxAction::Back},
-                                    {"views.bottom", 1, -64, HotboxAction::Bottom}};
-    float width = 0;
-    for (const Direction &d : directions) {
-      const auto measured = data.label_widths.find(d.id);
-      if (measured != data.label_widths.end()) {
-        width = std::max(width, measured->second + 24);
-      }
-    }
-    const float extent = width * 1.5f + 8;
-    // Shift the visual group inward. Direction selection still uses the actual captured origin.
-    const float cx = extent <= data.width / 2 ?
-                         std::clamp(data.origin[0], extent, data.width - extent) :
-                         data.width / 2;
-    float cy = std::clamp(data.origin[1], 78.0f, data.height - 78.0f);
-    float list_top = 0, list_bottom = data.height;
-    bool overlaps = false;
-    for (const MenuRect &rect : data.menu_layout.rects) {
-      list_top = std::max(list_top, rect.y + rect.height);
-      list_bottom = std::min(list_bottom, rect.y);
-      overlaps |= rect.x < cx + extent && rect.x + rect.width > cx - extent && rect.y < cy + 78 &&
-                  rect.y + rect.height > cy - 78;
-    }
-    if (overlaps) {
-      // The default appended Style tree fits beside a 156px-high direction group even at
-      // 480x320. Move only the drawing group; lists retain the authoritative layout rectangles
-      // and angular selection retains the captured physical mouse origin.
-      if (list_top + 4 + 156 <= data.height) {
-        cy = list_top + 4 + 78;
-      }
-      else if (list_bottom - 4 - 156 >= 0) {
-        cy = list_bottom - 4 - 78;
-      }
-    }
-    for (const Direction &d : directions) {
-      const MenuNode *node = hotbox_find_node(data.snapshot.menus, d.id);
-      if (!node) {
-        continue;
-      }
-      entries.push_back({{"", cx + d.x * (width + 8) - width / 2, cy + d.y - 14, width, 28, 0},
-                         node->label,
-                         d.action != HotboxAction::None && data.candidate == d.action,
-                         !node->enabled,
-                         false,
-                         menu_icon(*node)});
-    }
-  }
   {
     for (const MenuRect &rect : data.menu_layout.rects) {
-      const MenuNode *node = hotbox_find_node(data.snapshot.menus, rect.id);
-      const std::string label = node ? node->label : rect.id.ends_with(":previous") ? "<" : ">";
+      const bool back = rect.id.starts_with("@back:");
+      const MenuNode *node = hotbox_find_node(data.snapshot.menus, back ? rect.id.substr(6) : rect.id);
+      const std::string label = rect.direction_label ? std::string(hotbox_view_short_label(node->command)) :
+                                  node ? node->label : rect.id.ends_with(":previous") ? "<" : ">";
+      bool selected = data.hover_id == rect.id && data.hover_depth == rect.depth;
+      if (data.marking && rect.direction_label) {
+        selected = data.pending_leaf == rect.id;
+      }
+      if (data.marking && rect.id == "views.style") {
+        selected = false;
+      }
       entries.push_back({rect,
                          label,
-                         data.hover_id == rect.id && data.hover_depth == rect.depth,
+                         selected,
                          !rect.interactive,
                          node && node->kind == MenuKind::Separator,
-                         node ? menu_icon(*node) : ICON_NONE});
+                         back ? ICON_BACK : rect.direction_label ? ICON_NONE : node ? menu_icon(*node) : ICON_NONE});
     }
   }
   const float scale = data.scale;
@@ -211,8 +161,8 @@ void hotbox_draw(const HotboxVisual &data)
       line[3] *= 0.3f;
       const rctf separator = {(r.x + 6) * scale,
                               (r.x + r.width - 6) * scale,
-                              (r.y + 14) * scale,
-                              (r.y + 15) * scale};
+                              (r.y + r.height / 2) * scale,
+                              (r.y + r.height / 2 + 1) * scale};
       ui::draw_roundbox_4fv(&separator, true, 0, line);
     }
   }
@@ -240,7 +190,7 @@ void hotbox_draw(const HotboxVisual &data)
     const float left = (r.x + r.width / 2) * scale - (text_width + icon_width) / 2;
     if (entry.icon != ICON_NONE) {
       ui::icon_draw_ex(left,
-                       (r.y + 6) * scale,
+                       (r.y + (r.height - 16) / 2) * scale,
                        entry.icon,
                        1.0f / scale,
                        1.0f,
