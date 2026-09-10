@@ -5,16 +5,16 @@
 
 ## 最终程序与变更
 
-五小时最终构建尚未确定。当前映射菜单生产检查点为 `8341fdac9b0`，测试至 `86aa564a5d6`，终审修订复核通过；
+五小时最终构建尚未确定。当前生产检查点为 `837f1af156d`，包含三个选择动作，正在补齐任务审查的测试项；
 程序仍复用 `D:/source/AxisMeld-build/phase2b-ui-test-install/blender.exe`。
-当前 exe SHA-256：`34CCA824834179236285818C40C3076B46B58EECC8985CC7D77CC66F8603BE7A`。
+当前 exe SHA-256：`7152D3288CFCFBED587ADE9F9C7F4537A97CF71746FA37514C829E0ADE5AC87C`。
 后续切片可能继续更新此程序；最终交付时重新核对身份，不把中间检查点冒充全部成果。
 
 | 本批变更 | 实现状态 | 自动化证据 | 人工编号 |
 |---|---|---|---|
 | 短设置选项列表原生菜单 | 完成，独立终审通过，待统一手测 | 1a61bb81f3c + 45e9357edbf + 8965cbe5c58；33/33 原生测试，8 套 GUI/配置回归及窄窗专项通过 | H5-01 |
 | 长映射列表及层级操作 | 完成，终审修订复核通过，待手测 | 生产8341fdac9b0、测试86aa564a5d6；38 原生、40 Python、5 CTest；实际映射与禁用行 held 取消补测通过；已知边界见下 | H5-02 |
-| 三个基础选择动作 | 实现中，尚未交付 | Select All / Grow / Shrink，等待真实结果、撤销与审查 | 完成后按实际命令追加 |
+| 三个基础选择动作 | 实现及初轮回归完成，任务审查修订中 | 837f1af156d；实际选择/双锚点撤销/个人绑定及9套GUI回归通过；补充两项审查测试 | 审查完成后追加 |
 
 ## 一次性人工审核顺序
 
@@ -119,3 +119,11 @@ Space 清理检查。日志为 `batch5h-settings-native-list-narrow.log` / `batc
 随后补齐拥有鼠标键释放。检查无命令/设置分发、modal清空，移回明确绘图区后的W/E/R及
 重新打开热盒选择实际设置；不是所有坐标的原地按键保证。最终测试提交86aa564a5d6，
 独立终审提出的该项经一次修订复核关闭，无新增阻断项；极窄Tool Header边界单列保留。
+
+批次3当前检查点：837f1af156d。主控追加27项hotbox纯测试、14项input测试均通过，
+日志`batch5h-final2-hotbox-python.log` / `batch5h-final2-input-python.log`。
+当前7152D328…E5AC87C安装的`batch5h-final2-navigation.log` / `batch5h-final2-view-lock.log`
+均通过，不能以这些自动结果代替物理鼠标手感验收。源码与安装4个Python模块逐项SHA一致；
+build/stage exe同SHA，portable6份文件与备份无差异，fallback保持F84108D2…DE02F。
+独立任务审查要求补齐：Select ellipse分页的旧item_count5，以及Object已全选和Edit无变化
+时的返回状态/Recent策略；这些测试完成复核前不将三个命令写入最终完成表。
