@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-09-11T04:25:42.5094320+08:00",
+  "production_commit": "837f1af156d135c9b0c08625863b8d519231aee0",
+  "test_commit": "ee4fcaf04ff90a86fe954bc2217f4df8cd8c7def",
+  "review_range": "137c428cf0d..5b89b65311d",
+  "head_at_verification": "9f67ec05aeb8b251571deee4d96bbe5879d5ffb1",
+  "version": "AxisMeld 0.1.0-dev (based on Blender 5.3.0 Alpha)",
+  "executable": "D:/source/AxisMeld-build/phase2b-ui-test-install/blender.exe",
+  "exe_sha256": "7152D3288CFCFBED587ADE9F9C7F4537A97CF71746FA37514C829E0ADE5AC87C",
+  "build_and_stage_match": true,
+  "modules": [
+    {
+      "name": "adapter.py",
+      "sha256": "160B0CA2609808B859CCC210995E382B466A1FF24361F4BA3D08C23A4C34F6A6",
+      "source_and_installed_match": true
+    },
+    {
+      "name": "commands.py",
+      "sha256": "71742235AD081E891502E1B34760D46F8351486ACC4340CBFC9F5C599B5C1960",
+      "source_and_installed_match": true
+    },
+    {
+      "name": "hotbox_catalog.py",
+      "sha256": "C136489D3C35B2352459BBE1B26B55A9547FE2355A78AD9ECD4F55B839A2C1D8",
+      "source_and_installed_match": true
+    },
+    {
+      "name": "hotbox_runtime.py",
+      "sha256": "71E0603F52064CD6C33EB3204B25E91FF97073D47A11C0F021AC74203A52DE72",
+      "source_and_installed_match": true
+    }
+  ],
+  "portable_files": 6,
+  "portable_matches_preserved_backup": true,
+  "fallback_exe_sha256": "F84108D2F474ADF4FD804CBCC9FA16308FC3E22C7718C72082A85628502DE02F",
+  "blender_processes": 0,
+  "gui_runs": [
+    {
+      "suite": "selection",
+      "log": "D:/source/AxisMeld-build/batch5h-selection-fix1-gui-r3.log",
+      "sha256": "84868AF0E4E0B63B3D2D940DC1FBFE252CC4209310FEB1442B8C5DA2660A15D9",
+      "marker": "AXISMELD_SELECTION_EVENTS_PASS"
+    },
+    {
+      "suite": "menus",
+      "log": "D:/source/AxisMeld-build/batch5h-selection-menus.log",
+      "sha256": "016AB6340BB9332BA4503853DD606958D0630E2B439751D44C097ED2D557FC38",
+      "marker": "AXISMELD_HOTBOX_MENU_EVENTS_PASS"
+    },
+    {
+      "suite": "hotbox",
+      "log": "D:/source/AxisMeld-build/batch5h-selection-hotbox.log",
+      "sha256": "B92FEA0EFB18EFD15295FCFBD3D6368C3EA63FB839E35DFFDE985425036C7523",
+      "marker": "AXISMELD_HOTBOX_EVENTS_PASS"
+    },
+    {
+      "suite": "native-style",
+      "log": "D:/source/AxisMeld-build/batch5h-selection-native-style.log",
+      "sha256": "42AC5DAD2A7B44B510FEAD9FB2522F95ED37AEF8B0918A5C9D22DE623B96D3DA",
+      "marker": "AXISMELD_HOTBOX_NATIVE_STYLE_PASS"
+    },
+    {
+      "suite": "mappings-standard",
+      "log": "D:/source/AxisMeld-build/batch5h-selection-mappings-standard.log",
+      "sha256": "4A28651F1BEF2DD0A2E5E9EFAC1E3DEABE6804BD9B0C42CF7BDB08561784EF61",
+      "marker": "AXISMELD_HOTBOX_MAPPING_LISTS_PASS"
+    },
+    {
+      "suite": "mappings-narrow",
+      "log": "D:/source/AxisMeld-build/batch5h-selection-mappings-narrow.log",
+      "sha256": "F3C083EDC5EE2C4606816BC3101A6F7B542A8E1B69FE915095A8149C8C7717F3",
+      "marker": "AXISMELD_HOTBOX_MAPPING_LISTS_PASS"
+    },
+    {
+      "suite": "mappings-quad",
+      "log": "D:/source/AxisMeld-build/batch5h-selection-mappings-quad.log",
+      "sha256": "3C9D39D6D653AB76B9F1B094A44F33C69E5B9787D2DA18A2E39B965E2B31BF11",
+      "marker": "AXISMELD_HOTBOX_MAPPING_LISTS_PASS"
+    },
+    {
+      "suite": "release",
+      "log": "D:/source/AxisMeld-build/batch5h-selection-release.log",
+      "sha256": "CA5B4C8817FB3F9089FF2C22965851BFDB6DF02440848661E3F7639A21FC7F8B",
+      "marker": "AXISMELD_HOTBOX_RELEASE_EVENTS_PASS"
+    },
+    {
+      "suite": "profiles",
+      "log": "D:/source/AxisMeld-build/batch5h-selection-profiles.log",
+      "sha256": "B2C3BC050B9BD068AB8149289A2B87C0EF0AE6EE398565F995462364FC9FA0AB",
+      "marker": "AXISMELD_HOTBOX_PROFILES_PASS"
+    },
+    {
+      "suite": "manipulator",
+      "log": "D:/source/AxisMeld-build/batch5h-selection-manipulator-r2.log",
+      "sha256": "8F4677865589A0A1F6C4F0A53262AD172D15AC46055787B8CC473ADC8085908C",
+      "marker": "AXISMELD_MANIPULATOR_EVENTS_PASS"
+    },
+    {
+      "suite": "navigation",
+      "log": "D:/source/AxisMeld-build/batch5h-final2-navigation.log",
+      "sha256": "597C4D25707BA74D21D804A8F851B98329266D2CD505BCD1E386921728E8FD43",
+      "marker": "AXISMELD_NAVIGATION_EVENTS_PASS"
+    },
+    {
+      "suite": "view-lock",
+      "log": "D:/source/AxisMeld-build/batch5h-final2-view-lock.log",
+      "sha256": "2C712BBDEC1B9AE4F2CB582605CF60CBB15A34638199525ECECA3C3B16E9DE54",
+      "marker": "AXISMELD_VIEW_LOCK_EVENTS_PASS"
+    },
+    {
+      "suite": "native-narrow",
+      "log": "D:/source/AxisMeld-build/batch5h-final2-native-narrow.log",
+      "sha256": "5B756F941275A0C1E900DB59144C86C2D6ACC621C59234756FFDDD47C79CC08E",
+      "marker": "AXISMELD_HOTBOX_NATIVE_LIST_LAYOUT_PASS narrow"
+    },
+    {
+      "suite": "native-quad",
+      "log": "D:/source/AxisMeld-build/batch5h-final2-native-quad.log",
+      "sha256": "25AF37620C90095C1B03EBC0649D93B38501DCE45393CF4E5715F688FF3E0FF9",
+      "marker": "AXISMELD_HOTBOX_NATIVE_LIST_LAYOUT_PASS quad"
+    },
+    {
+      "suite": "guide",
+      "log": "D:/source/AxisMeld-build/batch5h-final2-guide.log",
+      "sha256": "4379E1DA5538E514E8AEEEE7A79335637A2ECF079EEF84914B4AB4193CFC5D72",
+      "marker": "AXISMELD_HOTBOX_MENU_EVENTS_PASS"
+    },
+    {
+      "suite": "overlay",
+      "log": "D:/source/AxisMeld-build/batch5h-final2-overlay.log",
+      "sha256": "D3BE39A5542713C5FEB118FD2978E9780997AA176B06689C1A2E6EE39B543F0E",
+      "marker": "AXISMELD_HOTBOX_MENU_EVENTS_PASS"
+    },
+    {
+      "suite": "menus-quad",
+      "log": "D:/source/AxisMeld-build/batch5h-final2-menus-quad.log",
+      "sha256": "25DE3100C5BAC9556522B23680B4BE2A530DF63C74B0FA5DB687B32D05B1F022",
+      "marker": "AXISMELD_HOTBOX_MENU_EVENTS_PASS"
+    }
+  ],
+  "python_tests": 41,
+  "ctest_targets": 5,
+  "manual_acceptance": "pending",
+  "known_unfixed": "Narrow Tool Header overlap can prevent no-move W/E/R after cancellation; see consolidated review",
+  "evidence_limits": [
+    "Original mapping rendering GUI RED invalid and not restored",
+    "Claimed historical fix1 pycompile log missing; separate fresh final2 log passes",
+    "Raw libpng warnings retained"
+  ]
+}
