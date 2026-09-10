@@ -26,6 +26,8 @@ struct HotboxVisual {
   bool tap_eligible = true;
   HotboxAction candidate = HotboxAction::None;
   float center[2], origin[2];
+  float press_position[2] = {0, 0};
+  float pointer_position[2] = {0, 0};
   float scale = 1;
   float width, height;
 };

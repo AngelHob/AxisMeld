@@ -4,8 +4,9 @@
 
 ## 启动正确测试版
 
-本轮已完成构建，视觉与锁定验收启动 `D:/source/AxisMeld-build/phase2b-roomy-test-install/blender.exe`。
-`phase2b-ui-test-install` 保留为上一轮已接受 B12-11 修复的版本，不含本轮加大按钮与固定视角锁定。
+最新参考图间距／拖曳线测试版启动 `D:/source/AxisMeld-build/phase2b-ui-test-install/blender.exe`。
+该目录已复用更新，包含之前的加大按钮、固定视角锁定及本轮修改。`phase2b-roomy-test-install`
+现在保留为本轮前的回退版，不含拖曳线和新中央留白。以最新报告的 SHA-256 区分，不以目录名字判断版本。
 保留的 `phase2b-test-install/blender.exe` 不含本轮椭圆编排与主题绘制。旧的
 `phase2a-test-install/blender.exe` 不含本轮设置/Recent 产品接入。独立测试目录不保证已保存
 预设，请进入 **Edit → Preferences → Keymap**，选择 **AxisMeld Maya 2026**；不要把新
@@ -18,7 +19,7 @@ exe 与当前激活的键位预设混为一件事。
 
 | 编号 | 操作 | 预期 | 结果 |
 |---|---|---|---|
-| B12-1 | 在正常视口中央按住 Space 查看首层 | 总体横向椭圆编排：Common、Current Pane、中央 Recent/AxisMeld/Hotbox Controls、按原顺序折为两排的 Modeling；中心最宽，上下收窄；单按钮使用当前 Blender 字体、主题圆角与语义图标，未接入项灰显并说明原因 | 自动布局/截图通过，待视觉偏好验收 |
+| B12-1 | 在正常视口中央按住 Space 查看首层 | Common、Current Pane、中央 Recent/AxisMeld/Hotbox Controls、按原顺序折为两排的 Modeling；外围行收窄，中央三入口独立留白，不再要求中心行最宽；单按钮使用当前 Blender 字体、主题圆角与语义图标，未接入项灰显并说明原因 | 自动布局/截图通过，待视觉偏好验收 |
 | B12-2 | Space+RMB 分别划向 N/E/S/W/NW/SW/SE，另试 NE 与死区 | 依次为透视/侧/前/顶/左/后/底；NE 与死区不执行；LMB/MMB 默认行为相同 | 待手测 |
 | B12-3 | 点击第二行 Shading 标题后再点叶项；另从标题按住拖到叶项释放 | 点击式浏览和划选式各只执行一次；空白或禁用项释放取消 | 待手测 |
 | B12-4 | 在四边和四个真实内容角打开；分别试 UI scale 1.0 与 2.0 | 指针仍是手势原点，按钮向内适配，无错误重叠；原生工具栏重叠区不被抢占 | 待手测 |
@@ -40,6 +41,14 @@ exe 与当前激活的键位预设混为一件事。
 
 ## 已知边界
 
+本轮优先补测：
+
+| 编号 | 操作 | 预期 | 结果 |
+|---|---|---|---|
+| B12-17 | 对照用户 Maya 截图，观察 Recent Commands／中央／Hotbox Controls | 两侧按钮自然宽度，分别约 2.2 个按钮高度的留白；空隙不会命中左右入口；小视口可换行，不硬挤 | 自动布局通过；待手测 |
+| B12-18 | Space 后按住鼠标划选视图，或拖曳普通菜单；试 1×／2× | 实际按下位置至指针有细引导线，不随菜单向内适配漂移；按钮和文字绘制在线上方 | 实际渲染像素测试通过；待手测 |
+| B12-19 | 划选退回起点后松鼠标，再移动；另外试 Esc、先松 Space、松另一鼠标键 | 无按键移动不出现线；取消无残留；松另一鼠标键不提前断线 | 实际渲染像素测试通过；待手测 |
+
 - 指数 dolly 灵敏度是 AxisMeld 为方向与稳定性做的适配，不是 Maya 数值一致性声明；自动化不能证明物理鼠标手感或卡顿已解决。
 - File/Edit/Create、Lighting/Show/Renderer、绝大多数 Modeling 与全部 UV 叶功能仍未接入；灰色目录只是稳定入口规划。
 - Recent 不监听全局历史、不保存文件路径或对象引用，并在退出程序后清空。
@@ -51,3 +60,5 @@ exe 与当前激活的键位预设混为一件事。
 本轮视觉补充证据见 [视觉验证说明](../design/2026-09-10-hotbox-visual-verification.md)。
 
 最新加大／二级椭圆与视角锁定证据及最终构建身份见 [本轮验证报告](2026-09-10-roomier-hotbox-view-lock-report.md)。优先手测 B12-13 至 B12-16。
+
+更新：参考图间距和拖曳线以 [最新验证报告](2026-09-10-reference-hotbox-report.md) 为准，优先补测 B12-17 至 B12-19。

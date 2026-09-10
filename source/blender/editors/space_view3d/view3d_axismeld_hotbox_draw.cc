@@ -5,6 +5,7 @@
 
 #include "BLF_api.hh"
 #include "DNA_theme_types.h"
+#include "GPU_immediate.hh"
 #include "GPU_state.hh"
 #include "UI_interface_c.hh"
 #include "UI_resources.hh"
@@ -33,8 +34,8 @@ int menu_icon(const MenuNode &node)
     return ICON_VIEW_PERSPECTIVE;
   }
   if (node.command == "view.side" || node.command == "view.bottom" ||
-      node.command == "view.front" || node.command == "view.back" ||
-      node.command == "view.top" || node.command == "view.left")
+      node.command == "view.front" || node.command == "view.back" || node.command == "view.top" ||
+      node.command == "view.left")
   {
     return ICON_VIEW_ORTHO;
   }
@@ -73,7 +74,8 @@ void hotbox_measure(HotboxVisual &data)
   auto measure = [&](auto &&self, const std::vector<MenuNode> &nodes) -> void {
     for (const MenuNode &node : nodes) {
       const bool view_label = node.id.starts_with("views.") && node.kind == MenuKind::Command;
-      const std::string_view label = view_label ? hotbox_view_short_label(node.command) : node.label;
+      const std::string_view label = view_label ? hotbox_view_short_label(node.command) :
+                                                  node.label;
       data.label_widths[node.id] = BLF_width(font, label.data(), label.size()) / data.scale +
                                    (!view_label && menu_icon(node) != ICON_NONE ? 20.0f : 0.0f);
       self(self, node.children);
@@ -110,9 +112,13 @@ void hotbox_draw(const HotboxVisual &data)
   {
     for (const MenuRect &rect : data.menu_layout.rects) {
       const bool back = rect.id.starts_with("@back:");
-      const MenuNode *node = hotbox_find_node(data.snapshot.menus, back ? rect.id.substr(6) : rect.id);
-      const std::string label = rect.direction_label ? std::string(hotbox_view_short_label(node->command)) :
-                                  node ? node->label : rect.id.ends_with(":previous") ? "<" : ">";
+      const MenuNode *node = hotbox_find_node(data.snapshot.menus,
+                                              back ? rect.id.substr(6) : rect.id);
+      const std::string label = rect.direction_label ?
+                                    std::string(hotbox_view_short_label(node->command)) :
+                                node                           ? node->label :
+                                rect.id.ends_with(":previous") ? "<" :
+                                                                 ">";
       bool selected = data.hover_id == rect.id && data.hover_depth == rect.depth;
       if (data.marking && rect.direction_label) {
         selected = data.pending_leaf == rect.id;
@@ -125,7 +131,10 @@ void hotbox_draw(const HotboxVisual &data)
                          selected,
                          !rect.interactive,
                          node && node->kind == MenuKind::Separator,
-                         back ? ICON_BACK : rect.direction_label ? ICON_NONE : node ? menu_icon(*node) : ICON_NONE});
+                         back                 ? ICON_BACK :
+                         rect.direction_label ? ICON_NONE :
+                         node                 ? menu_icon(*node) :
+                                                ICON_NONE});
     }
   }
   const float scale = data.scale;
@@ -134,13 +143,32 @@ void hotbox_draw(const HotboxVisual &data)
   const int font = style.uifont_id;
   const ThemeUI &theme = ui::theme::theme_get()->tui;
   GPU_blend(GPU_BLEND_ALPHA);
+  if (data.active_mouse && (data.pointer_position[0] != data.press_position[0] ||
+                            data.pointer_position[1] != data.press_position[1]))
+  {
+    // An owned gesture, not a menu-center decoration. Draw below all targets so text stays clear.
+    const uint pos = GPU_vertformat_attr_add(
+        immVertexFormat(), "pos", gpu::VertAttrType::SFLOAT_32_32);
+    float viewport[4];
+    GPU_viewport_size_get_f(viewport);
+    immBindBuiltinProgram(GPU_SHADER_3D_POLYLINE_UNIFORM_COLOR);
+    immUniform2fv("viewportSize", &viewport[2]);
+    immUniform1f("lineWidth", 1.25f * scale);
+    immUniformColor4ubv(theme.wcol_menu.text);
+    immBegin(GPU_PRIM_LINES, 2);
+    immVertex2f(pos, data.press_position[0] * scale, data.press_position[1] * scale);
+    immVertex2f(pos, data.pointer_position[0] * scale, data.pointer_position[1] * scale);
+    immEnd();
+    immUnbindProgram();
+  }
   ui::draw_roundbox_corner_set(ui::CNR_ALL);
   for (const Entry &entry : entries) {
     const MenuRect &r = entry.rect;
     const bool selected = entry.selected && !entry.disabled;
     const uiWidgetColors &colors = r.depth > 0 ? theme.wcol_menu_item : theme.wcol_menu;
-    const uchar *inner = selected ? colors.inner_sel :
-                                   r.depth > 0 ? theme.wcol_menu_back.inner : colors.inner;
+    const uchar *inner = selected    ? colors.inner_sel :
+                         r.depth > 0 ? theme.wcol_menu_back.inner :
+                                       colors.inner;
     const uchar *outline = selected ? colors.outline_sel : colors.outline;
     float background[4], border[4];
     for (int i = 0; i < 4; i++) {

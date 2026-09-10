@@ -11,6 +11,13 @@
 
 ## 2026-09-10 清理
 
+本日后续参考图修复复用了未运行的 `phase2b-ui-test-install` 作为新测试版；正在运行的
+`phase2b-roomy-test-install` 原样保留为回退版。覆盖前，旧 ui 版 `portable` 的 5 个文件
+已复制到 `D:/source/AxisMeld-build/preserved-test-configs/2026-09-10-reference/phase2b-ui-test-install/portable`
+并逐文件 SHA-256 校验；安装不删除个人配置。没有新增整套测试安装目录。
+
+以下为此前清理时的历史记录，不表示目录仍对应同一个构建：
+
 保留当前 `D:/source/AxisMeld-build/phase2b-roomy-test-install` 和上一版 `phase2b-ui-test-install`（清理时正在运行）。
 
 拟清理的两份旧程序为 `phase2a-test-install`（921,931,167 字节）、`phase2b-test-install`（922,172,850 字节），合计约 1.72 GiB。

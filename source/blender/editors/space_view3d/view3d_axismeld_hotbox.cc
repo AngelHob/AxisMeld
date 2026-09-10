@@ -42,7 +42,6 @@ struct HotboxData : HotboxVisual {
   bool navigation_consumed = false;
   bool menu_entered_on_press = false;
   bool mouse_moved_since_press = false;
-  float press_position[2] = {0, 0};
 };
 
 /* Validate each containing live list before inspecting the next captured pointer. */
@@ -188,7 +187,8 @@ static void scroll_owner(HotboxData &data, const std::string &owner, const int d
   const MenuNode *node = hotbox_find_node(data.snapshot.menus, owner);
   if (node || owner == "@main") {
     data.scroll_offsets[owner] = std::clamp(
-        data.scroll_offsets[owner] + delta, 0,
+        data.scroll_offsets[owner] + delta,
+        0,
         std::max(0, int(node ? node->children.size() : data.snapshot.menus.size()) - 1));
     hotbox_layout(data);
   }
@@ -197,7 +197,7 @@ static void scroll_owner(HotboxData &data, const std::string &owner, const int d
 static void back_to_parent(HotboxData &data, const std::string &owner)
 {
   const auto begin = data.open_path.begin() +
-                    (!data.open_path.empty() && data.open_path.front() == "center" ? 1 : 0);
+                     (!data.open_path.empty() && data.open_path.front() == "center" ? 1 : 0);
   const auto item = std::find(begin, data.open_path.end(), owner);
   if (item != data.open_path.end()) {
     data.open_path.erase(item, data.open_path.end());
@@ -274,8 +274,9 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   hotbox_measure(*data);
   hotbox_layout(*data);
   if (!data->menu_layout.supported) {
-    BKE_report(
-        op->reports, RPT_WARNING, "Viewport cannot fit hotbox targets (minimum 340 x 200 logical pixels)");
+    BKE_report(op->reports,
+               RPT_WARNING,
+               "Viewport cannot fit hotbox targets (minimum 340 x 200 logical pixels)");
   }
   data->state.begin(BLI_time_now_seconds(), RNA_float_get(op->ptr, "tap_seconds"));
   op->customdata = data;
@@ -322,6 +323,10 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
   const std::string item = hit_menu(data.menu_layout, x, y);
   const MenuNode *node = hotbox_find_node(data.snapshot.menus, item);
   const bool mouse = ELEM(event->type, LEFTMOUSE, MIDDLEMOUSE, RIGHTMOUSE);
+  if (ISMOUSE_MOTION(event->type) || mouse) {
+    data.pointer_position[0] = x;
+    data.pointer_position[1] = y;
+  }
   if (mouse && event->val == KM_PRESS && !data.active_mouse) {
     data.tap_eligible = false;
     data.active_mouse = event->type;
@@ -333,8 +338,8 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
     data.pending_leaf.clear();
     // Real menu rectangles (including disabled/separators) occlude the center-only fallback.
     const bool blank_center = data.menu_layout.supported && data.open_path.empty() &&
-                              data.snapshot.style == "center" &&
-                              !hover && x >= 0 && x < data.width && y >= 0 && y < data.height;
+                              data.snapshot.style == "center" && !hover && x >= 0 &&
+                              x < data.width && y >= 0 && y < data.height;
     if ((item == "views" && rect.depth == 0) || blank_center) {
       const int button = event->type == LEFTMOUSE ? 0 : event->type == MIDDLEMOUSE ? 1 : 2;
       const std::string &mapping = data.snapshot.center_buttons[button];
@@ -370,8 +375,8 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
   {
     data.mouse_moved_since_press = true;
   }
-  if (event->type == data.active_mouse && event->val == KM_RELEASE &&
-      data.menu_entered_on_press && !data.mouse_moved_since_press)
+  if (event->type == data.active_mouse && event->val == KM_RELEASE && data.menu_entered_on_press &&
+      !data.mouse_moved_since_press)
   {
     // A click enters its directory. Inward layout may put another target under this same
     // coordinate, but only a subsequent press or actual held motion can select that target.
@@ -434,10 +439,11 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
       // The central Style affordance is transparent during this original marking gesture.
       // It can be entered with a fresh click after releasing and latching the views ring.
       data.candidate = hover && item != "views.style" ? HotboxAction::None :
-                                                       hotbox_direction(dx, dy, 12);
+                                                        hotbox_direction(dx, dy, 12);
       data.pending_leaf = dx * dx + dy * dy <= 12 * 12 ? "" :
                           node && (rect.direction_label || node->kind == MenuKind::Setting) ?
-                              item : direction_id(data.candidate);
+                                                         item :
+                                                         direction_id(data.candidate);
     }
     else {
       data.pending_leaf = node && ELEM(node->kind, MenuKind::Command, MenuKind::Setting) ? item :
@@ -446,7 +452,8 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
     if (event->type == data.active_mouse && event->val == KM_RELEASE) {
       data.active_mouse = 0;
       if ((!node || node->kind != MenuKind::Menu) && !item.starts_with("@scroll:") &&
-          !item.starts_with("@back:")) {
+          !item.starts_with("@back:"))
+      {
         data.open_path.clear();
       }
       data.marking = false;

@@ -9,6 +9,8 @@ namespace blender::axismeld {
 namespace {
 constexpr float row_height = 38.0f;
 constexpr float gap = 10.0f;
+// User-supplied Maya reference: ~87px of space beside a ~40px-high central button.
+constexpr float center_gap = 2.2f * row_height;
 constexpr float margin = 12.0f;
 constexpr float padding = 40.0f;
 constexpr float scroll_width = 38.0f;
@@ -118,9 +120,9 @@ class LayoutBuilder {
     const std::array<float, 4> taper = {0.72f, 0.92f, 0.92f, 0.64f};
     const std::array<float, 4> y_offset = {2 * row_step, row_step, -row_step, -2 * row_step};
     std::array<float, 4> natural{};
-    float span = center.width + 2 * (gap + padding +
-                                      std::max(widths.at(central->children.front().id),
-                                               widths.at(central->children.back().id)));
+    float span = center.width + 2 * (center_gap + padding +
+                                     std::max(widths.at(central->children.front().id),
+                                              widths.at(central->children.back().id)));
     for (int i = 0; i < 4; i++) {
       if (rows[i].empty()) {
         return false;
@@ -134,14 +136,14 @@ class LayoutBuilder {
     // A real oval envelope around the invocation point. Compact/edge layouts retain the
     // bounded paged rows below; never move the central hit target away from the press.
     if (center_x - span / 2 < margin || center_x + span / 2 > width - margin ||
-        center.y - 2 * row_step < margin ||
-        center.y + 2 * row_step + row_height > height - margin)
+        center.y - 2 * row_step < margin || center.y + 2 * row_step + row_height > height - margin)
     {
       return false;
     }
-    const float side_width = (span - center.width) / 2 - gap;
-    add(central->children.front(), center.x - gap - side_width, center.y, side_width, 0);
-    add(central->children.back(), center.x + center.width + gap, center.y, side_width, 0);
+    const float left_width = widths.at(central->children.front().id) + padding;
+    const float right_width = widths.at(central->children.back().id) + padding;
+    add(central->children.front(), center.x - center_gap - left_width, center.y, left_width, 0);
+    add(central->children.back(), center.x + center.width + center_gap, center.y, right_width, 0);
     for (int i = 0; i < 4; i++) {
       const float row_width = span * taper[i];
       const float extra = (row_width - natural[i]) / rows[i].size();
@@ -166,6 +168,19 @@ class LayoutBuilder {
     const bool above_fits = above + block_height <= height;
     const float bottom = above_fits && (center_y <= height / 2 || below < 0) ? above : below;
     if (bottom < 0 || bottom + block_height > height) {
+      // Wider central separation can require a separate utility row in small panes.
+      // If one side alone is too short, use free slots on both sides of the fixed anchor.
+      for (int step = 1; step * row_step < height && int(rows.size()) < count; step++) {
+        for (const float y : {origin + step * row_step, origin - step * row_step}) {
+          if (y >= margin && y + row_height <= height - margin && int(rows.size()) < count) {
+            rows.push_back(y);
+          }
+        }
+      }
+      if (int(rows.size()) != count) {
+        return {};
+      }
+      std::sort(rows.begin(), rows.end(), std::greater<float>());
       return rows;
     }
     for (int i = count - 1; i >= 0; i--) {
@@ -257,8 +272,11 @@ class LayoutBuilder {
       const float rx = 1.7f * ry;
       local.clear();
       const MenuRect center = {center_node ? center_node->id : "@back:" + owner.id,
-                               -center_width / 2, -row_height / 2,
-                               center_width, row_height, depth};
+                               -center_width / 2,
+                               -row_height / 2,
+                               center_width,
+                               row_height,
+                               depth};
       local.push_back(center);
       bool clear = true;
       left = center.x;
@@ -267,9 +285,14 @@ class LayoutBuilder {
       top = center.y + center.height;
       for (const EllipseItem &item : items) {
         const float fit_width = item.node && !item.direction ? reference_width : item.width;
-        const MenuRect candidate{item.id, item.nx * rx - fit_width / 2,
-                                  item.ny * ry - row_height / 2,
-                                  fit_width, row_height, depth, item.enabled, item.direction};
+        const MenuRect candidate{item.id,
+                                 item.nx * rx - fit_width / 2,
+                                 item.ny * ry - row_height / 2,
+                                 fit_width,
+                                 row_height,
+                                 depth,
+                                 item.enabled,
+                                 item.direction};
         for (const MenuRect &other : local) {
           clear &= candidate.x + candidate.width + gap <= other.x ||
                    other.x + other.width + gap <= candidate.x ||
@@ -293,8 +316,10 @@ class LayoutBuilder {
     if (!found) {
       return false;
     }
-    const float cx = std::clamp(anchor.x + anchor.width / 2, margin - left, width - margin - right);
-    const float cy = std::clamp(anchor.y + anchor.height / 2, margin - bottom, height - margin - top);
+    const float cx = std::clamp(
+        anchor.x + anchor.width / 2, margin - left, width - margin - right);
+    const float cy = std::clamp(
+        anchor.y + anchor.height / 2, margin - bottom, height - margin - top);
     // Only the active secondary ring remains. Its center restores the exact parent path/page,
     // avoiding unreadable overlapping rings in small quad panes.
     std::erase_if(result.rects, [](const MenuRect &item) { return item.depth > 0; });
@@ -328,16 +353,24 @@ class LayoutBuilder {
       }
       constexpr float diagonal = 0.70710678118f;
       const std::array<std::pair<const char *, std::array<float, 2>>, 7> directions = {{
-          {"views.perspective", {0, 1}}, {"views.side", {1, 0}},
-          {"views.front", {0, -1}}, {"views.top", {-1, 0}},
-          {"views.left", {-diagonal, diagonal}}, {"views.back", {-diagonal, -diagonal}},
+          {"views.perspective", {0, 1}},
+          {"views.side", {1, 0}},
+          {"views.front", {0, -1}},
+          {"views.top", {-1, 0}},
+          {"views.left", {-diagonal, diagonal}},
+          {"views.back", {-diagonal, -diagonal}},
           {"views.bottom", {diagonal, -diagonal}},
       }};
       std::vector<EllipseItem> items;
       for (const auto &[id, position] : directions) {
         if (const MenuNode *node = find_node(owner.children, id)) {
-          items.push_back({node, id, widths.at(id) + padding,
-                           position[0], position[1], interactive(*node), true});
+          items.push_back({node,
+                           id,
+                           widths.at(id) + padding,
+                           position[0],
+                           position[1],
+                           interactive(*node),
+                           true});
         }
       }
       result.supported &= items.size() == 7 && ellipse(owner, anchor, depth, items, 0, style);
@@ -358,21 +391,24 @@ class LayoutBuilder {
       }
       std::vector<EllipseItem> items;
       if (paged) {
-        items.push_back({nullptr, "@scroll:" + owner.id + ":previous",
-                         scroll_width, 0, 0, first > 0});
+        items.push_back(
+            {nullptr, "@scroll:" + owner.id + ":previous", scroll_width, 0, 0, first > 0});
       }
       for (int i = first; i < first + capacity; i++) {
         const MenuNode &node = owner.children[i];
         items.push_back({&node, node.id, widths.at(node.id) + padding, 0, 0, interactive(node)});
       }
       if (paged) {
-        items.push_back({nullptr, "@scroll:" + owner.id + ":next",
-                         scroll_width, 0, 0, first + capacity < count});
+        items.push_back({nullptr,
+                         "@scroll:" + owner.id + ":next",
+                         scroll_width,
+                         0,
+                         0,
+                         first + capacity < count});
       }
       const float pi = 3.14159265359f;
       for (int i = 0; i < int(items.size()); i++) {
-        const float angle = (items.size() == 2 ? pi / 4 : pi / 2) -
-                            2 * pi * i / items.size();
+        const float angle = (items.size() == 2 ? pi / 4 : pi / 2) - 2 * pi * i / items.size();
         items[i].nx = std::cos(angle);
         items[i].ny = std::sin(angle);
       }
@@ -448,16 +484,18 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
     if (const MenuRect *anchor = build.rect("views")) {
       const MenuNode *central = find_node(snapshot.menus, "center");
       if (central && central->children.size() == 3 && snapshot.style != "center") {
-        normal_rows = anchor->x - gap - label_widths.at(central->children.front().id) - padding >=
+        normal_rows = anchor->x - center_gap - label_widths.at(central->children.front().id) -
+                              padding >=
                           margin &&
-                      anchor->x + anchor->width + gap +
+                      anchor->x + anchor->width + center_gap +
                               label_widths.at(central->children.back().id) + padding <=
                           width - margin;
       }
       if (snapshot.style == "rows") {
         for (const std::string &row : snapshot.rows) {
-          const float y = anchor->y +
-                          (row == "common" ? 2 * row_step : row == "pane" ? row_step : -row_step);
+          const float y = anchor->y + (row == "common" ? 2 * row_step :
+                                       row == "pane"   ? row_step :
+                                                         -row_step);
           normal_rows &= y >= 0 && y + row_height <= height;
         }
       }
@@ -486,11 +524,11 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
           const MenuRect center = *anchor;
           const float left_width = label_widths.at(nodes[0]->id) + padding;
           const float right_width = label_widths.at(nodes[1]->id) + padding;
-          if (center.x - gap - left_width >= margin &&
-              center.x + center.width + gap + right_width <= width - margin)
+          if (center.x - center_gap - left_width >= margin &&
+              center.x + center.width + center_gap + right_width <= width - margin)
           {
-            build.add(*nodes[0], center.x - gap - left_width, center.y, left_width, 0);
-            build.add(*nodes[1], center.x + center.width + gap, center.y, right_width, 0);
+            build.add(*nodes[0], center.x - center_gap - left_width, center.y, left_width, 0);
+            build.add(*nodes[1], center.x + center.width + center_gap, center.y, right_width, 0);
             continue;
           }
         }
@@ -505,7 +543,8 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
       const float row_origin = center ? center->y : center_y - row_height / 2;
       for (const auto &row : rows) {
         row_positions.push_back(row_origin + (row.first->id == "common" ? 2 * row_step :
-                                              row.first->id == "pane" ? row_step : -row_step));
+                                              row.first->id == "pane"   ? row_step :
+                                                                          -row_step));
       }
     }
     else {
@@ -537,7 +576,8 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
   if (!build.result.supported) {
     build.result.rects.clear();
   }
-  else if (std::any_of(build.result.rects.begin(), build.result.rects.end(),
+  else if (std::any_of(build.result.rects.begin(),
+                       build.result.rects.end(),
                        [](const MenuRect &item) { return item.depth > 0; }))
   {
     // The active ring owns both presentation and hits, including its empty gaps. Returning
@@ -587,13 +627,27 @@ bool hotbox_command_closes(const std::string_view command)
 
 std::string_view hotbox_view_short_label(const std::string_view command)
 {
-  if (command == "view.perspective") { return "Persp"; }
-  if (command == "view.side") { return "Side"; }
-  if (command == "view.front") { return "Front"; }
-  if (command == "view.top") { return "Top"; }
-  if (command == "view.left") { return "Left"; }
-  if (command == "view.back") { return "Back"; }
-  if (command == "view.bottom") { return "Bottom"; }
+  if (command == "view.perspective") {
+    return "Persp";
+  }
+  if (command == "view.side") {
+    return "Side";
+  }
+  if (command == "view.front") {
+    return "Front";
+  }
+  if (command == "view.top") {
+    return "Top";
+  }
+  if (command == "view.left") {
+    return "Left";
+  }
+  if (command == "view.back") {
+    return "Back";
+  }
+  if (command == "view.bottom") {
+    return "Bottom";
+  }
   return {};
 }
 }  // namespace blender::axismeld

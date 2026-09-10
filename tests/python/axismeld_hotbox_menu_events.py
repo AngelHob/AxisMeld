@@ -95,8 +95,8 @@ def suite():
         common_labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
         span = (sum(blf.dimensions(0, text)[0]/scale + 40 for text in common_labels) + 60) / .72
         center_width = blf.dimensions(0, 'AxisMeld')[0]/scale + 60
-        side_width = (span - center_width)/2 - 10
-        recent_center = cx - (center_width/2 + 10 + side_width/2)*scale
+        side_width = blf.dimensions(0, 'Recent Commands')[0]/scale + 60
+        recent_center = cx - (center_width/2 + 83.6 + side_width/2)*scale
         text_width = blf.dimensions(0, 'Recent Commands')[0]
         left = recent_center - (text_width + 20*scale)/2
         def foreground_peak(x0, x1):
@@ -153,6 +153,89 @@ def suite():
         failures.append(f'Space main Common directory missing: changed pixels={changed}')
     bpy.data.images.remove(before)
     bpy.data.images.remove(after)
+    if os.environ.get('AXISMELD_TEST_DRAG_GUIDE'):
+        event('SPACE', 'RELEASE')
+        yield from settle()
+        for requested_scale in (1.0, 2.0):
+            bpy.context.preferences.view.ui_scale = requested_scale
+            yield from settle(8)
+            region = next(r for r in area.regions if r.type == 'WINDOW')
+            scale = bpy.context.preferences.system.ui_scale
+            cx, cy = region.x + region.width // 2, region.y + region.height // 2
+            # Off-center press distinguishes the real gesture origin from the menu anchor.
+            ox, oy = cx + 12 * scale, cy
+            event('MOUSEMOVE', 'NOTHING', cx, cy)
+            yield from settle()
+            event('SPACE')
+            yield from settle(8)
+            event('MOUSEMOVE', 'NOTHING', ox, oy)
+            event('RIGHTMOUSE')
+            yield from settle()
+            stationary = screenshot(f'guide-{requested_scale}-stationary.png')
+            # Empty NE sector: no label/command changes along this short stroke.
+            event('MOUSEMOVE', 'NOTHING', ox + 40 * scale, oy + 40 * scale)
+            yield from settle()
+            dragged = screenshot(f'guide-{requested_scale}-dragged.png')
+            def line_pixels(first, second):
+                images = [bpy.data.images.load(str(p), check_existing=False) for p in (first, second)]
+                w = images[0].size[0]
+                pixels = [list(im.pixels) for im in images]
+                count = 0
+                for offset in range(int(24 * scale), int(37 * scale)):
+                    for across in range(-2, 3):
+                        i = (int(oy + offset) * w + int(ox + offset) + across) * 4
+                        count += sum(abs(pixels[0][i+k] - pixels[1][i+k]) for k in range(3)) > .2
+                for im in images:
+                    bpy.data.images.remove(im)
+                return count
+            check(line_pixels(stationary, dragged) > 8 * scale,
+                  f'{requested_scale}x missing press-origin drag guide in empty NE corridor')
+            event('LEFTMOUSE', 'RELEASE')
+            yield from settle()
+            other_release = screenshot(f'guide-{requested_scale}-other-release.png')
+            check(line_pixels(dragged, other_release) == 0, 'non-owner release removed guide')
+            event('MOUSEMOVE', 'NOTHING', ox, oy)
+            event('RIGHTMOUSE', 'RELEASE')
+            yield from settle()
+            # Move again without a held button: zero-length geometry alone must not mask
+            # a missing owner-release state transition.
+            event('MOUSEMOVE', 'NOTHING', ox + 40 * scale, oy + 40 * scale)
+            yield from settle()
+            released = screenshot(f'guide-{requested_scale}-released.png')
+            check(line_pixels(stationary, released) == 0, 'guide remained after neutral release')
+            event('SPACE', 'RELEASE')
+            yield from settle()
+        from axismeld import hotbox_runtime
+        hotbox_runtime.reload_settings(bpy.context, session={
+            'schema_version': 1, 'settings': {'center_buttons': {'RIGHTMOUSE': 'common.select'}}})
+        for cancellation in ('ESC', 'SPACE'):
+            event('MOUSEMOVE', 'NOTHING', cx, cy)
+            yield from settle()
+            clean = screenshot(f'guide-menu-{cancellation}-clean.png')
+            event('SPACE')
+            yield from settle(8)
+            event('MOUSEMOVE', 'NOTHING', ox, oy)
+            event('RIGHTMOUSE')
+            yield from settle()
+            stationary = screenshot(f'guide-menu-{cancellation}-stationary.png')
+            event('MOUSEMOVE', 'NOTHING', ox + 40 * scale, oy + 40 * scale)
+            yield from settle()
+            dragged = screenshot(f'guide-menu-{cancellation}-dragged.png')
+            check(line_pixels(stationary, dragged) > 8 * scale,
+                  'ordinary mapped menu missing held-drag guide')
+            event(cancellation, 'PRESS' if cancellation == 'ESC' else 'RELEASE')
+            yield from settle()
+            event('RIGHTMOUSE', 'RELEASE')
+            if cancellation == 'ESC':
+                event('ESC', 'RELEASE')
+                event('SPACE', 'RELEASE')
+            yield from settle()
+            cancelled = screenshot(f'guide-menu-{cancellation}-cancelled.png')
+            check(line_pixels(clean, cancelled) == 0, f'{cancellation} left a ghost guide')
+        print('PASS drag guide at 1x/2x, real press origin, owner release, ordinary menus and Esc/Space cleanup',
+              flush=True)
+        print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
+        return
     event('RIGHTMOUSE')
     yield
     event('MOUSEMOVE', 'NOTHING', cx - 90 * scale, cy + 90 * scale)
@@ -800,8 +883,8 @@ def suite():
     reset_hotbox_settings()
 
     # Actual settings leaves use the native bridge and rebuild the same live hotbox.
-    control_width = ((center_span - center[2]/scale)/2 - 10)*scale
-    controls = (center[0]+center[2]+10*scale, cy-19*scale, control_width, 38*scale)
+    control_width = (label_width('Hotbox Controls') + 40)*scale
+    controls = (center[0]+center[2]+83.6*scale, cy-19*scale, control_width, 38*scale)
     control_items = popup(controls, ['Menu Rows', 'Hotbox Style', 'Transparency',
                                      'Center Mouse Buttons'])
     yield from open_box()
@@ -849,8 +932,8 @@ def suite():
 
     # A successful leaf is visible and replayable through the session-only Recent menu.
     recent_command = hotbox_runtime.recent.items()[0]
-    recent_width = ((center_span - center[2]/scale)/2 - 10)*scale
-    recent_rect = (center[0]-10*scale-recent_width, cy-19*scale, recent_width, 38*scale)
+    recent_width = (label_width('Recent Commands') + 40)*scale
+    recent_rect = (center[0]-83.6*scale-recent_width, cy-19*scale, recent_width, 38*scale)
     yield from open_box()
     yield from click(midpoint(recent_rect))
     recent_labels = [COMMANDS[command].label for command in hotbox_runtime.recent.items()]
