@@ -35,10 +35,16 @@ struct MenuRect {
   bool native_menu = false;             // Contiguous option rows use native menu rendering.
   bool native_menu_standalone = false;  // Native entry placed on a hotbox, not inside a list.
 };
+struct MenuScrollBounds {
+  /* Displayed native mapping page, independent of a stale caller-owned offset. */
+  int effective_first = 0;
+  int maximum_first = 0;
+};
 struct MenuLayout {
   std::vector<MenuRect> rects;
   bool supported;
   int hit_depth = 0;  // Lower layers remain visible but cannot acquire input.
+  std::unordered_map<std::string, MenuScrollBounds> native_scroll_bounds;
 };
 
 /* Logical pixel coordinates, bottom-left origin. All nodes require measured label widths.
@@ -59,6 +65,13 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
                        const std::unordered_map<std::string, int> &scroll_offsets,
                        const std::unordered_map<std::string, float> &label_widths,
                        const std::array<float, 2> *popup_origin = nullptr);
+/* Native mapping pages normalize from their displayed first row; other menus retain legacy math.
+ */
+int menu_scroll_offset_transition(const MenuLayout &layout,
+                                  std::string_view owner,
+                                  int stored_offset,
+                                  int delta,
+                                  int item_count);
 std::string hit_menu(const MenuLayout &layout, float x, float y);
 /* Includes disabled/separator occlusion and preserves the exact visible occurrence/depth. */
 const MenuRect *hit_menu_rect(const MenuLayout &layout, float x, float y);

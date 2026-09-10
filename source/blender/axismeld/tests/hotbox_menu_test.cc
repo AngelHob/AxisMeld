@@ -481,6 +481,91 @@ TEST(axismeld_hotbox_menu, MappingOffsetsClampAndAncestorOffsetsDoNotHideTheOpen
   EXPECT_NE(rect(ancestor, owner + ".common_modify"), nullptr);
 }
 
+TEST(axismeld_hotbox_menu, NativeMappingScrollTransitionUsesTheDisplayedPageBounds)
+{
+  auto snapshot = default_snapshot();
+  snapshot.center_buttons[2] = "center.controls";
+  const auto widths = measured(snapshot);
+  const std::string owner = "center.controls.buttons.rightmouse";
+  const std::vector<std::string> path = {
+      "center", "center.controls", "center.controls.buttons", owner};
+  auto page = [&](const float width, const float height, const int offset) {
+    return layout_menu(
+        snapshot, width, height, width / 2, height / 2, path, {{owner, offset}}, widths);
+  };
+
+  int stored = 0;
+  auto layout = page(480, 320, stored);
+  ASSERT_TRUE(layout.supported);
+  auto bounds = layout.native_scroll_bounds.find(owner);
+  ASSERT_NE(bounds, layout.native_scroll_bounds.end());
+  EXPECT_GT(13 - bounds->second.maximum_first, 1);
+  EXPECT_LT(13 - bounds->second.maximum_first, 13);
+  for (int i = 0; i < 20; i++) {
+    stored = menu_scroll_offset_transition(layout, owner, stored, 1, 13);
+    layout = page(480, 320, stored);
+    ASSERT_TRUE(layout.supported);
+  }
+  bounds = layout.native_scroll_bounds.find(owner);
+  ASSERT_NE(bounds, layout.native_scroll_bounds.end());
+  EXPECT_EQ(stored, bounds->second.maximum_first);
+  EXPECT_EQ(bounds->second.effective_first, bounds->second.maximum_first);
+
+  const int reversed = menu_scroll_offset_transition(layout, owner, stored, -1, 13);
+  EXPECT_EQ(reversed, bounds->second.maximum_first - 1);
+  const auto previous_page = page(480, 320, reversed);
+  ASSERT_TRUE(previous_page.supported);
+  const auto previous_bounds = previous_page.native_scroll_bounds.find(owner);
+  ASSERT_NE(previous_bounds, previous_page.native_scroll_bounds.end());
+  EXPECT_EQ(previous_bounds->second.effective_first, bounds->second.effective_first - 1);
+  EXPECT_NE(
+      rect(previous_page, owner + "." + mapping_suffixes[previous_bounds->second.effective_first]),
+      nullptr);
+
+  const auto first = page(480, 320, 0);
+  ASSERT_TRUE(first.supported);
+  EXPECT_EQ(menu_scroll_offset_transition(first, owner, 0, -1, 13), 0);
+  const auto stale_negative = page(480, 320, -99);
+  const auto stale_oversized = page(480, 320, 99);
+  ASSERT_TRUE(stale_negative.supported);
+  ASSERT_TRUE(stale_oversized.supported);
+  EXPECT_EQ(menu_scroll_offset_transition(stale_negative, owner, -99, 1, 13), 1);
+  const auto stale_bounds = stale_oversized.native_scroll_bounds.find(owner);
+  ASSERT_NE(stale_bounds, stale_oversized.native_scroll_bounds.end());
+  EXPECT_EQ(menu_scroll_offset_transition(stale_oversized, owner, 99, -1, 13),
+            stale_bounds->second.maximum_first - 1);
+}
+
+TEST(axismeld_hotbox_menu, FullNativeMappingListsDoNotDriftAndLegacyEllipsesStayUnchanged)
+{
+  const auto snapshot = default_snapshot();
+  const auto widths = measured(snapshot);
+  const std::string mapping_owner = "center.controls.buttons.rightmouse";
+  const auto full = layout_menu(snapshot,
+                                1920,
+                                1080,
+                                960,
+                                540,
+                                {"center.controls", "center.controls.buttons", mapping_owner},
+                                {{mapping_owner, 7}},
+                                widths);
+  ASSERT_TRUE(full.supported);
+  const auto full_bounds = full.native_scroll_bounds.find(mapping_owner);
+  ASSERT_NE(full_bounds, full.native_scroll_bounds.end());
+  EXPECT_EQ(full_bounds->second.effective_first, 0);
+  EXPECT_EQ(full_bounds->second.maximum_first, 0);
+  EXPECT_EQ(menu_scroll_offset_transition(full, mapping_owner, 7, 1, 13), 0);
+  EXPECT_EQ(menu_scroll_offset_transition(full, mapping_owner, 7, -1, 13), 0);
+
+  const auto ellipse = layout_menu(snapshot, 1920, 1080, 960, 540, {"common.select"}, {}, widths);
+  ASSERT_TRUE(ellipse.supported);
+  EXPECT_EQ(ellipse.native_scroll_bounds.find("common.select"),
+            ellipse.native_scroll_bounds.end());
+  EXPECT_EQ(menu_scroll_offset_transition(ellipse, "common.select", 3, 1, 5), 4);
+  EXPECT_EQ(menu_scroll_offset_transition(ellipse, "common.select", 4, 1, 5), 4);
+  EXPECT_EQ(menu_scroll_offset_transition(ellipse, "common.select", 0, -1, 5), 0);
+}
+
 TEST(axismeld_hotbox_menu, ShortNativeSettingsListsFitNarrowViewportCornersWithoutDroppingRows)
 {
   auto snapshot = default_snapshot();

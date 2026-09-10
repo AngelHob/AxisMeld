@@ -186,10 +186,9 @@ static void scroll_owner(HotboxData &data, const std::string &owner, const int d
   }
   const MenuNode *node = hotbox_find_node(data.snapshot.menus, owner);
   if (node || owner == "@main") {
-    data.scroll_offsets[owner] = std::clamp(
-        data.scroll_offsets[owner] + delta,
-        0,
-        std::max(0, int(node ? node->children.size() : data.snapshot.menus.size()) - 1));
+    const int item_count = int(node ? node->children.size() : data.snapshot.menus.size());
+    data.scroll_offsets[owner] = menu_scroll_offset_transition(
+        data.menu_layout, owner, data.scroll_offsets[owner], delta, item_count);
     hotbox_layout(data);
   }
 }

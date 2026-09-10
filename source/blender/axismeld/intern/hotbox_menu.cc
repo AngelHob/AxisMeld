@@ -507,6 +507,9 @@ class LayoutBuilder {
             first = std::clamp(first, std::max(0, i - capacity + 1), i);
           }
         }
+        if (mapping_list(owner.id)) {
+          result.native_scroll_bounds[owner.id] = {first, count - capacity};
+        }
         int row = 0;
         auto add_native_row = [&](const std::string &id, const bool enabled) {
           result.rects.push_back(
@@ -744,6 +747,7 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
   }
   if (!build.result.supported) {
     build.result.rects.clear();
+    build.result.native_scroll_bounds.clear();
   }
   else if (std::any_of(build.result.rects.begin(),
                        build.result.rects.end(),
@@ -753,6 +757,20 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
     build.result.hit_depth = 1;
   }
   return build.result;
+}
+
+int menu_scroll_offset_transition(const MenuLayout &layout,
+                                  const std::string_view owner,
+                                  const int stored_offset,
+                                  const int delta,
+                                  const int item_count)
+{
+  const auto native_bounds = layout.native_scroll_bounds.find(std::string(owner));
+  if (native_bounds != layout.native_scroll_bounds.end()) {
+    return std::clamp(
+        native_bounds->second.effective_first + delta, 0, native_bounds->second.maximum_first);
+  }
+  return std::clamp(stored_offset + delta, 0, std::max(0, item_count - 1));
 }
 
 std::string hit_menu(const MenuLayout &layout, const float x, const float y)
