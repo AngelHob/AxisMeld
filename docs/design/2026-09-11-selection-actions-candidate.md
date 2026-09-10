@@ -28,6 +28,9 @@
   未知或未实现 ID 仍拒绝。新动作沿用 close_before=True、replayable=True，执行前释放热盒输入所有权。
 - 返回原生状态；仅原生 FINISHED 按现有规则进入 Recent。Select All 在不同模式的 no-op 返回
   不统一包装，不增加几何快照比较，不改全局历史或 undo 包装器。
+- 原生子调用显式使用`operation('EXEC_DEFAULT', True, **properties)`启用其撤销记录。
+  安装态双锚点验证发现省略第二个布尔参数会跳过子撤销，已据本地Python调用解析源码修订；
+  不给通用AxisMeld包装器新增UNDO，也不改其他既有命令的撤销行为。
 
 ## 验证门槛
 

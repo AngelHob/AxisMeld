@@ -102,7 +102,10 @@ def _selection_operation(context, command):
   `available()` checks the existing modeling context first, then exact MODE_COMMANDS gate. For new
   SELECTION_ACTIONS, None means `(False, 'Requires mesh Edit Mode')`; failed poll means
   `(False, 'Blender selection operator is unavailable in this context')`. The run branch obtains the
-  same tuple after available succeeds and calls `operation('EXEC_DEFAULT', **properties)`.
+  same tuple after available succeeds and calls `operation('EXEC_DEFAULT', True, **properties)`.
+  Actual dual-anchor GUI RED showed the omitted bool disables native child undo; Blender's Python
+  call parser defaults it to false. Explicit True preserves child-owned undo without changing the
+  generic wrapper flags. One undo must restore immediate pre-action B, not earlier sentinel A.
 
   Existing tools, views, hotbox and component-switch paths remain unchanged. Never catch a native failure and turn it into FINISHED.
 
