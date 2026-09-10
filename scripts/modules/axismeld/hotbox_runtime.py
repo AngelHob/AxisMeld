@@ -41,8 +41,8 @@ SUPPORTED_COMMANDS = frozenset({
     'view.perspective', 'view.side', 'view.bottom', 'view.front', 'view.back',
     'view.top', 'view.left', 'view.focus_selected', 'view.frame_all', 'view.wireframe',
     'view.shaded', 'view.toggle_quad', 'selection.toggle_component', 'selection.vertex_mode',
-    'selection.edge_mode', 'selection.face_mode', 'transform.move', 'transform.rotate',
-    'transform.scale',
+    'selection.edge_mode', 'selection.face_mode', 'selection.select_all', 'selection.grow',
+    'selection.shrink', 'transform.move', 'transform.rotate', 'transform.scale',
 })
 
 

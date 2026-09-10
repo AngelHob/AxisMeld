@@ -9,6 +9,8 @@ TOOLS = {'tool.select': 'builtin.select_box', 'transform.move': 'builtin.move',
          'transform.rotate': 'builtin.rotate', 'transform.scale': 'builtin.scale'}
 COMPONENTS = {'selection.vertex_mode': 'VERT', 'selection.edge_mode': 'EDGE',
               'selection.face_mode': 'FACE'}
+MODE_COMMANDS = {'selection.toggle_component', *COMPONENTS}
+SELECTION_ACTIONS = {'selection.select_all', 'selection.grow', 'selection.shrink'}
 VIEW_OPS = {'view.focus_selected': ('view_selected', {'use_all_regions': False}),
             'view.frame_all': ('view_all', {'center': False}),
             'view.orbit': ('rotate', {}), 'view.pan': ('move', {}),
@@ -24,16 +26,33 @@ def modeling_context(context):
                 context.mode in {'OBJECT', 'EDIT_MESH'})
 
 
+def _selection_operation(context, command):
+    if command == 'selection.select_all':
+        operation = bpy.ops.mesh.select_all if context.mode == 'EDIT_MESH' else bpy.ops.object.select_all
+        return operation, {'action': 'SELECT'}
+    if context.mode == 'EDIT_MESH' and command in {'selection.grow', 'selection.shrink'}:
+        operation = bpy.ops.mesh.select_more if command == 'selection.grow' else bpy.ops.mesh.select_less
+        return operation, {'use_face_step': True}
+    return None
+
+
 def available(context, command):
     if command not in COMMANDS:
         return False, 'Unknown AxisMeld command'
     if not modeling_context(context):
         return False, 'Requires a 3D View window in Object or mesh Edit Mode'
-    if command.startswith('selection.'):
+    if command in MODE_COMMANDS:
         obj = context.active_object
         if not (obj and obj.type == 'MESH' and obj.is_editable and obj.data.is_editable and
                 obj.select_get() and obj.visible_get(view_layer=context.view_layer)):
             return False, 'Select a visible, editable mesh first'
+    if command in SELECTION_ACTIONS:
+        resolved = _selection_operation(context, command)
+        if resolved is None:
+            return False, 'Requires mesh Edit Mode'
+        operation, _properties = resolved
+        if not operation.poll():
+            return False, 'Blender selection operator is unavailable in this context'
     if command in VIEW_OPS:
         operation = getattr(bpy.ops.view3d, VIEW_OPS[command][0], None)
         if operation is None or not operation.poll():
@@ -65,6 +84,11 @@ def run(context, command, *, invoke=True):
             return {'FINISHED'}
         return bpy.ops.mesh.select_mode('EXEC_DEFAULT', type=COMPONENTS[command],
                                         use_extend=False, use_expand=False)
+    if command in SELECTION_ACTIONS:
+        operation, properties = _selection_operation(context, command)
+        # bpy.ops Python calls default their child-undo argument to false. Keep the generic
+        # AxisMeld wrapper non-undoable while allowing the native selection operator to own it.
+        return operation('EXEC_DEFAULT', True, **properties)
     if command in VIEW_OPS:
         name, properties = VIEW_OPS[command]
         return getattr(bpy.ops.view3d, name)('INVOKE_DEFAULT' if invoke else 'EXEC_DEFAULT', **properties)

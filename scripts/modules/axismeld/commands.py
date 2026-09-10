@@ -28,6 +28,15 @@ COMMANDS = MappingProxyType({command.id: command for command in (
     Command('selection.vertex_mode', 'Vertex', 'F9'),
     Command('selection.edge_mode', 'Edge', 'F10'),
     Command('selection.face_mode', 'Face', 'F11'),
+    Command('selection.select_all', 'Select All',
+            difference=('Selects eligible objects or mesh components using Blender context; '
+                        'Maya DAG/UFE rules are not reproduced.')),
+    Command('selection.grow', 'Grow Selection',
+            difference=('Uses Blender native topology traversal; Maya '
+                        'GrowPolygonSelectionRegion equivalence is not claimed.')),
+    Command('selection.shrink', 'Shrink Selection',
+            difference=('Uses Blender native topology traversal; Maya '
+                        'ShrinkPolygonSelectionRegion equivalence is not claimed.')),
     Command('view.focus_selected', 'Frame Selected', 'F'),
     Command('view.frame_all', 'Frame All', 'A'),
     Command('view.orbit', 'Tumble', 'LEFTMOUSE', alt=True),

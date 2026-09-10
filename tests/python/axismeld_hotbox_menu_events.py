@@ -506,7 +506,8 @@ def suite():
     blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
     icon_labels = {'AxisMeld', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls',
                    'Wireframe', 'Solid', 'Perspective View', 'Right View', 'Bottom View',
-                   'Front View', 'Back View', 'Top View', 'Left View', 'Vertex', 'Edge', 'Face'}
+                   'Front View', 'Back View', 'Top View', 'Left View', 'Vertex', 'Edge', 'Face',
+                   'Select All', 'Grow Selection', 'Shrink Selection'}
     def label_width(label):
         native_icon = label in icon_labels or label.startswith(('Entry ', 'Parent ', 'Child '))
         return blf.dimensions(0, label)[0] / scale + (20 if native_icon else 0)
@@ -784,7 +785,8 @@ def suite():
 
     # Close-before mode command: no stale draw pointer and no residual Space playback.
     select = row_title(common_labels, 3, 96)
-    select_items = popup(select, ['Object / Component', '', 'Vertex', 'Edge', 'Face'])
+    select_items = popup(select, ['Object / Component', '', 'Vertex', 'Edge', 'Face',
+                                  'Select All', 'Grow Selection', 'Shrink Selection'])
     yield from open_box()
     yield from move(midpoint(select))
     event('LEFTMOUSE')

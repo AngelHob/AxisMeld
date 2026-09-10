@@ -11,7 +11,7 @@ import tempfile
 parser = argparse.ArgumentParser()
 parser.add_argument('--blender', required=True)
 parser.add_argument('--artifacts', help='Optional directory for isolated factory-scene screenshots')
-parser.add_argument('--suite', choices=('hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles'), default='hotbox')
+parser.add_argument('--suite', choices=('hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection'), default='hotbox')
 args = parser.parse_args()
 suite_script, pass_marker = {
     'hotbox': ('axismeld_hotbox_events.py', b'AXISMELD_HOTBOX_EVENTS_PASS'),
@@ -21,6 +21,7 @@ suite_script, pass_marker = {
     'release': ('axismeld_hotbox_release_events.py', b'AXISMELD_HOTBOX_RELEASE_EVENTS_PASS'),
     'release-cross-window': ('axismeld_hotbox_release_events.py', b'AXISMELD_HOTBOX_CROSS_WINDOW_PASS'),
     'profiles': ('axismeld_hotbox_profiles_blender.py', b'AXISMELD_HOTBOX_PROFILES_PASS'),
+    'selection': ('axismeld_selection_events.py', b'AXISMELD_SELECTION_EVENTS_PASS'),
 }[args.suite]
 startup = None
 if sys.platform == 'win32':

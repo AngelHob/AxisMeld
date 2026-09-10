@@ -11,7 +11,8 @@ _VIEW_REPLAYABLE = frozenset({
 })
 _CLOSE_REPLAYABLE = frozenset({
     'view.toggle_quad', 'selection.toggle_component', 'selection.vertex_mode',
-    'selection.edge_mode', 'selection.face_mode', 'transform.move',
+    'selection.edge_mode', 'selection.face_mode', 'selection.select_all',
+    'selection.grow', 'selection.shrink', 'transform.move',
     'transform.rotate', 'transform.scale',
 })
 
@@ -127,6 +128,9 @@ def _catalog():
             _command('common.select.vertex', 'Vertex', 'selection.vertex_mode'),
             _command('common.select.edge', 'Edge', 'selection.edge_mode'),
             _command('common.select.face', 'Face', 'selection.face_mode'),
+            _command('common.select.all', 'Select All', 'selection.select_all'),
+            _command('common.select.grow', 'Grow Selection', 'selection.grow'),
+            _command('common.select.shrink', 'Shrink Selection', 'selection.shrink'),
         )),
         _menu('common.modify', 'Modify', (
             _command('common.modify.move', 'Move Tool', 'transform.move'),

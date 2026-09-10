@@ -42,6 +42,39 @@ TEST(hotbox_model, ValidSnapshotOwnsDataAndNormalizesNull)
   EXPECT_EQ(out.center_buttons[2], "views");
 }
 
+TEST(hotbox_model, SelectionActionsUseLiteralRegisteredIdsAndUnknownRemainsAtomic)
+{
+  const std::array<std::pair<const char *, const char *>, 3> actions = {
+      std::pair{"common.select.all", "selection.select_all"},
+      std::pair{"common.select.grow", "selection.grow"},
+      std::pair{"common.select.shrink", "selection.shrink"},
+  };
+  for (const auto &[id, command] : actions) {
+    const std::string child = "{\"id\":\"" + std::string(id) +
+                              "\",\"kind\":\"command\",\"label\":\"Selection Action\"," +
+                              "\"command\":\"" + command +
+                              "\",\"enabled\":true,\"reason\":\"\",\"children\":[]}";
+    MenuSnapshot out{};
+    std::string error;
+    ASSERT_TRUE(parse_menu_snapshot(snapshot(child), out, error)) << error;
+    ASSERT_EQ(out.menus[0].children.size(), 1);
+    EXPECT_EQ(out.menus[0].children[0].id, id);
+    EXPECT_EQ(out.menus[0].children[0].command, command);
+  }
+
+  MenuSnapshot out{};
+  out.generation = 99;
+  out.style = "untouched";
+  std::string error;
+  EXPECT_FALSE(parse_menu_snapshot(
+      snapshot(
+          R"({"id":"common.select.unknown","kind":"command","label":"Unknown","command":"selection.unknown","enabled":true,"reason":"","children":[]})"),
+      out,
+      error));
+  EXPECT_EQ(out.generation, 99);
+  EXPECT_EQ(out.style, "untouched");
+}
+
 TEST(hotbox_model, BoundaryValidationCannotPartiallyReplaceSnapshot)
 {
   const std::string valid = snapshot();

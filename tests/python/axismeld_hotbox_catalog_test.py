@@ -37,6 +37,24 @@ def menu_node(identifier, children=()):
 
 
 class HotboxCatalogTest(unittest.TestCase):
+    def test_selection_actions_are_registered_unbound_and_have_explicit_contracts(self):
+        expected = ('selection.select_all', 'selection.grow', 'selection.shrink')
+        expected_differences = {
+            'selection.select_all':
+                'Selects eligible objects or mesh components using Blender context; Maya DAG/UFE rules are not reproduced.',
+            'selection.grow':
+                'Uses Blender native topology traversal; Maya GrowPolygonSelectionRegion equivalence is not claimed.',
+            'selection.shrink':
+                'Uses Blender native topology traversal; Maya ShrinkPolygonSelectionRegion equivalence is not claimed.',
+        }
+        for identifier in expected:
+            with self.subTest(identifier=identifier):
+                self.assertIsNone(COMMANDS[identifier].key)
+                self.assertEqual(COMMANDS[identifier].status, 'adapted')
+                self.assertEqual(COMMANDS[identifier].difference,
+                                 expected_differences[identifier])
+                self.assertEqual(hotbox_catalog.command_policy(identifier), (True, True))
+
     def test_new_view_commands_are_declared_without_default_keybindings(self):
         self.assertTrue(all(COMMANDS[key].key is None
                             for key in ('view.left', 'view.back', 'view.bottom')))
@@ -71,7 +89,12 @@ class HotboxCatalogTest(unittest.TestCase):
         self.assertEqual([node['command'] for node in node_by_id(catalog, 'common.select')['children']
                           if node['kind'] == 'command'], [
             'selection.toggle_component', 'selection.vertex_mode',
-            'selection.edge_mode', 'selection.face_mode'])
+            'selection.edge_mode', 'selection.face_mode',
+            'selection.select_all', 'selection.grow', 'selection.shrink'])
+        self.assertEqual([node['id'] for node in node_by_id(catalog, 'common.select')['children']], [
+            'common.select.object_component', 'common.select.separator.modes',
+            'common.select.vertex', 'common.select.edge', 'common.select.face',
+            'common.select.all', 'common.select.grow', 'common.select.shrink'])
         self.assertEqual([node['command'] for node in node_by_id(catalog, 'common.modify')['children']], [
             'transform.move', 'transform.rotate', 'transform.scale'])
         self.assertEqual([node['command'] for node in node_by_id(catalog, 'pane.view')['children']], [

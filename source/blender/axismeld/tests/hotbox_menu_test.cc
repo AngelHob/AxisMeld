@@ -135,7 +135,7 @@ TEST(axismeld_hotbox_menu, SecondaryCommandsOccupyAnEllipseInsteadOfAColumn)
     centers_y.insert(item.y + item.height / 2);
     children++;
   }
-  EXPECT_EQ(children, 5);
+  EXPECT_EQ(children, 8);
   EXPECT_NE(rect(layout, "@back:common.select"), nullptr);
   EXPECT_GE(centers_x.size(), 3);
   EXPECT_GE(centers_y.size(), 3);
@@ -1015,6 +1015,9 @@ TEST(axismeld_hotbox_menu, RestrictedClosePolicyUsesLiteralCommandIdentities)
                               "selection.vertex_mode",
                               "selection.edge_mode",
                               "selection.face_mode",
+                              "selection.select_all",
+                              "selection.grow",
+                              "selection.shrink",
                               "transform.move",
                               "transform.rotate",
                               "transform.scale",
