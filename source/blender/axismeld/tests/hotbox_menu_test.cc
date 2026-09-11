@@ -429,7 +429,7 @@ TEST(axismeld_hotbox_menu, NarrowMappingPagesReachAllChoicesWithBoundedNativeRow
               EXPECT_GE(item->y, 12) << item->id;
               EXPECT_LE(item->x + item->width, size[0] - 12) << item->id;
               EXPECT_LE(item->y + item->height, size[1] - 12) << item->id;
-              EXPECT_TRUE(separated_by(*entry, *item, 9.99f)) << item->id;
+              EXPECT_TRUE(separated_by(*entry, *item, -0.01f)) << item->id;
               if (i > 0) {
                 EXPECT_FLOAT_EQ(item->x, column[0]->x) << item->id;
                 EXPECT_FLOAT_EQ(item->width, column[0]->width) << item->id;
@@ -604,6 +604,19 @@ TEST(axismeld_hotbox_menu, ShortNativeSettingsListsFitNarrowViewportCornersWitho
       EXPECT_FLOAT_EQ(entry->width, widths.at(owner) + 60);
       const auto *first = rect(layout, ids.front());
       ASSERT_NE(first, nullptr);
+      float bottom = first->y, top = first->y + first->height;
+      for (const char *id : ids) {
+        const auto *child = rect(layout, id);
+        ASSERT_NE(child, nullptr);
+        bottom = std::min(bottom, child->y);
+        top = std::max(top, child->y + child->height);
+      }
+      // Full column bounds catch a gap in either side placement or vertical fallback.
+      EXPECT_LT(std::min({std::abs(first->x - entry->x - entry->width),
+                          std::abs(entry->x - first->x - first->width),
+                          std::abs(bottom - entry->y - entry->height),
+                          std::abs(entry->y - top)}),
+                0.01f);
       const MenuRect *previous = nullptr;
       for (const char *id : ids) {
         const auto *item = rect(layout, id);
@@ -618,10 +631,7 @@ TEST(axismeld_hotbox_menu, ShortNativeSettingsListsFitNarrowViewportCornersWitho
         if (previous) {
           EXPECT_FLOAT_EQ(previous->y, item->y + 24);
         }
-        EXPECT_TRUE(item->x >= entry->x + entry->width + 9.99f ||
-                    entry->x >= item->x + item->width + 9.99f ||
-                    item->y >= entry->y + entry->height + 9.99f ||
-                    entry->y >= item->y + item->height + 9.99f);
+        EXPECT_TRUE(separated_by(*entry, *item, -0.01f));
         previous = item;
       }
     }
@@ -657,10 +667,7 @@ TEST(axismeld_hotbox_menu, NarrowStylePopupDoesNotCoverItsEntry)
         const float dx = origin[0] - std::clamp(origin[0], item->x, item->x + item->width);
         const float dy = 105 - std::clamp(105.0f, item->y, item->y + item->height);
         EXPECT_GT(dx * dx + dy * dy, 12 * 12) << "Style must not cover the marking return zone";
-        EXPECT_TRUE(item->x >= entry->x + entry->width + 9.99f ||
-                    entry->x >= item->x + item->width + 9.99f ||
-                    item->y >= entry->y + entry->height + 9.99f ||
-                    entry->y >= item->y + item->height + 9.99f);
+        EXPECT_TRUE(separated_by(*entry, *item, -0.01f));
         EXPECT_EQ(hit_menu(layout, item->x + item->width / 2, item->y + 12), item->id);
       }
     }
@@ -789,6 +796,62 @@ TEST(axismeld_hotbox_menu, ViewOverlayUsesFullLabelsAndDisabledNorthEastCamera)
   const auto *perspective = rect(layout, "views.perspective");
   ASSERT_NE(perspective, nullptr);
   EXPECT_FLOAT_EQ(perspective->width, widths.at("views.perspective") + 16);
+}
+
+TEST(axismeld_hotbox_menu, NativeCascadeDoesNotHitUnrelatedRetainedHotboxes)
+{
+  const auto snapshot = default_snapshot();
+  for (const std::vector<std::string> path :
+       {std::vector<std::string>{"center.controls", "center.controls.buttons"},
+        std::vector<std::string>{
+            "center.controls", "center.controls.buttons", "center.controls.buttons.leftmouse"}})
+  {
+    const auto layout = layout_menu(snapshot, 1920, 1080, 960, 540, path, {}, measured(snapshot));
+    ASSERT_TRUE(layout.supported);
+    const auto *other = rect(layout, "center.controls.transparency");
+    ASSERT_NE(other, nullptr);
+    const auto *hit = hit_menu_rect(
+        layout, other->x + other->width / 2, other->y + other->height / 2);
+    EXPECT_TRUE(!hit || hit->id != other->id);
+    const auto *entry = rect(layout, "center.controls.buttons");
+    ASSERT_NE(entry, nullptr);
+    hit = hit_menu_rect(layout, entry->x + entry->width / 2, entry->y + entry->height / 2);
+    ASSERT_NE(hit, nullptr);
+    EXPECT_EQ(hit->id, entry->id);
+    const auto *sibling = rect(layout, "center.controls.buttons.rightmouse");
+    ASSERT_NE(sibling, nullptr);
+    hit = hit_menu_rect(layout, sibling->x + sibling->width / 2, sibling->y + sibling->height / 2);
+    ASSERT_NE(hit, nullptr);
+    EXPECT_EQ(hit->id, sibling->id);
+  }
+}
+
+TEST(axismeld_hotbox_menu, NativeCascadeTouchesItsDirectAnchor)
+{
+  const auto snapshot = default_snapshot();
+  for (const float cx : {200.0f, 960.0f, 1700.0f}) {
+    const auto layout = layout_menu(
+        snapshot,
+        1920,
+        1080,
+        cx,
+        540,
+        {"center.controls", "center.controls.buttons", "center.controls.buttons.leftmouse"},
+        {},
+        measured(snapshot));
+    ASSERT_TRUE(layout.supported);
+    for (const auto &pair :
+         {std::pair{"center.controls.buttons", "center.controls.buttons.leftmouse"},
+          std::pair{"center.controls.buttons.leftmouse",
+                    "center.controls.buttons.leftmouse.none"}})
+    {
+      const auto *anchor = rect(layout, pair.first), *child = rect(layout, pair.second);
+      ASSERT_NE(anchor, nullptr);
+      ASSERT_NE(child, nullptr);
+      EXPECT_TRUE(std::abs(child->x - anchor->x - anchor->width) < .01f ||
+                  std::abs(anchor->x - child->x - child->width) < .01f);
+    }
+  }
 }
 
 TEST(axismeld_hotbox_menu, ActiveNativeListDoesNotExposeUnderlyingRootHitTargets)

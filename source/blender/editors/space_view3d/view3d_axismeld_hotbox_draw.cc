@@ -180,6 +180,14 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
       background[i] = inner[i] / 255.0f;
       border[i] = outline[i] / 255.0f;
     }
+    if (r.depth > 0 && !selected) {
+      // Marking buttons sit above the retained primary hotbox. Native menus keep their theme.
+      const float primary = (theme.wcol_menu.inner[0] + theme.wcol_menu.inner[1] +
+                             theme.wcol_menu.inner[2]) /
+                            (3.0f * 255.0f);
+      const float grey = std::clamp(primary + 0.14f, 0.36f, 0.60f);
+      background[0] = background[1] = background[2] = grey;
+    }
     background[3] *= 1 - data.snapshot.transparency / 100.0f;
     border[3] *= 1 - data.snapshot.transparency / 100.0f;
     const rctf bounds = {

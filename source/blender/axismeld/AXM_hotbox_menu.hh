@@ -34,6 +34,7 @@ struct MenuRect {
   bool compact_label = false;
   bool native_menu = false;             // Contiguous option rows use native menu rendering.
   bool native_menu_standalone = false;  // Native entry placed on a hotbox, not inside a list.
+  bool retained_only = false;  // Visible background, not a disabled command or hit target.
 };
 struct MenuScrollBounds {
   /* Displayed native mapping page, independent of a stale caller-owned offset. */

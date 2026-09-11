@@ -66,14 +66,14 @@ def native_page(anchor, labels, measure, bounds, scale=1, marking_origin=None, f
             for i, label in enumerate(labels))
 
     def position(h):
-        x = ax+aw+10
+        x = ax+aw
         y = max(by+12, min(ay+ah-h, by+bh-12-h))
         if x+w <= bx+bw-12:
             return x, y
-        x = ax-10-w
+        x = ax-w
         if x >= bx+12:
             return x, y
-        for cy in (ay+ah+10, ay-10-h):
+        for cy in (ay+ah, ay-h):
             for cx in (max(bx+12, min(ax, bx+bw-12-w)), bx+12, bx+bw-12-w):
                 if cy < by+12 or cy+h > by+bh-12:
                     continue

@@ -387,6 +387,82 @@ def mapping_suite():
               'trailing-owner-release no-dispatch no-setting WER reopened-literal', expected,
               flush=True)
 
+    feedback_probe = os.environ.get('AXISMELD_TEST_CASCADE_FEEDBACK')
+    if feedback_probe:
+        check(layout_probe == 'standard', 'feedback probe requires its standard-view fixture')
+        reset_settings()
+        if feedback_probe == 'contrast':
+            theme = bpy.context.preferences.themes[0].user_interface
+            theme.wcol_menu.inner = (.20, .20, .20, 1)
+            theme.wcol_menu_back.inner = (.12, .12, .12, 1)
+            hotbox_runtime.reload_settings(bpy.context, session={
+                'schema_version': 1, 'settings': {'transparency': 0}})
+            event('MOUSEMOVE', 'NOTHING', (cx, cy))
+            event('SPACE')
+            yield from settle(8)
+            primary_path = screenshot('feedback-primary.png')
+            event('RIGHTMOUSE')
+            yield from settle(8)
+            views = ellipse_page(center, ['Perspective View', 'Right View', 'Bottom View',
+                                         'Front View', 'Back View', 'Top View', 'Left View'],
+                                 measure, bounds, scale, views=True)
+            secondary_path = screenshot('feedback-secondary-grey.png')
+
+            def background_sample(path, rect):
+                image, pixels, width = image_pixels(path)
+                try:
+                    x, y, _w, _h = rect
+                    samples = [pixels[(yy*width+xx)*4:(yy*width+xx)*4+3]
+                               for yy in range(int(y+4*scale), int(y+7*scale))
+                               for xx in range(int(x+8*scale), int(x+12*scale))]
+                    return tuple(sum(s[c] for s in samples)/len(samples) for c in range(3))
+                finally:
+                    bpy.data.images.remove(image)
+
+            primary = background_sample(primary_path, control)
+            secondary = background_sample(secondary_path, views['items'][0])
+            print('FEEDBACK_BACKGROUND', primary, secondary, flush=True)
+            check(max(secondary)-min(secondary) < .02 and
+                  sum(secondary)/3 >= sum(primary)/3 + .08,
+                  'secondary hotbox is not a visibly brighter neutral grey than primary')
+            event('RIGHTMOUSE', 'RELEASE')
+            yield from close_box()
+        else:
+            check(feedback_probe == 'drag', 'unknown feedback probe')
+            owner, buttons = yield from open_buttons()
+            controls = ellipse_page(control, CONTROL_LABELS, measure, bounds, scale)['items']
+            yield from move(owner)
+            event('LEFTMOUSE')
+            yield from settle()
+            # Continuous held motion deliberately crosses a retained, unrelated hotbox title.
+            # Do not teleport straight to the child: that hid the original input-stealing bug.
+            start = midpoint(owner)
+            for target in (midpoint(controls[2]), midpoint(buttons['items'][0])):
+                for step in range(1, 17):
+                    point = tuple(a+(b-a)*step/16 for a, b in zip(start, target))
+                    event('MOUSEMOVE', 'NOTHING', point)
+                    yield
+                start = target
+            yield from settle()
+            page = native_page(buttons['items'][0], MAPPING_LABELS, measure, bounds, scale)
+            target = midpoint(page['items'][0])
+            for step in range(1, 17):
+                event('MOUSEMOVE', 'NOTHING', tuple(a+(b-a)*step/16 for a, b in zip(start, target)))
+                yield
+            screenshot('feedback-cascade-held.png')
+            event('LEFTMOUSE', 'RELEASE')
+            yield from settle()
+            check(settings()['center_buttons']['LEFTMOUSE'] is None and
+                  len(settings_observed) == 1 and
+                  settings_observed[0][:2] == ('center.LEFTMOUSE', 'none') and not observed,
+                  f'crossing retained hotbox stole held cascade selection: {settings_observed!r}')
+            yield from close_box()
+            for key, tool in (('W', 'builtin.move'), ('E', 'builtin.rotate'), ('R', 'builtin.scale')):
+                yield from press_tool(key, tool)
+        print('AXISMELD_CASCADE_FEEDBACK_PASS', feedback_probe, flush=True)
+        print('AXISMELD_HOTBOX_MAPPING_LISTS_PASS', flush=True)
+        return
+
     menu_back = bpy.context.preferences.themes[0].user_interface.wcol_menu_back
     normal_menu_background = tuple(menu_back.inner)
     menu_back.inner = (.8, .12, .04, 1)
@@ -416,9 +492,9 @@ def mapping_suite():
                       f'{BUTTON_LABELS[index]} native submenu arrow missing')
             ox, oy, ow, oh = owner
             bx, by, bw, bh = rows[0]
-            separated = (bx >= ox+ow+9.99*scale or ox >= bx+bw+9.99*scale or
-                         by >= oy+oh+9.99*scale or oy >= by+bh+9.99*scale)
-            check(separated, 'Center Mouse Buttons owner and submenu are below 10px separation')
+            separated = (bx >= ox+ow-.1*scale or ox >= bx+bw-.1*scale or
+                         by >= oy+oh-.1*scale or oy >= by+bh-.1*scale)
+            check(separated, 'Center Mouse Buttons owner and submenu overlap')
         finally:
             bpy.data.images.remove(image)
         yield from click(buttons['items'][0])
@@ -910,9 +986,9 @@ def suite():
                 list_right = max(r[0]+r[2] for r in choices)
                 list_bottom = min(r[1] for r in choices)
                 list_top = max(r[1]+r[3] for r in choices)
-                check(list_left >= ox+ow+9.99*scale or ox >= list_right+9.99*scale or
-                      list_bottom >= oy+oh+9.99*scale or oy >= list_top+9.99*scale,
-                      f'{layout_probe} {name} owner/list separation is below 10 logical pixels')
+                check(list_left >= ox+ow-.1*scale or ox >= list_right-.1*scale or
+                      list_bottom >= oy+oh-.1*scale or oy >= list_top-.1*scale,
+                      f'{layout_probe} {name} owner and list overlap')
                 open_path = screenshot(
                     f'native-list-{layout_probe}-{name}-{selected_index}-open.png')
                 image = bpy.data.images.load(str(open_path), check_existing=False)
@@ -1026,11 +1102,12 @@ def suite():
                             for xx in range(int(ex+ew-18*scale), int(ex+ew-4*scale)))
             check(arrow_ink > 3*scale*scale,
                   f'{entry} {requested_scale}x native submenu arrow missing')
-            between_x = ex+ew+5*scale if choices[0][0] > ex else ex-5*scale
-            between_y = ey+eh/2
-            gap_rgb = pixels[(int(between_y)*width+int(between_x))*4:][:3]
-            check(not (gap_rgb[0] > .7 and gap_rgb[1] < .2 and gap_rgb[2] < .1),
-                  'entry and submenu incorrectly share a background spanning their gap')
+            left = min(r[0] for r in choices)
+            right = max(r[0]+r[2] for r in choices)
+            bottom = min(r[1] for r in choices)
+            top = max(r[1]+r[3] for r in choices)
+            check(min(abs(left-ex-ew), abs(ex-right), abs(bottom-ey-eh), abs(ey-top)) < .1*scale,
+                  'native menu does not touch its direct entry')
             if native_siblings:
                 left = int(min(r[0] for r in native_siblings))
                 right = int(max(r[0]+r[2] for r in native_siblings))

@@ -387,22 +387,20 @@ class LayoutBuilder {
                              float &x,
                              float &y) const
   {
-    x = anchor.x + anchor.width + gap;
+    x = anchor.x + anchor.width;
     y = std::clamp(
         anchor.y + anchor.height - desired_height, margin, height - margin - desired_height);
     if (x + desired_width <= width - margin) {
       return true;
     }
-    x = anchor.x - gap - desired_width;
+    x = anchor.x - desired_width;
     if (x >= margin) {
       return true;
     }
 
     const float origin_x = popup_origin ? (*popup_origin)[0] : center_x;
     const float origin_y = popup_origin ? (*popup_origin)[1] : center_y;
-    for (const float candidate_y :
-         {anchor.y + anchor.height + gap, anchor.y - gap - desired_height})
-    {
+    for (const float candidate_y : {anchor.y + anchor.height, anchor.y - desired_height}) {
       if (candidate_y < margin || candidate_y + desired_height > height - margin) {
         continue;
       }
@@ -755,6 +753,21 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
   {
     // Retain the first-level background without allowing it to steal a secondary gesture.
     build.result.hit_depth = 1;
+    int native_depth = 0;
+    for (const MenuRect &item : build.result.rects) {
+      if (item.native_menu && !item.native_menu_standalone) {
+        native_depth = std::max(native_depth, item.depth);
+      }
+    }
+    for (MenuRect &item : build.result.rects) {
+      // A retained marking ring must not steal a gesture heading into a native cascade.
+      // Keep the active anchors, native sibling rows and explicit Back navigation available.
+      item.retained_only = item.depth > 0 && item.depth < native_depth &&
+                           (!item.native_menu || item.native_menu_standalone) &&
+                           !item.id.starts_with("@back:") &&
+                           std::find(open_path.begin(), open_path.end(), item.id) ==
+                               open_path.end();
+    }
   }
   return build.result;
 }
@@ -786,8 +799,9 @@ const MenuRect *hit_menu_rect(const MenuLayout &layout, const float x, const flo
   }
   const MenuRect *hit = nullptr;
   for (const MenuRect &item : layout.rects) {
-    if (item.depth >= layout.hit_depth && x >= item.x && x <= item.x + item.width && y >= item.y &&
-        y <= item.y + item.height && (!hit || item.depth >= hit->depth))
+    if (!item.retained_only && item.depth >= layout.hit_depth && x >= item.x &&
+        x <= item.x + item.width && y >= item.y && y <= item.y + item.height &&
+        (!hit || item.depth >= hit->depth))
     {
       hit = &item;
     }
