@@ -132,6 +132,87 @@ TEST(axismeld_hotbox_menu, StandaloneToolDirectionsAndNativeChildOwnership)
   EXPECT_EQ(hit_menu(child, west.x + west.width / 2, west.y + 12), "");
 }
 
+TEST(axismeld_hotbox_menu, VisibleDirectionEdgesKeepNearestButtonAndDisabledOcclusion)
+{
+  const auto snapshot = default_snapshot();
+  auto widths = measured(snapshot);
+  visit(snapshot.menus, [&](const MenuNode &node) { widths[node.id] = node.label.size() * 7.0f; });
+  for (const std::array<float, 2> origin :
+       {std::array<float, 2>{960, 540}, {20, 20}, {1900, 1060}}) {
+    const auto layout = layout_menu(snapshot, 1920, 1080, origin[0], origin[1],
+                                    {"center", "views"}, {}, widths, &origin);
+    ASSERT_TRUE(layout.supported);
+    for (const std::string id : {"views.left", "views.back", "views.bottom", "views.camera"}) {
+      const auto *item = rect(layout, id);
+      ASSERT_NE(item, nullptr);
+      const bool left = id == "views.left" || id == "views.back";
+      for (const float extension : {0.5f, 4.0f, 8.0f, 64.0f, 256.0f}) {
+        const float x = left ? item->x - extension : item->x + item->width + extension;
+        const auto *nearest = nearest_marking_rect(layout, x, item->y + item->height / 2);
+        ASSERT_NE(nearest, nullptr);
+        EXPECT_EQ(nearest->id, id);
+        EXPECT_EQ(nearest->interactive, item->interactive);
+      }
+      const bool upper = id == "views.left" || id == "views.camera";
+      const auto *vertical = nearest_marking_rect(
+          layout, item->x + item->width / 2, item->y + (upper ? 150 : -150));
+      ASSERT_NE(vertical, nullptr);
+      EXPECT_EQ(vertical->id, id);
+    }
+    EXPECT_EQ(nearest_marking_rect(layout, NAN, 0), nullptr);
+    for (const auto &center : layout.return_regions) {
+      if (center.id == "views") {
+        for (const float distance : {23.0f, 24.0f, 25.0f}) {
+          EXPECT_EQ(nearest_marking_rect(layout, center.x + center.width / 2 + distance,
+                                        center.y + center.height / 2), nullptr);
+        }
+      }
+    }
+  }
+  for (const std::array<float, 2> origin :
+       {std::array<float, 2>{0, 0}, {1919, 0}, {0, 1079}, {1919, 1079}}) {
+    const auto layout = layout_menu(snapshot, 1920, 1080, origin[0], origin[1],
+                                    {"center", "views"}, {}, widths, &origin);
+    ASSERT_TRUE(layout.supported);
+    const float x = origin[0] + (origin[0] == 0 ? 90 : -90);
+    EXPECT_EQ(nearest_marking_rect(layout, x, origin[1], &origin), nullptr);
+    EXPECT_EQ(nearest_marking_rect(layout, origin[0] + (origin[0] == 0 ? 15 : -15),
+                                  origin[1] + (origin[1] == 0 ? 15 : -15), &origin), nullptr);
+  }
+}
+
+TEST(axismeld_hotbox_menu, ToolReferenceUsesContentWidthsAndInsetDiagonalRows)
+{
+  const auto snapshot = default_snapshot();
+  auto widths = measured(snapshot);
+  visit(snapshot.menus, [&](const MenuNode &node) { widths[node.id] = node.label.size() * 7.0f; });
+  for (const std::string tool : {"select", "move", "rotate", "scale"}) {
+    const std::string root = "tools." + tool;
+    const auto layout = layout_menu(
+        snapshot, 1920, 1080, 960, 540, {root}, {}, widths, nullptr, root);
+    ASSERT_TRUE(layout.supported);
+    std::set<float> sizes;
+    for (const auto &item : layout.rects) {
+      sizes.insert(item.width);
+      EXPECT_GE(item.width, 84);
+      EXPECT_GE(item.width, widths.at(item.id) + 16);
+      EXPECT_EQ(item.height, 24);
+      for (const auto &other : layout.rects) {
+        if (&item != &other) {
+          EXPECT_TRUE(separated_by(item, other, 4));
+        }
+      }
+    }
+    EXPECT_GT(sizes.size(), 1) << root;
+    if (tool != "select") {
+      const auto &west = *rect(layout, root + ".world");
+      const auto &northwest = *rect(layout, root + ".object");
+      EXPECT_FLOAT_EQ(northwest.x + northwest.width - west.x - west.width, 16);
+      EXPECT_FLOAT_EQ(northwest.y - west.y, 32);
+    }
+  }
+}
+
 TEST(axismeld_hotbox_menu, MarkingRowsStayCompactWithLongLabels)
 {
   const auto snapshot = default_snapshot();
@@ -1165,6 +1246,12 @@ TEST(axismeld_hotbox_menu, QuadSevenViewsAndCompactRootGroupsRemainReachable)
   }
   EXPECT_EQ(count, 7);  // Equal widths use compact labels while retaining the Style entry.
   EXPECT_EQ(rect(views, "views.camera"), nullptr);
+  const auto *left_view = rect(views, "views.left");
+  ASSERT_NE(left_view, nullptr);
+  const auto *empty_ne = nearest_marking_rect(views, 440, left_view->y + 12);
+  ASSERT_NE(empty_ne, nullptr);
+  EXPECT_EQ(empty_ne->id, "views.camera");
+  EXPECT_FALSE(empty_ne->interactive);
   EXPECT_NE(rect(views, "views.style"), nullptr);
   EXPECT_EQ(rect(views, "@back:views"), nullptr);
   EXPECT_NE(rect(views, "views"), nullptr);

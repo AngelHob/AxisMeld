@@ -66,8 +66,8 @@ def suite():
         nodes = next(n for n in walk(default_catalog()) if n['id'] == 'tools.' + tool_name)['children']
         scale = bpy.context.preferences.system.ui_scale
         blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
-        w = max(blf.dimensions(0, n['label'])[0] / scale +
-                (60 if n.get('presentation') == 'list' else 16) for n in nodes)
+        widths = {n['id']: max(84, blf.dimensions(0, n['label'])[0] / scale +
+                  (60 if n['kind'] == 'menu' else 16)) for n in nodes}
         d = math.sqrt(.5)
         directions = {'N': (0, 1), 'NE': (d, d), 'E': (1, 0), 'SE': (d, -d),
                       'S': (0, -1), 'SW': (-d, -d), 'W': (-1, 0), 'NW': (-d, d)}
@@ -75,8 +75,9 @@ def suite():
             rects = [(-12, -12, 24, 24)]
             clear = True
             for n in nodes:
+                w = widths[n['id']]
                 nx, ny = directions[n['direction']]
-                side = (w + 24)/2 + 8
+                side = (w + 24)/2 + 32
                 x = (0 if nx == 0 else math.copysign(side - (0 if ny == 0 else 16), nx)) - w/2
                 y = (0 if ny == 0 else math.copysign(32 * (2 if nx == 0 else 1), ny)) - 12
                 clear &= all(x+w+3.999 <= ox or ox+ow+3.999 <= x or
@@ -394,6 +395,16 @@ def suite():
     yield from settle()
     check(not modals(), 'Escape left modal')
     print('PASS trigger-first, disabled menu isolation and Escape', flush=True)
+
+    for key, name in (('Q', 'select'), ('E', 'rotate'), ('R', 'scale')):
+        yield from open_ring(key)
+        screenshot('reference-tool-' + name + '.png')
+        event('ESC')
+        event('LEFTMOUSE', 'RELEASE')
+        event(key, 'RELEASE')
+        event('ESC', 'RELEASE')
+        yield from settle()
+        check(not modals(), 'reference screenshot left ownership')
 
     # Clear is a native selection operation in both modes and owns its single undo entry.
     with override():

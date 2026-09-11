@@ -351,11 +351,15 @@ class LayoutBuilder {
       bottom = center.y;
       top = center.y + center.height;
       for (const EllipseItem &item : items) {
-        const float fit_width = item.node ? button_width : item.width;
+        const bool tool_ring = owner.presentation == "radial";
+        const float fit_width = tool_ring ? std::max(84.0f, item.width) :
+                                           item.node ? button_width : item.width;
+        const float tool_side = (fit_width + center_width) / 2 + 32;
         const float px = view_ring ?
                              (item.nx == 0 ?
                                   0 :
-                                  std::copysign(marking_side - (item.ny == 0 ? 0 : 16), item.nx)) :
+                                  std::copysign((tool_ring ? tool_side : marking_side) -
+                                                    (item.ny == 0 ? 0 : 16), item.nx)) :
                              item.nx * rx;
         const float py = view_ring ?
                              (item.ny == 0 ?
@@ -509,7 +513,8 @@ class LayoutBuilder {
         }
         items.push_back({&node,
                          node.id,
-                         widths.at(node.id) + child_padding(node),
+                         widths.at(node.id) +
+                             (node.kind == MenuKind::Menu ? native_entry_padding : secondary_padding),
                          direction->second[0],
                          direction->second[1],
                          interactive(node),
@@ -566,6 +571,19 @@ class LayoutBuilder {
       result.supported &= items.size() == 7 &&
                           (ellipse(owner, anchor, depth, items, 0, style, true, true) ||
                            ellipse(owner, anchor, depth, items, 0, nullptr, true, true));
+      if (result.supported) {
+        for (const MenuRect &item : result.rects) {
+          if (item.id == "views.left") {
+            const MenuRect &center = result.return_regions.back();
+            MenuRect empty = item;
+            empty.id = "views.camera";
+            empty.x = 2 * (center.x + center.width / 2) - item.x - item.width;
+            empty.interactive = false;
+            result.marking_gaps.push_back(empty);
+            break;
+          }
+        }
+      }
       return;
     }
     if (native_list(owner)) {
@@ -940,6 +958,76 @@ const MenuRect *hit_menu_rect(const MenuLayout &layout, const float x, const flo
     }
   }
   return hit;
+}
+
+const MenuRect *nearest_marking_rect(const MenuLayout &layout, const float x, const float y,
+                                    const std::array<float, 2> *gesture_origin)
+{
+  if (!layout.supported || !std::isfinite(x) || !std::isfinite(y)) {
+    return nullptr;
+  }
+  const MenuRect *nearest = nullptr;
+  float best = INFINITY, best_secondary = INFINITY;
+  float left = INFINITY, right = -INFINITY, bottom = INFINITY, top = -INFINITY;
+  std::vector<const MenuRect *> directions;
+  for (const auto *rects : {&layout.rects, &layout.marking_gaps}) {
+    for (const MenuRect &item : *rects) {
+      if (!item.retained_only && item.depth >= layout.hit_depth && item.direction_label &&
+          (!item.native_menu || item.native_menu_standalone)) {
+        directions.push_back(&item);
+        left = std::min(left, item.x);
+        right = std::max(right, item.x + item.width);
+        bottom = std::min(bottom, item.y);
+        top = std::max(top, item.y + item.height);
+      }
+    }
+  }
+  if (left > right) {
+    return nullptr;
+  }
+  // The visual center remains the blind-gesture zone; use the layout's actual
+  // dimensions, not an unrelated circular threshold that can turn Side into Bottom.
+  for (const MenuRect &center : layout.return_regions) {
+    if (center.id == "views" && gesture_origin) {
+      const float dx = x - (*gesture_origin)[0], dy = y - (*gesture_origin)[1];
+      const float radius = std::min(center.width, center.height) / 2;
+      if (dx * dx + dy * dy <= radius * radius) {
+        return nullptr;
+      }
+    }
+    if (center.id == "views" && x >= center.x && x <= center.x + center.width &&
+        y >= center.y && y <= center.y + center.height) {
+      return nullptr;
+    }
+  }
+  // When edge placement shifts the whole ring inward, preserve blind gestures in
+  // the empty corridor from the real press to the ring. Visible rectangles win upstream.
+  if (gesture_origin && (((*gesture_origin)[0] < left && x < left) ||
+                         ((*gesture_origin)[0] > right && x > right) ||
+                         ((*gesture_origin)[1] < bottom && y < bottom) ||
+                         ((*gesture_origin)[1] > top && y > top))) {
+    return nullptr;
+  }
+  // Continue the outer edge regions outward. Otherwise a farther horizontal stroke
+  // eventually prefers the slightly protruding middle row over its adjacent row.
+  const float px = std::clamp(x, left, right), py = std::clamp(y, bottom, top);
+  for (const MenuRect *direction : directions) {
+    const MenuRect &item = *direction;
+    const float dx = px - std::clamp(px, item.x, item.x + item.width);
+    const float dy = py - std::clamp(py, item.y, item.y + item.height);
+    // Straight outward strokes continue their displayed row/column. Comparing only
+    // Euclidean distance would let a protruding neighbour capture the far end again.
+    const bool horizontal = (x < left || x > right) && y >= bottom && y <= top;
+    const bool vertical = (y < bottom || y > top) && x >= left && x <= right;
+    const float distance = horizontal ? std::abs(dy) : vertical ? std::abs(dx) : dx * dx + dy * dy;
+    const float secondary = horizontal ? std::abs(dx) : vertical ? std::abs(dy) : 0;
+    if (distance < best || (distance == best && secondary < best_secondary)) {
+      nearest = &item;
+      best = distance;
+      best_secondary = secondary;
+    }
+  }
+  return nearest;
 }
 
 bool hotbox_command_closes(const std::string_view command)

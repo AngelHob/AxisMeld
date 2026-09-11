@@ -59,6 +59,8 @@ struct MenuLayout {
   std::unordered_map<std::string, MenuScrollBounds> native_scroll_bounds;
   // Invisible visual-center regions retained for gesture backtracking.
   std::vector<MenuRect> return_regions;
+  // Undrawn disabled directions still occlude outward marking in compact layouts.
+  std::vector<MenuRect> marking_gaps;
 };
 
 /* Logical pixel coordinates, bottom-left origin. All nodes require measured label widths.
@@ -92,6 +94,9 @@ std::string hit_menu(const MenuLayout &layout, float x, float y);
 std::string menu_return_target(const MenuLayout &layout, float x, float y);
 /* Includes disabled/separator occlusion and preserves the exact visible occurrence/depth. */
 const MenuRect *hit_menu_rect(const MenuLayout &layout, float x, float y);
+/* Closest visible direction rectangle, including disabled occlusion; never native lists. */
+const MenuRect *nearest_marking_rect(const MenuLayout &layout, float x, float y,
+                                    const std::array<float, 2> *gesture_origin = nullptr);
 bool hotbox_command_closes(std::string_view command);
 /* Compact view labels used only when full labels and the Style tail cannot fit. */
 std::string_view hotbox_view_short_label(std::string_view command);

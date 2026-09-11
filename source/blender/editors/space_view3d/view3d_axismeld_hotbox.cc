@@ -591,17 +591,20 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
         data.open_path.resize(2);
         hotbox_layout(data);
       }
-      // Real-origin dead zone wins first. Outside it, visible targets keep their semantics
-      // even after inward placement; only untargeted space uses the original direction sectors.
-      // Only untargeted space in the view ring uses sectors. Style and its submenu
-      // own their real rectangles; the retained first level never participates in hits.
+      // Short blind strokes retain cardinal gestures. Outside the central hole, use
+      // displayed geometry instead of unrelated 45-degree sectors. Style still wins.
+      const std::array<float, 2> gesture_origin = {data.origin[0], data.origin[1]};
+      const MenuRect *nearest = !returned && !hover && data.open_path.size() == 2 ?
+                                    nearest_marking_rect(data.menu_layout, x, y, &gesture_origin) :
+                                    nullptr;
       data.candidate = returned || hover || data.open_path.size() > 2 ?
                            HotboxAction::None :
                            hotbox_direction(dx, dy, 12);
       data.pending_leaf = dx * dx + dy * dy <= 12 * 12 ? "" :
                           node && (rect.direction_label || node->kind == MenuKind::Setting) ?
                                                          item :
-                                                         direction_id(data.candidate);
+                          nearest ? (nearest->interactive ? nearest->id : "") :
+                                    direction_id(data.candidate);
     }
     else {
       data.pending_leaf = node && ELEM(node->kind, MenuKind::Command, MenuKind::Setting) ? item :

@@ -420,6 +420,13 @@ def suite():
             return tuple(rv.view_rotation), rv.view_perspective
 
     directions = (
+        (-90, 90, 'view.left', (.5, .5, -.5, -.5)),
+        (-190, 35, 'view.left', (.5, .5, -.5, -.5)),
+        (-190, -35, 'view.back', (0, 0, .70710678, .70710678)),
+        (190, -35, 'view.bottom', (0, 1, 0, 0)),
+        (23, 0, 'view.side', (.5, .5, .5, .5)),
+        (24, 0, 'view.side', (.5, .5, .5, .5)),
+        (25, 0, 'view.side', (.5, .5, .5, .5)),
         (-90, 35, 'view.left', (.5, .5, -.5, -.5)),
         (90, 0, 'view.side', (.5, .5, .5, .5)),
         (0, -70, 'view.front', (.70710678, .70710678, 0, 0)),
@@ -446,7 +453,7 @@ def suite():
             yield from settle()
             check(len(observed) == count+1 and observed[-1] == (command, {'FINISHED'}) and
                   len(settings_observed) == setting_count,
-                  f'segmented 1/3/6/10/15/30/50/70/90 motion at {scale}x stole {command}')
+                  f'segmented motion ({dx},{dy}) at {scale}x stole {command}: {observed[count:]}')
             yield from close_box()
         yield from open_box()
         count, setting_count = len(observed), len(settings_observed)
@@ -628,6 +635,22 @@ def suite():
             check(len(observed) == count+1 and observed[-1] == (command, {'FINISHED'}),
                   '2x quad visible button ' + command)
             yield from close_box()
+        positions = popup(anchor, labels)
+        empty_y = midpoint(positions[6])[1]
+        empty_x = 2 * midpoint(positions[0])[0] - midpoint(positions[6])[0]
+        for empty_point in ((empty_x, empty_y), (region.x + region.width - 10, empty_y)):
+            yield from open_box()
+            count, original = len(observed), current_pose()
+            event('RIGHTMOUSE')
+            yield
+            yield from move(empty_point)
+            screenshot('menus-quad-2x-empty-ne.png')
+            event('RIGHTMOUSE', 'RELEASE')
+            yield from settle()
+            check(len(observed) == count and current_pose() == original,
+                  'compact hidden Camera direction must remain non-executable')
+            yield from close_box()
+        print('PASS compact hidden Camera and its outer row remain empty', flush=True)
         original_snapshot = hotbox_runtime.snapshot
         def quad_snapshot(context):
             value = json.loads(original_snapshot(context))
