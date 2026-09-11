@@ -68,6 +68,10 @@ GUI 使用 `tests/python/axismeld_hotbox_ui_runner.py --blender <候选或安装
 
 候选使用源码资源时出现 Cycles 未加载和 libpng ICC 配置警告，报告中保留原文；
 安装版将使用自带资源独立核实，不能把环境警告隐藏为无噪声通过。
+PNG 警告为 `libpng warning: iCCP: cHRM chunk does not match sRGB`，本批之前的
+`batch5h-mapping-gui-manipulator.log:17`、`batch5h-settings-manipulator.log:2` 已有相同文本；
+[Phase 2B 报告](phase-2b-report.md)也已记录。它指向 PNG 色彩元数据不匹配，具体资源文件
+尚未定位；不在本批输入功能范围内修改图像资源。旧回退版使用独立配置的后台资源启动检查通过。
 
 未覆盖/保留差异：没有方向勾选标记；同工具再次点按不复刻 Maya 轴柄重置；
 Circle 不是完整 Paint Select；普通子列表只接入有界子集及占位；真实 OS 自动重复标记、
