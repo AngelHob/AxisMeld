@@ -71,12 +71,14 @@ def suite():
         d = math.sqrt(.5)
         directions = {'N': (0, 1), 'NE': (d, d), 'E': (1, 0), 'SE': (d, -d),
                       'S': (0, -1), 'SW': (-d, -d), 'W': (-1, 0), 'NW': (-d, d)}
-        for ry in range(24, int(region.height / scale)):
-            rects = [(-12, -19, 24, 38)]
+        for ry in (0,):
+            rects = [(-12, -12, 24, 24)]
             clear = True
             for n in nodes:
                 nx, ny = directions[n['direction']]
-                x, y = nx * 1.6 * ry - w / 2, ny * ry - 12
+                side = (w + 24)/2 + 8
+                x = (0 if nx == 0 else math.copysign(side - (0 if ny == 0 else 16), nx)) - w/2
+                y = (0 if ny == 0 else math.copysign(32 * (2 if nx == 0 else 1), ny)) - 12
                 clear &= all(x+w+3.999 <= ox or ox+ow+3.999 <= x or
                              y+24+3.999 <= oy or oy+oh+3.999 <= y
                              for ox, oy, ow, oh in rects)
@@ -249,22 +251,127 @@ def suite():
         yield from settle()
         check(not modals(), 'post-gesture tool tap left modal')
     print('PASS all real ring leaves and independent orientation slots', flush=True)
-    sys.path.insert(0, str(Path(__file__).parent))
-    from axismeld_hotbox_geometry_fixture import native_list
+    # Returning through the visible blank center must retract the native submenu
+    # immediately, before a new outward stroke. This is outside the old 12px circle.
+    bpy.context.scene.transform_orientation_slots[1].type = 'LOCAL'
+    yield from open_ring('W')
+    event('MOUSEMOVE', 'NOTHING', middle(ring('move')['SE']))
+    yield from settle()
+    scale = bpy.context.preferences.system.ui_scale
+    event('MOUSEMOVE', 'NOTHING', (cx + 14*scale, cy + 14*scale))
+    yield from settle(1)
+    event('MOUSEMOVE', 'NOTHING', middle(ring('move')['W']))
+    event('LEFTMOUSE', 'RELEASE')
+    event('W', 'RELEASE')
+    yield from settle()
+    check(bpy.context.scene.transform_orientation_slots[1].type == 'GLOBAL',
+          'visual-center return failed to retract native child immediately')
     yield from open_ring('W')
     axis_rect = ring('move')['SW']
     event('MOUSEMOVE', 'NOTHING', middle(axis_rect))
     yield from settle()
     scale = bpy.context.preferences.system.ui_scale
-    rows = native_list(axis_rect, ['View (Blender)', 'Custom Axis / Alignment', 'Tool Options', 'Preserve UV'],
-                       lambda label: blf.dimensions(0, label)[0] / scale,
-                       (region.x, region.y, region.width, region.height), scale)
-    event('MOUSEMOVE', 'NOTHING', middle(rows[0]))
+    child = ring('move.axis', middle(axis_rect))
+    screenshot('compact-tool-axis.png')
+    event('MOUSEMOVE', 'NOTHING', middle(child['E']))
     event('LEFTMOUSE', 'RELEASE')
     event('W', 'RELEASE')
     yield from settle()
-    check(bpy.context.scene.transform_orientation_slots[1].type == 'VIEW', 'native Axis list View action failed')
-    check(not modals(), 'native Axis list left modal')
+    check(bpy.context.scene.transform_orientation_slots[1].type == 'VIEW', 'child Axis ring View action failed')
+    check(not modals(), 'child Axis ring left modal')
+    for key, name, slot_index in (('W', 'move', 1), ('R', 'scale', 3)):
+        bpy.context.scene.transform_orientation_slots[slot_index].type = 'LOCAL'
+        yield from open_ring(key)
+        axis_entry = middle(ring(name)['SW'])
+        event('MOUSEMOVE', 'NOTHING', axis_entry)
+        yield from settle()
+        axis_ring = ring(name + '.axis', axis_entry)
+        custom_entry = middle(axis_ring['SW'])
+        event('MOUSEMOVE', 'NOTHING', custom_entry)
+        yield from settle()
+        custom_ring = ring(name + '.axis.custom', custom_entry)
+        event('MOUSEMOVE', 'NOTHING', middle(custom_ring['W']))
+        yield from settle()
+        # Return to the current visible child's blank center after an outward stroke.
+        north = middle(custom_ring['N'])
+        event('MOUSEMOVE', 'NOTHING', (north[0], north[1] - 64*scale))
+        yield from settle(1)
+        event('MOUSEMOVE', 'NOTHING', middle(axis_ring['E']))
+        event('LEFTMOUSE', 'RELEASE')
+        event(key, 'RELEASE')
+        yield from settle()
+        check(bpy.context.scene.transform_orientation_slots[slot_index].type == 'VIEW',
+              name + ' third-level center return did not restore Axis')
+        check(not modals(), 'third-level return left modal')
+    # Child/root centers can coincide when both rings clamp inward at the corner.
+    edge_origin = (region.x + 10, region.y + 10)
+    bpy.context.scene.transform_orientation_slots[1].type = 'LOCAL'
+    event('MOUSEMOVE', 'NOTHING', edge_origin)
+    event('W')
+    yield from settle()
+    event('LEFTMOUSE')
+    yield from settle()
+    edge_ring = ring('move', edge_origin)
+    edge_axis_entry = middle(edge_ring['SW'])
+    event('MOUSEMOVE', 'NOTHING', edge_axis_entry)
+    yield from settle()
+    edge_axis = ring('move.axis', edge_axis_entry)
+    event('MOUSEMOVE', 'NOTHING', middle(edge_axis['W']))
+    yield from settle()
+    north = middle(edge_axis['N'])
+    event('MOUSEMOVE', 'NOTHING', (north[0], north[1] - 64*scale))
+    yield from settle(1)
+    event('MOUSEMOVE', 'NOTHING', middle(edge_ring['W']))
+    event('LEFTMOUSE', 'RELEASE')
+    event('W', 'RELEASE')
+    yield from settle()
+    check(bpy.context.scene.transform_orientation_slots[1].type == 'GLOBAL',
+          'edge-clamped child center did not return to root')
+    check(not modals(), 'edge-clamped return left ownership')
+
+    # Reach the same child through the actual Space -> Modify -> Tool Settings path.
+    sys.path.insert(0, str(Path(__file__).parent))
+    from axismeld_hotbox_geometry_fixture import ellipse_page, native_page
+    measure = lambda label: blf.dimensions(0, label)[0] / scale
+    labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
+    widths = [measure(label) + 40 for label in labels]
+    left = cx - (sum(widths) + 60)*scale/2
+    modify = (left + (sum(widths[:4]) + 40)*scale, cy + 77*scale,
+              widths[4]*scale, 38*scale)
+    bounds = (region.x, region.y, region.width, region.height)
+    event('MOUSEMOVE', 'NOTHING', (cx, cy))
+    event('SPACE')
+    yield from settle()
+    event('MOUSEMOVE', 'NOTHING', middle(modify))
+    event('LEFTMOUSE')
+    yield from settle()
+    tools_entry = ellipse_page(modify, ['Move Tool', 'Rotate Tool', 'Scale Tool', 'Tool Settings'],
+                               measure, bounds, scale)['items'][3]
+    event('MOUSEMOVE', 'NOTHING', middle(tools_entry))
+    yield from settle()
+    move_entry = native_page(tools_entry, ['Select Tool', 'Move Tool', 'Rotate Tool', 'Scale Tool'],
+                              measure, bounds, scale, submenu_indices=range(4))['items'][1]
+    event('MOUSEMOVE', 'NOTHING', middle(move_entry))
+    yield from settle()
+    space_ring = ring('move', middle(move_entry))
+    space_axis_entry = middle(space_ring['SW'])
+    event('MOUSEMOVE', 'NOTHING', space_axis_entry)
+    yield from settle()
+    space_axis = ring('move.axis', space_axis_entry)
+    screenshot('compact-space-tool-child.png')
+    event('MOUSEMOVE', 'NOTHING', middle(space_axis['W']))
+    yield from settle()
+    north = middle(space_axis['N'])
+    event('MOUSEMOVE', 'NOTHING', (north[0], north[1] - 64*scale))
+    yield from settle(1)
+    event('MOUSEMOVE', 'NOTHING', middle(space_ring['NW']))
+    event('LEFTMOUSE', 'RELEASE')
+    event('SPACE', 'RELEASE')
+    yield from settle()
+    check(bpy.context.scene.transform_orientation_slots[1].type == 'LOCAL',
+          'Space tool child return did not restore root orientation command')
+    check(not modals(), 'Space tool child left ownership')
+    print('PASS compact child, third-level, edge-center and Space tool return', flush=True)
     before = bpy.context.scene.transform_orientation_slots[1].type
     yield from gesture('W', 'move', 'W', trigger_first=True)
     check(bpy.context.scene.transform_orientation_slots[1].type == before, 'trigger-first committed')

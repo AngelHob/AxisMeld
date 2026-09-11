@@ -349,7 +349,7 @@ def suite():
         return
     event('RIGHTMOUSE')
     yield
-    event('MOUSEMOVE', 'NOTHING', cx - 90 * scale, cy + 90 * scale)
+    event('MOUSEMOVE', 'NOTHING', cx - 90 * scale, cy + 35 * scale)
     yield from settle()
     screenshot('menus-rmb-left-candidate.png')
     event('RIGHTMOUSE', 'RELEASE')
@@ -420,13 +420,13 @@ def suite():
             return tuple(rv.view_rotation), rv.view_perspective
 
     directions = (
-        (-90, 90, 'view.left', (.5, .5, -.5, -.5)),
+        (-90, 35, 'view.left', (.5, .5, -.5, -.5)),
         (90, 0, 'view.side', (.5, .5, .5, .5)),
-        (0, -90, 'view.front', (.70710678, .70710678, 0, 0)),
+        (0, -70, 'view.front', (.70710678, .70710678, 0, 0)),
         (-90, 0, 'view.top', (1, 0, 0, 0)),
-        (-90, -90, 'view.back', (0, 0, .70710678, .70710678)),
-        (90, -90, 'view.bottom', (0, 1, 0, 0)),
-        (0, 90, 'view.perspective', None),
+        (-90, -35, 'view.back', (0, 0, .70710678, .70710678)),
+        (90, -35, 'view.bottom', (0, 1, 0, 0)),
+        (0, 70, 'view.perspective', None),
     )
     # Continuous motion crosses the retained first-level center before reaching a sector.
     # A single large synthetic jump cannot catch an underlying hover stealing the gesture.
@@ -957,7 +957,7 @@ def suite():
     count = len(observed)
     event('LEFTMOUSE')
     yield
-    yield from move((blank[0], blank[1]-90*scale))
+    yield from move((blank[0], blank[1]-70*scale))
     event('LEFTMOUSE', 'RELEASE')
     yield from close_box()
     check(len(observed) == count+1 and observed[-1][0] == 'view.front',
@@ -1241,11 +1241,14 @@ def suite():
             bpy.utils.unregister_class(AXISMELD_OT_menu_region_probe)
             print('2x GUI matrix uses measured first WINDOW content pixels; pure layout retains literal0/0', flush=True)
         # Use actual viewport boundary coordinates, never a safe inset center substitute.
+        # Probe top-corner origin sectors close to the real press, outside its dead zone:
+        # the old +/-90 endpoint now intersects a different visible inward-clamped button,
+        # which correctly takes precedence over a direction-only sector.
         for corner, x, y, dx, dy, command in (
                 ('sw', region.x, region.y, 90, 0, 'view.side'),
                 ('se', region.x+region.width-1, region.y, -90, 0, 'view.top'),
-                ('nw', region.x, region.y+region.height-1, 90, -90, 'view.bottom'),
-                ('ne', region.x+region.width-1, region.y+region.height-1, -90, -90, 'view.back')):
+                ('nw', region.x, region.y+region.height-1, 15, -15, 'view.bottom'),
+                ('ne', region.x+region.width-1, region.y+region.height-1, -15, -15, 'view.back')):
             x, y = content_corners.get(corner, (x, y))
             event('MOUSEMOVE', 'NOTHING', x, y)
             yield from settle()

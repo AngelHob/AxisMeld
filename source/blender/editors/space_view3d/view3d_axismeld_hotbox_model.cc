@@ -167,7 +167,7 @@ struct Parser {
             const std::string_view parent_presentation = {})
   {
     const auto *dict = value.as_dictionary_value();
-    if (depth > 8 || ids.size() >= 256 ||
+    if (depth > 8 || ids.size() >= 512 ||
         !fields(
             dict, {"id", "kind", "label", "command", "enabled", "reason", "children"},
             {"value", "direction", "presentation"}))

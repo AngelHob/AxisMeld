@@ -23,10 +23,10 @@ class ToolHotboxTest(unittest.TestCase):
         for tool in ('select', 'move', 'rotate', 'scale'):
             self.assertIn('tools.' + tool, tuple(nodes))
         self.assertEqual({n['direction']: n['label'] for n in nodes['tools.move']['children']},
-                         {'W': 'World', 'NW': 'Object', 'NE': 'Normal Average',
+                         {'W': 'Global', 'NW': 'Local', 'NE': 'Normal Average',
                           'SE': 'Keep Spacing', 'N': 'Symmetry', 'S': 'Select',
                           'E': 'Snap', 'SW': 'Axis'})
-        self.assertLessEqual(len(nodes), 256)
+        self.assertLessEqual(len(nodes), 512)
         self.assertEqual(len(menus), 4)
 
     def test_other_tool_slots_are_classic_maya_and_placeholders_never_dispatch(self):
@@ -37,9 +37,9 @@ class ToolHotboxTest(unittest.TestCase):
                        'W': 'Paint Selection', 'NW': 'Marquee Select'},
             'rotate': {'N': 'Symmetry', 'NE': 'Normal Average', 'E': 'Gimbal',
                        'SE': 'Discrete Rotate', 'S': 'Select', 'SW': 'Custom Axis',
-                       'W': 'World', 'NW': 'Object'},
+                       'W': 'Global', 'NW': 'Local'},
             'scale': {'N': 'Symmetry', 'NE': 'Normal Average', 'E': 'Discrete Scale',
-                      'SE': 'Relative', 'S': 'Select', 'SW': 'Axis', 'W': 'World', 'NW': 'Object'},
+                      'SE': 'Relative', 'S': 'Select', 'SW': 'Axis', 'W': 'Global', 'NW': 'Local'},
         }.items():
             self.assertEqual({n['direction']: n['label'] for n in nodes['tools.' + tool]['children']}, expected)
         for node in nodes.values():
@@ -82,6 +82,33 @@ class ToolHotboxTest(unittest.TestCase):
                 p['children'][0]['presentation'] = 'list'
             with self.subTest(change=change), self.assertRaises(ValueError):
                 hotbox_runtime.serialize_snapshot(bad)
+
+    def test_nested_marking_choices_preserve_maya_slots_and_native_commands(self):
+        nodes = {n['id']: n for n in walk(hotbox_catalog.default_catalog())}
+        for tool in ('select', 'move', 'rotate', 'scale'):
+            p = 'tools.' + tool
+            select = nodes[p + '.select']
+            self.assertEqual(select['presentation'], 'radial')
+            self.assertEqual({n['direction']: n['label'] for n in select['children']},
+                             {'N': 'Preselect Highlight', 'NE': 'Highlight Closest',
+                              'E': 'Highlight Backfaces', 'SE': 'Container Centric',
+                              'S': 'Soft Selection', 'SW': 'Clear Selection',
+                              'W': 'Camera Based Selection', 'NW': 'Marquee Select'})
+            self.assertEqual(nodes[p + '.select.clear']['command'], 'selection.clear')
+            self.assertEqual(nodes[p + '.select.soft']['presentation'], 'radial')
+            self.assertEqual(nodes[p + '.symmetry']['presentation'], 'radial')
+        for tool in ('move', 'rotate', 'scale'):
+            p = 'tools.' + tool
+            self.assertEqual(nodes[p + '.world']['command'], f'orientation.{tool}.world')
+            self.assertEqual(nodes[p + '.object']['command'], f'orientation.{tool}.object')
+            # Recent Commands and keymap labels consume command metadata, not menu labels.
+            self.assertEqual(COMMANDS[f'orientation.{tool}.world'].label, 'Global')
+            self.assertEqual(COMMANDS[f'orientation.{tool}.object'].label, 'Local')
+            self.assertEqual(nodes[p + '.axis']['presentation'], 'radial')
+        self.assertEqual(nodes['tools.move.axis.custom']['presentation'], 'radial')
+        self.assertEqual(nodes['tools.move.snap']['presentation'], 'radial')
+        # Whole expanded tree must survive the real serializer, not only its builder.
+        hotbox_runtime.serialize_snapshot(hotbox_runtime.make_snapshot(generation=2))
 
     def test_radial_child_requires_direction(self):
         snap = hotbox_runtime.make_snapshot(generation=1)

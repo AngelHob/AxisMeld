@@ -96,15 +96,18 @@ TEST(axismeld_hotbox_menu, StandaloneToolDirectionsAndNativeChildOwnership)
   tool.presentation = "radial";
   const std::array<const char *, 8> directions = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"};
   for (const auto direction : directions) {
-    MenuNode child{std::string("tool.") + direction, direction, "", "", "", MenuKind::Menu, true, {}};
+    MenuNode child{
+        std::string("tool.") + direction, direction, "", "", "", MenuKind::Menu, true, {}};
     child.direction = direction;
     child.presentation = "list";
-    child.children.push_back({child.id + ".leaf", "Option", "selection.clear", "", "", MenuKind::Command, true, {}});
+    child.children.push_back(
+        {child.id + ".leaf", "Option", "selection.clear", "", "", MenuKind::Command, true, {}});
     tool.children.push_back(child);
   }
   snapshot.menus[0].children.push_back(tool);
   const auto widths = measured(snapshot);
-  const auto layout = layout_menu(snapshot, 1200, 800, 600, 400, {"tools.test"}, {}, widths, nullptr, "tools.test");
+  const auto layout = layout_menu(
+      snapshot, 1200, 800, 600, 400, {"tools.test"}, {}, widths, nullptr, "tools.test");
   ASSERT_TRUE(layout.supported);
   ASSERT_EQ(layout.rects.size(), 8);
   EXPECT_EQ(hit_menu(layout, 600, 400), "");
@@ -118,7 +121,8 @@ TEST(axismeld_hotbox_menu, StandaloneToolDirectionsAndNativeChildOwnership)
   EXPECT_LT(rect(layout, "tool.S")->y + 24, 400);
   EXPECT_LT(rect(layout, "tool.W")->x + rect(layout, "tool.W")->width, 600);
   EXPECT_GT(rect(layout, "tool.E")->x, 600);
-  const auto child = layout_menu(snapshot, 1200, 800, 600, 400, {"tools.test", "tool.N"}, {}, widths, nullptr, "tools.test");
+  const auto child = layout_menu(
+      snapshot, 1200, 800, 600, 400, {"tools.test", "tool.N"}, {}, widths, nullptr, "tools.test");
   ASSERT_TRUE(child.supported);
   ASSERT_NE(rect(child, "tool.W"), nullptr);
   EXPECT_TRUE(rect(child, "tool.W")->retained_only);
@@ -126,6 +130,92 @@ TEST(axismeld_hotbox_menu, StandaloneToolDirectionsAndNativeChildOwnership)
   EXPECT_TRUE(rect(child, "tool.N.leaf")->native_menu);
   const MenuRect &west = *rect(child, "tool.W");
   EXPECT_EQ(hit_menu(child, west.x + west.width / 2, west.y + 12), "");
+}
+
+TEST(axismeld_hotbox_menu, MarkingRowsStayCompactWithLongLabels)
+{
+  const auto snapshot = default_snapshot();
+  for (const float label_width : {80.0f, 160.0f}) {
+    auto widths = measured(snapshot);
+    visit(snapshot.menus, [&](const MenuNode &node) { widths[node.id] = label_width; });
+    for (const bool views : {false, true}) {
+      const auto layout = layout_menu(snapshot,
+                                      1920,
+                                      1080,
+                                      960,
+                                      540,
+                                      views ? std::vector<std::string>{"center", "views"} :
+                                              std::vector<std::string>{"tools.move"},
+                                      {},
+                                      widths,
+                                      nullptr,
+                                      views ? "" : "tools.move");
+      ASSERT_TRUE(layout.supported);
+      const auto *middle = rect(layout, views ? "views.top" : "tools.move.world");
+      const auto *upper = rect(layout, views ? "views.left" : "tools.move.object");
+      const auto *lower = rect(layout, views ? "views.back" : "tools.move.axis");
+      ASSERT_NE(middle, nullptr);
+      ASSERT_NE(upper, nullptr);
+      ASSERT_NE(lower, nullptr);
+      EXPECT_GE(upper->y - middle->y - middle->height, 4);
+      EXPECT_LE(upper->y - middle->y - middle->height, 11);
+      EXPECT_LE(middle->y - lower->y - lower->height, 11);
+    }
+  }
+}
+
+TEST(axismeld_hotbox_menu, ToolChildRingReplacesParentButSpaceDirectoryRemains)
+{
+  auto snapshot = default_snapshot();
+  // Independent tree avoids coupling the visibility test to catalog changes.
+  MenuNode leaf{"nested.leaf", "Clear", "selection.clear", "", "", MenuKind::Command, true, {}};
+  leaf.direction = "SW";
+  MenuNode child{"nested.child", "Select", "", "", "", MenuKind::Menu, true, {leaf}};
+  child.presentation = "radial";
+  child.direction = "S";
+  MenuNode root{"nested", "Tool", "", "", "", MenuKind::Menu, true, {child}};
+  root.presentation = "radial";
+  snapshot.menus[0].children.push_back(root);
+  const auto widths = measured(snapshot);
+  const auto tool = layout_menu(
+      snapshot, 1200, 800, 600, 400, {"nested", "nested.child"}, {}, widths, nullptr, "nested");
+  ASSERT_TRUE(tool.supported);
+  EXPECT_EQ(rect(tool, "nested.child"), nullptr);
+  ASSERT_NE(rect(tool, "nested.leaf"), nullptr);
+  const auto space = layout_menu(
+      snapshot, 1200, 800, 600, 400, {"nested", "nested.child"}, {}, widths);
+  ASSERT_TRUE(space.supported);
+  EXPECT_NE(rect(space, "views"), nullptr);
+  EXPECT_NE(rect(space, "nested.leaf"), nullptr);
+}
+
+TEST(axismeld_hotbox_menu, VisualCenterReturnIsImmediateWithoutStealingVisibleLeaves)
+{
+  const auto snapshot = default_snapshot();
+  const auto widths = measured(snapshot);
+  const auto layout = layout_menu(snapshot,
+                                  1200,
+                                  800,
+                                  600,
+                                  400,
+                                  {"tools.move", "tools.move.spacing"},
+                                  {},
+                                  widths,
+                                  nullptr,
+                                  "tools.move");
+  ASSERT_TRUE(layout.supported);
+  EXPECT_EQ(menu_return_target(layout, 614, 414), "tools.move");
+  const auto *leaf = rect(layout, "tools.move.spacing.options");
+  ASSERT_NE(leaf, nullptr);
+  EXPECT_TRUE(menu_return_target(layout, leaf->x + leaf->width / 2, leaf->y + 12).empty());
+  const auto edge = layout_menu(
+      snapshot, 1200, 800, 0, 0, {"tools.move"}, {}, widths, nullptr, "tools.move");
+  ASSERT_TRUE(edge.supported);
+  ASSERT_EQ(edge.return_regions.size(), 1);
+  const auto &center = edge.return_regions.front();
+  EXPECT_EQ(menu_return_target(edge, center.x + center.width / 2, center.y + center.height / 2),
+            "tools.move");
+  EXPECT_TRUE(menu_return_target(edge, -10, -10).empty());
 }
 
 TEST(axismeld_hotbox_menu, ReferenceCentralSpacingDoesNotStretchSideHitTargets)
@@ -956,7 +1046,7 @@ TEST(axismeld_hotbox_menu, ActiveNativeListDoesNotExposeUnderlyingRootHitTargets
   EXPECT_FALSE(button->native_menu_standalone);
 }
 
-TEST(axismeld_hotbox_menu, SevenViewsLieOnHorizontalEllipseWithTheOriginalDirections)
+TEST(axismeld_hotbox_menu, SevenViewsKeepTaperedRowsAndOriginalDirections)
 {
   auto snapshot = default_snapshot();
   auto widths = measured(snapshot);
@@ -991,7 +1081,7 @@ TEST(axismeld_hotbox_menu, SevenViewsLieOnHorizontalEllipseWithTheOriginalDirect
     ASSERT_NE(item, nullptr);
     const float nx = (item->x + item->width / 2 - cx) / rx;
     const float ny = (item->y + item->height / 2 - cy) / ry;
-    EXPECT_NEAR(nx * nx + ny * ny, 1.0f, .001f);
+    EXPECT_NEAR(std::abs(ny), .5f, .001f);  // Equal row steps, not equal angular steps.
     EXPECT_GT(nx * signs[0], 0);
     EXPECT_GT(ny * signs[1], 0);
     EXPECT_LT(std::abs(nx), .9f);  // Diagonals cannot remain at the old rectangular corners.

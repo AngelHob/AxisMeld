@@ -14,7 +14,7 @@ from .hotbox_profiles import (CANONICAL_ROWS, DEFAULT_APPEARANCE, DEFAULT_SETTIN
                               validate_settings)
 
 
-MAX_NODES = 256
+MAX_NODES = 512
 MAX_DEPTH = 8
 MAX_JSON_BYTES = 256 * 1024
 MAX_TEXT = 128

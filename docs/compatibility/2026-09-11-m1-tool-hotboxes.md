@@ -1,5 +1,8 @@
 # M1 工具热盒集中验收
 
+后续修订见 [紧凑子热盒验收](2026-09-11-compact-tool-hotboxes.md)：Global/Local 显示名、
+Axis/Select 等子热盒、父环隐藏及中心返回规则已替代本页对应的首批布局；下面保留历史验证记录。
+
 状态：M1 已通过审查、更新原测试入口并完成安装态自动验证；下表人工结果全部待测。
 范围：[M1 实现计划](../superpowers/plans/2026-09-11-m1-tool-hotboxes.md)；
 功能对照与占位：[Maya 工具菜单对照](../maya-mapping/2026-09-11-tool-marking-menus.md)。

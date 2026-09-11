@@ -20,11 +20,13 @@ def view_page(anchor, labels, measure, bounds, scale):
                   'Back View', 'Top View', 'Left View', 'New Camera'])
         widths = [measure(label) + 16 for label in names]
         widths = [max(widths)] * len(widths)
-        for ry in range(24, int(bh)):
-            rectangles = [(-aw/2, -19, aw, 38)]  # Reserved hole, never a secondary button.
+        for ry in (0,):
+            rectangles = [(-aw/2, -12 if compact else -19, aw, 24 if compact else 38)]
             clear = True
             for w, (nx, ny) in zip(widths, slots):
-                x, y = nx*1.7*ry-w/2, ny*ry-12
+                side = (w + aw)/2 + 8
+                x = (0 if nx == 0 else math.copysign(side - (0 if ny == 0 else 16), nx)) - w/2
+                y = (0 if ny == 0 else math.copysign((28 if compact else 35) * (2 if nx == 0 else 1), ny)) - 12
                 clear &= all(x+w+3.999 <= ox or ox+ow+3.999 <= x or
                              y+24+3.999 <= oy or oy+oh+3.999 <= y
                              for ox, oy, ow, oh in rectangles)

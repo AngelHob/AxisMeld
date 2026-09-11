@@ -25,7 +25,7 @@ UV 的快捷键、选择、编辑器和算法全部后置。本表中的 UV 相�
 ## 2. 固定方向对照
 
 表中英文为本批功能展示标签；方向及功能身份来自默认 MEL 菜单定义。完整翻译资源文字、
-Toolkit 变体及主观手感未据此验收。N/S 是共享设置组入口，展开后按已批准规范使用普通菜单。
+Toolkit 变体及主观手感未据此验收。最新修订将 N/S 共享组改为 Maya 对应的子热盒。
 
 | 方向 | Q 选择 | W 移动 | E 旋转 | R 缩放 |
 |---|---|---|---|---|
@@ -35,8 +35,8 @@ Toolkit 变体及主观手感未据此验收。N/S 是共享设置组入口，�
 | SE | Clear Selection | Keep Spacing | Discrete Rotate | Relative |
 | S | Select | Select | Select | Select |
 | SW | Lasso Select | Axis | Custom Axis | Axis |
-| W | Paint Selection | World | World | World |
-| NW | Marquee Select | Object | Object | Object |
+| W | Paint Selection | Global | Global | Global |
+| NW | Marquee Select | Local | Local | Local |
 
 方向来源：`selectMarkingMenuImpl.mel:31-55`；`translateMarkingMenuImpl.mel:18-42,100-170`；
 `rotateMarkingMenuImpl.mel:19-92`；`scaleMarkingMenuImpl.mel:18-123`；
@@ -52,10 +52,10 @@ Toolkit 变体及主观手感未据此验收。N/S 是共享设置组入口，�
 | Lasso Select | Lasso Select 工具 | adapted；选区/完成逻辑沿用 Blender |
 | Paint Selection | Circle Select 工具 | adapted；不是完整 Maya Paint Select 笔刷 |
 | Clear Selection | 当前 Object / Mesh Edit 的原生 DESELECT | 保持当前模式；此处对照 `select -clear`，不冒充另一入口 Select None 的模式切换流程 |
-| World / Object | GLOBAL / LOCAL 变换方向 | adapted；不改变原生变换数学或物体 Global 缩放差异 |
+| Global / Local（Maya World / Object） | GLOBAL / LOCAL 变换方向 | adapted；内部旧 ID 不变，不改变原生变换数学或物体 Global 缩放差异 |
 | Normal Average | NORMAL 方向 | adapted；平均规则和有效上下文以 Blender 为准 |
 | Gimbal（旋转） | GIMBAL 方向 | adapted；欧拉/四元数和锁轴差异不承诺消除 |
-| View (Blender) | VIEW 方向 | Blender 独有扩展，放到轴设置的普通菜单，不占用 Maya 固定快速划选方向 |
+| View (Blender) | VIEW 方向 | Blender 扩展放在 Maya 未占用的 Axis E / Custom Axis NE 方向 |
 
 Blender 现有 `Scene.transform_orientation_slots[1/2/3]` 分别服务位移/旋转/缩放；
 `BKE_scene_orientation_slot_get` 检查 SELECT 标志决定是否采用专用槽。
@@ -94,10 +94,30 @@ GUI 已验证三个真实槽相互独立，已有操纵器回归另行通过。�
 
 - 直接调用 Q/W/E/R 的工具热盒不显示一级 Space 热盒，也不新增中心返回按钮。
 - 从 Space → Modify → Tool Settings 进入同一工具菜单，使用同一命令和方向定义。
-- 一般选项采用普通菜单；不要因 Maya 某些历史设置子菜单也有 radial 标签就违反
-  用户已确认的“方向动作热盒 + 设置普通菜单”组合规范。
+- 最新用户修订：Maya 方向式子菜单使用真正子热盒，普通工具父环隐藏；Space 主目录保留。
+- 没有方向的设置仍用原生列表；不按功能是否叫“设置”就把 Maya 的方向式子菜单强制转成列表。
 - 保留已有 Space 的一级颜色和 75% 默认不透明度；工具热盒与子菜单使用原生不透明样式。
 - 新增菜单不能让父背景截走鼠标，也不能让 Q 松键覆盖刚选中的 Lasso/Circle 工具。
+
+### 紧凑子热盒修订的方向表
+
+基于同一 Maya 2026 安装的 commonSelectOptionsPopup、commonReflectionOptionsPopup、
+translateMarkingMenuImpl、rotateMarkingMenuImpl、scaleMarkingMenuImpl，仅记录功能身份和方向。
+
+| 子热盒 | 方向 |
+|---|---|
+| Select | N 预选高亮、NE 最近高亮、E 背面高亮、SE Container Centric、S Soft Selection、SW Clear、W Camera Based、NW Marquee |
+| Soft Selection | N Object Falloff、S 开关、SW Volume、W Surface、NW Global Falloff、E Color；均为 M1-P07 占位 |
+| Symmetry | N 开关、W Global、E Local、NE Topology、SW X、S Y、SE Z；均为 M1-P01 占位 |
+| Move/Scale Axis | W Parent Axis、NW Component Axis、N Live Object Axis、NE Rotation Axis、SW Custom Axis；均待 M1-P06 适配。E View 为现有 Blender 扩展，S Tool Options 原生列表 |
+| Custom Axis（Rotate 直接进入；Move/Scale 三级） | E Custom、W Orient to Component、SW Towards Point、S Align Edge、SE Align Face、N Align Object、NW Reset；待 M1-P06。NE View 为 Blender 扩展 |
+| Move Snap | E Discrete Move、SE Vertex、SW Face Center 占位；S 原生 Snap Options 保留 Relative 非方向条目 |
+
+Select 中已有 Marquee/Clear 命令继续可用，Select All 仍在 Space 的选择菜单及 Move/Scale Axis →
+Tool Options 中，不把它硬占 Maya 已有的八个 Select 方向。普通开关的适配仍在计划中，本批不新增变换算法。
+
+几何为紧凑错行椭圆，不宣称其逻辑像素值就是 Maya 默认参数。二级工具/视图字体与原生不透明样式不变；
+极小视口可降至 4px 行空隙和短视图标签，保留按钮高度与 Style 可达性。
 
 ## 6. M2 右键菜单的后续衔接（仅预检，不在 M1 启用）
 

@@ -356,8 +356,8 @@ class HotboxCatalogTest(unittest.TestCase):
             hotbox_runtime.validate_snapshot(too_deep)
 
         too_many = hotbox_runtime.make_snapshot(generation=1)
-        too_many['menus'][0]['children'] = [menu_node(f'many.{index}') for index in range(257)]
-        with self.assertRaisesRegex(ValueError, '256'):
+        too_many['menus'][0]['children'] = [menu_node(f'many.{index}') for index in range(513)]
+        with self.assertRaisesRegex(ValueError, '512'):
             hotbox_runtime.validate_snapshot(too_many)
 
         too_large = hotbox_runtime.make_snapshot(generation=1)

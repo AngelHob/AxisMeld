@@ -517,20 +517,22 @@ def suite():
     yield from key(hold=6)
     check(len(regions()) == 1, 'adapter did not forward adjusted tap threshold')
     config.preferences.hotbox_tap_seconds = 0.4
+    # Public compact view rows: diagonal centers at +/-35, poles at +/-70.
+    # The former -90px Front sample now falls on the visible Hotbox Style entry.
     for dx, dy, quat, projection in [
             (90, 0, (0.5, 0.5, 0.5, 0.5), 'ORTHO'),
-            (0, -90, (0.70710678, 0.70710678, 0, 0), 'ORTHO'),
+            (0, -70, (0.70710678, 0.70710678, 0, 0), 'ORTHO'),
             (-90, 0, (1, 0, 0, 0), 'ORTHO'),
-            (-90, 90, (0.5, 0.5, -0.5, -0.5), 'ORTHO'),
-            (-90, -90, (0, 0, 0.70710678, 0.70710678), 'ORTHO'),
-            (90, -90, (0, 1, 0, 0), 'ORTHO')]:
+            (-90, 35, (0.5, 0.5, -0.5, -0.5), 'ORTHO'),
+            (-90, -35, (0, 0, 0.70710678, 0.70710678), 'ORTHO'),
+            (90, -35, (0, 1, 0, 0), 'ORTHO')]:
         yield from locate()
         view = pose(rv(regions()[0]))
         yield from gesture(dx, dy)
         check(len(regions()) == 1, 'marking release became layout tap')
         same(pose(rv(regions()[0])), (quat, view[1], view[2], projection), 'cardinal event')
     yield from locate()
-    yield from gesture(0, 90)
+    yield from gesture(0, 70)
     check(rv(regions()[0]).view_perspective == 'PERSP', 'up gesture did not restore perspective')
     for dx, dy in [(0, 0), (6, 0), (40, 40)]:
         yield from locate()
@@ -634,7 +636,7 @@ def suite():
         bpy.ops.mesh.select_all(action='DESELECT')
     yield from settle()
     yield from locate()
-    yield from gesture(0, -90)
+    yield from gesture(0, -70)
     check(rv(regions()[0]).view_perspective == 'ORTHO' and len(regions()) == 1,
           'mesh Edit Mode gesture failed')
     with bpy.context.temp_override(window=win, area=area, region=regions()[0]):
@@ -712,7 +714,7 @@ def suite():
         check(bpy.ops.view3d.axismeld_view(action='TOGGLE_QUAD') == {'CANCELLED'}, 'camera lock accepted')
     yield from locate()
     before = pose(rv(regions()[0]))
-    yield from gesture(0, -90)
+    yield from gesture(0, -70)
     same(pose(rv(regions()[0])), before, 'rejected command changed camera-locked view')
     check(len(regions()) == 1, 'rejected marking command became a layout tap')
     space.lock_camera = False

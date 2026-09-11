@@ -57,6 +57,8 @@ struct MenuLayout {
   bool supported;
   int hit_depth = 0;  // Lower layers remain visible but cannot acquire input.
   std::unordered_map<std::string, MenuScrollBounds> native_scroll_bounds;
+  // Invisible visual-center regions retained for gesture backtracking.
+  std::vector<MenuRect> return_regions;
 };
 
 /* Logical pixel coordinates, bottom-left origin. All nodes require measured label widths.
@@ -86,6 +88,8 @@ int menu_scroll_offset_transition(const MenuLayout &layout,
                                   int delta,
                                   int item_count);
 std::string hit_menu(const MenuLayout &layout, float x, float y);
+/* Retraction must not occlude an active child target overlapping an ancestor center. */
+std::string menu_return_target(const MenuLayout &layout, float x, float y);
 /* Includes disabled/separator occlusion and preserves the exact visible occurrence/depth. */
 const MenuRect *hit_menu_rect(const MenuLayout &layout, float x, float y);
 bool hotbox_command_closes(std::string_view command);

@@ -28,9 +28,9 @@ COMMANDS = MappingProxyType({command.id: command for command in (
                                  ('selection.paint', 'Paint Selection'))),
     Command('selection.clear', 'Clear Selection',
             difference='Native deselect in the current Object or Mesh Edit set; no mode switching.'),
-    *(Command(identifier, identifier.rsplit('.', 1)[-1].title(),
+    *(Command(identifier, orientation.title(),
               difference='Blender per-tool transform orientation; Normal uses Blender selection normals and Gimbal uses Euler semantics.')
-      for identifier in ORIENTATIONS),
+      for identifier, (_, orientation) in ORIENTATIONS.items()),
     Command('tool.select', 'Select Tool', 'Q', difference='Native box select; hold Q + LMB opens classic tool options; toolkit variants deferred.'),
     Command('transform.move', 'Move Tool', 'W', difference='Native Move tool with classic held-LMB menu; same-tool tap does not reset the active axis.'),
     Command('transform.rotate', 'Rotate Tool', 'E', difference='Native Rotate tool with classic held-LMB menu; same-tool tap does not reset the active axis.'),

@@ -21,29 +21,57 @@ def tool_menus(node):
     def action(prefix, name, label, command, direction=None):
         return node(prefix + '.' + name, 'command', label, command=command, direction=direction)
 
-    def planned(prefix, name, label, code, difference):
+    def planned(prefix, name, label, code, difference, direction=None):
         return node(prefix + '.' + name, 'disabled', label, enabled=False,
-                    reason=f'M1-P{code:02}: {difference}')
+                    reason=f'M1-P{code:02}: {difference}', direction=direction)
 
     def options(prefix, name, label, direction, children):
         return node(prefix + '.' + name, 'menu', label, children=children,
                     direction=direction, presentation='list')
+
+    def radial(prefix, name, label, direction, children):
+        return node(prefix + '.' + name, 'menu', label, children=children,
+                    direction=direction, presentation='radial')
+
+    def pending_ring(prefix, entries, code, reason):
+        return [planned(prefix, name, label, code, reason, direction)
+                for name, label, direction in entries]
+
+    def custom_axis(prefix, tool):
+        return pending_ring(prefix, (
+            ('custom', 'Custom Axis', 'E'), ('component', 'Orient to Component', 'W'),
+            ('point', 'Orient Towards Point', 'SW'), ('edge', 'Align with Edge', 'S'),
+            ('face', 'Align with Face', 'SE'), ('object', 'Align with Object', 'N'),
+            ('reset', 'Reset Axis', 'NW')), 6,
+            'Custom orientations exist; Maya axis alignment adapter pending') + [
+                action(prefix, 'view', 'View (Blender)', f'orientation.{tool}.view', 'NE')]
 
     roots = []
     for tool, label in (('select', 'Select Tool'), ('move', 'Move Tool'),
                          ('rotate', 'Rotate Tool'), ('scale', 'Scale Tool')):
         p = 'tools.' + tool
         children = [
-            options(p, 'symmetry', 'Symmetry', 'N', (
-                planned(p + '.symmetry', 'options', 'Symmetry Options', 1,
-                        'Blender symmetry capabilities exist; tool adapter pending'),)),
-            options(p, 'select', 'Select', 'S', (
-                action(p + '.select', 'all', 'Select All', 'selection.select_all'),
-                action(p + '.select', 'clear', 'Clear Selection', 'selection.clear'),
-                planned(p + '.select', 'soft', 'Soft Selection', 7,
-                        'Proportional editing exists; Maya soft-selection adapter pending'),
-                planned(p + '.select', 'options', 'Selection Options', 7,
-                        'Advanced selection options adapter pending'),)),
+            radial(p, 'symmetry', 'Symmetry', 'N', pending_ring(p + '.symmetry', (
+                ('options', 'Symmetry', 'N'), ('world', 'Global', 'W'),
+                ('object', 'Local', 'E'), ('topology', 'Topology', 'NE'),
+                ('x', 'X Axis', 'SW'), ('y', 'Y Axis', 'S'), ('z', 'Z Axis', 'SE')),
+                1, 'Blender symmetry capabilities exist; tool adapter pending')),
+            radial(p, 'select', 'Select', 'S', [
+                *pending_ring(p + '.select', (
+                    ('options', 'Preselect Highlight', 'N'),
+                    ('closest', 'Highlight Closest', 'NE'),
+                    ('backfaces', 'Highlight Backfaces', 'E'),
+                    ('container', 'Container Centric', 'SE'),
+                    ('camera', 'Camera Based Selection', 'W')), 7,
+                    'Advanced selection options adapter pending'),
+                action(p + '.select', 'marquee', 'Marquee Select', 'selection.marquee', 'NW'),
+                action(p + '.select', 'clear', 'Clear Selection', 'selection.clear', 'SW'),
+                radial(p + '.select', 'soft', 'Soft Selection', 'S', pending_ring(
+                    p + '.select.soft', (
+                        ('object', 'Object Falloff', 'N'), ('toggle', 'Soft Selection', 'S'),
+                        ('volume', 'Volume', 'SW'), ('surface', 'Surface', 'W'),
+                        ('global', 'Global Falloff', 'NW'), ('color', 'Falloff Color', 'E')),
+                    7, 'Proportional editing exists; Maya soft-selection adapter pending'))]),
         ]
         if tool == 'select':
             children += [action(p, name, title, 'selection.' + name, direction)
@@ -60,21 +88,36 @@ def tool_menus(node):
                      'Blender occlusion selection exists; automatic camera-based policy adapter pending'))]
         else:
             children += [action(p, name, title, f'orientation.{tool}.{name}', direction)
-                         for name, title, direction in (('world', 'World', 'W'),
-                             ('object', 'Object', 'NW'), ('normal', 'Normal Average', 'NE'))]
+                         for name, title, direction in (('world', 'Global', 'W'),
+                             ('object', 'Local', 'NW'), ('normal', 'Normal Average', 'NE'))]
             axis_label = 'Custom Axis' if tool == 'rotate' else 'Axis'
-            children.append(options(p, 'axis', axis_label, 'SW', (
-                action(p + '.axis', 'view', 'View (Blender)', f'orientation.{tool}.view'),
-                planned(p + '.axis', 'custom', 'Custom Axis / Alignment', 6,
-                        'Custom orientations exist; Maya axis alignment adapter pending'),
-                planned(p + '.axis', 'tool', 'Tool Options', 8,
-                        'Smart extrude/duplicate and pivot variants await individual capability mapping'),
-                planned(p + '.axis', 'uv', 'Preserve UV', 9, 'UV workflow deferred; no UV state changes'),)))
+            axis = p + '.axis'
+            axis_children = custom_axis(axis, tool) if tool == 'rotate' else [
+                *pending_ring(axis, (
+                    ('parent', 'Parent Axis', 'W'), ('normal', 'Component Axis', 'NW'),
+                    ('live', 'Live Object Axis', 'N'), ('rotation', 'Rotation Axis', 'NE')),
+                    6, 'Maya parent/component/live axes differ from Blender Local/Normal; adapter pending'),
+                radial(axis, 'custom', 'Custom Axis', 'SW', custom_axis(axis + '.custom', tool)),
+                action(axis, 'view', 'View (Blender)', f'orientation.{tool}.view', 'E'),
+                options(axis, 'tool', 'Tool Options', 'S', (
+                    action(axis + '.tool', 'all', 'Select All', 'selection.select_all'),
+                    planned(axis, 'uv', 'Preserve UV', 9, 'UV workflow deferred; no UV state changes'),
+                    planned(axis + '.tool', 'options', 'More Tool Options', 8,
+                            'Smart extrude/duplicate and pivot variants await capability mapping')))]
+            children.append(radial(p, 'axis', axis_label, 'SW', axis_children))
             if tool == 'rotate':
                 children.append(action(p, 'gimbal', 'Gimbal', 'orientation.rotate.gimbal', 'E'))
                 entries = (('discrete', 'Discrete Rotate', 'SE', 5),)
             elif tool == 'move':
-                entries = (('snap', 'Snap', 'E', 5), ('spacing', 'Keep Spacing', 'SE', 4))
+                children.append(radial(p, 'snap', 'Snap', 'E', [
+                    *pending_ring(p + '.snap', (
+                        ('options', 'Discrete Move', 'E'), ('vertex', 'Vertex', 'SE'),
+                        ('face', 'Face Center', 'SW')), 5,
+                        'Native snapping exists; Maya live-surface snap adapter pending'),
+                    options(p + '.snap', 'settings', 'Snap Options', 'S', (
+                        planned(p + '.snap', 'relative', 'Relative', 5,
+                                'Native snapping exists; relative-step adapter pending'),))]))
+                entries = (('spacing', 'Keep Spacing', 'SE', 4),)
             else:
                 entries = (('discrete', 'Discrete Scale', 'E', 5), ('relative', 'Relative', 'SE', 5))
             children += [options(p, name, title, direction, (

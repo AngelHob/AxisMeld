@@ -43,6 +43,8 @@ struct HotboxData : HotboxVisual {
   bool menu_entered_on_press = false;
   bool mouse_moved_since_press = false;
   bool tool_shown = false;
+  std::vector<std::string> return_path;
+  bool center_return_armed = false;
 };
 
 /* Validate each containing live list before inspecting the next captured pointer. */
@@ -266,8 +268,8 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   }
   if (!tool_root.empty()) {
     const MenuNode *root = hotbox_find_node(snapshot.menus, tool_root);
-    if ((tool_root != "tools.select" && tool_root != "tools.move" &&
-         tool_root != "tools.rotate" && tool_root != "tools.scale") ||
+    if ((tool_root != "tools.select" && tool_root != "tools.move" && tool_root != "tools.rotate" &&
+         tool_root != "tools.scale") ||
         !root || root->kind != MenuKind::Menu || !root->enabled || root->presentation != "radial")
     {
       return OPERATOR_CANCELLED;
@@ -313,6 +315,54 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   return OPERATOR_RUNNING_MODAL;
 }
 
+static bool retract_at_center(HotboxData &data, const float x, const float y, const bool motion)
+{
+  if (data.return_path != data.open_path) {
+    data.return_path = data.open_path;
+    data.center_return_armed = false;
+  }
+  std::string target = menu_return_target(data.menu_layout, x, y);
+  if (data.menu_layout.return_regions.size() > 1 && !data.open_path.empty()) {
+    const MenuRect &current = data.menu_layout.return_regions.back();
+    if (current.id == data.open_path.back() && data.open_path.size() > 1) {
+      const bool inside = x >= current.x && x < current.x + current.width && y >= current.y &&
+                          y < current.y + current.height;
+      if (motion && !inside) {
+        data.center_return_armed = true;
+      }
+      // The opening stroke arrives at the child's center. Only a subsequent
+      // outward-and-back stroke may retract it. Visible child targets still win.
+      if (target == current.id) {
+        target = data.center_return_armed ? data.open_path[data.open_path.size() - 2] : "";
+      }
+    }
+  }
+  const float dx = x - data.origin[0], dy = y - data.origin[1];
+  if (dx * dx + dy * dy <= 12 * 12) {
+    if (!data.tool_root.empty()) {
+      target = data.tool_root;
+    }
+    else if (data.marking) {
+      target = "views";
+    }
+  }
+  const auto begin = data.open_path.begin() +
+                     (!data.open_path.empty() && data.open_path.front() == "center" ? 1 : 0);
+  const auto owner = std::find(begin, data.open_path.end(), target);
+  if (owner == data.open_path.end() || owner + 1 == data.open_path.end()) {
+    return false;
+  }
+  data.open_path.erase(owner + 1, data.open_path.end());
+  data.return_path.clear();
+  data.center_return_armed = false;
+  data.hover_id.clear();
+  data.hover_depth = -1;
+  data.pending_leaf.clear();
+  data.candidate = HotboxAction::None;
+  hotbox_layout(data);
+  return true;
+}
+
 static wmOperatorStatus tool_modal(bContext *C, wmOperator *op, const wmEvent *event)
 {
   auto &data = *static_cast<HotboxData *>(op->customdata);
@@ -348,15 +398,13 @@ static wmOperatorStatus tool_modal(bContext *C, wmOperator *op, const wmEvent *e
     data.pointer_position[0] = x;
     data.pointer_position[1] = y;
     const bool at_origin = (x - data.origin[0]) * (x - data.origin[0]) +
-                               (y - data.origin[1]) * (y - data.origin[1]) <= 12 * 12;
-    if (at_origin && data.open_path.size() > 1)
-    {
-      data.open_path.resize(1);
-      hotbox_layout(data);
-    }
+                               (y - data.origin[1]) * (y - data.origin[1]) <=
+                           12 * 12;
+    const bool returned = retract_at_center(data, x, y, ISMOUSE_MOTION(event->type));
     // Edge clamping may move a button under the real press origin. The dead zone wins
     // over all menu hit testing, including reopening a child after returning to cancel it.
-    const MenuRect *hover = at_origin ? nullptr : hit_menu_rect(data.menu_layout, x, y);
+    const MenuRect *hover = at_origin || returned ? nullptr :
+                                                    hit_menu_rect(data.menu_layout, x, y);
     const MenuRect rect = hover ? *hover : MenuRect{};
     data.hover_id = hover ? rect.id : "";
     data.hover_depth = hover ? rect.depth : -1;
@@ -410,12 +458,16 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
   }
   const float x = (event->xy[0] - data.region->winrct.xmin) / data.scale;
   const float y = (event->xy[1] - data.region->winrct.ymin) / data.scale;
-  const MenuRect *hover = hit_menu_rect(data.menu_layout, x, y);
+  const bool returned = data.active_mouse &&
+                        (ISMOUSE_MOTION(event->type) ||
+                         (event->type == data.active_mouse && event->val == KM_RELEASE)) &&
+                        retract_at_center(data, x, y, ISMOUSE_MOTION(event->type));
+  const MenuRect *hover = returned ? nullptr : hit_menu_rect(data.menu_layout, x, y);
   // Copy before open_menu/scroll can rebuild the owning rect vector.
   const MenuRect rect = hover ? *hover : MenuRect{};
   data.hover_id = hover ? rect.id : "";
   data.hover_depth = hover ? rect.depth : -1;
-  const std::string item = hit_menu(data.menu_layout, x, y);
+  const std::string item = returned ? "" : hit_menu(data.menu_layout, x, y);
   const MenuNode *node = hotbox_find_node(data.snapshot.menus, item);
   const bool mouse = ELEM(event->type, LEFTMOUSE, MIDDLEMOUSE, RIGHTMOUSE);
   if (ISMOUSE_MOTION(event->type) || mouse) {
@@ -543,8 +595,9 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
       // even after inward placement; only untargeted space uses the original direction sectors.
       // Only untargeted space in the view ring uses sectors. Style and its submenu
       // own their real rectangles; the retained first level never participates in hits.
-      data.candidate = hover || data.open_path.size() > 2 ? HotboxAction::None :
-                                                            hotbox_direction(dx, dy, 12);
+      data.candidate = returned || hover || data.open_path.size() > 2 ?
+                           HotboxAction::None :
+                           hotbox_direction(dx, dy, 12);
       data.pending_leaf = dx * dx + dy * dy <= 12 * 12 ? "" :
                           node && (rect.direction_label || node->kind == MenuKind::Setting) ?
                                                          item :
@@ -599,8 +652,12 @@ void VIEW3D_OT_axismeld_hotbox(wmOperatorType *ot)
   PropertyRNA *prop = RNA_def_string(
       ot->srna, "menu_json", nullptr, 0, "Menu Snapshot", "Validated declarative menu snapshot");
   RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
-  prop = RNA_def_string(ot->srna, "tool_menu", nullptr, 0, "Tool Menu",
-                       "Registered tool root, armed until left mouse press");
+  prop = RNA_def_string(ot->srna,
+                        "tool_menu",
+                        nullptr,
+                        0,
+                        "Tool Menu",
+                        "Registered tool root, armed until left mouse press");
   RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
 }
 }  // namespace blender

@@ -29,12 +29,28 @@ static std::string replace(std::string input, const std::string &from, const std
   return input;
 }
 
+TEST(hotbox_model, ExpandedToolTreeRetainsBoundedAtomicParsing)
+{
+  MenuSnapshot out{};
+  std::string error, children;
+  for (int i = 0; i < 300; i++) {
+    children += (i ? "," : "") + menu("entry" + std::to_string(i));
+  }
+  ASSERT_TRUE(parse_menu_snapshot(snapshot(children), out, error));
+  for (int i = 300; i < 513; i++) {
+    children += "," + menu("entry" + std::to_string(i));
+  }
+  EXPECT_FALSE(parse_menu_snapshot(snapshot(children), out, error));
+  EXPECT_EQ(out.generation, 7);
+  EXPECT_EQ(out.menus.front().children.size(), 300);
+}
+
 TEST(hotbox_model, DirectionMetadataIsOptionalStrictAndAtomic)
 {
-  const std::string child = replace(menu("north"), "\"kind\":\"menu\"",
-                                    "\"direction\":\"N\",\"kind\":\"menu\"");
-  const std::string radial = replace(menu("ring", child), "\"id\":\"ring\"",
-                                     "\"id\":\"ring\",\"presentation\":\"radial\"");
+  const std::string child = replace(
+      menu("north"), "\"kind\":\"menu\"", "\"direction\":\"N\",\"kind\":\"menu\"");
+  const std::string radial = replace(
+      menu("ring", child), "\"id\":\"ring\"", "\"id\":\"ring\",\"presentation\":\"radial\"");
   MenuSnapshot out{};
   std::string error;
   EXPECT_TRUE(parse_menu_snapshot(snapshot(radial), out, error));
@@ -51,7 +67,8 @@ TEST(hotbox_model, DirectionMetadataIsOptionalStrictAndAtomic)
 
 TEST(hotbox_model, RadialChildRequiresDirectionAtomically)
 {
-  const std::string radial = replace(menu("ring", menu("north")), "\"id\":\"ring\"",
+  const std::string radial = replace(menu("ring", menu("north")),
+                                     "\"id\":\"ring\"",
                                      "\"id\":\"ring\",\"presentation\":\"radial\"");
   MenuSnapshot out{};
   out.generation = 99;
@@ -200,7 +217,7 @@ TEST(hotbox_model, CenterButtonSettingAcceptsRegisteredMenuOrDisabledOnly)
 TEST(hotbox_model, NodeCountAndDepthAreBounded)
 {
   std::string children;
-  for (int i = 0; i < 252; i++) {
+  for (int i = 0; i < 508; i++) {
     if (i)
       children += ",";
     children += menu("child" + std::to_string(i));

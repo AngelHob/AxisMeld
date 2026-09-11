@@ -6,6 +6,25 @@
 #include <cmath>
 
 namespace blender::axismeld {
+std::string menu_return_target(const MenuLayout &layout, const float x, const float y)
+{
+  if (!layout.supported) {
+    return {};
+  }
+  // Nested rings can cover an ancestor center; do not turn a visible child into
+  // an invisible Back target. Retained background rectangles do not block return.
+  if (const MenuRect *hit = hit_menu_rect(layout, x, y)) {
+    if (!hit->retained_only && hit->depth >= layout.hit_depth) {
+      return {};
+    }
+  }
+  for (auto item = layout.return_regions.rbegin(); item != layout.return_regions.rend(); ++item) {
+    if (x >= item->x && x < item->x + item->width && y >= item->y && y < item->y + item->height) {
+      return item->id;
+    }
+  }
+  return {};
+}
 namespace {
 constexpr float row_height = 38.0f;
 constexpr float gap = 10.0f;
@@ -296,7 +315,9 @@ class LayoutBuilder {
                const bool compact = false)
   {
     const float center_width = anchor.width;
-    const float center_height = view_ring ? row_height : secondary_height;
+    const float center_height = view_ring && !compact && owner.presentation != "radial" ?
+                                    row_height :
+                                    secondary_height;
     float button_width = reference_width;
     for (const EllipseItem &item : items) {
       if (item.node) {
@@ -310,7 +331,12 @@ class LayoutBuilder {
     for (float ry = 24; ry < height; ry += 1) {
       // Tool rings keep native submenu text/arrow padding; a slightly rounder ellipse
       // fits their full labels in small panes without narrowing the actual buttons.
-      const float rx = (owner.presentation == "radial" ? 1.6f : 1.7f) * ry;
+      const float rx = 1.7f * ry;
+      // Marking menus use five staggered rows. Label width affects X only, not
+      // the central-row reach. Arbitrary paged directories retain their ellipse.
+      const float marking_step = std::max(secondary_height + (compact ? 4 : 8),
+                                          (center_height + secondary_height) / 2 + secondary_gap);
+      const float marking_side = (button_width + center_width) / 2 + 8;
       local.clear();
       const MenuRect center = {"@back:" + owner.id,
                                -center_width / 2,
@@ -326,9 +352,19 @@ class LayoutBuilder {
       top = center.y + center.height;
       for (const EllipseItem &item : items) {
         const float fit_width = item.node ? button_width : item.width;
+        const float px = view_ring ?
+                             (item.nx == 0 ?
+                                  0 :
+                                  std::copysign(marking_side - (item.ny == 0 ? 0 : 16), item.nx)) :
+                             item.nx * rx;
+        const float py = view_ring ?
+                             (item.ny == 0 ?
+                                  0 :
+                                  std::copysign(marking_step * (item.nx == 0 ? 2 : 1), item.ny)) :
+                             item.ny * ry;
         const MenuRect candidate{item.id,
-                                 item.nx * rx - fit_width / 2,
-                                 item.ny * ry - secondary_height / 2,
+                                 px - fit_width / 2,
+                                 py - secondary_height / 2,
                                  fit_width,
                                  secondary_height,
                                  depth,
@@ -366,6 +402,9 @@ class LayoutBuilder {
         found = true;
         break;
       }
+      if (view_ring) {
+        break;  // Fixed row geometry cannot improve by growing legacy radii.
+      }
     }
     if (!found) {
       return false;
@@ -374,6 +413,16 @@ class LayoutBuilder {
         anchor.x + anchor.width / 2, margin - left, width - margin - right);
     const float cy = std::clamp(
         anchor.y + anchor.height / 2, margin - bottom, height - margin - top);
+    if (view_ring) {
+      const float return_width = center_width + 16;
+      const float return_height = compact ? 32 : owner.presentation == "radial" ? 40 : 46;
+      result.return_regions.push_back({owner.id,
+                                       cx - return_width / 2,
+                                       cy - return_height / 2,
+                                       return_width,
+                                       return_height,
+                                       depth});
+    }
     // Ordinary directories retain one active ring and explicit Back/page navigation.
     // The root remains a draw-only background; the Views ring has no center control.
     std::erase_if(result.rects, [](const MenuRect &item) { return item.depth > 0; });
@@ -443,9 +492,14 @@ class LayoutBuilder {
     }
     if (owner.presentation == "radial") {
       constexpr float d = 0.70710678118f;
-      const std::unordered_map<std::string, std::array<float, 2>> directions = {
-          {"N", {0, 1}}, {"NE", {d, d}}, {"E", {1, 0}}, {"SE", {d, -d}},
-          {"S", {0, -1}}, {"SW", {-d, -d}}, {"W", {-1, 0}}, {"NW", {-d, d}}};
+      const std::unordered_map<std::string, std::array<float, 2>> directions = {{"N", {0, 1}},
+                                                                                {"NE", {d, d}},
+                                                                                {"E", {1, 0}},
+                                                                                {"SE", {d, -d}},
+                                                                                {"S", {0, -1}},
+                                                                                {"SW", {-d, -d}},
+                                                                                {"W", {-1, 0}},
+                                                                                {"NW", {-d, d}}};
       std::vector<EllipseItem> items;
       for (const MenuNode &node : owner.children) {
         const auto direction = directions.find(node.direction);
@@ -453,8 +507,13 @@ class LayoutBuilder {
           result.supported = false;
           return;
         }
-        items.push_back({&node, node.id, widths.at(node.id) + child_padding(node),
-                         direction->second[0], direction->second[1], interactive(node), true});
+        items.push_back({&node,
+                         node.id,
+                         widths.at(node.id) + child_padding(node),
+                         direction->second[0],
+                         direction->second[1],
+                         interactive(node),
+                         true});
       }
       // The hole belongs to the gesture, not the width of the directory that opened it.
       MenuRect ring_anchor = anchor;
@@ -670,8 +729,8 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
         }
         anchor = *found;
       }
-      build.popup(*node, anchor, index + 1,
-                  index + 1 < int(open_path.size()) ? open_path[index + 1] : "");
+      build.popup(
+          *node, anchor, index + 1, index + 1 < int(open_path.size()) ? open_path[index + 1] : "");
     }
     if (!build.result.supported) {
       return {{}, false};
@@ -686,7 +745,8 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
     for (MenuRect &item : build.result.rects) {
       item.retained_only = item.depth < native_depth &&
                            (!item.native_menu || item.native_menu_standalone) &&
-                           std::find(open_path.begin(), open_path.end(), item.id) == open_path.end();
+                           std::find(open_path.begin(), open_path.end(), item.id) ==
+                               open_path.end();
     }
     return build.result;
   }
