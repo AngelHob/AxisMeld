@@ -63,6 +63,13 @@ RNA `use` 的显示描述与实际标志容易混淆，必须结合原生 getter
 不能只看属性名。AxisMeld 中键轴拖动复用 `WIDGETGROUP_gizmo_invoke_prepare`，应与直接拖轴
 读取同一工具方向，测试须确认工具之间不互相覆盖。
 
+本批主任务已定点核实消费链：`DNA_scene_types.h:2775-2777` 定义 1/2/3；
+`rna_scene.cc:3392` 将 `use` 映射到 SELECT；`scene.cc:2638-2660` 按工具标志取专用槽；
+`transform_gizmo_3d.cc:1986-2010` 按 builtin.move/rotate/scale 设置工具标志，
+`:2314-2326` 将该方向写入原生 gizmo 操作参数，`:2382` 的 AxisMeld 中键路径调用同一准备函数。
+GUI 已验证三个真实槽相互独立，已有操纵器回归另行通过。此处是源代码消费链与槽状态证据，
+不是每种方向下实体鼠标拖拽结果的完整矩阵；后者保留在 M1-05 人工验收。
+
 菜单中的坐标方向是场景工具设置，不写入 `hotbox_user.json` 的颜色/菜单配置，
 也不引入独立复制场景数据的 AxisMeld 变换系统。
 
