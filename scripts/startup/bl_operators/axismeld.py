@@ -2,11 +2,12 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 import bpy
 from bpy.types import Operator, KeyConfigPreferences, WindowManager
-from bpy.props import StringProperty, BoolProperty, EnumProperty, FloatProperty
+from bpy.props import StringProperty, BoolProperty, EnumProperty, FloatProperty, FloatVectorProperty, IntProperty
 
 from axismeld import adapter, runtime, hotbox_runtime
 from axismeld.commands import PRESET_NAME
 from axismeld.hotbox_catalog import registered_menu_choices
+from axismeld.hotbox_profiles import DEFAULT_APPEARANCE
 
 
 class AXISMELD_OT_command(Operator):
@@ -98,6 +99,42 @@ class AXISMELD_OT_hotbox_refresh(Operator):
         return {'FINISHED'}
 
 
+class AXISMELD_OT_hotbox_reset_appearance(Operator):
+    bl_idname = 'axismeld.hotbox_reset_appearance'
+    bl_label = 'Restore Appearance Defaults'
+    bl_description = 'Restore public hotbox colors and 75% opacity; keep keymaps, layout and mouse mappings'
+
+    def execute(self, context):
+        try:
+            hotbox_runtime.reset_appearance(context)
+        except ValueError as error:
+            self.report({'WARNING'}, str(error))
+            return {'CANCELLED'}
+        return {'FINISHED'}
+
+
+def _appearance_update(field):
+    def update(self, context):
+        if hotbox_runtime.preferences_are_syncing():
+            return
+        value = getattr(self, f'hotbox_{field}')
+        if isinstance(DEFAULT_APPEARANCE[field], list):
+            value = [round(channel*255) for channel in value]
+        try:
+            hotbox_runtime.apply_appearance(context, field, value)
+        except ValueError as error:
+            print('AxisMeld:', error)
+            hotbox_runtime.reload_settings(context)
+    return update
+
+
+def _appearance_color(field, name):
+    return FloatVectorProperty(
+        name=name, size=3, subtype='COLOR_GAMMA', min=0, max=1,
+        default=tuple(channel/255 for channel in DEFAULT_APPEARANCE[field]),
+        options={'SKIP_SAVE'}, update=_appearance_update(field))
+
+
 def _update_profile(self, context):
     runtime.load()
 
@@ -132,11 +169,25 @@ class AXISMELD_Preferences(KeyConfigPreferences):
                                     ('center', 'Center Zone Only', '')),
         default='rows', options={'SKIP_SAVE'}, update=_hotbox_update('style', 'hotbox_style'))
     hotbox_transparency: EnumProperty(
-        name='Primary Hotbox Transparency', items=tuple((str(value), f'{value}%', '')
-                                                for value in (0, 25, 50, 75, 100)),
+        name='Primary Hotbox Opacity', items=tuple((str(value), f'{100-value}%', '')
+                                                for value in (100, 75, 50, 25, 0)),
         default='25', options={'SKIP_SAVE'},
-        description='Primary hotbox background only; secondary hotboxes and menus stay opaque',
+        description='Opacity of primary backgrounds; Controls Transparency uses the inverse value; secondary stays opaque',
         update=_hotbox_update('transparency', 'hotbox_transparency'))
+    hotbox_theme_background: BoolProperty(
+        name='Use Theme Background', default=True, options={'SKIP_SAVE'},
+        update=_appearance_update('theme_background'))
+    hotbox_background: _appearance_color('background', 'Background Color')
+    hotbox_brightness: IntProperty(
+        name='Background Brightness', default=-13, min=-128, max=128, options={'SKIP_SAVE'},
+        description='RGB offset for idle primary backgrounds; zero keeps the chosen color unchanged',
+        update=_appearance_update('brightness'))
+    hotbox_text: _appearance_color('text', 'Normal Text')
+    hotbox_placeholder: _appearance_color('placeholder', 'Placeholder Text')
+    hotbox_theme_hover_text: BoolProperty(
+        name='Use Theme Hover Text', default=True, options={'SKIP_SAVE'},
+        update=_appearance_update('theme_hover_text'))
+    hotbox_hover_text: _appearance_color('hover_text', 'Hover Text')
     hotbox_row_common: BoolProperty(
         name='Show Common Menus', default=True, options={'SKIP_SAVE'},
         update=_hotbox_update('row.common'))
@@ -169,7 +220,24 @@ class AXISMELD_Preferences(KeyConfigPreferences):
         layout.label(text=str(runtime.profile_directory() or 'No configuration directory'))
         layout.label(text=hotbox_runtime.settings_storage_note(bpy.context))
         layout.prop(self, 'hotbox_style')
-        layout.prop(self, 'hotbox_transparency')
+        appearance = layout.box()
+        appearance.label(text='Hotbox Appearance', icon='COLOR')
+        appearance.use_property_split = True
+        appearance.use_property_decorate = False
+        appearance.prop(self, 'hotbox_transparency')
+        appearance.prop(self, 'hotbox_theme_background')
+        color = appearance.column()
+        color.enabled = not self.hotbox_theme_background
+        color.prop(self, 'hotbox_background')
+        appearance.prop(self, 'hotbox_brightness', slider=True)
+        appearance.prop(self, 'hotbox_text')
+        appearance.prop(self, 'hotbox_placeholder')
+        appearance.prop(self, 'hotbox_theme_hover_text')
+        color = appearance.column()
+        color.enabled = not self.hotbox_theme_hover_text
+        color.prop(self, 'hotbox_hover_text')
+        appearance.operator('axismeld.hotbox_reset_appearance', icon='LOOP_BACK')
+        appearance.label(text='Next hotbox open applies changes; secondary menus use the opaque Blender theme')
         row = layout.row(align=True)
         row.prop(self, 'hotbox_row_common')
         row.prop(self, 'hotbox_row_pane')
@@ -183,7 +251,7 @@ class AXISMELD_Preferences(KeyConfigPreferences):
 
 
 classes = (AXISMELD_OT_command, AXISMELD_OT_reload_profile, AXISMELD_OT_hotbox_dispatch,
-           AXISMELD_OT_hotbox_setting, AXISMELD_OT_hotbox_refresh)
+           AXISMELD_OT_hotbox_setting, AXISMELD_OT_hotbox_refresh, AXISMELD_OT_hotbox_reset_appearance)
 
 
 def register():

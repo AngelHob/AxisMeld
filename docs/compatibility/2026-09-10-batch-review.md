@@ -1,6 +1,38 @@
 # AxisMeld 五小时批次集中验收
 
-## 2026-09-11 恢复一级原始暗色（当前已安装）
+## 2026-09-11 热盒外观集中设置（当前已安装）
+
+原测试入口：`D:/source/AxisMeld-build/phase2b-ui-test-install/blender.exe`。
+当前exe SHA-256：`87C6A0989066AEF83E6047DD0CBFCE650DDF7C3BA970058AC6F81BA99F62A59B`。
+入口：Edit → Preferences → Keymap，选择AxisMeld Maya 2026，展开Preferences → Hotbox Appearance。
+
+| 控件 | 用途 / 默认 |
+|---|---|
+| Primary Hotbox Opacity | 一级不透明度，默认75%；旧Hotbox Controls → Transparency仍按透明度表示，两者互为补数 |
+| Use Theme Background / Background Color | 默认跟随主题；取消勾选后可自选一级底色 |
+| Background Brightness | RGB明暗偏移，默认-13；设0恢复所选底色原亮度，可在-128到128调节 |
+| Normal Text / Placeholder Text | 正常字默认#A0A0A0、占位字默认黑色 |
+| Use Theme Hover Text / Hover Text | 默认跟随主题悬停字色，取消勾选后自选 |
+| Restore Appearance Defaults | 只重置上述外观和75%不透明度，不改变快捷键、布局和鼠标映射 |
+
+启用Use Studio and User Profile Files时自动保存个人外观，禁用时仅会话生效；均在下次打开热盒时应用，
+不用重启或重新构建。二级及更深保持Blender原生主题、完全不透明，不受上述外观设置影响。
+旧schema-1文件无需迁移/改写，appearance对象逐字段合并；颜色严格RGB字节验证，错误文件拒绝覆盖。
+默认一级底色已按用户确认压暗13/255，悬停底色、图标和上下文禁用逻辑不变。
+
+验证：47项Python、5组CTest（含8项原生解析、41项布局）通过；先有旧版配置/解析/缺少控件失败证据，
+再实现。安装态appearance、profiles、native-style、release、text、alpha共6组通过。
+实际截图验证自选底色、明暗和三类字色，黑白极值钳制、配置重载/重置及会话不写文件；
+真实Keymap设置页已检查。默认主题0.4底色实测约0.353，正常灰字0.624、占位黑字0.035。
+alpha覆盖0/25/75/100透明度及二级原生背景/hover/分隔线；静态复核通过。
+日志：`D:/source/AxisMeld-build/h5-appearance-build.log`、`h5-appearance-final-{python,ctest}.log`、
+`h5-appearance-installed-{appearance,profiles,native-style,release,text,alpha}.log`。
+设置页截图：`h5-appearance-installed-appearance/appearance-preferences.png`。
+仅更新原exe及三个Python模块，四项安装文件与构建/源码SHA一致；6份portable配置及回退exe未变。
+没有新增完整安装目录、关闭用户窗口或推送。所有测试进程已退出。
+手测：调整一级底色/明暗/文字后重新打开热盒，确认个人喜好；再试外观重置，不应影响操作配置。
+
+## 2026-09-11 恢复一级原始暗色（历史版本）
 
 用户否决进一步提亮的观感后，已取消全部RGB提亮，恢复一级主题原始暗色；保持75%不透明、
 正常灰字、黑色占位字、悬停和二级完全不透明。原测试入口不变，当前exe SHA-256：

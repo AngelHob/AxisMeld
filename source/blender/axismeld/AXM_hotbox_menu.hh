@@ -17,6 +17,15 @@ struct MenuNode {
   bool enabled;
   std::vector<MenuNode> children;
 };
+struct MenuAppearance {
+  bool theme_background = true;
+  std::array<int, 3> background = {64, 64, 64};
+  int brightness = -13;
+  std::array<int, 3> text = {160, 160, 160};
+  std::array<int, 3> placeholder = {0, 0, 0};
+  bool theme_hover_text = true;
+  std::array<int, 3> hover_text = {255, 255, 255};
+};
 struct MenuSnapshot {
   uint64_t generation;
   std::string style;
@@ -24,6 +33,7 @@ struct MenuSnapshot {
   std::vector<std::string> rows;
   std::array<std::string, 3> center_buttons;
   std::vector<MenuNode> menus;
+  MenuAppearance appearance;
 };
 struct MenuRect {
   std::string id;

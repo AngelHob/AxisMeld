@@ -233,6 +233,9 @@ class HotboxCatalogTest(unittest.TestCase):
         self.assertEqual(value['settings'], {
             'style': 'zones',
             'transparency': 75,
+            'appearance': {'theme_background': True, 'background': [64, 64, 64],
+                           'brightness': -13, 'text': [160, 160, 160], 'placeholder': [0, 0, 0],
+                           'theme_hover_text': True, 'hover_text': [255, 255, 255]},
             'rows': ['common', 'modeling'],
             'center_buttons': {
                 'LEFTMOUSE': None,

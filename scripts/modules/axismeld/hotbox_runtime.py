@@ -8,7 +8,7 @@ from threading import Lock
 
 from .commands import COMMANDS, PRESET_NAME
 from .hotbox_catalog import default_catalog, command_policy
-from .hotbox_profiles import (CANONICAL_ROWS, DEFAULT_SETTINGS, MENU_IDS, MOUSE_BUTTONS,
+from .hotbox_profiles import (CANONICAL_ROWS, DEFAULT_APPEARANCE, DEFAULT_SETTINGS, MENU_IDS, MOUSE_BUTTONS,
                               load_hotbox_profiles, resolve_hotbox, save_hotbox_user,
                               validate_settings)
 
@@ -88,11 +88,33 @@ def dispatch(context, command):
 
 def apply_setting(context, setting, value):
     """Apply one setting through the shared Controls/Preferences persistence path."""
-    global _settings
     if (not isinstance(setting, str) or setting not in SETTING_VALUES or
             not isinstance(value, str) or value not in SETTING_VALUES[setting]):
         raise ValueError('Unknown hotbox setting or option')
     candidate = _settings_with_change(_settings, setting, value)
+    _commit_settings(context, candidate, [setting])
+
+
+def apply_appearance(context, field, value):
+    """Typed preferences boundary, separate from executable menu setting commands."""
+    if not isinstance(field, str) or field not in DEFAULT_APPEARANCE:
+        raise ValueError('Unknown appearance field')
+    candidate = deepcopy(_settings)
+    candidate['appearance'][field] = deepcopy(value)
+    validate_settings(candidate)
+    _commit_settings(context, candidate, [f'appearance.{field}'])
+
+
+def reset_appearance(context):
+    candidate = deepcopy(_settings)
+    candidate['appearance'] = deepcopy(DEFAULT_APPEARANCE)
+    candidate['transparency'] = DEFAULT_SETTINGS['transparency']
+    _commit_settings(context, candidate,
+                     ['transparency', *(f'appearance.{key}' for key in DEFAULT_APPEARANCE)])
+
+
+def _commit_settings(context, candidate, changed):
+    global _settings
     if _file_overrides_enabled(context):
         from . import runtime
         directory = runtime.profile_directory()
@@ -100,21 +122,24 @@ def apply_setting(context, setting, value):
             raise ValueError('No configuration directory for hotbox_user.json')
         persisted, _errors = load_hotbox_profiles(directory)
         persisted_settings = deepcopy(persisted['settings'])
-        model_key = 'rows' if setting.startswith('row.') else (
-            'center_buttons' if setting.startswith('center.') else setting)
-        if model_key == 'center_buttons':
-            button = setting.removeprefix('center.')
-            persisted_settings[model_key][button] = candidate[model_key][button]
-        else:
-            persisted_settings[model_key] = deepcopy(candidate[model_key])
+        for setting in changed:
+            if setting.startswith(('center.', 'appearance.')):
+                group, key = setting.split('.', 1)
+                model_key = 'center_buttons' if group == 'center' else group
+                persisted_settings[model_key][key] = deepcopy(candidate[model_key][key])
+            else:
+                model_key = 'rows' if setting.startswith('row.') else setting
+                persisted_settings[model_key] = deepcopy(candidate[model_key])
         try:
             save_hotbox_user(directory, persisted_settings)
         except (OSError, ValueError) as error:
             raise ValueError(str(error)) from error
-        _remove_session_setting(setting)
+        for setting in changed:
+            _remove_session_setting(setting)
         reload_settings(context)
     else:
-        _store_session_setting(setting, candidate)
+        for setting in changed:
+            _store_session_setting(setting, candidate)
         _settings = candidate
         _sync_preferences(context)
 
@@ -139,6 +164,9 @@ def _store_session_setting(setting, settings):
     patch = _session_document['settings']
     if setting.startswith('row.'):
         patch['rows'] = deepcopy(settings['rows'])
+    elif setting.startswith('appearance.'):
+        key = setting.removeprefix('appearance.')
+        patch.setdefault('appearance', {})[key] = deepcopy(settings['appearance'][key])
     elif setting.startswith('center.'):
         button = setting.removeprefix('center.')
         patch.setdefault('center_buttons', {})[button] = settings['center_buttons'][button]
@@ -150,6 +178,11 @@ def _remove_session_setting(setting):
     patch = _session_document['settings']
     if setting.startswith('row.'):
         patch.pop('rows', None)
+    elif setting.startswith('appearance.'):
+        appearance = patch.get('appearance', {})
+        appearance.pop(setting.removeprefix('appearance.'), None)
+        if not appearance:
+            patch.pop('appearance', None)
     elif setting.startswith('center.'):
         buttons = patch.get('center_buttons', {})
         buttons.pop(setting.removeprefix('center.'), None)
@@ -221,6 +254,10 @@ def _sync_preferences(context):
     try:
         preferences.hotbox_style = _settings['style']
         preferences.hotbox_transparency = str(_settings['transparency'])
+        for key, value in _settings['appearance'].items():
+            if isinstance(value, list):
+                value = tuple(channel/255 for channel in value)
+            setattr(preferences, f'hotbox_{key}', value)
         for row in CANONICAL_ROWS:
             setattr(preferences, f'hotbox_row_{row}', row in _settings['rows'])
         for button in MOUSE_BUTTONS:

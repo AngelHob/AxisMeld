@@ -337,6 +337,9 @@ def bridge_suite(win, area, region):
         bpy.ops.axismeld.hotbox_refresh()
         changed = json.loads(wm.axismeld_hotbox_snapshot)
         check(changed['settings'] == {'style': 'center', 'transparency': 75,
+              'appearance': {'theme_background': True, 'background': [64, 64, 64], 'brightness': -13,
+                             'text': [160, 160, 160], 'placeholder': [0, 0, 0],
+                             'theme_hover_text': True, 'hover_text': [255, 255, 255]},
               'rows': ['common', 'modeling'], 'center_buttons': {
                   'LEFTMOUSE': 'views', 'MIDDLEMOUSE': 'views', 'RIGHTMOUSE': 'views'}},
               'settings mutation or canonical row ordering failed')

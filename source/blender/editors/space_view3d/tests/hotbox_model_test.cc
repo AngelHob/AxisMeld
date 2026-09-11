@@ -36,10 +36,48 @@ TEST(hotbox_model, ValidSnapshotOwnsDataAndNormalizesNull)
   EXPECT_TRUE(parse_menu_snapshot(snapshot(), out, error));
   EXPECT_EQ(out.generation, 7);
   EXPECT_EQ(out.transparency, 25);
+  EXPECT_EQ(out.appearance.brightness, -13);
+  EXPECT_TRUE(out.appearance.theme_background);
   ASSERT_EQ(out.menus.size(), 4);
   EXPECT_EQ(out.menus[2].children[0].id, "views");
   EXPECT_TRUE(out.center_buttons[0].empty());
   EXPECT_EQ(out.center_buttons[2], "views");
+}
+
+TEST(hotbox_model, OptionalAppearanceAcceptsValidColorsAndRejectsMalformedValuesAtomically)
+{
+  const auto with_appearance = [](const std::string &appearance) {
+    return replace(
+        snapshot(), "\"style\":\"rows\"", "\"appearance\":" + appearance + ",\"style\":\"rows\"");
+  };
+  MenuSnapshot out{};
+  std::string error;
+  EXPECT_TRUE(parse_menu_snapshot(
+      with_appearance(
+          R"({"theme_background":false,"background":[40,50,60],"brightness":-13,"text":[160,160,160],"placeholder":[0,0,0],"theme_hover_text":false,"hover_text":[200,210,220]})"),
+      out,
+      error));
+  EXPECT_FALSE(out.appearance.theme_background);
+  EXPECT_EQ(out.appearance.background, (std::array<int, 3>{40, 50, 60}));
+  EXPECT_FALSE(out.appearance.theme_hover_text);
+  EXPECT_EQ(out.appearance.hover_text, (std::array<int, 3>{200, 210, 220}));
+  for (const std::string appearance : {R"({"text":[-1,0,0]})",
+                                       R"({"text":[0,0]})",
+                                       R"({"text":[true,0,0]})",
+                                       R"({"text":[0.5,0,0]})",
+                                       R"({"brightness":129})",
+                                       R"({"brightness":true})",
+                                       R"({"text":[256,0,0]})",
+                                       R"({"brightness":-129})",
+                                       R"({"brightness":1.5})",
+                                       R"({"theme_background":1})",
+                                       R"({"unknown":0})",
+                                       "null"})
+  {
+    out.generation = 99;
+    EXPECT_FALSE(parse_menu_snapshot(with_appearance(appearance), out, error));
+    EXPECT_EQ(out.generation, 99);
+  }
 }
 
 TEST(hotbox_model, SelectionActionsUseLiteralRegisteredIdsAndUnknownRemainsAtomic)

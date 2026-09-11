@@ -13,12 +13,18 @@ from .hotbox_catalog import default_catalog
 HOTBOX_PROFILE_FILENAMES = ('hotbox_studio.json', 'hotbox_user.json')
 CANONICAL_ROWS = ('common', 'pane', 'modeling')
 MOUSE_BUTTONS = ('LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE')
-SETTING_KEYS = frozenset({'style', 'transparency', 'rows', 'center_buttons'})
+DEFAULT_APPEARANCE = {
+    'theme_background': True, 'background': [64, 64, 64], 'brightness': -13,
+    'text': [160, 160, 160], 'placeholder': [0, 0, 0],
+    'theme_hover_text': True, 'hover_text': [255, 255, 255],
+}
+SETTING_KEYS = frozenset({'style', 'transparency', 'rows', 'center_buttons', 'appearance'})
 DEFAULT_SETTINGS = {
     'style': 'rows',
     'transparency': 25,
     'rows': list(CANONICAL_ROWS),
     'center_buttons': {button: 'views' for button in MOUSE_BUTTONS},
+    'appearance': deepcopy(DEFAULT_APPEARANCE),
 }
 
 
@@ -56,6 +62,22 @@ def _validate_center_buttons(center_buttons, *, partial):
             raise ValueError(f'{button} must reference a menu ID or null')
 
 
+def validate_appearance(appearance, *, partial=False):
+    if not isinstance(appearance, dict) or (set(appearance) - DEFAULT_APPEARANCE.keys() if partial
+                                           else set(appearance) != DEFAULT_APPEARANCE.keys()):
+        raise ValueError('appearance contains unknown or missing fields')
+    for key, value in appearance.items():
+        if key in {'theme_background', 'theme_hover_text'}:
+            if type(value) is not bool:
+                raise ValueError(f'{key} must be a boolean')
+        elif key == 'brightness':
+            if type(value) is not int or not -128 <= value <= 128:
+                raise ValueError('brightness must be an integer from -128 to 128')
+        elif (not isinstance(value, list) or len(value) != 3 or
+              any(type(channel) is not int or not 0 <= channel <= 255 for channel in value)):
+            raise ValueError(f'{key} must be three integer RGB channels from 0 to 255')
+
+
 def validate_settings(settings):
     """Validate a fully resolved settings object and return it unchanged."""
     if not isinstance(settings, dict) or set(settings) != SETTING_KEYS:
@@ -67,6 +89,7 @@ def validate_settings(settings):
         raise ValueError('transparency must be 0, 25, 50, 75 or 100')
     _validate_rows(settings['rows'])
     _validate_center_buttons(settings['center_buttons'], partial=False)
+    validate_appearance(settings['appearance'])
     return settings
 
 
@@ -89,13 +112,15 @@ def _validate_layer_document(document):
         _validate_rows(settings['rows'])
     if 'center_buttons' in settings:
         _validate_center_buttons(settings['center_buttons'], partial=True)
+    if 'appearance' in settings:
+        validate_appearance(settings['appearance'], partial=True)
 
 
 def apply_validated_layer(base, patch, validate=validate_settings):
     """Apply one already-schema-checked layer to a copy, then validate it."""
     candidate = deepcopy(base)
     for key, value in patch.get('settings', {}).items():
-        if key == 'center_buttons':
+        if key in {'center_buttons', 'appearance'}:
             candidate['settings'][key].update(value)
         else:
             candidate['settings'][key] = deepcopy(value)
@@ -164,6 +189,10 @@ def _settings_delta(base, settings):
                if settings['center_buttons'][button] != base['center_buttons'][button]}
     if buttons:
         delta['center_buttons'] = buttons
+    appearance = {key: deepcopy(value) for key, value in settings['appearance'].items()
+                  if value != base['appearance'][key]}
+    if appearance:
+        delta['appearance'] = appearance
     return delta
 
 

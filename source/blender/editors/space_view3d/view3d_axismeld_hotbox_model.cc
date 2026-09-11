@@ -60,6 +60,61 @@ bool setting_value(const std::string &command, const std::string &value)
          value == "toggle";
 }
 
+bool appearance(const DictionaryValue &dict, MenuAppearance &out)
+{
+  if (!fields(&dict,
+              {},
+              {"theme_background",
+               "background",
+               "brightness",
+               "text",
+               "placeholder",
+               "theme_hover_text",
+               "hover_text"}))
+  {
+    return false;
+  }
+  for (const auto &[key, target] : {std::pair{"theme_background", &out.theme_background},
+                                    std::pair{"theme_hover_text", &out.theme_hover_text}})
+  {
+    if (dict.lookup(key)) {
+      const auto value = dict.lookup_bool(key);
+      if (!value) {
+        return false;
+      }
+      *target = *value;
+    }
+  }
+  if (dict.lookup("brightness")) {
+    const auto value = dict.lookup_int("brightness");
+    if (!value || *value < -128 || *value > 128) {
+      return false;
+    }
+    out.brightness = int(*value);
+  }
+  for (const auto &[key, target] : {std::pair{"background", &out.background},
+                                    std::pair{"text", &out.text},
+                                    std::pair{"placeholder", &out.placeholder},
+                                    std::pair{"hover_text", &out.hover_text}})
+  {
+    if (!dict.lookup(key)) {
+      continue;
+    }
+    const auto *channels = dict.lookup_array(key);
+    if (!channels || channels->elements().size() != 3) {
+      return false;
+    }
+    for (int i = 0; i < 3; i++) {
+      const auto *value = channels->elements()[i]->as_int_value();
+      if (!value || value->value() < 0 || value->value() > 255) {
+        return false;
+      }
+      (*target)[i] = int(value->value());
+    }
+  }
+  return true;
+}
+
 const std::unordered_set<std::string> commands = {"tool.select",
                                                   "transform.move",
                                                   "transform.rotate",
@@ -193,9 +248,15 @@ bool parse_menu_snapshot(const std::string_view json, MenuSnapshot &out, std::st
   const auto *settings = dict->lookup_dict("settings");
   const auto *menus = dict->lookup_array("menus");
   if (!schema || *schema != 1 || !generation || *generation <= 0 || !menus ||
-      !fields(settings, {"style", "transparency", "rows", "center_buttons"}))
+      !fields(settings, {"style", "transparency", "rows", "center_buttons"}, {"appearance"}))
     return false;
   MenuSnapshot next{};
+  if (settings->lookup("appearance")) {
+    const auto *value = settings->lookup_dict("appearance");
+    if (!value || !appearance(*value, next.appearance)) {
+      return false;
+    }
+  }
   next.generation = *generation;
   const auto transparency = settings->lookup_int("transparency");
   const auto *rows = settings->lookup_array("rows");

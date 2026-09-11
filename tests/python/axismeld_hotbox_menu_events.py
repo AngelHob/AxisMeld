@@ -120,7 +120,7 @@ def suite():
         xx, yy = int(left + widths[0]/2), int(cy + 86*scale)
         backdrop = sum(b[(yy*width+xx)*4:(yy*width+xx)*4+3])/3
         print('PRIMARY_IDLE_BACKDROP', backdrop, flush=True)
-        check(.38 < backdrop < .42, 'primary idle backdrop must preserve the original theme .4 without brightening')
+        check(.33 < backdrop < .37, 'primary idle backdrop must darken theme .4 by 13/255 by default')
         print('PRIMARY_TEXT_INK', 'placeholder', placeholder, 'normal', normal, flush=True)
         check(.60 < normal < .65, 'primary normal label must be visible medium grey, not theme white')
         check(placeholder < .08, 'primary placeholder label must be opaque black')

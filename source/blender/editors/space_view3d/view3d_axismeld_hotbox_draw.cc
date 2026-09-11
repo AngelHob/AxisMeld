@@ -179,6 +179,13 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
       background[i] = inner[i] / 255.0f;
       border[i] = outline[i] / 255.0f;
     }
+    const MenuAppearance &appearance = data.snapshot.appearance;
+    if (!selected) {
+      for (int i = 0; i < 3; i++) {
+        const int channel = appearance.theme_background ? inner[i] : appearance.background[i];
+        background[i] = std::clamp(channel + appearance.brightness, 0, 255) / 255.0f;
+      }
+    }
     background[3] *= 1 - data.snapshot.transparency / 100.0f;
     border[3] *= 1 - data.snapshot.transparency / 100.0f;
     const rctf bounds = {
@@ -234,11 +241,20 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
                        nullptr);
     }
     if (entry.placeholder) {
-      color[0] = color[1] = color[2] = 0;
+      for (int i = 0; i < 3; i++) {
+        color[i] = uchar(appearance.placeholder[i]);
+      }
       color[3] = 255;
     }
     else if (!selected) {
-      color[0] = color[1] = color[2] = 160;
+      for (int i = 0; i < 3; i++) {
+        color[i] = uchar(appearance.text[i]);
+      }
+    }
+    else if (!appearance.theme_hover_text) {
+      for (int i = 0; i < 3; i++) {
+        color[i] = uchar(appearance.hover_text[i]);
+      }
     }
     const rcti text_rect = {int(left + icon_width),
                             int(left + icon_width + text_width + 1),
