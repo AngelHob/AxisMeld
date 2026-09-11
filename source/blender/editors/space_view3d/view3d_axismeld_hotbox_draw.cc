@@ -166,10 +166,10 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
   ui::draw_roundbox_corner_set(ui::CNR_ALL);
   for (const Entry &entry : entries) {
     const MenuRect &r = entry.rect;
-    if (r.native_menu) {
+    if (r.native_menu && !r.native_menu_standalone) {
       continue;
     }
-    const bool selected = entry.selected && !entry.disabled;
+    const bool selected = entry.selected && !entry.disabled && !r.native_menu;
     const uiWidgetColors &colors = r.depth > 0 ? theme.wcol_menu_item : theme.wcol_menu;
     const uchar *inner = selected    ? colors.inner_sel :
                          r.depth > 0 ? theme.wcol_menu_back.inner :
@@ -194,6 +194,9 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
         r.x * scale, (r.x + r.width) * scale, r.y * scale, (r.y + r.height) * scale};
     ui::draw_roundbox_4fv_ex(
         &bounds, background, nullptr, 1.0f, border, scale, colors.roundness * 20 * scale);
+    if (r.native_menu) {
+      continue;  // Native menu text, arrow and hover are drawn over this shared backdrop below.
+    }
     if (entry.separator) {
       float line[4];
       for (int i = 0; i < 4; i++) {
@@ -283,7 +286,7 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
   }
   for (const auto &[depth, blocks] : menu_levels) {
     for (const NativeBlock &block : blocks) {
-      ui::menu_overlay_draw(C, block.items);
+      ui::menu_overlay_draw(C, block.items, !block.standalone);
     }
   }
   if (!data.marking) {

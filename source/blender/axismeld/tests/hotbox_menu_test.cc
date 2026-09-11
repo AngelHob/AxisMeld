@@ -141,6 +141,38 @@ TEST(axismeld_hotbox_menu, SecondaryCommandsOccupyAnEllipseInsteadOfAColumn)
   EXPECT_GE(centers_y.size(), 3);
 }
 
+TEST(axismeld_hotbox_menu, EqualWidthRingExposesExtendedEdgesWithoutOverlap)
+{
+  const auto snapshot = default_snapshot();
+  auto widths = measured(snapshot);
+  widths["views.perspective"] = 104;
+  widths["views.front"] = 25;
+  widths["center.controls.buttons"] = 151;
+  for (const std::vector<std::string> path :
+       {std::vector<std::string>{"center", "views"}, std::vector<std::string>{"center.controls"}})
+  {
+    const auto layout = layout_menu(snapshot, 1920, 1080, 960, 540, path, {}, widths);
+    ASSERT_TRUE(layout.supported);
+    const float want = path.back() == "views" ? 120 : 211;
+    for (const auto &item : layout.rects) {
+      if (item.depth != 1 || item.id.starts_with("@") || item.id == "views.style") {
+        continue;
+      }
+      EXPECT_FLOAT_EQ(item.width, want) << item.id;
+      for (const float dx : {2.0f, want - 2.0f}) {
+        const auto *hit = hit_menu_rect(layout, item.x + dx, item.y + 12);
+        ASSERT_NE(hit, nullptr) << item.id;
+        EXPECT_EQ(hit->id, item.id);
+      }
+      for (const auto &other : layout.rects) {
+        if (other.depth == item.depth && &other != &item) {
+          EXPECT_TRUE(separated_by(item, other, 3.99f)) << item.id << ":" << other.id;
+        }
+      }
+    }
+  }
+}
+
 TEST(axismeld_hotbox_menu, CompactSecondaryHitTargetsDoNotInheritPrimaryPadding)
 {
   const auto snapshot = default_snapshot();
@@ -157,7 +189,8 @@ TEST(axismeld_hotbox_menu, CompactSecondaryHitTargetsDoNotInheritPrimaryPadding)
       }
       EXPECT_FLOAT_EQ(item.height, 24);
       if (!item.id.starts_with("@")) {
-        EXPECT_FLOAT_EQ(item.width, widths.at(item.id) + (item.native_menu ? 60 : 16)) << item.id;
+        EXPECT_FLOAT_EQ(item.width, item.id == "views.style" ? 140 : 96) << item.id;
+        EXPECT_GE(item.width, widths.at(item.id) + (item.native_menu ? 60 : 16)) << item.id;
       }
       const float x = item.x + item.width / 2, y = item.y + item.height / 2;
       const auto *hit = hit_menu_rect(layout, x, y);
@@ -674,15 +707,15 @@ TEST(axismeld_hotbox_menu, NarrowStylePopupDoesNotCoverItsEntry)
   }
 }
 
-TEST(axismeld_hotbox_menu, TighterViewRingExposesNearerTargetsWithoutOverlap)
+TEST(axismeld_hotbox_menu, UniformViewRingKeepsCompactSpacingWithoutOverlap)
 {
   const auto snapshot = default_snapshot();
   const auto layout = layout_menu(
       snapshot, 1920, 1080, 960, 540, {"center", "views"}, {}, measured(snapshot));
   ASSERT_TRUE(layout.supported);
-  // A shorter horizontal reach must acquire the now-visible Right View button,
-  // not remain in the old ring's empty corridor.
-  EXPECT_EQ(hit_menu(layout, 1050, 540), "views.side");
+  const auto *side = rect(layout, "views.side");
+  ASSERT_NE(side, nullptr);
+  EXPECT_EQ(hit_menu(layout, side->x + 2, side->y + 12), "views.side");
   const auto *style = rect(layout, "views.style"), *front = rect(layout, "views.front");
   ASSERT_NE(style, nullptr);
   ASSERT_NE(front, nullptr);
@@ -1001,7 +1034,8 @@ TEST(axismeld_hotbox_menu, QuadSevenViewsAndCompactRootGroupsRemainReachable)
                 item.interactive ? item.id : "");
     }
   }
-  EXPECT_EQ(count, 8);  // The tighter ring now fits the complete overlay in this fixture.
+  EXPECT_EQ(count, 7);  // Equal widths use compact labels while retaining the Style entry.
+  EXPECT_EQ(rect(views, "views.camera"), nullptr);
   EXPECT_NE(rect(views, "views.style"), nullptr);
   EXPECT_EQ(rect(views, "@back:views"), nullptr);
   EXPECT_NE(rect(views, "views"), nullptr);

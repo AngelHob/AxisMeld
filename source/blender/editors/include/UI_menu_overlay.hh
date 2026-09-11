@@ -21,6 +21,8 @@ struct MenuOverlayItem {
 /** Draw native menu components without registering blocks or input handlers.
  * The caller owns hit testing, input and lifetime. Rows must form a contiguous menu.
  */
-void menu_overlay_draw(const bContext *C, Span<MenuOverlayItem> items);
+void menu_overlay_draw(const bContext *C,
+                       Span<MenuOverlayItem> items,
+                       bool draw_background = true);
 }  // namespace ui
 }  // namespace blender

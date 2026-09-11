@@ -14,11 +14,12 @@ def view_page(anchor, labels, measure, bounds, scale):
     diagonal = math.sqrt(.5)
     slots = [(0, 1), (1, 0), (diagonal, -diagonal), (0, -1),
              (-diagonal, -diagonal), (-1, 0), (-diagonal, diagonal), (diagonal, diagonal)]
-    for compact in (False, True):
+    for compact, with_style in ((False, True), (True, True), (True, False)):
         names = (['Persp', 'Side', 'Bottom', 'Front', 'Back', 'Top', 'Left'] if compact else
                  ['Perspective View', 'Right View', 'Bottom View', 'Front View',
                   'Back View', 'Top View', 'Left View', 'New Camera'])
         widths = [measure(label) + 16 for label in names]
+        widths = [max(widths)] * len(widths)
         for ry in range(24, int(bh)):
             rectangles = [(-aw/2, -19, aw, 38)]  # Reserved hole, never a secondary button.
             clear = True
@@ -28,7 +29,7 @@ def view_page(anchor, labels, measure, bounds, scale):
                              y+24+3.999 <= oy or oy+oh+3.999 <= y
                              for ox, oy, ow, oh in rectangles)
                 rectangles.append((x, y, w, 24))
-            if not compact:
+            if with_style:
                 w = measure('Hotbox Style') + 60
                 rectangles.append((-w/2, min(r[1] for r in rectangles)-28, w, 24))
             left = min(r[0] for r in rectangles)
@@ -50,7 +51,8 @@ def view_page(anchor, labels, measure, bounds, scale):
                 result['items'][i] = translated(rectangles[i+1])
             if not compact:
                 result['items'][9] = translated(rectangles[8])
-                result['items'][8] = translated(rectangles[9])
+            if with_style:
+                result['items'][8] = translated(rectangles[-1])
             return result
     raise AssertionError(f'view fixture cannot fit in {bounds!r}')
 
@@ -167,7 +169,7 @@ def ellipse_page(anchor, labels, measure, bounds, scale=1, first=0, views=False)
             result = {'items': [None]*len(labels), 'back': translated(rectangles[0]),
                       'previous': None, 'next': None, 'capacity': capacity, 'first': offset}
             for index, rectangle in zip(indices, rectangles[1:]):
-                value = translated(rectangle, 38 if index < 0 else widths[index])
+                value = translated(rectangle, 38 if index < 0 else max(widths))
                 if index < 0:
                     result['previous' if index == -1 else 'next'] = value
                 else:

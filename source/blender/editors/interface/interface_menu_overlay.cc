@@ -9,7 +9,9 @@
 #include "interface_intern.hh"
 
 namespace blender::ui {
-void menu_overlay_draw(const bContext *C, const Span<MenuOverlayItem> items)
+void menu_overlay_draw(const bContext *C,
+                       const Span<MenuOverlayItem> items,
+                       const bool draw_background)
 {
   if (items.is_empty()) {
     return;
@@ -66,6 +68,10 @@ void menu_overlay_draw(const bContext *C, const Span<MenuOverlayItem> items)
   }
   block_bounds_set_normal(block, 0);
   block_end(C, block);
+  if (!draw_background) {
+    // The caller supplies a shared hotbox backdrop; keep native text, arrows and hover.
+    block->flag &= ~BLOCK_LOOP;
+  }
   block_draw(C, block);
   block_free(C, block);
 }

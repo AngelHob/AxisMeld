@@ -292,6 +292,12 @@ class LayoutBuilder {
   {
     const float center_width = anchor.width;
     const float center_height = view_ring ? row_height : secondary_height;
+    float button_width = reference_width;
+    for (const EllipseItem &item : items) {
+      if (item.node) {
+        button_width = std::max(button_width, item.width);
+      }
+    }
     std::vector<MenuRect> local;
     float left = 0, right = 0, bottom = 0, top = 0;
     bool found = false;
@@ -312,7 +318,7 @@ class LayoutBuilder {
       bottom = center.y;
       top = center.y + center.height;
       for (const EllipseItem &item : items) {
-        const float fit_width = item.node && !item.direction ? reference_width : item.width;
+        const float fit_width = item.node ? button_width : item.width;
         const MenuRect candidate{item.id,
                                  item.nx * rx - fit_width / 2,
                                  item.ny * ry - secondary_height / 2,
@@ -366,11 +372,6 @@ class LayoutBuilder {
     std::erase_if(result.rects, [](const MenuRect &item) { return item.depth > 0; });
     for (int i = view_ring ? 1 : 0; i < int(local.size()); i++) {
       MenuRect item = local[i];
-      if (i > 0 && i <= int(items.size())) {
-        const float natural_width = items[i - 1].width;
-        item.x += (item.width - natural_width) / 2;
-        item.width = natural_width;
-      }
       item.x += cx;
       item.y += cy;
       item.native_menu = native_list(item.id);
@@ -471,7 +472,8 @@ class LayoutBuilder {
         }
       }
       result.supported &= items.size() == 7 &&
-                          ellipse(owner, anchor, depth, items, 0, nullptr, true, true);
+                          (ellipse(owner, anchor, depth, items, 0, style, true, true) ||
+                           ellipse(owner, anchor, depth, items, 0, nullptr, true, true));
       return;
     }
     if (native_list(owner.id)) {

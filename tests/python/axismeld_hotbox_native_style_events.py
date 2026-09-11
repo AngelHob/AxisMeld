@@ -421,6 +421,10 @@ def mapping_suite():
 
             primary = background_sample(primary_path, control)
             secondary = background_sample(secondary_path, views['items'][0])
+            menu_entry = background_sample(secondary_path, views['items'][8])
+            print('FEEDBACK_ENTRY_BACKGROUND', menu_entry, secondary, flush=True)
+            check(max(abs(a-b) for a, b in zip(menu_entry, secondary)) < .025,
+                  'standalone native menu entry does not share the secondary hotbox grey')
             print('FEEDBACK_BACKGROUND', primary, secondary, flush=True)
             check(max(secondary)-min(secondary) < .02 and
                   sum(secondary)/3 >= sum(primary)/3 + .08,
