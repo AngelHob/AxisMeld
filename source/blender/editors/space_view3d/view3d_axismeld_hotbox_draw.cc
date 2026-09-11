@@ -110,7 +110,7 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
   struct Entry {
     MenuRect rect;
     std::string text;
-    bool selected, disabled, separator;
+    bool selected, disabled, separator, placeholder;
     int icon = ICON_NONE;
   };
   std::vector<Entry> entries;
@@ -133,6 +133,7 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
                          selected,
                          !rect.interactive,
                          node && node->kind == MenuKind::Separator,
+                         node && node->kind == MenuKind::Disabled,
                          back                 ? ICON_BACK :
                          rect.direction_label ? ICON_NONE :
                          node                 ? menu_icon(*node) :
@@ -231,6 +232,13 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
                        color,
                        false,
                        nullptr);
+    }
+    if (entry.placeholder) {
+      color[0] = color[1] = color[2] = 0;
+      color[3] = 255;
+    }
+    else if (!selected) {
+      color[0] = color[1] = color[2] = 160;
     }
     const rcti text_rect = {int(left + icon_width),
                             int(left + icon_width + text_width + 1),
