@@ -25,9 +25,9 @@ def run():
 
     from axismeld import hotbox_runtime, runtime
     baseline = json.loads(hotbox_runtime.snapshot(bpy.context))
-    check(baseline['settings']['transparency'] == 75 and
-          bpy.context.window_manager.keyconfigs.active.preferences.hotbox_transparency == '75',
-          'fresh installed profile and preferences must start at 75 percent transparency')
+    check(baseline['settings']['transparency'] == 25 and
+          bpy.context.window_manager.keyconfigs.active.preferences.hotbox_transparency == '25',
+          'fresh installed profile and preferences must start at 75 percent opacity')
     directory = runtime.profile_directory()
     check(directory.resolve().is_relative_to(root), 'profile directory escaped private root')
     directory.mkdir(parents=True, exist_ok=True)
@@ -36,16 +36,16 @@ def run():
     (directory / 'hotbox_studio.json').write_text(json.dumps({
         'schema_version': 1, 'settings': {'style': 'zones', 'transparency': 50}}), encoding='utf-8')
     (directory / 'hotbox_user.json').write_text(json.dumps({
-        'schema_version': 1, 'settings': {'transparency': 25}}), encoding='utf-8')
+        'schema_version': 1, 'settings': {'transparency': 75}}), encoding='utf-8')
     config = runtime.load()
     move = next(item.type for item in config.keymaps['Mesh'].keymap_items
                 if item.idname == 'axismeld.command' and item.properties.command == 'transform.move')
     first = json.loads(hotbox_runtime.snapshot(bpy.context))
     check(move == 'T', 'schema-1 keybinding edit was not preserved')
-    check(first['settings']['style'] == 'zones' and first['settings']['transparency'] == 25,
+    check(first['settings']['style'] == 'zones' and first['settings']['transparency'] == 75,
           'installed hotbox layers did not resolve')
     check(config.preferences.hotbox_style == 'zones' and
-          config.preferences.hotbox_transparency == '25', 'preferences did not show effective settings')
+          config.preferences.hotbox_transparency == '75', 'preferences did not show effective settings')
 
     # The native Controls operator and preference callback share one persisted mutation path.
     hotbox_runtime.reload_settings(bpy.context, session={
@@ -54,7 +54,7 @@ def run():
           {'FINISHED'}, 'Controls setting failed')
     user = json.loads((directory / 'hotbox_user.json').read_text(encoding='utf-8'))
     check(user == {'schema_version': 1, 'settings': {
-        'center_buttons': {'RIGHTMOUSE': 'pane.shading'}, 'transparency': 25}},
+        'center_buttons': {'RIGHTMOUSE': 'pane.shading'}, 'transparency': 75}},
         f'one persisted setting leaked another session field: {user!r}')
     config.preferences.hotbox_style = 'center'
     user = json.loads((directory / 'hotbox_user.json').read_text(encoding='utf-8'))

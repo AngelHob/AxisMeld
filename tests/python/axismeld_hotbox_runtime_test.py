@@ -103,14 +103,14 @@ class SessionSettingsTest(unittest.TestCase):
         context = self.context()
         hotbox_runtime.reload_settings(context, session={
             'schema_version': 1, 'settings': {'style': 'zones'}})
-        hotbox_runtime.apply_setting(context, 'transparency', '25')
+        hotbox_runtime.apply_setting(context, 'transparency', '75')
         hotbox_runtime.reload_settings(context)
         self.assertEqual(hotbox_runtime.current_settings()['style'], 'zones')
-        self.assertEqual(hotbox_runtime.current_settings()['transparency'], 25)
+        self.assertEqual(hotbox_runtime.current_settings()['transparency'], 75)
         hotbox_runtime.reload_settings(context, session={
             'schema_version': 1, 'settings': {}})
         self.assertEqual(hotbox_runtime.current_settings()['style'], 'rows')
-        self.assertEqual(hotbox_runtime.current_settings()['transparency'], 75)
+        self.assertEqual(hotbox_runtime.current_settings()['transparency'], 25)
 
     def test_invalid_explicit_session_keeps_previous_valid_layer(self):
         context = self.context()

@@ -179,6 +179,12 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
       background[i] = inner[i] / 255.0f;
       border[i] = outline[i] / 255.0f;
     }
+    if (!selected) {
+      /* Lift only the primary idle fill; retain native hover and secondary styling. */
+      for (int i = 0; i < 3; i++) {
+        background[i] = std::min(background[i] + 0.08f, 1.0f);
+      }
+    }
     background[3] *= 1 - data.snapshot.transparency / 100.0f;
     border[3] *= 1 - data.snapshot.transparency / 100.0f;
     const rctf bounds = {

@@ -435,7 +435,8 @@ def mapping_suite():
                                                 page['items'][1])
             yield from close_box()
             theme.wcol_menu_back.inner = (.8, .12, .04, .2)
-            for transparency in (() if feedback_probe == 'separator' else (0, 75, 100)):
+            translucent_primaries = {}
+            for transparency in (() if feedback_probe == 'separator' else (0, 25, 75, 100)):
                 hotbox_runtime.reload_settings(bpy.context, session={
                     'schema_version': 1, 'settings': {'transparency': transparency}})
                 event('MOUSEMOVE', 'NOTHING', (cx, cy))
@@ -445,13 +446,15 @@ def mapping_suite():
                 check_labels(primary_path, {'items': [control]}, ['Hotbox Controls'],
                              f'root transparency {transparency}')
                 primary = background_sample(primary_path, control)
-                if transparency == 75:
-                    translucent_primary = primary
+                if transparency in {25, 75}:
+                    translucent_primaries[transparency] = primary
                 if transparency == 100:
                     # Alpha blending is independently checked from opaque and clear captures.
-                    expected = tuple(a*.25 + b*.75 for a, b in zip(opaque_primary, primary))
-                    check(max(abs(a-b) for a, b in zip(translucent_primary, expected)) < .025,
-                          'primary transparency is not 75 percent while foreground remains visible')
+                    for amount, rendered in translucent_primaries.items():
+                        alpha = amount/100
+                        expected = tuple(a*(1-alpha) + b*alpha for a, b in zip(opaque_primary, primary))
+                        check(max(abs(a-b) for a, b in zip(rendered, expected)) < .025,
+                              f'primary transparency is not {amount} percent while foreground remains visible')
                 event('RIGHTMOUSE')
                 yield from settle(8)
                 path = screenshot(f'opacity-secondary-{transparency}.png')

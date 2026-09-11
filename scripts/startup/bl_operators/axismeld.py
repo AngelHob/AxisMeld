@@ -134,7 +134,7 @@ class AXISMELD_Preferences(KeyConfigPreferences):
     hotbox_transparency: EnumProperty(
         name='Primary Hotbox Transparency', items=tuple((str(value), f'{value}%', '')
                                                 for value in (0, 25, 50, 75, 100)),
-        default='75', options={'SKIP_SAVE'},
+        default='25', options={'SKIP_SAVE'},
         description='Primary hotbox background only; secondary hotboxes and menus stay opaque',
         update=_hotbox_update('transparency', 'hotbox_transparency'))
     hotbox_row_common: BoolProperty(

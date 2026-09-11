@@ -56,7 +56,7 @@ def suite():
     primary_text_probe = bool(os.environ.get('AXISMELD_TEST_PRIMARY_TEXT'))
     if primary_text_probe:
         colors = bpy.context.preferences.themes[0].user_interface.wcol_menu
-        colors.inner = (.8, .8, .8, 1)
+        colors.inner = (.4, .4, .4, 1)
         colors.text = (.95, .95, .95)
         from axismeld import hotbox_runtime
         hotbox_runtime.reload_settings(bpy.context, session={
@@ -106,16 +106,23 @@ def suite():
         labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
         widths = [blf.dimensions(0, label)[0] + 40*scale for label in labels]
         left = cx - (sum(widths) + 60*scale)/2
-        def ink_floor(index):
+        def ink_range(index):
             center = left + sum(widths[:index]) + 10*scale*index + widths[index]/2
             half_text = blf.dimensions(0, labels[index])[0]/2
             rgb = [b[(yy*width+xx)*4:(yy*width+xx)*4+3]
                    for yy in range(int(cy+90*scale), int(cy+102*scale))
                    for xx in range(int(center-half_text), int(center+half_text))]
-            return min(sum(pixel)/3 for pixel in rgb)
-        placeholder, normal = ink_floor(0), ink_floor(3)
+            values = [sum(pixel)/3 for pixel in rgb]
+            return min(values), max(values)
+        # Black strokes are below the backdrop; grey strokes are above it.
+        placeholder, normal = ink_range(0)[0], ink_range(3)[1]
+        # Sample idle File backdrop below its text, away from rounded edges.
+        xx, yy = int(left + widths[0]/2), int(cy + 86*scale)
+        backdrop = sum(b[(yy*width+xx)*4:(yy*width+xx)*4+3])/3
+        print('PRIMARY_IDLE_BACKDROP', backdrop, flush=True)
+        check(.46 < backdrop < .50, 'primary idle backdrop must be slightly brighter than theme .4')
         print('PRIMARY_TEXT_INK', 'placeholder', placeholder, 'normal', normal, flush=True)
-        check(.35 < normal < .65, 'primary normal label must be medium grey, not theme white')
+        check(.60 < normal < .65, 'primary normal label must be visible medium grey, not theme white')
         check(placeholder < .08, 'primary placeholder label must be opaque black')
         bpy.data.images.remove(before)
         bpy.data.images.remove(after)

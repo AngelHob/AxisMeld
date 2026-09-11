@@ -16,7 +16,7 @@ MOUSE_BUTTONS = ('LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE')
 SETTING_KEYS = frozenset({'style', 'transparency', 'rows', 'center_buttons'})
 DEFAULT_SETTINGS = {
     'style': 'rows',
-    'transparency': 75,
+    'transparency': 25,
     'rows': list(CANONICAL_ROWS),
     'center_buttons': {button: 'views' for button in MOUSE_BUTTONS},
 }

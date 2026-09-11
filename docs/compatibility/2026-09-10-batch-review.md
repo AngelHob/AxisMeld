@@ -1,6 +1,26 @@
 # AxisMeld 五小时批次集中验收
 
-## 2026-09-11 一级文字配色与累计样式修正版（当前已安装）
+## 2026-09-11 一级底色提亮及75%不透明（已构建验证，等待关闭旧窗口安装）
+
+- 一级未悬停底色在主题RGB上各加0.08并钳制到1；悬停、边框、图标和灰色正常字/黑色占位字不变。
+- 默认Transparency=25，即75%不透明。二级及更深仍为原生Blender样式、完全不透明。
+- 新exe：`D:/source/AxisMeld-build/bin/Release/blender.exe`，SHA-256：
+  `0E3A16C9FFF91E74A9B75395466A27730410856213A836CEE8F69942835CC9F2`。
+- 原测试入口仍为下节旧版：检测到用户窗口运行，不关闭、不替换；安装时需一起复制exe、
+  `scripts/modules/axismeld/hotbox_profiles.py`和`scripts/startup/bl_operators/axismeld.py`。
+- 本轮个人hotbox_user.json为schema_version=1、settings空对象，无需改写；新默认将在新进程加载。
+
+验证：41项Python、5组CTest通过，构建日志`h5-primary-bright-build.log`。
+旧版默认/重置测试先失败，旧版真实GUI底色采样0.400失败；修正后约0.475，黑字0.047、灰字0.624。
+3组真实GUI（底色与文字、native-style、分层alpha）及release GUI、profiles集成全部通过。
+分层alpha覆盖Transparency=0/25/75/100，分别对比全透明/全不透明截图确认混合比例，
+并验证二级、原生菜单入口和深层菜单不受一级或主题alpha影响。静态复核通过。
+日志前缀`D:/source/AxisMeld-build/h5-primary-bright-`，`opacity.log`为标准native-style测试，
+实际分层透明度专项为`alpha.log`。测试复用既有blender-opacity-check.exe及安装运行库，
+通过源码资源路径加载最新Python模块；源码环境缺少Cycles插件警告不代表完整安装验收。
+未新增完整build目录，未关闭用户进程、未改个人设置、未推送或合并。手测重点仅为一级亮度是否合适。
+
+## 2026-09-11 一级文字配色与累计样式修正版（当前已安装旧版）
 
 原测试入口已更新：`D:/source/AxisMeld-build/phase2b-ui-test-install/blender.exe`。
 当前exe SHA-256：`94CA60DA90292699C00D71FDF0000734E8618F20CA4E52137465A0E82EE8AE88`。
