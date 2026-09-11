@@ -62,7 +62,7 @@ This is one coupled deliverable: Python capabilities, strict snapshot parser, na
 9. Settings/list menu children may initially contain a bounded subset plus explicit missing entries; do not invent new Maya directions. Blender-only orientation View may live in Axis/Custom Axis normal settings, clearly named View (Blender), never taking a Maya marking slot.
 10. New commands are registered in COMMANDS, runtime allowlist, catalog policy and native parser together, initially without new default keys. `status='adapted'` with concrete differences. Selection actions preserve native child undo and FINISHED/CANCELLED/PASS_THROUGH. No global wrapper UNDO. Display active setting state if adding checked metadata; otherwise report missing check marks as a UI limitation rather than false state.
 
-- [ ] **Step 1: Write focused failing behavioral tests.**
+- [x] **Step 1: Write focused failing behavioral tests.**
 
 Example pure test shape (use the actual exported catalog helper after choosing its stable name):
 ```python
@@ -77,13 +77,13 @@ self.assertEqual({n['direction']: n['label'] for n in nodes['tools.move']['child
 ```
 Add serializer/parser rejection and behavior tests: invalid direction, duplicate direction, old snapshot accepted, malformed snapshot rejected without mutation. Layout tests use literal expected directional sides, equal dimensions, no center target, retained parent and blocked unrelated background hits for a native child.
 
-- [ ] **Step 2: Run tests and capture expected RED.**
+- [x] **Step 2: Run tests and capture expected RED.**
 ```powershell
 & C:/Python314/python.exe -m unittest discover -s tests/python -p axismeld_tool_hotbox_test.py
 ```
 Expected missing tool roots / unsupported metadata assertion; avoid import-error-only proof.
 
-- [ ] **Step 3: Add minimal catalog and adapters, then native integration.**
+- [x] **Step 3: Add minimal catalog and adapters, then native integration.**
 Use the existing semantic dispatch:
 ```python
 # keyboard invocation only; menu/EXEC never enters this branch
@@ -95,7 +95,7 @@ return result
 ```
 Determine `keyboard_tool_session` from the invoking event in the wrapper (not from `invoke=True` alone, because menu replay uses that). Register native property with hidden/skip-save flags. Before adding the modal, check existing modal/UI handlers. Keep invisible armed state out of layout/draw; initialize displayed root only on owned LMB. Share existing source-live checks, close guard, renderer and list hit isolation.
 
-- [ ] **Step 4: Run GREEN and real GUI event sequences.**
+- [x] **Step 4: Run GREEN and real GUI event sequences.**
 Use `win.event_simulate` following the isolated existing event suites:
 ```python
 win.event_simulate(type='W', value='PRESS', x=cx, y=cy)
@@ -107,7 +107,7 @@ yield from settle()
 ```
 Test all four tools, tap/no popup, actual alternate tool selection, trigger-first cancel, Esc with held mouse/key, auto repeat, modifier navigation, remapped key, scene changes, Object/Edit, single/quad, disabled target no execution, Space regression and W/E/R after closing without moving mouse. Use private factory scenes and never user configuration. Save actual screenshots for root ring and native child for visual review.
 
-- [ ] **Step 5: Build, verify, self-review and commit.**
+- [x] **Step 5: Build, verify, self-review and commit.**
 ```powershell
 & 'C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe' --build D:/source/AxisMeld-build --config Release --target blender editor_hotbox_hotbox_model_test axismeld_hotbox_menu_test -- /m:4
 & C:/Python314/python.exe -m unittest discover -s tests/python -p 'axismeld_*test.py'
@@ -117,7 +117,9 @@ Use candidate `phase2b-ui-test-install/blender-opacity-check.exe` with source re
 
 ## Controller delivery checkpoint
 
-- [ ] Inspect task report, task-scoped review and any fixes; then whole-slice review.
-- [ ] Update Maya mapping / placeholder backlog and concentrated manual acceptance table.
-- [ ] Verify no running user Blender before updating existing installed executable and only changed bundled modules; retain fallback and hash personal files before/after. If running, keep candidate and ask user to exit without killing it.
-- [ ] Report precisely which M1 features work, remaining adaptation differences, and that M2/M3/UV are not completed.
+- [x] Inspect task report, task-scoped review and any fixes; then whole-slice review.
+- [x] Update Maya mapping / placeholder backlog and concentrated manual acceptance table.
+- [x] Verify no running user Blender before updating existing installed executable and only changed bundled modules; retain fallback and hash personal files before/after. If running, keep candidate and ask user to exit without killing it.
+- [x] Report precisely which M1 features work, remaining adaptation differences, and that M2/M3/UV are not completed.
+
+Delivery: see [M1 acceptance](../../compatibility/2026-09-11-m1-tool-hotboxes.md). Eight installed GUI suites passed; manual acceptance remains open. No merge or remote push was performed.

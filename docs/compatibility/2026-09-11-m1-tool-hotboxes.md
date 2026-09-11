@@ -1,6 +1,6 @@
 # M1 工具热盒集中验收
 
-状态：M1 候选已构建并进入审查，尚未更新用户测试程序。下表人工结果全部待测。
+状态：M1 已通过审查、更新原测试入口并完成安装态自动验证；下表人工结果全部待测。
 范围：[M1 实现计划](../superpowers/plans/2026-09-11-m1-tool-hotboxes.md)；
 功能对照与占位：[Maya 工具菜单对照](../maya-mapping/2026-09-11-tool-marking-menus.md)。
 
@@ -42,32 +42,34 @@
 ## 自动化与交付记录
 
 本批开始前：47 项 Python 基线通过，源码在隔离工作区；未发现运行中的 Blender。
-安装前必须再次核对进程状态；不能据启动时快照直接覆盖。
+安装前已再次核对，无运行中的 Blender；未终止任何用户进程。
 
 原测试入口：`D:/source/AxisMeld-build/phase2b-ui-test-install/blender.exe`。
 更新前 SHA256：`87C6A0989066AEF83E6047DD0CBFCE650DDF7C3BA970058AC6F81BA99F62A59B`。
 回退入口：`D:/source/AxisMeld-build/phase2b-roomy-test-install/blender.exe`。
 更新前回退 SHA256：`F84108D2F474ADF4FD804CBCC9FA16308FC3E22C7718C72082A85628502DE02F`。
-六个 portable 文件的 SHA256 已单独采集，交付时逐项比较。
+六个 portable 文件的 SHA256 在安装前后及全部 GUI 测试结束后逐项比较，6/6 未变；回退 exe 哈希未变。
 
-候选实现提交：`0b27a59ba1a`，校验修复：`89b6bba7273`。修复后候选 exe SHA256：
-`8760100020BBFD92035C1450DD5FCA966A37648645A9BA0099A41211744D6D0D`。
-主任务已独立比较候选与编译产物哈希，结果相同；工作树及差异检查干净。
+实现提交：`0b27a59ba1a`，校验修复：`89b6bba7273`，输入修复：`c7909d81507`。
+最终安装 exe SHA256：`97AEE90EF85872F9AF38EFD8C03576CB2DC44B5F3A8956553B8E5116C7876645`。
+已核对编译产物、候选和安装 exe 一致；只复制六个改动 Python 文件和 exe，模块逐文件哈希匹配，未新增整套安装。
 
 | 验证 | 当前证据 | 边界 |
 |---|---|---|
 | Python 全部 AxisMeld 单元测试 | 修复后实现者及主任务分别运行，52/52 通过 | 不等于实体键鼠验收 |
 | Native CTest | 实现者及主任务分别运行，5/5 目标通过；含 480×320 全树路径 | 不宣称所有极窄视口都已完善 |
-| 候选 GUI | tools、menus、native-style、release、selection、appearance 及独立 manipulator 回归通过 | source resources 环境；最后文字布局修订后重跑 tools 和 Native，安装版仍需独立回归 |
-| 截图 | 主任务查看最终工具环和普通子菜单：等宽、无中心按钮、父级可见、Keep Spacing 完整 | 不是 Maya Toolkit 所有变体的视觉一比一验收 |
+| 安装态 GUI | 清除源码资源覆盖后，tools、hotbox、menus、native-style、release、selection、appearance、manipulator 八组全部退出 0 且具备 PASS 标记 | 使用安装目录自带资源、私有 factory 配置；release 是同窗口专项，不宣称跨窗口全覆盖 |
+| 截图 | 主任务查看候选工具环、普通子菜单和安装版工具环：等宽、无中心按钮、父级可见、Keep Spacing 完整 | 不是 Maya Toolkit 所有变体的视觉一比一验收 |
 
 测试命令：`python -m unittest discover -s tests/python -p 'axismeld_*test.py'`；
 `ctest --test-dir D:/source/AxisMeld-build -C Release -R '^(axismeld_(hotbox_menu|hotbox_state|identity|transform_axis)|editor_hotbox_hotbox_model)$' --output-on-failure`；
 GUI 使用 `tests/python/axismeld_hotbox_ui_runner.py --blender <候选或安装exe> --suite <suite>`。
-日志位于 `D:/source/AxisMeld-build/m1-tools-*.log`；最终候选工具截图位于 `m1-tools-artifacts`。
+最终安装态日志：`D:/source/AxisMeld-build/m1-tools-installed-<suite>.log`；
+截图：`D:/source/AxisMeld-build/m1-tools-installed-artifacts`。实现、RED/GREEN 和审查修复详情见
+[实现报告](../superpowers/reviews/2026-09-11-m1-implementation-report.md)。
 
 候选使用源码资源时出现 Cycles 未加载和 libpng ICC 配置警告，报告中保留原文；
-安装版将使用自带资源独立核实，不能把环境警告隐藏为无噪声通过。
+安装版八组均未出现 Cycles 缺失提示；仍出现既有 PNG 警告及预期负向夹具警告，不声称输出无噪声。
 PNG 警告为 `libpng warning: iCCP: cHRM chunk does not match sRGB`，本批之前的
 `batch5h-mapping-gui-manipulator.log:17`、`batch5h-settings-manipulator.log:2` 已有相同文本；
 [Phase 2B 报告](phase-2b-report.md)也已记录。它指向 PNG 色彩元数据不匹配，具体资源文件
@@ -86,6 +88,6 @@ M2 上下文右键、M3 全部建模菜单/快捷键及 UV 尚不属于本批完
 - 窗口失焦后不再收到旧按键释放时，释放监听器残留；必须用“不补发旧 release”的用例验证清理。
 - 紧凑按钮的子菜单箭头挤占文字，导致 Keep Spacing 截短；除尺寸测试外需要检查实际渲染截图。
 - 审查发现径向菜单缺方向时两端仍接受、布局却拒绝；修复后两端拒绝，原生测试确认旧 generation 99 不被覆盖，普通旧快照仍兼容。见 `m1-tools-fix1-*-red/green.log`。
-- 整体审查指出重叠工具按键被旧释放监听阻止，以及边缘原点落入夹紧按钮后误提交；实现者已取得真实事件 RED，完成情况以最终修复和安装验证为准。
+- 整体审查指出重叠工具按键被旧释放监听阻止，以及边缘原点落入夹紧按钮后误提交；两项均取得真实 RED，修复复审通过。安装态验证覆盖原键/改键、两种释放顺序、旧鼠标/Space guard 阻挡，以及边缘原地和返回原点取消。
 
 这些记录用于保留失败证据；最终通过状态以本页交付记录为准，不将开发中某次通过等同于最终安装版通过。

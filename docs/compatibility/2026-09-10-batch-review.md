@@ -1,9 +1,11 @@
 # AxisMeld 五小时批次集中验收
 
-## 2026-09-11 热盒外观集中设置（当前已安装）
+最新测试入口与哈希见 [2026-09-11 M1 工具热盒验收](2026-09-11-m1-tool-hotboxes.md)。以下记录为此前批次。
+
+## 2026-09-11 热盒外观集中设置（已保留在后续版本）
 
 原测试入口：`D:/source/AxisMeld-build/phase2b-ui-test-install/blender.exe`。
-当前exe SHA-256：`87C6A0989066AEF83E6047DD0CBFCE650DDF7C3BA970058AC6F81BA99F62A59B`。
+本次外观批次交付时exe SHA-256：`87C6A0989066AEF83E6047DD0CBFCE650DDF7C3BA970058AC6F81BA99F62A59B`（历史值）。
 入口：Edit → Preferences → Keymap，选择AxisMeld Maya 2026，展开Preferences → Hotbox Appearance。
 
 | 控件 | 用途 / 默认 |
