@@ -6170,11 +6170,14 @@ static void draw_dialog_alert(Block *block, const rcti *rect)
   draw_roundbox_4fv(&line_rect, true, radius, color);
 }
 
-void draw_menu_back(uiStyle * /*style*/, Block *block, const rcti *rect)
+void draw_menu_back(uiStyle * /*style*/, Block *block, const rcti *rect, const bool force_opaque)
 {
   WidgetType *wt = widget_type(WidgetStyle::MenuBack);
 
   wt->state(wt, &STATE_INFO_NULL, EmbossType::Undefined);
+  if (force_opaque) {
+    wt->wcol.inner[3] = 255;
+  }
   if (block) {
     const float zoom = 1.0f / block->aspect;
     wt->draw_block(&wt->wcol,

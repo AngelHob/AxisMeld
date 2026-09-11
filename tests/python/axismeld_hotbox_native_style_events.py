@@ -391,10 +391,13 @@ def mapping_suite():
     if feedback_probe:
         check(layout_probe == 'standard', 'feedback probe requires its standard-view fixture')
         reset_settings()
-        if feedback_probe == 'contrast':
+        if feedback_probe in {'opacity', 'separator'}:
             theme = bpy.context.preferences.themes[0].user_interface
             theme.wcol_menu.inner = (.20, .20, .20, 1)
-            theme.wcol_menu_back.inner = (.12, .12, .12, 1)
+            theme.wcol_menu_back.inner = (.8, .12, .04, .2)
+            theme.wcol_menu_item.inner = (.1, .1, .1, 0)
+            theme.wcol_menu_item.text = (.9, .9, .9)
+            theme.wcol_menu_item.inner_sel = (.05, .2, .9, 1)
             hotbox_runtime.reload_settings(bpy.context, session={
                 'schema_version': 1, 'settings': {'transparency': 0}})
             event('MOUSEMOVE', 'NOTHING', (cx, cy))
@@ -411,25 +414,94 @@ def mapping_suite():
             def background_sample(path, rect):
                 image, pixels, width = image_pixels(path)
                 try:
-                    x, y, _w, _h = rect
+                    x, y, w, _h = rect
                     samples = [pixels[(yy*width+xx)*4:(yy*width+xx)*4+3]
                                for yy in range(int(y+4*scale), int(y+7*scale))
-                               for xx in range(int(x+8*scale), int(x+12*scale))]
+                               for xx in range(int(x+w/2-2*scale), int(x+w/2+2*scale))]
                     return tuple(sum(s[c] for s in samples)/len(samples) for c in range(3))
                 finally:
                     bpy.data.images.remove(image)
 
-            primary = background_sample(primary_path, control)
-            secondary = background_sample(secondary_path, views['items'][0])
-            menu_entry = background_sample(secondary_path, views['items'][8])
-            print('FEEDBACK_ENTRY_BACKGROUND', menu_entry, secondary, flush=True)
-            check(max(abs(a-b) for a, b in zip(menu_entry, secondary)) < .025,
-                  'standalone native menu entry does not share the secondary hotbox grey')
-            print('FEEDBACK_BACKGROUND', primary, secondary, flush=True)
-            check(max(secondary)-min(secondary) < .02 and
-                  sum(secondary)/3 >= sum(primary)/3 + .08,
-                  'secondary hotbox is not a visibly brighter neutral grey than primary')
+            opaque_primary = background_sample(primary_path, control)
             event('RIGHTMOUSE', 'RELEASE')
+            yield from close_box()
+            # Reference the actual native widget at full theme alpha (same display transform).
+            theme.wcol_menu_back.inner = (.8, .12, .04, 1)
+            owner, buttons, page = yield from open_mapping(0)
+            yield from move(page['items'][0])
+            reference = background_sample(screenshot('opacity-native-reference.png'), page['items'][1])
+            yield from move(page['items'][1])
+            hover_reference = background_sample(screenshot('opacity-native-hover-reference.png'),
+                                                page['items'][1])
+            yield from close_box()
+            theme.wcol_menu_back.inner = (.8, .12, .04, .2)
+            for transparency in (() if feedback_probe == 'separator' else (0, 75, 100)):
+                hotbox_runtime.reload_settings(bpy.context, session={
+                    'schema_version': 1, 'settings': {'transparency': transparency}})
+                event('MOUSEMOVE', 'NOTHING', (cx, cy))
+                event('SPACE')
+                yield from settle(8)
+                primary_path = screenshot(f'opacity-primary-{transparency}.png')
+                check_labels(primary_path, {'items': [control]}, ['Hotbox Controls'],
+                             f'root transparency {transparency}')
+                primary = background_sample(primary_path, control)
+                if transparency == 75:
+                    translucent_primary = primary
+                if transparency == 100:
+                    # Alpha blending is independently checked from opaque and clear captures.
+                    expected = tuple(a*.25 + b*.75 for a, b in zip(opaque_primary, primary))
+                    check(max(abs(a-b) for a, b in zip(translucent_primary, expected)) < .025,
+                          'primary transparency is not 75 percent while foreground remains visible')
+                event('RIGHTMOUSE')
+                yield from settle(8)
+                path = screenshot(f'opacity-secondary-{transparency}.png')
+                for label, rect in (('view', views['items'][0]), ('entry', views['items'][8])):
+                    color = background_sample(path, rect)
+                    print('OPAQUE_THEME_SAMPLE', transparency, label, color, flush=True)
+                    check(max(abs(a-b) for a, b in zip(color, reference)) < .025,
+                          f'{label} must use opaque native theme, independent of root transparency')
+                yield from move(views['items'][0])
+                color = background_sample(screenshot(f'opacity-hover-{transparency}.png'),
+                                          views['items'][0])
+                # Compare native hover, not the deliberately different blue selected color.
+                check(max(abs(a-b) for a, b in zip(color, hover_reference)) < .025,
+                      f'marking hover must match native menu hover, got {color!r}')
+                event('MOUSEMOVE', 'NOTHING', (cx, cy))
+                yield from settle()
+                event('RIGHTMOUSE', 'RELEASE')
+                yield from close_box()
+                owner, buttons, page = yield from open_mapping(0)
+                event('MOUSEMOVE', 'NOTHING', midpoint(page['items'][0]))
+                yield from settle()
+                path = screenshot(f'opacity-cascade-{transparency}.png')
+                # Retained ancestors may be geometrically covered; use visible leaf background.
+                color = background_sample(path, page['items'][1])
+                check(max(abs(a-b) for a, b in zip(color, reference)) < .025,
+                      'deep native menu must be opaque even when theme alpha is low')
+                yield from close_box()
+            check(tuple(theme.wcol_menu_back.inner)[3] < .21,
+                  'opaque overlay mutated the global menu theme alpha')
+            hotbox_runtime.reload_settings(bpy.context, session={
+                'schema_version': 1, 'settings': {'center_buttons': {'LEFTMOUSE': 'pane.panels'}}})
+            event('MOUSEMOVE', 'NOTHING', (cx, cy))
+            event('SPACE')
+            yield from settle()
+            event('LEFTMOUSE')
+            yield from settle()
+            event('LEFTMOUSE', 'RELEASE')
+            yield from settle()
+            panels = ellipse_page(center, ['Views', '', 'Single / Quad View'], measure, bounds, scale)
+            path = screenshot('opacity-native-separator.png')
+            image, pixels, width = image_pixels(path)
+            try:
+                x, y, w, h = panels['items'][1]
+                line_green = max(pixels[(yy*width+xx)*4+1]
+                                 for yy in range(int(y+h/2-2*scale), int(y+h/2+2*scale))
+                                 for xx in range(int(x+w/2-10*scale), int(x+w/2+10*scale)))
+                check(line_green > reference[1]+.05,
+                      'native separator lost its visible line and became an empty button')
+            finally:
+                bpy.data.images.remove(image)
             yield from close_box()
         else:
             check(feedback_probe == 'drag', 'unknown feedback probe')
@@ -1113,11 +1185,17 @@ def suite():
             check(min(abs(left-ex-ew), abs(ex-right), abs(bottom-ey-eh), abs(ey-top)) < .1*scale,
                   'native menu does not touch its direct entry')
             if native_siblings:
+                bx, by, bw, bh = ring['back']
+                back_icon_ink = sum(min(pixels[(yy*width+xx)*4:(yy*width+xx)*4+3]) > .65
+                                    for yy in range(int(by+5*scale), int(by+bh-5*scale))
+                                    for xx in range(int(bx+4*scale), int(bx+22*scale)))
+                check(back_icon_ink > 3*scale*scale,
+                      f'{entry} native Back icon must stay left of its readable label')
                 left = int(min(r[0] for r in native_siblings))
                 right = int(max(r[0]+r[2] for r in native_siblings))
                 bottom = int(min(r[1] for r in native_siblings))
                 top = int(max(r[1]+r[3] for r in native_siblings))
-                excluded = (*ring['items'], *choices)
+                excluded = (*ring['items'], ring['back'], *choices)
                 gap_samples = []
                 for yy in range(bottom, top):
                     for xx in range(left, right):

@@ -132,9 +132,10 @@ class AXISMELD_Preferences(KeyConfigPreferences):
                                     ('center', 'Center Zone Only', '')),
         default='rows', options={'SKIP_SAVE'}, update=_hotbox_update('style', 'hotbox_style'))
     hotbox_transparency: EnumProperty(
-        name='Hotbox Transparency', items=tuple((str(value), f'{value}%', '')
+        name='Primary Hotbox Transparency', items=tuple((str(value), f'{value}%', '')
                                                 for value in (0, 25, 50, 75, 100)),
-        default='25', options={'SKIP_SAVE'},
+        default='75', options={'SKIP_SAVE'},
+        description='Primary hotbox background only; secondary hotboxes and menus stay opaque',
         update=_hotbox_update('transparency', 'hotbox_transparency'))
     hotbox_row_common: BoolProperty(
         name='Show Common Menus', default=True, options={'SKIP_SAVE'},

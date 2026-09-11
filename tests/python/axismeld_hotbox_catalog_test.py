@@ -281,7 +281,7 @@ class HotboxCatalogTest(unittest.TestCase):
         self.assertEqual(set(parsed), {'schema_version', 'generation', 'settings', 'menus'})
         self.assertEqual(parsed['schema_version'], 1)
         self.assertEqual(parsed['generation'], 7)
-        self.assertEqual(parsed['settings']['transparency'], 25)
+        self.assertEqual(parsed['settings']['transparency'], 75)
         self.assertEqual([row['id'] for row in parsed['menus']],
                          ['common', 'pane', 'center', 'modeling'])
         parsed['settings']['center_buttons']['RIGHTMOUSE'] = None

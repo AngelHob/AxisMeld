@@ -1449,7 +1449,7 @@ enum {
 gpu::Batch *batch_roundbox_widget_get();
 gpu::Batch *batch_roundbox_shadow_get();
 
-void draw_menu_back(uiStyle *style, Block *block, const rcti *rect);
+void draw_menu_back(uiStyle *style, Block *block, const rcti *rect, bool force_opaque = false);
 void draw_popover_back(ARegion *region, uiStyle *style, Block *block, const rcti *rect);
 void draw_pie_center(Block *block);
 const uiWidgetColors *tooltip_get_theme();

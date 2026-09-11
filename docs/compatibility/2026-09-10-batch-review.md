@@ -1,5 +1,34 @@
 # AxisMeld 五小时批次集中验收
 
+## 2026-09-11 默认样式与分层透明度（最新构建，待退出旧程序后安装）
+
+用户确认“二级以下”包含二级本身。最新源码已实现：
+
+| 范围 | 新行为 | 手测 |
+|---|---|---|
+| 一级热盒 | 默认75%透明度，即背景25%不透明；文字/图标保持清晰 | H5-00：默认和0/75/100%切换 |
+| 二级及更深层 | 动作按钮、菜单入口和连续菜单复用Blender原生菜单配色/边框/悬停，背景完全不透明 | H5-00/01：无场景透出、原生灰色hover、禁用项 |
+| 布局和交互 | 保留等宽椭圆、独立原生入口、紧凑间距、图标、分隔线和跨级输入隔离 | H5-02/04/09：Back、分隔线、四视图、拖曳和松键 |
+| 配置 | Transparency只影响一级；旧个人25%覆盖仍保留，新建或恢复公共默认才为75% | H5-07：可手动选Transparency → 75%，不必删除个人文件 |
+
+新build：`D:/source/AxisMeld-build/bin/Release/blender.exe`，SHA-256：
+`921F3B1DF9EE22375F3D1DB8F4655C6DC9F9E38E3B51790364571B1D19C20796`。
+正式测试入口仍为下节旧exe：用户窗口占用期间不关闭、不替换；没有更新其两个Python模块或个人配置。
+临时测试exe借用同一安装的运行库，测试时通过环境变量读取最新源码scripts及既有Python/datafiles，
+不是新建完整安装。安装收尾需要退出旧窗口后复制exe及`hotbox_profiles.py`、`bl_operators/axismeld.py`。
+
+证据前缀`D:/source/AxisMeld-build/h5-opacity-`：默认值和灰底测试先失败；
+原生hover、Back图标位置和分隔线分别有真实GUI失败证据后再修复。
+最终构建日志`h5-opacity-build-r6.log`；41项原生布局与5组CTest通过。
+最终静态审查通过；手感仍待人工验收，旧Tool Header极窄遮挡不在本次范围。
+最终41项Python测试通过；`h5-opacity-final-{opacity,drag,native-style,release,quad,guide}.log`
+六组实际GUI和`h5-opacity-final-profiles.log`配置集成测试通过。opacity专项覆盖主题alpha=0.2、
+一级0/75/100%、原生hover、可读文字及分隔线；native-style补测Back图标不与文字重叠。
+测试使用源码资源路径，出现源码环境未带Cycles插件的警告；不表示完整安装或Cycles渲染已验收。
+6份portable配置与本轮前一致，原exe和回退exe未变。临时`blender-opacity-check.exe`及
+`bin/Release/blender.shared`运行库目录链接仍暂留（清理命令被执行策略拒绝）；未新建完整安装目录。
+未推送、合并或关闭用户窗口。下一步仅原路径替换及安装态配置复验，不重新实现已完成内容。
+
 ## 2026-09-11 人工反馈修正版（当前测试程序）
 
 本节取代下方五小时冻结版的程序身份；旧清单保留为历史证据，不用于验证当前exe。

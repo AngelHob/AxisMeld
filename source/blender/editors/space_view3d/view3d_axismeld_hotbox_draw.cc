@@ -166,27 +166,17 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
   ui::draw_roundbox_corner_set(ui::CNR_ALL);
   for (const Entry &entry : entries) {
     const MenuRect &r = entry.rect;
-    if (r.native_menu && !r.native_menu_standalone) {
+    if (r.native_menu || r.depth > 0) {
       continue;
     }
-    const bool selected = entry.selected && !entry.disabled && !r.native_menu;
-    const uiWidgetColors &colors = r.depth > 0 ? theme.wcol_menu_item : theme.wcol_menu;
-    const uchar *inner = selected    ? colors.inner_sel :
-                         r.depth > 0 ? theme.wcol_menu_back.inner :
-                                       colors.inner;
+    const bool selected = entry.selected && !entry.disabled;
+    const uiWidgetColors &colors = theme.wcol_menu;
+    const uchar *inner = selected ? colors.inner_sel : colors.inner;
     const uchar *outline = selected ? colors.outline_sel : colors.outline;
     float background[4], border[4];
     for (int i = 0; i < 4; i++) {
       background[i] = inner[i] / 255.0f;
       border[i] = outline[i] / 255.0f;
-    }
-    if (r.depth > 0 && !selected) {
-      // Marking buttons sit above the retained primary hotbox. Native menus keep their theme.
-      const float primary = (theme.wcol_menu.inner[0] + theme.wcol_menu.inner[1] +
-                             theme.wcol_menu.inner[2]) /
-                            (3.0f * 255.0f);
-      const float grey = std::clamp(primary + 0.14f, 0.36f, 0.60f);
-      background[0] = background[1] = background[2] = grey;
     }
     background[3] *= 1 - data.snapshot.transparency / 100.0f;
     border[3] *= 1 - data.snapshot.transparency / 100.0f;
@@ -194,9 +184,6 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
         r.x * scale, (r.x + r.width) * scale, r.y * scale, (r.y + r.height) * scale};
     ui::draw_roundbox_4fv_ex(
         &bounds, background, nullptr, 1.0f, border, scale, colors.roundness * 20 * scale);
-    if (r.native_menu) {
-      continue;  // Native menu text, arrow and hover are drawn over this shared backdrop below.
-    }
     if (entry.separator) {
       float line[4];
       for (int i = 0; i < 4; i++) {
@@ -261,17 +248,18 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
   std::map<int, std::vector<NativeBlock>> menu_levels;
   for (const Entry &entry : entries) {
     const MenuRect &r = entry.rect;
-    if (r.native_menu) {
+    if (r.native_menu || r.depth > 0) {
       const MenuNode *node = hotbox_find_node(data.snapshot.menus, r.id);
-      const bool submenu = node && node->kind == MenuKind::Menu;
+      const bool submenu = r.native_menu && node && node->kind == MenuKind::Menu;
       const int icon_only = r.id.starts_with("@scroll:") && r.id.ends_with(":previous") ?
                                 ICON_TRIA_UP :
                             r.id.starts_with("@scroll:") && r.id.ends_with(":next") ?
                                 ICON_TRIA_DOWN :
                                 ICON_NONE;
       auto &blocks = menu_levels[r.depth];
-      if (r.native_menu_standalone || blocks.empty() || blocks.back().standalone) {
-        blocks.push_back({r.native_menu_standalone, {}});
+      const bool standalone = r.native_menu_standalone || !r.native_menu;
+      if (standalone || blocks.empty() || blocks.back().standalone) {
+        blocks.push_back({standalone, {}});
       }
       blocks.back().items.push_back({entry.text,
                                      {int(r.x * scale),
@@ -281,12 +269,15 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
                                      entry.selected,
                                      !entry.disabled,
                                      submenu,
-                                     icon_only});
+                                     icon_only,
+                                     r.native_menu ? ICON_NONE : entry.icon,
+                                     !r.native_menu,
+                                     entry.separator});
     }
   }
   for (const auto &[depth, blocks] : menu_levels) {
     for (const NativeBlock &block : blocks) {
-      ui::menu_overlay_draw(C, block.items, !block.standalone);
+      ui::menu_overlay_draw(C, block.items, true);
     }
   }
   if (!data.marking) {
