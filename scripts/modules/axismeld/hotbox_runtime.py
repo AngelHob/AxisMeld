@@ -341,8 +341,8 @@ def validate_snapshot(value):
         kind = node['kind']
         if not isinstance(kind, str) or kind not in NODE_KINDS:
             raise ValueError('unknown menu node kind')
-        if 'direction' in node:
-            if (not isinstance(node['direction'], str) or node['direction'] not in DIRECTIONS or
+        if 'direction' in node or parent_presentation == 'radial':
+            if (not isinstance(node.get('direction'), str) or node['direction'] not in DIRECTIONS or
                     parent_presentation != 'radial' or kind == 'separator'):
                 raise ValueError('invalid direction or placement')
         if 'presentation' in node:

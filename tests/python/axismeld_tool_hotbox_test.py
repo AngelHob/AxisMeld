@@ -63,7 +63,9 @@ class ToolHotboxTest(unittest.TestCase):
         snap = hotbox_runtime.make_snapshot(generation=1)
         parent = snap['menus'][0]['children'][3]
         parent['presentation'] = 'radial'
-        parent['children'][0]['direction'] = 'N'
+        parent['children'] = [child for child in parent['children'] if child['kind'] == 'command'][:3]
+        for child, direction in zip(parent['children'], ('N', 'E', 'S')):
+            child['direction'] = direction
         hotbox_runtime.serialize_snapshot(snap)
         for change in ('invalid', 'duplicate', 'list', 'root', 'command'):
             bad = copy.deepcopy(snap)
@@ -80,6 +82,20 @@ class ToolHotboxTest(unittest.TestCase):
                 p['children'][0]['presentation'] = 'list'
             with self.subTest(change=change), self.assertRaises(ValueError):
                 hotbox_runtime.serialize_snapshot(bad)
+
+    def test_radial_child_requires_direction(self):
+        snap = hotbox_runtime.make_snapshot(generation=1)
+        nodes = {n['id']: n for n in walk(snap['menus'])}
+        del nodes['tools.move.symmetry']['direction']
+        with self.assertRaises(ValueError):
+            hotbox_runtime.serialize_snapshot(snap)
+
+    def test_legacy_snapshot_without_metadata_is_accepted(self):
+        snap = hotbox_runtime.make_snapshot(generation=1)
+        for node in walk(snap['menus']):
+            node.pop('direction', None)
+            node.pop('presentation', None)
+        hotbox_runtime.serialize_snapshot(snap)
 
 
 if __name__ == '__main__':

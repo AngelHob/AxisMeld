@@ -184,7 +184,7 @@ struct Parser {
     out.enabled = *enabled;
     if (dict->lookup("value") && !text(*dict, "value", out.value))
       return false;
-    if (dict->lookup("direction")) {
+    if (dict->lookup("direction") || parent_presentation == "radial") {
       const std::unordered_set<std::string> valid = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"};
       if (!text(*dict, "direction", out.direction) || !valid.contains(out.direction) ||
           parent_presentation != "radial" || kind == "separator")

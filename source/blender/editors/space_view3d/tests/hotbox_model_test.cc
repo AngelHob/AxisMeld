@@ -49,6 +49,17 @@ TEST(hotbox_model, DirectionMetadataIsOptionalStrictAndAtomic)
   }
 }
 
+TEST(hotbox_model, RadialChildRequiresDirectionAtomically)
+{
+  const std::string radial = replace(menu("ring", menu("north")), "\"id\":\"ring\"",
+                                     "\"id\":\"ring\",\"presentation\":\"radial\"");
+  MenuSnapshot out{};
+  out.generation = 99;
+  std::string error;
+  EXPECT_FALSE(parse_menu_snapshot(snapshot(radial), out, error));
+  EXPECT_EQ(out.generation, 99);
+}
+
 TEST(hotbox_model, ValidSnapshotOwnsDataAndNormalizesNull)
 {
   MenuSnapshot out{};
