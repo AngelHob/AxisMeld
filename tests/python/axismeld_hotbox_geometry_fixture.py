@@ -127,7 +127,7 @@ def ellipse_page(anchor, labels, measure, bounds, scale=1, first=0, views=False)
         return view_page(anchor, labels, measure, bounds, scale)
     ax, ay, aw, ah = (v / scale for v in anchor)
     bx, by, bw, bh = (v / scale for v in bounds)
-    native_entries = {'Menu Rows', 'Hotbox Style', 'Transparency', 'Center Mouse Buttons'}
+    native_entries = {'Menu Rows', 'Hotbox Style', 'Transparency', 'Center Mouse Buttons', 'Tool Settings'}
     widths = [measure(label) + (60 if label in native_entries else 16) for label in labels]
     center_width = aw
     choices = []

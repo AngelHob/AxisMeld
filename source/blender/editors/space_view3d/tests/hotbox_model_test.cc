@@ -29,6 +29,26 @@ static std::string replace(std::string input, const std::string &from, const std
   return input;
 }
 
+TEST(hotbox_model, DirectionMetadataIsOptionalStrictAndAtomic)
+{
+  const std::string child = replace(menu("north"), "\"kind\":\"menu\"",
+                                    "\"direction\":\"N\",\"kind\":\"menu\"");
+  const std::string radial = replace(menu("ring", child), "\"id\":\"ring\"",
+                                     "\"id\":\"ring\",\"presentation\":\"radial\"");
+  MenuSnapshot out{};
+  std::string error;
+  EXPECT_TRUE(parse_menu_snapshot(snapshot(radial), out, error));
+  for (const auto &bad : {replace(radial, "\"N\"", "\"UP\""),
+                          replace(radial, "\"radial\"", "\"list\""),
+                          replace(radial, "\"N\"", "true"),
+                          replace(radial, "\"radial\"", "false")})
+  {
+    out.generation = 99;
+    EXPECT_FALSE(parse_menu_snapshot(snapshot(bad), out, error));
+    EXPECT_EQ(out.generation, 99);
+  }
+}
+
 TEST(hotbox_model, ValidSnapshotOwnsDataAndNormalizesNull)
 {
   MenuSnapshot out{};

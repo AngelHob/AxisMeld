@@ -254,7 +254,7 @@ def suite():
     center_width = (measure('AxisMeld') + 60) * scale
     anchor = (menu_origin[0] - center_width / 2, menu_origin[1] - 19 * scale,
               center_width, 38 * scale)
-    move_rect = ellipse_page(anchor, ['Move Tool', 'Rotate Tool', 'Scale Tool'], measure,
+    move_rect = ellipse_page(anchor, ['Move Tool', 'Rotate Tool', 'Scale Tool', 'Tool Settings'], measure,
                              (region.x, region.y, region.width, region.height), scale)['items'][0]
     event('MOUSEMOVE', 'NOTHING', x=round(move_rect[0] + move_rect[2] / 2),
           y=round(move_rect[1] + move_rect[3] / 2))

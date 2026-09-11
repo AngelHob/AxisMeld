@@ -8,6 +8,7 @@ from axismeld import adapter, runtime, hotbox_runtime
 from axismeld.commands import PRESET_NAME
 from axismeld.hotbox_catalog import registered_menu_choices
 from axismeld.hotbox_profiles import DEFAULT_APPEARANCE
+from axismeld.tool_hotbox import TOOL_ROOTS
 
 
 class AXISMELD_OT_command(Operator):
@@ -23,9 +24,10 @@ class AXISMELD_OT_command(Operator):
     def poll(cls, context):
         return adapter.modeling_context(context)
 
-    def _run(self, context, invoke):
+    def _run(self, context, invoke, keyboard_tool_session=False):
         try:
-            result = adapter.run(context, self.command, invoke=invoke)
+            result = adapter.run(context, self.command, invoke=invoke,
+                                 keyboard_tool_session=keyboard_tool_session)
         except (ValueError, RuntimeError) as error:
             self.report({'WARNING'}, str(error))
             return {'CANCELLED'}
@@ -36,7 +38,12 @@ class AXISMELD_OT_command(Operator):
         return self._run(context, False)
 
     def invoke(self, context, event):
-        return self._run(context, True)
+        keyboard = event.value == 'PRESS' and event.type not in {
+            'LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE', 'BUTTON4MOUSE', 'BUTTON5MOUSE',
+            'ACTIONZONE_AREA', 'ACTIONZONE_REGION', 'NONE'}
+        if self.command in TOOL_ROOTS and event.is_repeat:
+            return {'CANCELLED'}
+        return self._run(context, True, keyboard_tool_session=keyboard)
 
 
 class AXISMELD_OT_reload_profile(Operator):

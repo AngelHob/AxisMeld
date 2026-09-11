@@ -29,6 +29,7 @@ if(WITH_GTESTS)
     DEPENDS
       tests/hotbox_menu_fixture.py
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/hotbox_catalog.py
+      ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/tool_hotbox.py
     VERBATIM
   )
   add_custom_target(axismeld_menu_fixture DEPENDS ${menu_fixture})

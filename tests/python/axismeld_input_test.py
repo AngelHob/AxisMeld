@@ -34,7 +34,12 @@ class ProfilesTest(unittest.TestCase):
         self.assertEqual(set(COMMANDS) - set(bindings), {
             'view.toggle_quad', 'view.perspective', 'view.side', 'view.front', 'view.top',
             'view.left', 'view.back', 'view.bottom', 'selection.select_all',
-            'selection.grow', 'selection.shrink'})
+            'selection.grow', 'selection.shrink', 'selection.clear', 'selection.marquee',
+            'selection.lasso', 'selection.paint', 'orientation.move.world',
+            'orientation.move.object', 'orientation.move.normal', 'orientation.move.view',
+            'orientation.rotate.world', 'orientation.rotate.object', 'orientation.rotate.normal',
+            'orientation.rotate.view', 'orientation.rotate.gimbal', 'orientation.scale.world',
+            'orientation.scale.object', 'orientation.scale.normal', 'orientation.scale.view'})
 
     def test_unbound_menu_command_can_be_remapped_and_hotbox_disabled(self):
         result = resolve_profiles([('user', profile(**{

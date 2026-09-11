@@ -42,6 +42,7 @@ struct HotboxData : HotboxVisual {
   bool navigation_consumed = false;
   bool menu_entered_on_press = false;
   bool mouse_moved_since_press = false;
+  bool tool_shown = false;
 };
 
 /* Validate each containing live list before inspecting the next captured pointer. */
@@ -253,7 +254,19 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
     BKE_report(op->reports, RPT_WARNING, error.c_str());
     return OPERATOR_CANCELLED;
   }
+  const std::string tool_root = RNA_string_get(op->ptr, "tool_menu");
+  if (!tool_root.empty()) {
+    const MenuNode *root = hotbox_find_node(snapshot.menus, tool_root);
+    if ((tool_root != "tools.select" && tool_root != "tools.move" &&
+         tool_root != "tools.rotate" && tool_root != "tools.scale") ||
+        !root || root->kind != MenuKind::Menu || !root->enabled || root->presentation != "radial")
+    {
+      return OPERATOR_CANCELLED;
+    }
+  }
   auto *data = new HotboxData();
+  data->tool_root = tool_root;
+  data->tap_eligible = tool_root.empty();
   data->snapshot = std::move(snapshot);
   data->window = window;
   data->screen = CTX_wm_screen(C);
@@ -271,15 +284,17 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   data->center[0] = (event->xy[0] - data->region->winrct.xmin) / data->scale;
   data->center[1] = (event->xy[1] - data->region->winrct.ymin) / data->scale;
   hotbox_measure(*data);
-  hotbox_layout(*data);
-  if (!data->menu_layout.supported) {
+  if (tool_root.empty()) {
+    hotbox_layout(*data);
+  }
+  if (tool_root.empty() && !data->menu_layout.supported) {
     BKE_report(op->reports,
                RPT_WARNING,
                "Viewport cannot fit hotbox targets (minimum 340 x 200 logical pixels)");
   }
   data->state.begin(BLI_time_now_seconds(), RNA_float_get(op->ptr, "tap_seconds"));
   op->customdata = data;
-  if (data->menu_layout.supported) {
+  if (tool_root.empty() && data->menu_layout.supported) {
     data->draw_handle = ED_region_draw_cb_activate(
         data->region_type, draw, data, REGION_DRAW_POST_PIXEL);
   }
@@ -289,9 +304,76 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   return OPERATOR_RUNNING_MODAL;
 }
 
+static wmOperatorStatus tool_modal(bContext *C, wmOperator *op, const wmEvent *event)
+{
+  auto &data = *static_cast<HotboxData *>(op->customdata);
+  const float x = (event->xy[0] - data.region->winrct.xmin) / data.scale;
+  const float y = (event->xy[1] - data.region->winrct.ymin) / data.scale;
+  if (event->modifier ||
+      (!ISTIMER(event->type) && !ISMOUSE_MOTION(event->type) && event->type != LEFTMOUSE))
+  {
+    close_guard(C, op, true);
+    return OPERATOR_FINISHED | OPERATOR_PASS_THROUGH;
+  }
+  if (!data.tool_shown) {
+    if (event->type != LEFTMOUSE || event->val != KM_PRESS) {
+      return OPERATOR_RUNNING_MODAL | OPERATOR_PASS_THROUGH;
+    }
+    data.tool_shown = true;
+    data.active_mouse = LEFTMOUSE;
+    data.center[0] = data.origin[0] = data.press_position[0] = x;
+    data.center[1] = data.origin[1] = data.press_position[1] = y;
+    data.pointer_position[0] = x;
+    data.pointer_position[1] = y;
+    data.open_path = {data.tool_root};
+    hotbox_layout(data);
+    if (!data.menu_layout.supported) {
+      return close_guard(C, op, true);
+    }
+    data.draw_handle = ED_region_draw_cb_activate(
+        data.region_type, draw, &data, REGION_DRAW_POST_PIXEL);
+    ED_region_tag_redraw(data.region);
+    return OPERATOR_RUNNING_MODAL;
+  }
+  if (ISMOUSE_MOTION(event->type) || event->type == LEFTMOUSE) {
+    data.pointer_position[0] = x;
+    data.pointer_position[1] = y;
+    if ((x - data.origin[0]) * (x - data.origin[0]) +
+            (y - data.origin[1]) * (y - data.origin[1]) <= 12 * 12 &&
+        data.open_path.size() > 1)
+    {
+      data.open_path.resize(1);
+      hotbox_layout(data);
+    }
+    const MenuRect *hover = hit_menu_rect(data.menu_layout, x, y);
+    const MenuRect rect = hover ? *hover : MenuRect{};
+    data.hover_id = hover ? rect.id : "";
+    data.hover_depth = hover ? rect.depth : -1;
+    const MenuNode *node = hotbox_find_node(data.snapshot.menus, data.hover_id);
+    if (ISMOUSE_MOTION(event->type) && node && node->enabled && node->kind == MenuKind::Menu) {
+      open_menu(data, rect);
+    }
+    if (event->type == LEFTMOUSE && event->val == KM_RELEASE) {
+      data.active_mouse = 0;
+      if (node && node->enabled && ELEM(node->kind, MenuKind::Command, MenuKind::Setting)) {
+        return submit(C, op, *node);
+      }
+      return close_guard(C, op, true);
+    }
+    ED_region_tag_redraw(data.region);
+  }
+  return OPERATOR_RUNNING_MODAL;
+}
+
 static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
 {
   auto &data = *static_cast<HotboxData *>(op->customdata);
+  if (event->type == WINDEACTIVATE && !data.tool_root.empty()) {
+    // Releases may occur outside this window. Do not create a guard after the focus-loss
+    // event it would need in order to clear its own ownership.
+    cleanup(C, op);
+    return OPERATOR_CANCELLED | OPERATOR_PASS_THROUGH;
+  }
   if (event->type == WINDEACTIVATE || event->type == EVT_ESCKEY || !source_context(C, data)) {
     if (event->type == data.active_mouse && event->val == KM_RELEASE) {
       data.active_mouse = 0;
@@ -311,6 +393,9 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
       return close_guard(C, op, false);
     }
     return OPERATOR_RUNNING_MODAL;
+  }
+  if (!data.tool_root.empty()) {
+    return tool_modal(C, op, event);
   }
   const float x = (event->xy[0] - data.region->winrct.xmin) / data.scale;
   const float y = (event->xy[1] - data.region->winrct.ymin) / data.scale;
@@ -502,6 +587,9 @@ void VIEW3D_OT_axismeld_hotbox(wmOperatorType *ot)
                 1);
   PropertyRNA *prop = RNA_def_string(
       ot->srna, "menu_json", nullptr, 0, "Menu Snapshot", "Validated declarative menu snapshot");
+  RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
+  prop = RNA_def_string(ot->srna, "tool_menu", nullptr, 0, "Tool Menu",
+                       "Registered tool root, armed until left mouse press");
   RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
 }
 }  // namespace blender

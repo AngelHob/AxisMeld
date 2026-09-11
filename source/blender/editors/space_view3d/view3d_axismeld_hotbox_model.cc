@@ -116,6 +116,23 @@ bool appearance(const DictionaryValue &dict, MenuAppearance &out)
 }
 
 const std::unordered_set<std::string> commands = {"tool.select",
+                                                  "selection.marquee",
+                                                  "selection.lasso",
+                                                  "selection.paint",
+                                                  "selection.clear",
+                                                  "orientation.move.world",
+                                                  "orientation.move.object",
+                                                  "orientation.move.normal",
+                                                  "orientation.move.view",
+                                                  "orientation.rotate.world",
+                                                  "orientation.rotate.object",
+                                                  "orientation.rotate.normal",
+                                                  "orientation.rotate.view",
+                                                  "orientation.rotate.gimbal",
+                                                  "orientation.scale.world",
+                                                  "orientation.scale.object",
+                                                  "orientation.scale.normal",
+                                                  "orientation.scale.view",
                                                   "transform.move",
                                                   "transform.rotate",
                                                   "transform.scale",
@@ -146,12 +163,14 @@ const std::unordered_set<std::string> commands = {"tool.select",
 struct Parser {
   std::unordered_set<std::string> ids, menu_ids;
   std::vector<std::pair<std::string, std::string>> center_settings;
-  bool node(const Value &value, MenuNode &out, const int depth)
+  bool node(const Value &value, MenuNode &out, const int depth,
+            const std::string_view parent_presentation = {})
   {
     const auto *dict = value.as_dictionary_value();
     if (depth > 8 || ids.size() >= 256 ||
         !fields(
-            dict, {"id", "kind", "label", "command", "enabled", "reason", "children"}, {"value"}))
+            dict, {"id", "kind", "label", "command", "enabled", "reason", "children"},
+            {"value", "direction", "presentation"}))
       return false;
     std::string kind;
     if (!text(*dict, "id", out.id, true) || !ids.insert(out.id).second ||
@@ -164,6 +183,16 @@ struct Parser {
       return false;
     out.enabled = *enabled;
     if (dict->lookup("value") && !text(*dict, "value", out.value))
+      return false;
+    if (dict->lookup("direction")) {
+      const std::unordered_set<std::string> valid = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"};
+      if (!text(*dict, "direction", out.direction) || !valid.contains(out.direction) ||
+          parent_presentation != "radial" || kind == "separator")
+        return false;
+    }
+    if (dict->lookup("presentation") &&
+        (!text(*dict, "presentation", out.presentation) || kind != "menu" ||
+         (out.presentation != "radial" && out.presentation != "list")))
       return false;
     if (kind == "menu") {
       out.kind = MenuKind::Menu;
@@ -197,9 +226,11 @@ struct Parser {
           return false;
       }
     }
+    std::unordered_set<std::string> directions;
     for (const auto &child : children->elements()) {
       MenuNode next{};
-      if (!node(*child, next, depth + 1))
+      if (!node(*child, next, depth + 1, out.presentation) ||
+          (!next.direction.empty() && !directions.insert(next.direction).second))
         return false;
       out.children.push_back(std::move(next));
     }

@@ -39,9 +39,14 @@ bool native_list(const std::string &id)
          mapping_list(id);
 }
 
+bool native_list(const MenuNode &node)
+{
+  return node.presentation == "list" || native_list(node.id);
+}
+
 float child_padding(const MenuNode &node)
 {
-  return native_list(node.id) ? native_entry_padding : secondary_padding;
+  return native_list(node) ? native_entry_padding : secondary_padding;
 }
 
 const MenuNode *find_node(const std::vector<MenuNode> &nodes, const std::string &id)
@@ -303,7 +308,9 @@ class LayoutBuilder {
     bool found = false;
     // The ratio fixes a horizontal ellipse. Grow radii, never shrink target sizes.
     for (float ry = 24; ry < height; ry += 1) {
-      const float rx = 1.7f * ry;
+      // Tool rings keep native submenu text/arrow padding; a slightly rounder ellipse
+      // fits their full labels in small panes without narrowing the actual buttons.
+      const float rx = (owner.presentation == "radial" ? 1.6f : 1.7f) * ry;
       local.clear();
       const MenuRect center = {"@back:" + owner.id,
                                -center_width / 2,
@@ -375,6 +382,9 @@ class LayoutBuilder {
       item.x += cx;
       item.y += cy;
       item.native_menu = native_list(item.id);
+      if (const MenuNode *node = find_node(owner.children, item.id)) {
+        item.native_menu |= native_list(*node);
+      }
       item.native_menu_standalone = item.native_menu;
       result.rects.push_back(item);
     }
@@ -431,6 +441,29 @@ class LayoutBuilder {
     if (owner.children.empty()) {
       return;
     }
+    if (owner.presentation == "radial") {
+      constexpr float d = 0.70710678118f;
+      const std::unordered_map<std::string, std::array<float, 2>> directions = {
+          {"N", {0, 1}}, {"NE", {d, d}}, {"E", {1, 0}}, {"SE", {d, -d}},
+          {"S", {0, -1}}, {"SW", {-d, -d}}, {"W", {-1, 0}}, {"NW", {-d, d}}};
+      std::vector<EllipseItem> items;
+      for (const MenuNode &node : owner.children) {
+        const auto direction = directions.find(node.direction);
+        if (direction == directions.end()) {
+          result.supported = false;
+          return;
+        }
+        items.push_back({&node, node.id, widths.at(node.id) + child_padding(node),
+                         direction->second[0], direction->second[1], interactive(node), true});
+      }
+      // The hole belongs to the gesture, not the width of the directory that opened it.
+      MenuRect ring_anchor = anchor;
+      ring_anchor.x += (anchor.width - 24) / 2;
+      ring_anchor.y += (anchor.height - 24) / 2;
+      ring_anchor.width = ring_anchor.height = 24;
+      result.supported &= ellipse(owner, ring_anchor, depth, items, 0, nullptr, true);
+      return;
+    }
     if (owner.id == "views") {
       const MenuNode *style = find_node(owner.children, "views.style");
       if (!style) {
@@ -476,7 +509,7 @@ class LayoutBuilder {
                            ellipse(owner, anchor, depth, items, 0, nullptr, true, true));
       return;
     }
-    if (native_list(owner.id)) {
+    if (native_list(owner)) {
       float w = 0;
       for (const MenuNode &node : owner.children) {
         const float item_padding = node.kind == MenuKind::Menu ? native_entry_padding :
@@ -588,7 +621,8 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
                        const std::vector<std::string> &open_path,
                        const std::unordered_map<std::string, int> &scroll_offsets,
                        const std::unordered_map<std::string, float> &label_widths,
-                       const std::array<float, 2> *popup_origin)
+                       const std::array<float, 2> *popup_origin,
+                       const std::string_view tool_root)
 {
   if (!std::isfinite(width) || !std::isfinite(height) || !std::isfinite(center_x) ||
       !std::isfinite(center_y) || width < 340 || height < 200 || center_x < 0 ||
@@ -619,6 +653,43 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
                       scroll_offsets,
                       label_widths,
                       popup_origin};
+  if (!tool_root.empty()) {
+    const MenuNode *node = find_node(snapshot.menus, std::string(tool_root));
+    if (!node || node->presentation != "radial" || open_path.empty() ||
+        open_path.front() != tool_root)
+    {
+      return {{}, false};
+    }
+    MenuRect anchor{node->id, center_x - 12, center_y - 12, 24, 24, 0};
+    for (int index = 0; index < int(open_path.size()); index++) {
+      if (index) {
+        node = find_node(node->children, open_path[index]);
+        const MenuRect *found = build.rect(open_path[index]);
+        if (!node || !found || node->kind != MenuKind::Menu || !interactive(*node)) {
+          break;
+        }
+        anchor = *found;
+      }
+      build.popup(*node, anchor, index + 1,
+                  index + 1 < int(open_path.size()) ? open_path[index + 1] : "");
+    }
+    if (!build.result.supported) {
+      return {{}, false};
+    }
+    build.result.hit_depth = 1;
+    int native_depth = 0;
+    for (const MenuRect &item : build.result.rects) {
+      if (item.native_menu && !item.native_menu_standalone) {
+        native_depth = std::max(native_depth, item.depth);
+      }
+    }
+    for (MenuRect &item : build.result.rects) {
+      item.retained_only = item.depth < native_depth &&
+                           (!item.native_menu || item.native_menu_standalone) &&
+                           std::find(open_path.begin(), open_path.end(), item.id) == open_path.end();
+    }
+    return build.result;
+  }
   if (const MenuNode *center = find_node(snapshot.menus, "views")) {
     const float w = label_widths.at(center->id) + padding;
     build.add(*center,

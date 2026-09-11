@@ -89,6 +89,45 @@ TEST(axismeld_hotbox_menu, RoomierMainTargetsKeepTenPixelGaps)
   }
 }
 
+TEST(axismeld_hotbox_menu, StandaloneToolDirectionsAndNativeChildOwnership)
+{
+  auto snapshot = default_snapshot();
+  MenuNode tool{"tools.test", "Move", "", "", "", MenuKind::Menu, true, {}};
+  tool.presentation = "radial";
+  const std::array<const char *, 8> directions = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"};
+  for (const auto direction : directions) {
+    MenuNode child{std::string("tool.") + direction, direction, "", "", "", MenuKind::Menu, true, {}};
+    child.direction = direction;
+    child.presentation = "list";
+    child.children.push_back({child.id + ".leaf", "Option", "selection.clear", "", "", MenuKind::Command, true, {}});
+    tool.children.push_back(child);
+  }
+  snapshot.menus[0].children.push_back(tool);
+  const auto widths = measured(snapshot);
+  const auto layout = layout_menu(snapshot, 1200, 800, 600, 400, {"tools.test"}, {}, widths, nullptr, "tools.test");
+  ASSERT_TRUE(layout.supported);
+  ASSERT_EQ(layout.rects.size(), 8);
+  EXPECT_EQ(hit_menu(layout, 600, 400), "");
+  for (const auto &item : layout.rects) {
+    EXPECT_EQ(item.width, layout.rects.front().width);
+    EXPECT_EQ(item.height, 24);
+    EXPECT_GT(item.depth, 0);
+  }
+  ASSERT_NE(rect(layout, "tool.N"), nullptr);
+  EXPECT_GT(rect(layout, "tool.N")->y, 400);
+  EXPECT_LT(rect(layout, "tool.S")->y + 24, 400);
+  EXPECT_LT(rect(layout, "tool.W")->x + rect(layout, "tool.W")->width, 600);
+  EXPECT_GT(rect(layout, "tool.E")->x, 600);
+  const auto child = layout_menu(snapshot, 1200, 800, 600, 400, {"tools.test", "tool.N"}, {}, widths, nullptr, "tools.test");
+  ASSERT_TRUE(child.supported);
+  ASSERT_NE(rect(child, "tool.W"), nullptr);
+  EXPECT_TRUE(rect(child, "tool.W")->retained_only);
+  ASSERT_NE(rect(child, "tool.N.leaf"), nullptr);
+  EXPECT_TRUE(rect(child, "tool.N.leaf")->native_menu);
+  const MenuRect &west = *rect(child, "tool.W");
+  EXPECT_EQ(hit_menu(child, west.x + west.width / 2, west.y + 12), "");
+}
+
 TEST(axismeld_hotbox_menu, ReferenceCentralSpacingDoesNotStretchSideHitTargets)
 {
   auto snapshot = default_snapshot();

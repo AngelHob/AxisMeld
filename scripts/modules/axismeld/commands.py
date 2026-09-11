@@ -3,6 +3,7 @@
 """Immutable Maya command metadata; Blender implementation lives in adapter.py."""
 from dataclasses import dataclass
 from types import MappingProxyType
+from .tool_hotbox import ORIENTATIONS
 
 PRESET_NAME = 'AxisMeld_Maya_2026'
 SOURCE_URL = ('https://help.autodesk.com/cloudhelp/2026/ENU/Maya-KeyboardShortcuts/files/'
@@ -20,10 +21,20 @@ class Command:
 
 
 COMMANDS = MappingProxyType({command.id: command for command in (
-    Command('tool.select', 'Select Tool', 'Q'),
-    Command('transform.move', 'Move Tool', 'W'),
-    Command('transform.rotate', 'Rotate Tool', 'E'),
-    Command('transform.scale', 'Scale Tool', 'R'),
+    *(Command(identifier, label,
+              difference='Uses a persistent Blender selection tool; Paint is circle selection, not Maya brush semantics.')
+      for identifier, label in (('selection.marquee', 'Marquee Select'),
+                                 ('selection.lasso', 'Lasso Select'),
+                                 ('selection.paint', 'Paint Selection'))),
+    Command('selection.clear', 'Clear Selection',
+            difference='Native deselect in the current Object or Mesh Edit set; no mode switching.'),
+    *(Command(identifier, identifier.rsplit('.', 1)[-1].title(),
+              difference='Blender per-tool transform orientation; Normal uses Blender selection normals and Gimbal uses Euler semantics.')
+      for identifier in ORIENTATIONS),
+    Command('tool.select', 'Select Tool', 'Q', difference='Native box select; hold Q + LMB opens classic tool options; toolkit variants deferred.'),
+    Command('transform.move', 'Move Tool', 'W', difference='Native Move tool with classic held-LMB menu; same-tool tap does not reset the active axis.'),
+    Command('transform.rotate', 'Rotate Tool', 'E', difference='Native Rotate tool with classic held-LMB menu; same-tool tap does not reset the active axis.'),
+    Command('transform.scale', 'Scale Tool', 'R', difference='Native Scale tool with classic held-LMB menu; global object-scale difference remains deferred.'),
     Command('selection.toggle_component', 'Object / Component', 'F8'),
     Command('selection.vertex_mode', 'Vertex', 'F9'),
     Command('selection.edge_mode', 'Edge', 'F10'),

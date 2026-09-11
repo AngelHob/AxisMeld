@@ -14,7 +14,9 @@ def node(value):
                        for key in ('id', 'label', 'command', 'reason', 'value'))
     children = ',\n'.join(node(child) for child in value['children'])
     return ('{' + fields + ', MenuKind::' + value['kind'].title() + ', ' +
-            str(value['enabled']).lower() + ', {' + children + '}}')
+            str(value['enabled']).lower() + ', {' + children + '}, ' +
+            json.dumps(value.get('direction', '')) + ', ' +
+            json.dumps(value.get('presentation', '')) + '}')
 
 
 Path(sys.argv[1]).write_text(

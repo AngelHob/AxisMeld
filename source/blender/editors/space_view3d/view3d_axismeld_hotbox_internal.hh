@@ -14,6 +14,7 @@ const MenuNode *hotbox_find_node(const std::vector<MenuNode> &nodes, std::string
  */
 struct HotboxVisual {
   MenuSnapshot snapshot;
+  std::string tool_root;
   std::vector<std::string> open_path;
   std::unordered_map<std::string, int> scroll_offsets;
   std::unordered_map<std::string, float> label_widths;

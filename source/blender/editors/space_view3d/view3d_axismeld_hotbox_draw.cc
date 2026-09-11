@@ -102,7 +102,8 @@ void hotbox_layout(HotboxVisual &data)
                                  data.open_path,
                                  data.scroll_offsets,
                                  data.label_widths,
-                                 data.marking ? &origin : nullptr);
+                                 data.marking ? &origin : nullptr,
+                                 data.tool_root);
 }
 
 void hotbox_draw(const bContext *C, const HotboxVisual &data)

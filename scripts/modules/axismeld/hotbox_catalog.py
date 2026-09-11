@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 """Declarative AxisMeld hotbox menu catalog without Blender dependencies."""
 from copy import deepcopy
+from .tool_hotbox import MENU_COMMANDS, tool_menus
 
 
 _VIEW_REPLAYABLE = frozenset({
@@ -21,12 +22,13 @@ def command_policy(command):
     """Return the fixed ``(close_before, replayable)`` command policy."""
     if command in _VIEW_REPLAYABLE:
         return False, True
-    if command in _CLOSE_REPLAYABLE:
+    if command in _CLOSE_REPLAYABLE or (command in MENU_COMMANDS and command != 'tool.select'):
         return True, True
     return True, False
 
 
-def _node(identifier, kind, label, *, command='', enabled=True, reason='', children=(), value=None):
+def _node(identifier, kind, label, *, command='', enabled=True, reason='', children=(), value=None,
+          direction=None, presentation=None):
     node = {
         'id': identifier,
         'kind': kind,
@@ -38,6 +40,10 @@ def _node(identifier, kind, label, *, command='', enabled=True, reason='', child
     }
     if value is not None:
         node['value'] = value
+    if direction is not None:
+        node['direction'] = direction
+    if presentation is not None:
+        node['presentation'] = presentation
     return node
 
 
@@ -136,6 +142,8 @@ def _catalog():
             _command('common.modify.move', 'Move Tool', 'transform.move'),
             _command('common.modify.rotate', 'Rotate Tool', 'transform.rotate'),
             _command('common.modify.scale', 'Scale Tool', 'transform.scale'),
+            _node('common.modify.tools', 'menu', 'Tool Settings',
+                  children=tool_menus(_node), presentation='list'),
         )),
         _disabled('common.display', 'Display'),
         _disabled('common.windows', 'Windows'),

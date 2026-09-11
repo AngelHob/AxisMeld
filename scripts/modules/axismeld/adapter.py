@@ -4,13 +4,14 @@
 import bpy
 
 from .commands import COMMANDS
+from .tool_hotbox import TOOL_ROOTS, ORIENTATIONS, SELECTION_TOOLS
 
 TOOLS = {'tool.select': 'builtin.select_box', 'transform.move': 'builtin.move',
-         'transform.rotate': 'builtin.rotate', 'transform.scale': 'builtin.scale'}
+         'transform.rotate': 'builtin.rotate', 'transform.scale': 'builtin.scale', **SELECTION_TOOLS}
 COMPONENTS = {'selection.vertex_mode': 'VERT', 'selection.edge_mode': 'EDGE',
               'selection.face_mode': 'FACE'}
 MODE_COMMANDS = {'selection.toggle_component', *COMPONENTS}
-SELECTION_ACTIONS = {'selection.select_all', 'selection.grow', 'selection.shrink'}
+SELECTION_ACTIONS = {'selection.select_all', 'selection.clear', 'selection.grow', 'selection.shrink'}
 VIEW_OPS = {'view.focus_selected': ('view_selected', {'use_all_regions': False}),
             'view.frame_all': ('view_all', {'center': False}),
             'view.orbit': ('rotate', {}), 'view.pan': ('move', {}),
@@ -27,9 +28,9 @@ def modeling_context(context):
 
 
 def _selection_operation(context, command):
-    if command == 'selection.select_all':
+    if command in {'selection.select_all', 'selection.clear'}:
         operation = bpy.ops.mesh.select_all if context.mode == 'EDIT_MESH' else bpy.ops.object.select_all
-        return operation, {'action': 'SELECT'}
+        return operation, {'action': 'DESELECT' if command == 'selection.clear' else 'SELECT'}
     if context.mode == 'EDIT_MESH' and command in {'selection.grow', 'selection.shrink'}:
         operation = bpy.ops.mesh.select_more if command == 'selection.grow' else bpy.ops.mesh.select_less
         return operation, {'use_face_step': True}
@@ -64,13 +65,26 @@ def available(context, command):
     return True, ''
 
 
-def run(context, command, *, invoke=True):
+def run(context, command, *, invoke=True, keyboard_tool_session=False):
     valid, reason = available(context, command)
     if not valid:
         raise ValueError(reason)
     if command in TOOLS:
         # Explicit selection is idempotent; repeated W must not cycle tools.
-        return bpy.ops.wm.tool_set_by_id('EXEC_DEFAULT', name=TOOLS[command], cycle=False)
+        result = bpy.ops.wm.tool_set_by_id('EXEC_DEFAULT', name=TOOLS[command], cycle=False)
+        if result == {'FINISHED'} and keyboard_tool_session and command in TOOL_ROOTS:
+            from . import hotbox_runtime
+            return bpy.ops.view3d.axismeld_hotbox(
+                'INVOKE_DEFAULT', menu_json=hotbox_runtime.snapshot(context),
+                tool_menu=TOOL_ROOTS[command])
+        return result
+    if command in ORIENTATIONS:
+        index, orientation = ORIENTATIONS[command]
+        slot = context.scene.transform_orientation_slots[index]
+        slot.type = orientation
+        slot.use = True  # SELECT enables the tool slot in BKE_scene_orientation_slot_get.
+        context.area.tag_redraw()
+        return {'FINISHED'}
     if command == 'selection.toggle_component':
         mode = 'OBJECT' if context.mode == 'EDIT_MESH' else 'EDIT'
         return bpy.ops.object.mode_set('EXEC_DEFAULT', mode=mode)

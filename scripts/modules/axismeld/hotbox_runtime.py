@@ -7,6 +7,7 @@ import logging
 from threading import Lock
 
 from .commands import COMMANDS, PRESET_NAME
+from .tool_hotbox import DIRECTIONS, MENU_COMMANDS
 from .hotbox_catalog import default_catalog, command_policy
 from .hotbox_profiles import (CANONICAL_ROWS, DEFAULT_APPEARANCE, DEFAULT_SETTINGS, MENU_IDS, MOUSE_BUTTONS,
                               load_hotbox_profiles, resolve_hotbox, save_hotbox_user,
@@ -38,6 +39,7 @@ _session_document = {'schema_version': 1, 'settings': {}}
 # Deliberately independent of the general adapter registry: new-window/file and interactive
 # navigation actions must not become callable through this batch's menu bridge.
 SUPPORTED_COMMANDS = frozenset({
+    *MENU_COMMANDS,
     'view.perspective', 'view.side', 'view.bottom', 'view.front', 'view.back',
     'view.top', 'view.left', 'view.focus_selected', 'view.frame_all', 'view.wireframe',
     'view.shaded', 'view.toggle_quad', 'selection.toggle_component', 'selection.vertex_mode',
@@ -312,7 +314,7 @@ def validate_snapshot(value):
     active = set()
     count = 0
 
-    def visit(node, depth):
+    def visit(node, depth, parent_presentation=''):
         nonlocal count
         if depth > MAX_DEPTH:
             raise ValueError(f'menu depth exceeds {MAX_DEPTH}')
@@ -322,7 +324,7 @@ def validate_snapshot(value):
         if not isinstance(node, dict):
             raise ValueError('menu node must be an object')
         fields = set(node)
-        if not NODE_FIELDS <= fields or fields - (NODE_FIELDS | {'value'}):
+        if not NODE_FIELDS <= fields or fields - (NODE_FIELDS | {'value', 'direction', 'presentation'}):
             raise ValueError('menu node contains unknown or missing fields')
 
         identifier = node['id']
@@ -339,6 +341,13 @@ def validate_snapshot(value):
         kind = node['kind']
         if not isinstance(kind, str) or kind not in NODE_KINDS:
             raise ValueError('unknown menu node kind')
+        if 'direction' in node:
+            if (not isinstance(node['direction'], str) or node['direction'] not in DIRECTIONS or
+                    parent_presentation != 'radial' or kind == 'separator'):
+                raise ValueError('invalid direction or placement')
+        if 'presentation' in node:
+            if kind != 'menu' or node['presentation'] not in ('radial', 'list'):
+                raise ValueError('invalid menu presentation')
         _validate_text(node['label'], 'node label', max_length=MAX_TEXT)
         _validate_text(node['command'], 'node command')
         _validate_text(node['reason'], 'node reason')
@@ -377,8 +386,12 @@ def validate_snapshot(value):
 
         active.add(identity)
         try:
+            directions = [child.get('direction') for child in children
+                          if isinstance(child, dict) and 'direction' in child]
+            if any(directions.count(direction) > 1 for direction in directions):
+                raise ValueError('duplicate direction in ring')
             for child in children:
-                visit(child, depth + 1)
+                visit(child, depth + 1, node.get('presentation', ''))
         finally:
             active.remove(identity)
 

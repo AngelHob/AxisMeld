@@ -16,6 +16,7 @@ struct MenuNode {
   MenuKind kind;
   bool enabled;
   std::vector<MenuNode> children;
+  std::string direction, presentation;
 };
 struct MenuAppearance {
   bool theme_background = true;
@@ -75,7 +76,8 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
                        const std::vector<std::string> &open_path,
                        const std::unordered_map<std::string, int> &scroll_offsets,
                        const std::unordered_map<std::string, float> &label_widths,
-                       const std::array<float, 2> *popup_origin = nullptr);
+                       const std::array<float, 2> *popup_origin = nullptr,
+                       std::string_view tool_root = {});
 /* Native mapping pages normalize from their displayed first row; other menus retain legacy math.
  */
 int menu_scroll_offset_transition(const MenuLayout &layout,
