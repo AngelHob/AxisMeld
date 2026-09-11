@@ -16,7 +16,7 @@ namespace blender {
 namespace {
 struct ReleaseData {
   int trigger, mouse;
-  bool trigger_down, mouse_down;
+  bool trigger_down, mouse_down, tool_session;
 };
 
 static void cleanup(bContext * /*C*/, wmOperator *op)
@@ -39,7 +39,8 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent * /*ev
   if (!trigger_down && !mouse_down) {
     return OPERATOR_FINISHED;
   }
-  op->customdata = new ReleaseData{trigger, mouse, trigger_down, mouse_down};
+  op->customdata = new ReleaseData{
+      trigger, mouse, trigger_down, mouse_down, RNA_boolean_get(op->ptr, "tool_session")};
   /* The command may have destroyed its initiating region. Retain only window ownership. */
   WM_event_add_modal_handler_ex(CTX_wm_window(C), nullptr, nullptr, op);
   return OPERATOR_RUNNING_MODAL;
@@ -81,6 +82,15 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
                     OPERATOR_PASS_THROUGH;
 }
 }  // namespace
+
+bool axismeld_hotbox_guard_allows_tool_session(const wmOperator *op, const int trigger_type)
+{
+  if (!op || op->type != WM_operatortype_find("VIEW3D_OT_axismeld_hotbox_release_guard", true)) {
+    return false;
+  }
+  const auto *data = static_cast<const ReleaseData *>(op->customdata);
+  return data && data->tool_session && !data->mouse_down && data->trigger != trigger_type;
+}
 
 std::string axismeld_hotbox_refresh(bContext *C)
 {
@@ -131,13 +141,15 @@ wmOperatorStatus axismeld_hotbox_setting(bContext *C, const char *setting, const
 }
 
 wmOperatorStatus axismeld_hotbox_guard_begin(
-    bContext *C, int trigger_type, int mouse_type, bool trigger_down, bool mouse_down)
+    bContext *C, int trigger_type, int mouse_type, bool trigger_down, bool mouse_down,
+    bool tool_session)
 {
   PointerRNA props = WM_operator_properties_create("VIEW3D_OT_axismeld_hotbox_release_guard");
   RNA_enum_set(&props, "trigger_type", trigger_type);
   RNA_enum_set(&props, "mouse_type", mouse_type);
   RNA_boolean_set(&props, "trigger_down", trigger_down);
   RNA_boolean_set(&props, "mouse_down", mouse_down);
+  RNA_boolean_set(&props, "tool_session", tool_session);
   const wmOperatorStatus result = WM_operator_name_call(C,
                                                         "VIEW3D_OT_axismeld_hotbox_release_guard",
                                                         wm::OpCallContext::InvokeDefault,
@@ -173,5 +185,7 @@ void VIEW3D_OT_axismeld_hotbox_release_guard(wmOperatorType *ot)
       ot->srna, "trigger_down", false, "Trigger Down", "Captured trigger awaits release");
   RNA_def_boolean(
       ot->srna, "mouse_down", false, "Mouse Down", "Captured mouse button awaits release");
+  RNA_def_boolean(
+      ot->srna, "tool_session", false, "Tool Session", "Release ownership came from a tool gesture");
 }
 }  // namespace blender

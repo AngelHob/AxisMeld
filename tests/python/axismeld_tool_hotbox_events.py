@@ -56,7 +56,7 @@ def suite():
             bpy.ops.screen.screenshot(filepath=str(path))
         print('SCREENSHOT', path, flush=True)
 
-    def ring(tool_name):
+    def ring(tool_name, origin=None):
         # Coordinates only; independent native tests assert direction, spacing and hit ownership.
         from axismeld.hotbox_catalog import default_catalog
         def walk(nodes):
@@ -86,8 +86,9 @@ def suite():
                 right = max(r[0]+r[2] for r in rects)
                 bottom = min(r[1] for r in rects)
                 top = max(r[1]+r[3] for r in rects)
-                ox = max(region.x+scale*(12-left), min(cx, region.x+region.width-scale*(12+right)))
-                oy = max(region.y+scale*(12-bottom), min(cy, region.y+region.height-scale*(12+top)))
+                px, py = origin if origin is not None else (cx, cy)
+                ox = max(region.x+scale*(12-left), min(px, region.x+region.width-scale*(12+right)))
+                oy = max(region.y+scale*(12-bottom), min(py, region.y+region.height-scale*(12+top)))
                 return {n['direction']: (ox + r[0]*scale, oy + r[1]*scale, r[2]*scale, r[3]*scale)
                         for n, r in zip(nodes, rects[1:])}
         raise AssertionError('tool ring fixture does not fit')
@@ -117,6 +118,39 @@ def suite():
         yield from settle()
         check(not modals(), 'gesture left stale modal: ' + str(modals()))
 
+    def overlap(old_key, *, old_release_first):
+        slot = bpy.context.scene.transform_orientation_slots[2]
+        slot.type = 'LOCAL'
+        event('MOUSEMOVE', 'NOTHING', (cx, cy))
+        event(old_key)
+        yield from settle()
+        event('E')
+        yield from settle()
+        check(tool() == 'builtin.rotate', 'overlap must switch to Rotate immediately')
+        check(modals().count('VIEW3D_OT_axismeld_hotbox') == 1,
+              old_key + '-down E-down must hand off one armed tool session: ' + str(modals()))
+        check(modals().count('VIEW3D_OT_axismeld_hotbox_release_guard') == 1,
+              'old trigger must retain independent release ownership')
+        if old_release_first:
+            event(old_key, 'RELEASE')
+            yield from settle()
+            check(modals() == ['VIEW3D_OT_axismeld_hotbox'],
+                  'old release must be swallowed without cancelling E: ' + str(modals()))
+        event('LEFTMOUSE')
+        yield from settle()
+        event('MOUSEMOVE', 'NOTHING', middle(ring('rotate')['W']))
+        yield from settle()
+        if not old_release_first:
+            event('E', 'RELEASE')
+            yield from settle()
+        event('LEFTMOUSE', 'RELEASE')
+        yield from settle()
+        event('E' if old_release_first else old_key, 'RELEASE')
+        yield from settle()
+        check(slot.type == ('GLOBAL' if old_release_first else 'LOCAL'),
+              'overlap must commit only when mouse releases before the new trigger: ' + slot.type)
+        check(not modals(), 'overlap left stale modal: ' + str(modals()))
+
     event('MOUSEMOVE', 'NOTHING')
     yield from settle()
     with override():
@@ -138,6 +172,58 @@ def suite():
         yield from settle()
         check(not modals(), 'tap left stale modal: ' + str(modals()))
     print('PASS immediate Q/W/E/R taps and repeat ownership', flush=True)
+
+    yield from overlap('W', old_release_first=True)
+    yield from overlap('W', old_release_first=False)
+
+    # Handoff must not bypass mouse ownership or the existing Space release barrier.
+    yield from open_ring('W')
+    event('E')
+    yield from settle()
+    check(tool() == 'builtin.rotate', 'mouse-owned overlap must still switch the tool immediately')
+    check(modals() == ['VIEW3D_OT_axismeld_hotbox_release_guard'],
+          'an old owned mouse must block the new tool session: ' + str(modals()))
+    event('W', 'RELEASE')
+    event('LEFTMOUSE', 'RELEASE')
+    event('E', 'RELEASE')
+    yield from settle()
+    check(not modals(), 'mouse-conflicting overlap left ownership')
+    event('SPACE')
+    yield from settle()
+    event('ESC')
+    event('ESC', 'RELEASE')
+    yield from settle()
+    event('W')
+    yield from settle()
+    check(modals() == ['VIEW3D_OT_axismeld_hotbox_release_guard'],
+          'a Space-origin release guard must still block tool sessions: ' + str(modals()))
+    event('SPACE', 'RELEASE')
+    event('W', 'RELEASE')
+    yield from settle()
+    check(not modals(), 'Space release barrier left ownership')
+
+    edge = (region.x + 30, cy)
+    slot = bpy.context.scene.transform_orientation_slots[1]
+    for return_to_origin in (False, True):
+        slot.type = 'LOCAL'
+        event('MOUSEMOVE', 'NOTHING', edge)
+        event('W')
+        yield from settle()
+        event('LEFTMOUSE')
+        yield from settle()
+        if return_to_origin:
+            event('MOUSEMOVE', 'NOTHING', middle(ring('move', edge)['SW']))
+            yield from settle()
+            event('MOUSEMOVE', 'NOTHING', edge)
+            yield from settle()
+        event('LEFTMOUSE', 'RELEASE')
+        event('W', 'RELEASE')
+        yield from settle()
+        check(slot.type == 'LOCAL',
+              'edge origin committed World (returned=%s): %s' % (return_to_origin, slot.type))
+        check(not modals(), 'edge origin left stale modal: ' + str(modals()))
+    print('PASS overlapping tool-key handoff and edge-origin cancellation', flush=True)
+
     for key, name, index in (('W', 'move', 1), ('E', 'rotate', 2), ('R', 'scale', 3)):
         yield from gesture(key, name, 'NW')
         check(bpy.context.scene.transform_orientation_slots[index].type == 'LOCAL', name + ' Object failed')
@@ -313,6 +399,8 @@ def suite():
     binding.type = 'F13'
     bpy.context.window_manager.keyconfigs.update()
     yield from settle()
+    yield from overlap('F13', old_release_first=True)
+    yield from overlap('F13', old_release_first=False)
     yield from gesture('F13', 'move', 'W')
     check(bpy.context.scene.transform_orientation_slots[1].type == 'GLOBAL', 'remapped trigger failed')
     # keyconfigs.update rebuilds the resolved map; reacquire its current RNA item.

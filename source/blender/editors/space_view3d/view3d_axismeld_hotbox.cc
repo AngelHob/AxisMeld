@@ -105,9 +105,10 @@ static wmOperatorStatus close_guard(bContext *C, wmOperator *op, const bool trig
 {
   const auto &data = *static_cast<HotboxData *>(op->customdata);
   const int trigger = data.trigger, mouse = data.active_mouse;
+  const bool tool_session = !data.tool_root.empty();
   cleanup(C, op);
   if (trigger_down || mouse) {
-    axismeld_hotbox_guard_begin(C, trigger, mouse, trigger_down, mouse != 0);
+    axismeld_hotbox_guard_begin(C, trigger, mouse, trigger_down, mouse != 0, tool_session);
   }
   return OPERATOR_FINISHED;
 }
@@ -133,10 +134,11 @@ static wmOperatorStatus submit(bContext *C, wmOperator *op, const MenuNode &leaf
   const bool setting = leaf.kind == MenuKind::Setting;
   if (!setting && hotbox_command_closes(command)) {
     const int trigger = data.trigger, mouse = data.active_mouse;
+    const bool tool_session = !data.tool_root.empty();
     cleanup(C, op);
     axismeld_hotbox_dispatch(C, command.c_str());
     // No source-area/region access after dispatch: mode/quad commands can destroy them.
-    axismeld_hotbox_guard_begin(C, trigger, mouse, true, mouse != 0);
+    axismeld_hotbox_guard_begin(C, trigger, mouse, true, mouse != 0, tool_session);
     return OPERATOR_FINISHED;
   }
   const wmOperatorStatus result = setting ?
@@ -243,7 +245,15 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
     return OPERATOR_PASS_THROUGH;
   }
   wmWindow *window = CTX_wm_window(C);
+  const std::string tool_root = RNA_string_get(op->ptr, "tool_menu");
   for (const wmEventHandler &handler : window->runtime->modalhandlers) {
+    if (!tool_root.empty() && handler.type == WM_HANDLER_TYPE_OP &&
+        axismeld_hotbox_guard_allows_tool_session(
+            reinterpret_cast<const wmEventHandler_Op &>(handler).op, event->type))
+    {
+      // The priority guard retains its old key; it does not own this trigger or the mouse.
+      continue;
+    }
     if (ELEM(handler.type, WM_HANDLER_TYPE_OP, WM_HANDLER_TYPE_UI)) {
       return OPERATOR_PASS_THROUGH;
     }
@@ -254,7 +264,6 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
     BKE_report(op->reports, RPT_WARNING, error.c_str());
     return OPERATOR_CANCELLED;
   }
-  const std::string tool_root = RNA_string_get(op->ptr, "tool_menu");
   if (!tool_root.empty()) {
     const MenuNode *root = hotbox_find_node(snapshot.menus, tool_root);
     if ((tool_root != "tools.select" && tool_root != "tools.move" &&
@@ -338,14 +347,16 @@ static wmOperatorStatus tool_modal(bContext *C, wmOperator *op, const wmEvent *e
   if (ISMOUSE_MOTION(event->type) || event->type == LEFTMOUSE) {
     data.pointer_position[0] = x;
     data.pointer_position[1] = y;
-    if ((x - data.origin[0]) * (x - data.origin[0]) +
-            (y - data.origin[1]) * (y - data.origin[1]) <= 12 * 12 &&
-        data.open_path.size() > 1)
+    const bool at_origin = (x - data.origin[0]) * (x - data.origin[0]) +
+                               (y - data.origin[1]) * (y - data.origin[1]) <= 12 * 12;
+    if (at_origin && data.open_path.size() > 1)
     {
       data.open_path.resize(1);
       hotbox_layout(data);
     }
-    const MenuRect *hover = hit_menu_rect(data.menu_layout, x, y);
+    // Edge clamping may move a button under the real press origin. The dead zone wins
+    // over all menu hit testing, including reopening a child after returning to cancel it.
+    const MenuRect *hover = at_origin ? nullptr : hit_menu_rect(data.menu_layout, x, y);
     const MenuRect rect = hover ? *hover : MenuRect{};
     data.hover_id = hover ? rect.id : "";
     data.hover_depth = hover ? rect.depth : -1;

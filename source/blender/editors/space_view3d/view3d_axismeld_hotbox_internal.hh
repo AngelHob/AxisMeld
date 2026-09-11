@@ -45,5 +45,8 @@ std::string axismeld_hotbox_refresh(bContext *C);
 wmOperatorStatus axismeld_hotbox_dispatch(bContext *C, const char *command);
 wmOperatorStatus axismeld_hotbox_setting(bContext *C, const char *setting, const char *value);
 wmOperatorStatus axismeld_hotbox_guard_begin(
-    bContext *C, int trigger_type, int mouse_type, bool trigger_down, bool mouse_down);
+    bContext *C, int trigger_type, int mouse_type, bool trigger_down, bool mouse_down,
+    bool tool_session = false);
+/* Only a disjoint tool-key release may coexist with a newly armed tool session. */
+bool axismeld_hotbox_guard_allows_tool_session(const wmOperator *op, int trigger_type);
 }  // namespace blender
