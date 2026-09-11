@@ -1,6 +1,6 @@
 # M1 工具热盒集中验收
 
-状态：开发中，尚未更新用户测试程序。以下为本批统一验收清单，不是通过声明。
+状态：M1 候选已构建并进入审查，尚未更新用户测试程序。下表人工结果全部待测。
 范围：[M1 实现计划](../superpowers/plans/2026-09-11-m1-tool-hotboxes.md)；
 功能对照与占位：[Maya 工具菜单对照](../maya-mapping/2026-09-11-tool-marking-menus.md)。
 
@@ -50,7 +50,29 @@
 更新前回退 SHA256：`F84108D2F474ADF4FD804CBCC9FA16308FC3E22C7718C72082A85628502DE02F`。
 六个 portable 文件的 SHA256 已单独采集，交付时逐项比较。
 
-本表在实际验证后补充测试命令、日志、失败/修复证据、安装文件与已知差异。
+候选实现提交：`0b27a59ba1a`。候选 exe SHA256：
+`DC2107F7BB39EA7EF38E05E9A53CC0050BDB9753FFBC515A6C55A8CD53F927CC`。
+主任务已独立比较候选与编译产物哈希，结果相同；工作树及差异检查干净。
+
+| 验证 | 当前证据 | 边界 |
+|---|---|---|
+| Python 全部 AxisMeld 单元测试 | 实现者及主任务分别运行，50/50 通过 | 不等于实体键鼠验收 |
+| Native CTest | 实现者及主任务分别运行，5/5 目标通过；含 480×320 全树路径 | 不宣称所有极窄视口都已完善 |
+| 候选 GUI | tools、menus、native-style、release、selection、appearance 及独立 manipulator 回归通过 | source resources 环境；最后文字布局修订后重跑 tools 和 Native，安装版仍需独立回归 |
+| 截图 | 主任务查看最终工具环和普通子菜单：等宽、无中心按钮、父级可见、Keep Spacing 完整 | 不是 Maya Toolkit 所有变体的视觉一比一验收 |
+
+测试命令：`python -m unittest discover -s tests/python -p 'axismeld_*test.py'`；
+`ctest --test-dir D:/source/AxisMeld-build -C Release -R '^(axismeld_(hotbox_menu|hotbox_state|identity|transform_axis)|editor_hotbox_hotbox_model)$' --output-on-failure`；
+GUI 使用 `tests/python/axismeld_hotbox_ui_runner.py --blender <候选或安装exe> --suite <suite>`。
+日志位于 `D:/source/AxisMeld-build/m1-tools-*.log`；最终候选工具截图位于 `m1-tools-artifacts`。
+
+候选使用源码资源时出现 Cycles 未加载和 libpng ICC 配置警告，报告中保留原文；
+安装版将使用自带资源独立核实，不能把环境警告隐藏为无噪声通过。
+
+未覆盖/保留差异：没有方向勾选标记；同工具再次点按不复刻 Maya 轴柄重置；
+Circle 不是完整 Paint Select；普通子列表只接入有界子集及占位；真实 OS 自动重复标记、
+跨窗口实体失焦和每工具方向下直接/中键轴拖拽手感仍需人工确认。
+
 M2 上下文右键、M3 全部建模菜单/快捷键及 UV 尚不属于本批完成范围。
 
 ### 开发中发现的回归
