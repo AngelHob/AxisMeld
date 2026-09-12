@@ -5,6 +5,7 @@ from bpy.types import Operator, KeyConfigPreferences, WindowManager
 from bpy.props import StringProperty, BoolProperty, EnumProperty, FloatProperty, FloatVectorProperty, IntProperty
 
 from axismeld import adapter, runtime, hotbox_runtime
+from axismeld.context_hotbox import COMPONENT_HOTBOX
 from axismeld.commands import PRESET_NAME
 from axismeld.hotbox_catalog import registered_menu_choices
 from axismeld.hotbox_profiles import DEFAULT_APPEARANCE
@@ -38,6 +39,11 @@ class AXISMELD_OT_command(Operator):
         return self._run(context, False)
 
     def invoke(self, context, event):
+        if self.command == COMPONENT_HOTBOX and (
+                event.value != 'PRESS' or event.is_repeat or
+                event.alt or event.ctrl or event.shift or event.oskey or
+                not adapter.available(context, self.command)[0]):
+            return {'PASS_THROUGH'}
         keyboard = event.value == 'PRESS' and event.type not in {
             'LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE', 'BUTTON4MOUSE', 'BUTTON5MOUSE',
             'ACTIONZONE_AREA', 'ACTIONZONE_REGION', 'NONE'}

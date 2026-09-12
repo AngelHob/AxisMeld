@@ -3,6 +3,7 @@
 """Transform generated keymap data. No mutation of Blender/addon user state."""
 from copy import deepcopy
 
+from .context_hotbox import COMPONENT_HOTBOX
 from .commands import baseline_bindings, RESERVED_KEYS
 from .profiles import MODIFIERS
 
@@ -39,6 +40,14 @@ def validate_global_bindings(base, bindings):
         for operator, event, data in content['items']:
             for command, owned in bindings.items():
                 if owned is not None and overlaps(event, owned):
+                    # Screen Editing is activated on area edges; keep its exact native RMB
+                    # item. It does not intercept the 3D View WINDOW component gesture.
+                    if (command == COMPONENT_HOTBOX and name == 'Screen Editing' and
+                            args == {'space_type': 'EMPTY', 'region_type': 'WINDOW'} and
+                            operator == 'screen.area_options' and data is None and
+                            event == {'type': 'RIGHTMOUSE', 'value': 'PRESS'} and
+                            owned == baseline_bindings()[COMPONENT_HOTBOX]):
+                        continue
                     if _original_frames_space_play(
                             name, args, operator, event, data, command, owned):
                         continue
@@ -47,7 +56,9 @@ def validate_global_bindings(base, bindings):
 
 def generate_keymaps(base, bindings):
     result = deepcopy(base)
-    owned = [*baseline_bindings().values(), *(value for value in bindings.values() if value),
+    # Context sessions must retain the native fallback for rejected contexts and rebinds.
+    owned = [*(value for key, value in baseline_bindings().items() if key != COMPONENT_HOTBOX),
+             *(value for key, value in bindings.items() if value and key != COMPONENT_HOTBOX),
              *({'type': key} for key in RESERVED_KEYS)]
     for name, args, content in result:
         # Native operators poll the Maya preset, modeling context and highlighted/armed
@@ -58,14 +69,20 @@ def generate_keymaps(base, bindings):
         if not modeling_keymap(name, args):
             continue
         content['items'] = [item for item in content['items']
-                            if not any(overlaps(item[1], event) for event in owned)]
+                            if not (item[0] == 'axismeld.command' and item[2] and
+                                    ('command', COMPONENT_HOTBOX) in item[2].get('properties', ()))
+                            and not any(overlaps(item[1], event) for event in owned)]
         for command, event in bindings.items():
             if command == 'hotbox.open':
                 continue
             target = ('3D View',) if command.startswith('view.') else ('Object Mode', 'Mesh')
             if name in target and event is not None:
-                content['items'].append(('axismeld.command', dict(event),
-                                         {'properties': [('command', command)]}))
+                item = ('axismeld.command', dict(event),
+                        {'properties': [('command', command)]})
+                if command == COMPONENT_HOTBOX:
+                    content['items'].insert(0, item)
+                else:
+                    content['items'].append(item)
         if name in {'3D View Tool: Move', '3D View Tool: Rotate', '3D View Tool: Scale'}:
             content['items'][0:0] = [
                 ('axismeld.axis_drag', {'type': 'MIDDLEMOUSE', 'value': 'PRESS'}, None),

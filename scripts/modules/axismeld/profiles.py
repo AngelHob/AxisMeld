@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 
+from .context_hotbox import COMPONENT_HOTBOX
 from .commands import COMMANDS, baseline_bindings
 
 MODIFIERS = ('ctrl', 'shift', 'alt', 'oskey')
@@ -53,6 +54,9 @@ def _apply(bindings, document):
     for command, event in changes.items():
         candidate[command] = (normalize_event(event, keyboard_only=command == 'hotbox.open')
                               if event is not None else None)
+        if command == COMPONENT_HOTBOX and candidate[command] and any(
+                candidate[command][key] for key in MODIFIERS):
+            raise ValueError('Component hotbox requires an unmodified PRESS event')
     seen = {}
     for command, event in candidate.items():
         if event is None:

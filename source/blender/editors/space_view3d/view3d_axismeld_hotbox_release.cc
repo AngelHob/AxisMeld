@@ -29,7 +29,8 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent * /*ev
 {
   const int trigger = RNA_enum_get(op->ptr, "trigger_type");
   const int mouse = RNA_enum_get(op->ptr, "mouse_type");
-  if (!CTX_wm_window(C) || !ISKEYBOARD(trigger) ||
+  if (!CTX_wm_window(C) ||
+      (!ISKEYBOARD(trigger) && !ELEM(trigger, LEFTMOUSE, MIDDLEMOUSE, RIGHTMOUSE)) ||
       (mouse != 0 && !ELEM(mouse, LEFTMOUSE, MIDDLEMOUSE, RIGHTMOUSE)))
   {
     return OPERATOR_CANCELLED;

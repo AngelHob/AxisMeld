@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 """Declarative AxisMeld hotbox menu catalog without Blender dependencies."""
 from copy import deepcopy
+from .context_hotbox import component_menu
 from .tool_hotbox import MENU_COMMANDS, tool_menus
 
 
@@ -11,7 +12,7 @@ _VIEW_REPLAYABLE = frozenset({
     'view.wireframe', 'view.shaded',
 })
 _CLOSE_REPLAYABLE = frozenset({
-    'view.toggle_quad', 'selection.toggle_component', 'selection.vertex_mode',
+    'mode.object', 'view.toggle_quad', 'selection.toggle_component', 'selection.vertex_mode',
     'selection.edge_mode', 'selection.face_mode', 'selection.select_all',
     'selection.grow', 'selection.shrink', 'transform.move',
     'transform.rotate', 'transform.scale',
@@ -128,9 +129,9 @@ def _catalog():
         _disabled('common.edit', 'Edit'),
         _disabled('common.create', 'Create'),
         _menu('common.select', 'Select', (
+            component_menu(_node),
             _command('common.select.object_component', 'Object / Component',
                      'selection.toggle_component'),
-            _separator('common.select.separator.modes'),
             _command('common.select.vertex', 'Vertex', 'selection.vertex_mode'),
             _command('common.select.edge', 'Edge', 'selection.edge_mode'),
             _command('common.select.face', 'Face', 'selection.face_mode'),

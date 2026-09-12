@@ -130,7 +130,8 @@ TEST(hotbox_model, OptionalAppearanceAcceptsValidColorsAndRejectsMalformedValues
 
 TEST(hotbox_model, SelectionActionsUseLiteralRegisteredIdsAndUnknownRemainsAtomic)
 {
-  const std::array<std::pair<const char *, const char *>, 3> actions = {
+  const std::array<std::pair<const char *, const char *>, 4> actions = {
+      std::pair{"context.components.object", "mode.object"},
       std::pair{"common.select.all", "selection.select_all"},
       std::pair{"common.select.grow", "selection.grow"},
       std::pair{"common.select.shrink", "selection.shrink"},

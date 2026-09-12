@@ -39,7 +39,7 @@ _session_document = {'schema_version': 1, 'settings': {}}
 # Deliberately independent of the general adapter registry: new-window/file and interactive
 # navigation actions must not become callable through this batch's menu bridge.
 SUPPORTED_COMMANDS = frozenset({
-    *MENU_COMMANDS,
+    *MENU_COMMANDS, 'mode.object',
     'view.perspective', 'view.side', 'view.bottom', 'view.front', 'view.back',
     'view.top', 'view.left', 'view.focus_selected', 'view.frame_all', 'view.wireframe',
     'view.shaded', 'view.toggle_quad', 'selection.toggle_component', 'selection.vertex_mode',

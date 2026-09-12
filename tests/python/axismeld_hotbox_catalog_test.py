@@ -92,7 +92,7 @@ class HotboxCatalogTest(unittest.TestCase):
             'selection.edge_mode', 'selection.face_mode',
             'selection.select_all', 'selection.grow', 'selection.shrink'])
         self.assertEqual([node['id'] for node in node_by_id(catalog, 'common.select')['children']], [
-            'common.select.object_component', 'common.select.separator.modes',
+            'context.components', 'common.select.object_component',
             'common.select.vertex', 'common.select.edge', 'common.select.face',
             'common.select.all', 'common.select.grow', 'common.select.shrink'])
         self.assertEqual([node['command'] for node in node_by_id(catalog, 'common.modify')['children']

@@ -32,7 +32,7 @@ class ProfilesTest(unittest.TestCase):
         self.assertEqual(bindings['hotbox.open']['type'], 'SPACE')
         self.assertEqual(bindings['hotbox.open']['value'], 'PRESS')
         self.assertEqual(set(COMMANDS) - set(bindings), {
-            'view.toggle_quad', 'view.perspective', 'view.side', 'view.front', 'view.top',
+            'mode.object', 'view.toggle_quad', 'view.perspective', 'view.side', 'view.front', 'view.top',
             'view.left', 'view.back', 'view.bottom', 'selection.select_all',
             'selection.grow', 'selection.shrink', 'selection.clear', 'selection.marquee',
             'selection.lasso', 'selection.paint', 'orientation.move.world',

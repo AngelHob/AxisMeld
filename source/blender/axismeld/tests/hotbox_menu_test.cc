@@ -346,6 +346,9 @@ TEST(axismeld_hotbox_menu, SecondaryCommandsOccupyAnEllipseInsteadOfAColumn)
     children++;
   }
   EXPECT_EQ(children, 8);
+  // Component submenu replaces a non-action separator; keep this directory on one page.
+  EXPECT_NE(rect(layout, "context.components"), nullptr);
+  EXPECT_EQ(rect(layout, "@scroll:common.select:next"), nullptr);
   EXPECT_NE(rect(layout, "@back:common.select"), nullptr);
   EXPECT_GE(centers_x.size(), 3);
   EXPECT_GE(centers_y.size(), 3);

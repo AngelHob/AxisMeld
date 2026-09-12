@@ -3,6 +3,7 @@
 """Blender operator adaptation; profile files cannot provide implementation code."""
 import bpy
 
+from .context_hotbox import COMPONENT_HOTBOX, COMPONENT_ROOT
 from .commands import COMMANDS
 from .tool_hotbox import TOOL_ROOTS, ORIENTATIONS, SELECTION_TOOLS
 
@@ -10,7 +11,7 @@ TOOLS = {'tool.select': 'builtin.select_box', 'transform.move': 'builtin.move',
          'transform.rotate': 'builtin.rotate', 'transform.scale': 'builtin.scale', **SELECTION_TOOLS}
 COMPONENTS = {'selection.vertex_mode': 'VERT', 'selection.edge_mode': 'EDGE',
               'selection.face_mode': 'FACE'}
-MODE_COMMANDS = {'selection.toggle_component', *COMPONENTS}
+MODE_COMMANDS = {'selection.toggle_component', 'mode.object', COMPONENT_HOTBOX, *COMPONENTS}
 SELECTION_ACTIONS = {'selection.select_all', 'selection.clear', 'selection.grow', 'selection.shrink'}
 VIEW_OPS = {'view.focus_selected': ('view_selected', {'use_all_regions': False}),
             'view.frame_all': ('view_all', {'center': False}),
@@ -85,6 +86,16 @@ def run(context, command, *, invoke=True, keyboard_tool_session=False):
         slot.use = True  # SELECT enables the tool slot in BKE_scene_orientation_slot_get.
         context.area.tag_redraw()
         return {'FINISHED'}
+    if command == COMPONENT_HOTBOX:
+        if not invoke:
+            raise ValueError('Component hotbox requires an invoke event')
+        from . import hotbox_runtime
+        return bpy.ops.view3d.axismeld_hotbox(
+            'INVOKE_DEFAULT', menu_json=hotbox_runtime.snapshot(context), tool_menu=COMPONENT_ROOT)
+    if command == 'mode.object':
+        if context.mode == 'OBJECT':
+            return {'FINISHED'}
+        return bpy.ops.object.mode_set('EXEC_DEFAULT', mode='OBJECT')
     if command == 'selection.toggle_component':
         mode = 'OBJECT' if context.mode == 'EDIT_MESH' else 'EDIT'
         return bpy.ops.object.mode_set('EXEC_DEFAULT', mode=mode)
