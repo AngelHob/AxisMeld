@@ -35,6 +35,11 @@ class AXISMELD_OT_command(Operator):
         # Nested native modal operators own their handlers and subsequent mouse events.
         return {'FINISHED'} if 'RUNNING_MODAL' in result else result
 
+    def _native_component(self, context):
+        result = bpy.ops.view3d.axismeld_hotbox(
+            'INVOKE_DEFAULT', menu_json=hotbox_runtime.snapshot(context), tool_menu='context.components')
+        return {'FINISHED'} if 'RUNNING_MODAL' in result else result
+
     def execute(self, context):
         return self._run(context, False)
 
@@ -42,8 +47,12 @@ class AXISMELD_OT_command(Operator):
         if self.command == COMPONENT_HOTBOX and (
                 event.value != 'PRESS' or event.is_repeat or
                 event.alt or event.ctrl or event.shift or event.oskey or
-                not adapter.available(context, self.command)[0]):
+                (event.type not in {'LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE'} and
+                 not adapter.available(context, self.command)[0])):
             return {'PASS_THROUGH'}
+        if self.command == COMPONENT_HOTBOX and event.type in {'LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE'}:
+            # Native PRESS performs a read-only GPU pick before deciding whether to pass through.
+            return self._native_component(context)
         keyboard = event.value == 'PRESS' and event.type not in {
             'LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE', 'BUTTON4MOUSE', 'BUTTON5MOUSE',
             'ACTIONZONE_AREA', 'ACTIONZONE_REGION', 'NONE'}

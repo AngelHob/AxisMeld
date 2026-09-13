@@ -41,16 +41,19 @@ def suite():
     def modals():
         return [op.bl_idname for op in win.modal_operators]
     captured = False
-    def gesture(delta, cancel=False, trigger='RIGHTMOUSE'):
+    def gesture(delta, cancel=False, trigger='RIGHTMOUSE', during=None):
         nonlocal captured
         event('MOUSEMOVE', 'NOTHING', (0, 0))
+        yield from settle()  # Scene setup must reach the GPU before the PRESS pick.
         event(trigger)
         yield from settle()
-        check(modals().count('VIEW3D_OT_axismeld_hotbox') == 1, 'RMB must immediately open one component session')
+        check(modals().count('VIEW3D_OT_axismeld_hotbox') == 1, 'RMB must immediately open one component session: ' + str((bpy.context.mode, [(o.name,o.mode,o.select_get()) for o in bpy.context.scene.objects], modals())))
         if not captured:
             with override():
                 bpy.ops.screen.screenshot(filepath=str(Path(os.environ.get('AXISMELD_TEST_ARTIFACTS', root)) / 'component-ring.png'))
             captured = True
+        if during is not None:
+            during()
         event('MOUSEMOVE', 'NOTHING', delta)
         yield from settle()
         if cancel:
@@ -80,6 +83,90 @@ def suite():
         check(bpy.context.mode == 'OBJECT', 'center/Esc/disabled directions must not execute')
     print('PASS RMB component directions, consecutive gestures, Object Mode idempotence, center/Esc/placeholders', flush=True)
     cube = bpy.context.active_object
+    # M2b: the factory cube is under the pointer, while another mesh is active.
+    with override():
+        bpy.ops.mesh.primitive_cube_add(location=(20, 0, 0))
+        other = bpy.context.active_object
+    def capture_pointer():
+        with override():
+            bpy.ops.screen.screenshot(filepath=str(Path(os.environ.get('AXISMELD_TEST_ARTIFACTS', root)) / 'pointer-before-commit.png'))
+    yield from gesture((0,0), during=capture_pointer)
+    before = (tuple(o.name for o in bpy.context.selected_objects), other.name)
+    from axismeld import hotbox_runtime
+    recent_before = hotbox_runtime.recent.items()
+    for delta, cancel in [((0,0),False), ((0,64),True), ((86,0),False)]:
+        yield from gesture(delta, cancel)
+        check((tuple(o.name for o in bpy.context.selected_objects), bpy.context.active_object.name) == before,
+              'pointer cancellation must preserve selection and active object')
+        check(hotbox_runtime.recent.items() == recent_before, 'pointer cancellation polluted Recent')
+    yield from gesture((0,64))
+    check(bpy.context.active_object == cube and bpy.context.mode == 'EDIT_MESH',
+          'pointer commit must target the unselected mesh under RMB, not the active mesh')
+    check(not other.select_get(), 'unselected pointer target must replace previous selection')
+    with override():
+        adapter.run(bpy.context, 'mode.object', invoke=False)
+        other.select_set(True)
+        bpy.context.view_layer.objects.active = other
+    yield from settle()
+    yield from gesture((85,32))
+    check(bpy.context.active_object == cube and other.select_get() and cube.select_get(),
+          'selected pointer target must activate while preserving native selection set')
+    with override():
+        other.select_set(False)
+        bpy.data.objects.remove(other, do_unlink=True)
+    # No active object still permits a pointer target, but ordinary commands stay unavailable.
+    with override():
+        cube.select_set(False)
+        bpy.context.view_layer.objects.active = None
+        check(not adapter.available(bpy.context, 'selection.edge_mode')[0], 'global capability weakened')
+    yield from gesture((0,64))
+    check(bpy.context.mode == 'EDIT_MESH' and bpy.context.active_object == cube,
+          'pointer target must work without an active object')
+    with override():
+        adapter.run(bpy.context, 'mode.object', invoke=False)
+    # A captured target becoming unavailable must cancel, never execute on a replacement active mesh.
+    with override():
+        bpy.ops.mesh.primitive_cube_add(location=(20, 0, 0))
+        other = bpy.context.active_object
+    def invalidate_target():
+        cube.hide_select = True
+    recent_before = hotbox_runtime.recent.items()
+    yield from gesture((0,64), during=invalidate_target)
+    check(bpy.context.mode == 'OBJECT' and bpy.context.active_object == other and not cube.select_get(),
+          'invalid target fell back to another mesh or changed selection')
+    check(hotbox_runtime.recent.items() == recent_before, 'invalid target polluted Recent')
+    with override():
+        cube.hide_select = False
+        bpy.data.objects.remove(other, do_unlink=True)
+        cube.select_set(True)
+        bpy.context.view_layer.objects.active = cube
+    with override():
+        bpy.ops.mesh.primitive_cube_add(location=(20, 0, 0))
+        other = bpy.context.active_object
+    def delete_target():
+        bpy.data.objects.remove(cube, do_unlink=True)
+    recent_before = hotbox_runtime.recent.items()
+    yield from gesture((0,64), during=delete_target)
+    check(bpy.context.mode == 'OBJECT' and bpy.context.active_object == other and other.select_get(),
+          'deleted target fell back to the active mesh')
+    check(hotbox_runtime.recent.items() == recent_before, 'deleted target polluted Recent')
+    with override():
+        bpy.ops.mesh.primitive_cube_add()
+        cube = bpy.context.active_object
+        bpy.data.objects.remove(other, do_unlink=True)
+    # Edit-mode pointer remains bound to the current native editing set.
+    with override():
+        bpy.ops.mesh.primitive_cube_add(location=(20, 0, 0))
+        other = bpy.context.active_object
+        bpy.ops.object.mode_set(mode='EDIT')
+    yield from gesture((0,64))
+    check(bpy.context.mode == 'EDIT_MESH' and bpy.context.active_object == other and cube.mode == 'OBJECT',
+          'Edit Mesh pointer crossed to another object')
+    with override():
+        adapter.run(bpy.context, 'mode.object', invoke=False)
+        bpy.data.objects.remove(other, do_unlink=True)
+        cube.select_set(True)
+        bpy.context.view_layer.objects.active = cube
     native_draws = []
     def native_menu_probe(self, context):
         native_draws.append(context.mode)
@@ -96,8 +183,33 @@ def suite():
         event('ESC')
         event('ESC', 'RELEASE')
         yield from settle()
+    # Real foreground non-mesh geometry must pass to Blender, not edit the mesh behind it.
+    from mathutils import Quaternion, Vector
+    rv3d = region.data
+    saved_view = (rv3d.view_rotation.copy(), rv3d.view_location.copy(), rv3d.view_distance, rv3d.view_perspective)
+    rv3d.view_rotation = Quaternion((1, 0, 0, 0))
+    rv3d.view_location = Vector((0, 0, 0))
+    rv3d.view_distance = 10
+    rv3d.view_perspective = 'ORTHO'
+    with override():
+        bpy.ops.curve.primitive_bezier_circle_add(radius=3, location=(0, 0, 3))
+        foreground = bpy.context.active_object
+        foreground.data.dimensions = '2D'
+        foreground.data.fill_mode = 'BOTH'
+        foreground.select_set(False)
+        cube.select_set(True)
+        bpy.context.view_layer.objects.active = cube
+    yield from settle()
+    yield from native_rmb()
+    check(bpy.context.mode == 'OBJECT' and bpy.context.active_object == cube,
+          'foreground non-mesh changed mesh context')
+    with override():
+        bpy.data.objects.remove(foreground, do_unlink=True)
+    rv3d.view_rotation, rv3d.view_location, rv3d.view_distance, rv3d.view_perspective = saved_view
+    yield from settle()
     with override():
         cube.select_set(False)
+        cube.hide_set(True)
         check(not adapter.available(bpy.context, 'context.component_hotbox')[0], 'unselected mesh available')
     yield from native_rmb()
     with override():
@@ -107,6 +219,7 @@ def suite():
     yield from native_rmb()
     with override():
         bpy.context.active_object.select_set(False)
+        cube.hide_set(False)
         bpy.context.view_layer.objects.active = cube
         cube.select_set(True)
     # Real keymap edits preserve native RMB, and the new trigger owns its own release.
@@ -119,10 +232,18 @@ def suite():
     bpy.context.window_manager.keyconfigs.update()
     yield from settle()
     yield from native_rmb()
+    with override():
+        bpy.ops.mesh.primitive_cube_add(location=(20, 0, 0))
+        keyboard_target = bpy.context.active_object
     yield from gesture((0,64), trigger='F13')
-    check(bpy.context.mode == 'EDIT_MESH', 'remapped keyboard trigger must execute once')
+    check(bpy.context.mode == 'EDIT_MESH' and bpy.context.active_object == keyboard_target,
+          'remapped keyboard trigger must keep the active target rather than pick the pointer cube')
     with override():
         adapter.run(bpy.context, 'mode.object', invoke=False)
+    with override():
+        bpy.data.objects.remove(keyboard_target, do_unlink=True)
+        cube.select_set(True)
+        bpy.context.view_layer.objects.active = cube
     binding().active = False
     bpy.context.window_manager.keyconfigs.update()
     yield from settle()

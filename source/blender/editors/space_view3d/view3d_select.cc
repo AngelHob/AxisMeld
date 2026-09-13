@@ -2443,7 +2443,8 @@ static Base *mouse_select_object_center(const ViewContext *vc, Base *startbase, 
 
 static Base *ed_view3d_give_base_under_cursor_ex(bContext *C,
                                                  const int mval[2],
-                                                 int *r_material_slot)
+                                                 int *r_material_slot,
+                                                 const bool object_nearest = false)
 {
   Depsgraph *depsgraph = CTX_data_ensure_evaluated_depsgraph(C);
   Base *basact = nullptr;
@@ -2455,13 +2456,13 @@ static Base *ed_view3d_give_base_under_cursor_ex(bContext *C,
 
   const ViewContext vc = ED_view3d_viewcontext_init(C, depsgraph);
 
-  const bool do_nearest = !XRAY_ACTIVE(vc.v3d);
+  const bool do_nearest = object_nearest || !XRAY_ACTIVE(vc.v3d);
   const bool do_material_slot_selection = r_material_slot != nullptr;
   const int hits = mixed_bones_object_selectbuffer(
       &vc, &buffer, mval, VIEW3D_SELECT_FILTER_NOP, do_nearest, false, do_material_slot_selection);
 
   if (hits > 0) {
-    const bool has_bones = (r_material_slot == nullptr) &&
+    const bool has_bones = !object_nearest && (r_material_slot == nullptr) &&
                            selectbuffer_has_bones(buffer.storage.as_span().slice(0, hits));
     basact = mouse_select_eval_buffer(
         &vc, buffer, hits, do_nearest, has_bones, true, r_material_slot);
@@ -2473,6 +2474,12 @@ static Base *ed_view3d_give_base_under_cursor_ex(bContext *C,
 Base *ED_view3d_give_base_under_cursor(bContext *C, const int mval[2])
 {
   return ed_view3d_give_base_under_cursor_ex(C, mval, nullptr);
+}
+
+Base *ED_view3d_give_nearest_selectable_base_under_cursor(bContext *C, const int mval[2])
+{
+  /* Object targeting must not prioritize bones or cycle past the active object in X-Ray. */
+  return ed_view3d_give_base_under_cursor_ex(C, mval, nullptr, true);
 }
 
 Object *ED_view3d_give_object_under_cursor(bContext *C, const int mval[2])

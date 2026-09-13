@@ -1,6 +1,14 @@
 /* SPDX-FileCopyrightText: 2026 AxisMeld Authors
  * SPDX-License-Identifier: GPL-2.0-or-later */
 #include "BKE_context.hh"
+#include "BKE_layer.hh"
+#include "BKE_lib_id.hh"
+#include "BKE_library.hh"
+#include "DNA_object_types.h"
+#include "DEG_depsgraph.hh"
+#include "ED_object.hh"
+#include "ED_outliner.hh"
+#include "ED_view3d.hh"
 #include "BKE_report.hh"
 #include "BKE_screen.hh"
 #include "BKE_wm_runtime.hh"
@@ -44,6 +52,8 @@ struct HotboxData : HotboxVisual {
   bool mouse_moved_since_press = false;
   bool tool_shown = false;
   bool component_session = false;
+  unsigned int component_target_uid = 0;
+  ViewLayer *component_view_layer = nullptr;
   std::vector<std::string> return_path;
   bool center_return_armed = false;
 };
@@ -129,6 +139,70 @@ static bool refresh(bContext *C, HotboxData &data)
   return data.menu_layout.supported;
 }
 
+static bool component_target_valid(bContext *C, Base *base)
+{
+  return base && base->object->type == OB_MESH &&
+         base->object->mode == OB_MODE_OBJECT && BASE_SELECTABLE(CTX_wm_view3d(C), base) &&
+         ID_IS_EDITABLE(base->object) && base->object->data &&
+         ID_IS_EDITABLE(base->object->data) && !ID_IS_OVERRIDE_LIBRARY(base->object) &&
+         !ID_IS_OVERRIDE_LIBRARY(base->object->data);
+}
+
+static bool component_command(const std::string &command)
+{
+  return command == "selection.vertex_mode" || command == "selection.edge_mode" ||
+         command == "selection.face_mode" || command == "mode.object";
+}
+
+static void enable_component_target_commands(std::vector<MenuNode> &nodes)
+{
+  for (MenuNode &node : nodes) {
+    if (node.id == "context.components") {
+      for (MenuNode &child : node.children) {
+        if (child.kind == MenuKind::Command && component_command(child.command)) {
+          child.enabled = true;
+          child.reason.clear();
+        }
+      }
+      return;
+    }
+    enable_component_target_commands(node.children);
+  }
+}
+
+static bool commit_component_target(bContext *C, const HotboxData &data)
+{
+  if (!data.component_target_uid) {
+    return true;  // Edit Mesh keeps its existing native editing set.
+  }
+  ViewLayer *view_layer = CTX_data_view_layer(C);
+  if (view_layer != data.component_view_layer) {
+    return false;
+  }
+  BKE_view_layer_synced_ensure(*CTX_data_main(C), CTX_data_scene(C), view_layer);
+  Base *target = nullptr;
+  for (Base &base : *BKE_view_layer_object_bases_get(view_layer)) {
+    if (base.object->id.session_uid == data.component_target_uid) {
+      target = &base;
+      break;
+    }
+  }
+  if (!component_target_valid(C, target)) {
+    return false;
+  }
+  if (!(target->flag & BASE_SELECTED)) {
+    for (Base &base : *BKE_view_layer_object_bases_get(view_layer)) {
+      ed::object::base_select(&base, ed::object::BA_DESELECT);
+    }
+    ed::object::base_select(target, ed::object::BA_SELECT);
+  }
+  ed::object::base_activate(C, target);
+  DEG_id_tag_update(&CTX_data_scene(C)->id, ID_RECALC_SELECT);
+  WM_event_add_notifier(C, NC_SCENE | ND_OB_SELECT, CTX_data_scene(C));
+  ED_outliner_select_sync_from_object_tag(C);
+  return true;
+}
+
 static wmOperatorStatus submit(bContext *C, wmOperator *op, const MenuNode &leaf)
 {
   auto &data = *static_cast<HotboxData *>(op->customdata);
@@ -136,6 +210,10 @@ static wmOperatorStatus submit(bContext *C, wmOperator *op, const MenuNode &leaf
   const std::string command = leaf.command, value = leaf.value;
   const bool setting = leaf.kind == MenuKind::Setting;
   if (data.component_session) {
+    if (!component_command(command) || !commit_component_target(C, data)) {
+      cleanup(C, op);
+      return OPERATOR_CANCELLED;
+    }
     cleanup(C, op);
     axismeld_hotbox_dispatch(C, command.c_str());
     return OPERATOR_FINISHED;
@@ -285,7 +363,29 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
       return OPERATOR_CANCELLED;
     }
   }
+  unsigned int target_uid = 0;
+  if (component && CTX_data_mode_enum(C) == CTX_MODE_OBJECT) {
+    Base *target = nullptr;
+    if (ELEM(event->type, LEFTMOUSE, MIDDLEMOUSE, RIGHTMOUSE)) {
+      const int mval[2] = {event->xy[0] - CTX_wm_region(C)->winrct.xmin,
+                           event->xy[1] - CTX_wm_region(C)->winrct.ymin};
+      target = ED_view3d_give_nearest_selectable_base_under_cursor(C, mval);
+      if (target && !component_target_valid(C, target)) {
+        return OPERATOR_PASS_THROUGH;
+      }
+    }
+    if (!target) {
+      target = CTX_data_active_base(C);
+      if (!component_target_valid(C, target) || !(target->flag & BASE_SELECTED)) {
+        return OPERATOR_PASS_THROUGH;
+      }
+    }
+    target_uid = target->object->id.session_uid;
+    enable_component_target_commands(snapshot.menus);
+  }
   auto *data = new HotboxData();
+  data->component_target_uid = target_uid;
+  data->component_view_layer = CTX_data_view_layer(C);
   data->tool_root = tool_root;
   data->component_session = component;
   data->tap_eligible = tool_root.empty();
