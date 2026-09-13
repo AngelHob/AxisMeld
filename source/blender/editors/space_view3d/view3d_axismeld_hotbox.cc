@@ -18,6 +18,8 @@
 #include "DNA_screen_types.h"
 #include "DNA_view3d_types.h"
 #include "DNA_windowmanager_types.h"
+#include "DNA_userdef_types.h"
+#include "BLI_string.hh"
 #include "ED_screen.hh"
 #include "ED_space_api.hh"
 #include "RNA_access.hh"
@@ -105,6 +107,17 @@ static void draw(const bContext *C, ARegion *region, void *customdata)
   }
 }
 
+/* Only the main modeling menu expands modes; QWER and component mouse sessions retain
+ * their existing mesh boundary at invoke. View actions still use their own narrow poll. */
+static bool modeling_menu_poll(bContext *C)
+{
+  return STREQ(U.keyconfigstr, "AxisMeld_Maya_2026") && CTX_wm_area(C) &&
+         CTX_wm_area(C)->spacetype == SPACE_VIEW3D && CTX_wm_region(C) &&
+         CTX_wm_region(C)->regiontype == RGN_TYPE_WINDOW && CTX_wm_region_view3d(C) &&
+         ELEM(CTX_data_mode_enum(C), CTX_MODE_OBJECT, CTX_MODE_EDIT_MESH,
+              CTX_MODE_EDIT_CURVE, CTX_MODE_EDIT_SURFACE, CTX_MODE_EDIT_LATTICE);
+}
+
 static bool source_context(bContext *C, const HotboxData &data)
 {
   if (!source_live(C, data)) {
@@ -113,7 +126,7 @@ static bool source_context(bContext *C, const HotboxData &data)
   return CTX_wm_window(C) == data.window && CTX_wm_area(C) == data.area &&
          CTX_wm_region(C) == data.region && CTX_data_mode_enum(C) == data.mode &&
          CTX_data_scene(C) && CTX_data_scene(C)->id.session_uid == data.scene_uid &&
-         axismeld_view_context_poll(C);
+         modeling_menu_poll(C);
 }
 
 static wmOperatorStatus close_guard(bContext *C, wmOperator *op, const bool trigger_down)
@@ -407,6 +420,9 @@ static std::string direction_id(const HotboxAction action)
 static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event)
 {
   const std::string tool_root = RNA_string_get(op->ptr, "tool_menu");
+  if (!tool_root.empty() && !axismeld_view_context_poll(C)) {
+    return OPERATOR_PASS_THROUGH;
+  }
   const bool component = tool_root == "context.components";
   const bool creation = tool_root == "context.create";
   const bool direct = component || creation;
@@ -902,7 +918,7 @@ void VIEW3D_OT_axismeld_hotbox(wmOperatorType *ot)
   ot->name = "AxisMeld Hotbox";
   ot->idname = "VIEW3D_OT_axismeld_hotbox";
   ot->description = "Hold for Maya-style menus and central view gestures, tap to toggle a pane";
-  ot->poll = axismeld_view_context_poll;
+  ot->poll = modeling_menu_poll;
   ot->invoke = invoke;
   ot->modal = modal;
   ot->cancel = cleanup;

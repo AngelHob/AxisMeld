@@ -5,11 +5,11 @@ from copy import deepcopy
 
 from .context_hotbox import COMPONENT_HOTBOX
 from .creation_hotbox import CREATE_HOTBOX
-from .commands import baseline_bindings, RESERVED_KEYS
+from .commands import baseline_bindings, binding_events, RESERVED_KEYS
 from .profiles import MODIFIERS
+from .modeling_registry import SPECS as MODELING_SPECS, keymap_targets
 
 CONTEXT_HOTBOXES = frozenset({COMPONENT_HOTBOX, CREATE_HOTBOX})
-
 
 def overlaps(event, owned):
     if event.get('type') != owned['type']:
@@ -41,7 +41,7 @@ def validate_global_bindings(base, bindings):
         if args.get('modal') or name not in {'Window', 'Screen', 'Screen Editing', 'Frames'}:
             continue
         for operator, event, data in content['items']:
-            for command, owned in bindings.items():
+            for command, owned in binding_events(bindings):
                 if owned is not None and overlaps(event, owned):
                     # Screen Editing is activated on area edges; keep its exact native RMB
                     # item. It does not intercept the 3D View WINDOW component gesture.
@@ -60,8 +60,10 @@ def validate_global_bindings(base, bindings):
 def generate_keymaps(base, bindings):
     result = deepcopy(base)
     # Context sessions must retain the native fallback for rejected contexts and rebinds.
-    owned = [*(value for key, value in baseline_bindings().items() if key not in CONTEXT_HOTBOXES),
-             *(value for key, value in bindings.items() if value and key not in CONTEXT_HOTBOXES),
+    owned = [*(value for key, value in baseline_bindings().items()
+               if key not in CONTEXT_HOTBOXES and key not in MODELING_SPECS),
+             *(value for key, value in bindings.items()
+               if value and key not in CONTEXT_HOTBOXES and key not in MODELING_SPECS),
              *({'type': key} for key in RESERVED_KEYS)]
     for name, args, content in result:
         # Native operators poll the Maya preset, modeling context and highlighted/armed
@@ -69,17 +71,27 @@ def generate_keymaps(base, bindings):
         if name == 'Generic Gizmo Maybe Drag':
             content['items'].insert(0, ('axismeld.axis_select',
                                        {'type': 'LEFTMOUSE', 'value': 'CLICK'}, None))
-        if not modeling_keymap(name, args):
+        legacy_map = modeling_keymap(name, args)
+        extra_map = name in {'Curve', 'Lattice'} and not args.get('modal', False)
+        if not legacy_map and not extra_map:
             continue
+        local_owned = list(owned) if legacy_map else []
+        # Curve/Lattice only gain explicitly declared M3 shortcuts; native QWER and
+        # non-modeling editor maps remain intact. View-wide fallback bindings are retained.
+        local_owned.extend(event for layer in (baseline_bindings(), bindings)
+                           for identifier, event in binding_events(layer)
+                           if event and identifier in MODELING_SPECS and
+                           name in keymap_targets(identifier))
         content['items'] = [item for item in content['items']
                              if not (item[0] == 'axismeld.command' and item[2] and
                                      any(('command', command) in item[2].get('properties', ())
                                          for command in CONTEXT_HOTBOXES))
-                            and not any(overlaps(item[1], event) for event in owned)]
-        for command, event in bindings.items():
+                            and not any(overlaps(item[1], event) for event in local_owned)]
+        for command, event in binding_events(bindings):
             if command == 'hotbox.open':
                 continue
-            target = ('3D View',) if command.startswith('view.') else ('Object Mode', 'Mesh')
+            target = (keymap_targets(command) if command in MODELING_SPECS else
+                      ('3D View',) if command.startswith('view.') else ('Object Mode', 'Mesh'))
             if name in target and event is not None:
                 item = ('axismeld.command', dict(event),
                         {'properties': [('command', command)]})
@@ -114,14 +126,17 @@ def addon_conflicts(keyconfig, bindings):
     if keyconfig is None:
         return conflicts
     for keymap in keyconfig.keymaps:
-        if not modeling_keymap(keymap.name, {'modal': keymap.is_modal}):
+        extra_map = keymap.name in {'Curve', 'Lattice'} and not keymap.is_modal
+        if not modeling_keymap(keymap.name, {'modal': keymap.is_modal}) and not extra_map:
             continue
         for item in keymap.keymap_items:
             if not item.active:
                 continue
             event = {'type': item.type, 'any': item.any,
                      **{key: getattr(item, key) for key in MODIFIERS}}
-            for command, owned in bindings.items():
+            for command, owned in binding_events(bindings):
+                if extra_map and (command not in MODELING_SPECS or keymap.name not in keymap_targets(command)):
+                    continue
                 if owned is not None and overlaps(event, owned):
                     conflicts.append(f'Addon {keymap.name}: {item.idname} overlaps {command}')
     return conflicts

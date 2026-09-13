@@ -23,6 +23,9 @@ _CLOSE_REPLAYABLE = frozenset({
 
 def command_policy(command):
     """Return the fixed ``(close_before, replayable)`` command policy."""
+    from .modeling_registry import SPECS
+    if command in SPECS:
+        return True, SPECS[command].replayable
     if command in _VIEW_REPLAYABLE:
         return False, True
     if command in _CLOSE_REPLAYABLE or (command in MENU_COMMANDS and command != 'tool.select'):
@@ -211,7 +214,8 @@ def _catalog():
             ('modeling.generate', 'Generate'),
         )
     ))
-    return common, pane, center, modeling
+    from .modeling_catalog import extend_catalog
+    return extend_catalog((common, pane, center, modeling), _node)
 
 
 _DEFAULT_CATALOG = _catalog()

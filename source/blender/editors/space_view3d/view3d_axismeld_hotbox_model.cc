@@ -166,7 +166,9 @@ const std::unordered_set<std::string> commands = {"tool.select",
                                                   "view.top",
                                                   "view.left",
                                                   "view.back",
-                                                  "view.bottom"};
+                                                  "view.bottom",
+#include "view3d_axismeld_modeling_commands.inc"
+};
 
 struct Parser {
   std::unordered_set<std::string> ids, menu_ids;
@@ -175,10 +177,10 @@ struct Parser {
             const std::string_view parent_presentation = {})
   {
     const auto *dict = value.as_dictionary_value();
-    if (depth > 8 || ids.size() >= 512 ||
+    if (depth > 8 || ids.size() >= 2048 ||
         !fields(
             dict, {"id", "kind", "label", "command", "enabled", "reason", "children"},
-            {"value", "direction", "presentation"}))
+            {"value", "direction", "presentation", "indicator", "checked"}))
       return false;
     std::string kind;
     if (!text(*dict, "id", out.id, true) || !ids.insert(out.id).second ||
@@ -190,6 +192,13 @@ struct Parser {
     if (!enabled || !children)
       return false;
     out.enabled = *enabled;
+    if (dict->lookup("indicator") || dict->lookup("checked")) {
+      const auto checked = dict->lookup_bool("checked");
+      if (kind != "command" || !text(*dict, "indicator", out.indicator) || !checked ||
+          (out.indicator != "radio" && out.indicator != "checkbox"))
+        return false;
+      out.checked = *checked;
+    }
     if (dict->lookup("value") && !text(*dict, "value", out.value))
       return false;
     if (dict->lookup("direction") || parent_presentation == "radial") {

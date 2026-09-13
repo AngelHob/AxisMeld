@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .context_hotbox import COMPONENT_HOTBOX
 from .creation_hotbox import CREATE_HOTBOX
-from .commands import COMMANDS, baseline_bindings
+from .commands import COMMANDS, baseline_bindings, binding_events
 
 MODIFIERS = ('ctrl', 'shift', 'alt', 'oskey')
 KEY_TYPES = frozenset((*'ABCDEFGHIJKLMNOPQRSTUVWXYZ', *(f'F{i}' for i in range(1, 25)),
@@ -62,7 +62,7 @@ def _apply(bindings, document):
                 candidate[command][key] for key in ('alt', 'oskey')):
             raise ValueError('Creation hotbox cannot capture Alt or OSKey navigation')
     seen = {}
-    for command, event in candidate.items():
+    for command, event in binding_events(candidate):
         if event is None:
             continue
         signature = event_signature(event)

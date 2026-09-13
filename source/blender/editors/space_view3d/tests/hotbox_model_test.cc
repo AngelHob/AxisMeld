@@ -33,16 +33,45 @@ TEST(hotbox_model, ExpandedToolTreeRetainsBoundedAtomicParsing)
 {
   MenuSnapshot out{};
   std::string error, children;
-  for (int i = 0; i < 300; i++) {
+  for (int i = 0; i < 800; i++) {
     children += (i ? "," : "") + menu("entry" + std::to_string(i));
   }
   ASSERT_TRUE(parse_menu_snapshot(snapshot(children), out, error));
-  for (int i = 300; i < 513; i++) {
+  for (int i = 800; i < 2049; i++) {
     children += "," + menu("entry" + std::to_string(i));
   }
   EXPECT_FALSE(parse_menu_snapshot(snapshot(children), out, error));
   EXPECT_EQ(out.generation, 7);
-  EXPECT_EQ(out.menus.front().children.size(), 300);
+  EXPECT_EQ(out.menus.front().children.size(), 800);
+}
+
+TEST(hotbox_model, ModelingCommandsAndReadOnlyIndicatorsRemainExplicit)
+{
+  const char *registered[] = {
+#include "../view3d_axismeld_modeling_commands.inc"
+  };
+  MenuSnapshot out{};
+  std::string error;
+  const auto leaf = [](const std::string &command) {
+    return R"({"id":"action","kind":"command","label":"Action","enabled":true,"reason":"","children":[],"command":")" +
+           command + R"(","indicator":"radio","checked":false})";
+  };
+  for (const auto *command : registered) {
+    ASSERT_TRUE(parse_menu_snapshot(snapshot(leaf(command)), out, error)) << command << error;
+    EXPECT_EQ(menu_radio_state(out, out.menus[0].children[0]), MenuRadioState::Unselected);
+  }
+  const std::string valid = leaf(registered[0]);
+  for (const auto &bad : {leaf("modeling.execute_arbitrary"),
+                          replace(valid, "\"checked\":false", "\"checked\":0"),
+                          replace(valid, "\"radio\"", "\"operator_path\""),
+                          replace(valid, "\"command\",\"label\"", "\"menu\",\"label\"")})
+  {
+    out.generation = 99;
+    EXPECT_FALSE(parse_menu_snapshot(snapshot(bad), out, error));
+    EXPECT_EQ(out.generation, 99);
+  }
+  ASSERT_TRUE(parse_menu_snapshot(snapshot(replace(valid, "\"checked\":false", "\"checked\":true")), out, error));
+  EXPECT_EQ(menu_radio_state(out, out.menus[0].children[0]), MenuRadioState::Selected);
 }
 
 TEST(hotbox_model, CreationCommandsAreExplicitAndUnknownGeometryIsRejected)
@@ -235,7 +264,7 @@ TEST(hotbox_model, CenterButtonSettingAcceptsRegisteredMenuOrDisabledOnly)
 TEST(hotbox_model, NodeCountAndDepthAreBounded)
 {
   std::string children;
-  for (int i = 0; i < 508; i++) {
+  for (int i = 0; i < 2044; i++) {
     if (i)
       children += ",";
     children += menu("child" + std::to_string(i));

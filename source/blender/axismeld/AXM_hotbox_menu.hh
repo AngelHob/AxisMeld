@@ -17,6 +17,8 @@ struct MenuNode {
   bool enabled;
   std::vector<MenuNode> children;
   std::string direction, presentation;
+  std::string indicator;
+  bool checked = false;
 };
 struct MenuAppearance {
   bool theme_background = true;
@@ -51,7 +53,7 @@ struct MenuRect {
   bool retained_only = false;  // Visible background, not a disabled command or hit target.
 };
 struct MenuScrollBounds {
-  /* Displayed native mapping page, independent of a stale caller-owned offset. */
+  /* Displayed native list page, independent of a stale caller-owned offset. */
   int effective_first = 0;
   int maximum_first = 0;
 };
@@ -85,7 +87,7 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
                        const std::unordered_map<std::string, float> &label_widths,
                        const std::array<float, 2> *popup_origin = nullptr,
                        std::string_view tool_root = {});
-/* Native mapping pages normalize from their displayed first row; other menus retain legacy math.
+/* Native list pages normalize from their displayed first row; other menus retain legacy math.
  */
 int menu_scroll_offset_transition(const MenuLayout &layout,
                                   std::string_view owner,

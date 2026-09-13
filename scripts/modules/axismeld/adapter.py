@@ -7,6 +7,8 @@ from .context_hotbox import COMPONENT_HOTBOX, COMPONENT_ROOT
 from .creation_hotbox import CREATE_HOTBOX, CREATE_OPERATORS, CREATE_ROOT
 from .commands import COMMANDS
 from .tool_hotbox import TOOL_ROOTS, ORIENTATIONS, SELECTION_TOOLS
+from . import modeling_adapter
+from .modeling_registry import SPECS as MODELING_SPECS
 
 TOOLS = {'tool.select': 'builtin.select_box', 'transform.move': 'builtin.move',
          'transform.rotate': 'builtin.rotate', 'transform.scale': 'builtin.scale', **SELECTION_TOOLS}
@@ -42,6 +44,12 @@ def _selection_operation(context, command):
 def available(context, command):
     if command not in COMMANDS:
         return False, 'Unknown AxisMeld command'
+    if command in MODELING_SPECS:
+        return modeling_adapter.available(context, command)
+    if command == 'hotbox.open':
+        return (True, '') if (modeling_adapter.menu_context(context) and
+                             bpy.ops.view3d.axismeld_hotbox.poll()) else (
+            False, 'Requires a supported modeling 3D View window')
     if not modeling_context(context):
         return False, 'Requires a 3D View window in Object or mesh Edit Mode'
     if command == CREATE_HOTBOX or command in CREATE_OPERATORS:
@@ -87,6 +95,8 @@ def run(context, command, *, invoke=True, keyboard_tool_session=False):
     valid, reason = available(context, command)
     if not valid:
         raise ValueError(reason)
+    if command in MODELING_SPECS:
+        return modeling_adapter.run(context, command, invoke=invoke)
     if command in CREATE_OPERATORS:
         operator_name, properties = CREATE_OPERATORS[command]
         # The native child owns its geometry and single undo entry; wrappers remain non-undoable.

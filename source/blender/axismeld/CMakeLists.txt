@@ -31,6 +31,13 @@ if(WITH_GTESTS)
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/hotbox_catalog.py
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/tool_hotbox.py
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/creation_hotbox.py
+      ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/modeling_schema.py
+      ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/modeling_registry.py
+      ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/modeling_catalog.py
+      ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/modeling_common.py
+      ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/modeling_mesh.py
+      ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/modeling_shapes.py
+      ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/modeling_gaps.py
     VERBATIM
   )
   add_custom_target(axismeld_menu_fixture DEPENDS ${menu_fixture})

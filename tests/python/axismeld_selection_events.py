@@ -37,7 +37,9 @@ def suite():
     expected_actions = ('selection.select_all', 'selection.grow', 'selection.shrink')
     for command in expected_actions:
         check(command in COMMANDS, f'installed {command} action missing')
-        check(COMMANDS[command].key is None and COMMANDS[command].status == 'adapted',
+        check(COMMANDS[command].key == {'selection.select_all': 'A', 'selection.grow': 'PERIOD',
+                                      'selection.shrink': 'COMMA'}[command] and
+              COMMANDS[command].status == 'adapted',
               f'installed {command} metadata changed')
 
     win = bpy.context.window
@@ -311,7 +313,7 @@ def suite():
     print('PASS 5x5 Face Step grow/shrink literals and geometry/UV invariants', flush=True)
 
     sys.path.insert(0, str(Path(__file__).parent))
-    from axismeld_hotbox_geometry_fixture import ellipse_page
+    from axismeld_hotbox_geometry_fixture import native_page
     scale = bpy.context.preferences.system.ui_scale
     cx, cy = region.x + region.width // 2, region.y + region.height // 2
     position = [cx, cy]
@@ -328,18 +330,19 @@ def suite():
 
     def label_width(label):
         blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
-        icons = {'Object / Component', 'Vertex', 'Edge', 'Face', 'Select All',
-                 'Grow Selection', 'Shrink Selection'}
+        icons = {'AxisMeld', 'Vertex', 'Edge', 'Face'}
         return blf.dimensions(0, label)[0] / scale + (20 if label in icons else 0)
 
-    labels = ['Object / Component', '', 'Vertex', 'Edge', 'Face',
-              'Select All', 'Grow Selection', 'Shrink Selection']
+    from axismeld.hotbox_catalog import default_catalog
+    entries = next(n for n in default_catalog()[0]['children'] if n['id'] == 'common.select')['children']
+    labels = [n['label'] for n in entries]
     center_width = (label_width('AxisMeld') + 40) * scale
     center = (cx-center_width/2, cy-19*scale, center_width, 38*scale)
 
     def positions(anchor):
-        return ellipse_page(anchor, labels, label_width,
-                            (region.x, region.y, region.width, region.height), scale)['items']
+        return native_page(anchor, labels, label_width,
+                           (region.x, region.y, region.width, region.height), scale,
+                           submenu_indices=[i for i, n in enumerate(entries) if n['kind'] == 'menu'])['items']
 
     def modal_open():
         return any(operator.bl_idname == 'VIEW3D_OT_axismeld_hotbox'
@@ -458,9 +461,9 @@ def suite():
                    if item.idname == 'axismeld.command' and
                    item.properties.command == 'selection.select_all')
     check(binding.type == 'F13', 'private Select All binding did not reload')
-    check(all(COMMANDS[command].key is None for command in expected_actions) and
+    check([COMMANDS[command].key for command in expected_actions] == ['A', 'PERIOD', 'COMMA'] and
           baseline_bindings()['view.frame_all']['type'] == 'A',
-          'default no-key metadata or existing A binding changed')
+          'verified default metadata or existing A binding changed')
     bpy.context.view_layer.objects.active = None
     event('MOUSEMOVE', 'NOTHING', (cx, cy)); yield from settle()
     event('F13'); event('F13', 'RELEASE'); yield from settle()

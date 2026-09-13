@@ -8,6 +8,9 @@
 namespace blender::axismeld {
 MenuRadioState menu_radio_state(const MenuSnapshot &snapshot, const MenuNode &node)
 {
+  if (node.kind == MenuKind::Command && node.indicator == "radio") {
+    return node.checked ? MenuRadioState::Selected : MenuRadioState::Unselected;
+  }
   if (node.kind != MenuKind::Setting) {
     return MenuRadioState::None;
   }
@@ -129,13 +132,12 @@ const MenuNode *find_node(const std::vector<MenuNode> &nodes, const std::string 
 }
 
 bool valid_widths(const std::vector<MenuNode> &nodes,
-                  const std::unordered_map<std::string, float> &widths,
-                  const float available)
+                  const std::unordered_map<std::string, float> &widths)
 {
   for (const MenuNode &node : nodes) {
     const auto width = widths.find(node.id);
     if (width == widths.end() || !std::isfinite(width->second) || width->second < 0 ||
-        width->second + padding > available || !valid_widths(node.children, widths, available))
+        !valid_widths(node.children, widths))
     {
       return false;
     }
@@ -296,6 +298,13 @@ class LayoutBuilder {
     }
     const bool overflow = total > width - 2 * margin;
     const float room = width - 2 * margin - (overflow ? 2 * (scroll_width + gap) : 0);
+    if (std::any_of(nodes.begin(), nodes.end(), [&](const MenuNode *node) {
+          return widths.at(node->id) + padding > room;
+        }))
+    {
+      result.supported = false;
+      return;
+    }
     int first = overflow ? offset(owner.id, int(nodes.size())) : 0;
     auto end_of_page = [&](const int start) {
       float used = 0;
@@ -657,7 +666,7 @@ class LayoutBuilder {
       }
 
       const int count = int(owner.children.size());
-      const int minimum_capacity = mapping_list(owner.id) ? 1 : count;
+      const int minimum_capacity = 1;
       for (int capacity = count; capacity >= minimum_capacity; capacity--) {
         const bool paged = capacity < count;
         const float h = (capacity + (paged ? 2 : 0)) * secondary_height;
@@ -675,9 +684,7 @@ class LayoutBuilder {
             first = std::clamp(first, std::max(0, i - capacity + 1), i);
           }
         }
-        if (mapping_list(owner.id)) {
-          result.native_scroll_bounds[owner.id] = {first, count - capacity};
-        }
+        result.native_scroll_bounds[owner.id] = {first, count - capacity};
         int row = 0;
         auto add_native_row = [&](const std::string &id, const bool enabled) {
           result.rects.push_back(
@@ -762,7 +769,7 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
   if (!std::isfinite(width) || !std::isfinite(height) || !std::isfinite(center_x) ||
       !std::isfinite(center_y) || width < 340 || height < 200 || center_x < 0 ||
       center_x > width || center_y < 0 || center_y > height ||
-      !valid_widths(snapshot.menus, label_widths, width - 2 * margin - 2 * (scroll_width + gap)))
+      !valid_widths(snapshot.menus, label_widths))
   {
     return {{}, false};
   }
@@ -828,6 +835,9 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
   }
   if (const MenuNode *center = find_node(snapshot.menus, "views")) {
     const float w = label_widths.at(center->id) + padding;
+    if (w > width || row_height > height) {
+      return {{}, false};
+    }
     build.add(*center,
               std::clamp(center_x - w / 2, 0.0f, width - w),
               std::clamp(center_y - row_height / 2, 0.0f, height - row_height),

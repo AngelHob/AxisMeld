@@ -12,6 +12,7 @@ from axismeld.commands import baseline_bindings, COMMANDS
 from axismeld.profiles import resolve_profiles, load_profiles
 from axismeld.keymap import generate_keymaps
 from axismeld.keymap import validate_global_bindings
+from axismeld.modeling_registry import SPECS as MODELING_SPECS
 
 
 def profile(**bindings):
@@ -25,18 +26,17 @@ class ProfilesTest(unittest.TestCase):
                     'selection.vertex_mode': 'F9', 'selection.edge_mode': 'F10',
                     'selection.face_mode': 'F11', 'view.focus_selected': 'F', 'view.frame_all': 'A'}
         self.assertEqual({key: baseline_bindings()[key]['type'] for key in expected}, expected)
-        self.assertTrue(all(command.status == 'adapted' for command in COMMANDS.values()))
+        self.assertTrue(all(command.status in {'adapted', 'blender'} for command in COMMANDS.values()))
 
     def test_hotbox_is_bound_but_menu_view_commands_are_known_and_unbound(self):
         bindings = baseline_bindings()
         self.assertEqual(bindings['hotbox.open']['type'], 'SPACE')
         self.assertEqual(bindings['hotbox.open']['value'], 'PRESS')
-        self.assertEqual(set(COMMANDS) - set(bindings), {
+        self.assertEqual(set(COMMANDS) - set(bindings) - set(MODELING_SPECS), {
             'mesh.create_disc', 'mesh.create_sphere', 'mesh.create_torus', 'mesh.create_cube',
             'mesh.create_cone', 'mesh.create_cylinder', 'mesh.create_plane',
             'mode.object', 'view.toggle_quad', 'view.perspective', 'view.side', 'view.front', 'view.top',
-            'view.left', 'view.back', 'view.bottom', 'selection.select_all',
-            'selection.grow', 'selection.shrink', 'selection.clear', 'selection.marquee',
+            'view.left', 'view.back', 'view.bottom', 'selection.marquee',
             'selection.lasso', 'selection.paint', 'orientation.move.world',
             'orientation.move.object', 'orientation.move.normal', 'orientation.move.view',
             'orientation.rotate.world', 'orientation.rotate.object', 'orientation.rotate.normal',

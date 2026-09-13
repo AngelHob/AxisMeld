@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from .tool_hotbox import ORIENTATIONS
 from .creation_hotbox import CREATE_HOTBOX, PRIMITIVES
+from .modeling_registry import SPECS as MODELING_SPECS
 
 PRESET_NAME = 'AxisMeld_Maya_2026'
 SOURCE_URL = ('https://help.autodesk.com/cloudhelp/2026/ENU/Maya-KeyboardShortcuts/files/'
@@ -25,6 +26,9 @@ class Command:
 
 
 COMMANDS = MappingProxyType({command.id: command for command in (
+    *(Command(spec.id, spec.label, spec.key, alt=spec.alt, ctrl=spec.ctrl, shift=spec.shift,
+              status=spec.classification, difference=spec.difference)
+      for spec in MODELING_SPECS.values()),
     *(Command('mesh.create_' + name, label,
               difference=('Creates a native Blender primitive at the 3D Cursor with Blender dimensions, '
                           'Z-up and topology; Maya interactive placement is not reproduced.' +
@@ -38,7 +42,7 @@ COMMANDS = MappingProxyType({command.id: command for command in (
       for identifier, label in (('selection.marquee', 'Marquee Select'),
                                  ('selection.lasso', 'Lasso Select'),
                                  ('selection.paint', 'Paint Selection'))),
-    Command('selection.clear', 'Clear Selection',
+    Command('selection.clear', 'Clear Selection', 'D', alt=True,
             difference='Native deselect in the current Object or Mesh Edit set; no mode switching.'),
     *(Command(identifier, orientation.title(),
               difference='Blender per-tool transform orientation; Normal uses Blender selection normals and Gimbal uses Euler semantics.')
@@ -55,13 +59,13 @@ COMMANDS = MappingProxyType({command.id: command for command in (
     Command('selection.vertex_mode', 'Vertex', 'F9'),
     Command('selection.edge_mode', 'Edge', 'F10'),
     Command('selection.face_mode', 'Face', 'F11'),
-    Command('selection.select_all', 'Select All',
+    Command('selection.select_all', 'Select All', 'A', ctrl=True, shift=True,
             difference=('Selects eligible objects or mesh components using Blender context; '
                         'Maya DAG/UFE rules are not reproduced.')),
-    Command('selection.grow', 'Grow Selection',
+    Command('selection.grow', 'Grow Selection', 'PERIOD', shift=True,
             difference=('Uses Blender native topology traversal; Maya '
                         'GrowPolygonSelectionRegion equivalence is not claimed.')),
-    Command('selection.shrink', 'Shrink Selection',
+    Command('selection.shrink', 'Shrink Selection', 'COMMA', shift=True,
             difference=('Uses Blender native topology traversal; Maya '
                         'ShrinkPolygonSelectionRegion equivalence is not claimed.')),
     Command('view.focus_selected', 'Frame Selected', 'F'),
@@ -99,3 +103,21 @@ def baseline_bindings():
     return {key: {'type': command.key, 'value': 'PRESS', 'alt': command.alt,
                   'ctrl': command.ctrl, 'shift': command.shift, 'oskey': command.oskey}
             for key, command in COMMANDS.items() if command.key is not None}
+
+
+# Verified default Maya aliases: hotkeySetup.mel:257 and :267. Remapping or
+# disabling the primary also removes these aliases. Native Screen Ctrl+Z/G stay native.
+DEFAULT_ALIASES = {
+    'edit.redo': ({'type': 'Y', 'value': 'PRESS', 'ctrl': True},),
+    'display.frame_selected_all': ({'type': 'F', 'value': 'PRESS', 'ctrl': True, 'shift': True},),
+}
+
+
+def binding_events(bindings):
+    """One input source for profile collision checks, keymaps and diagnostics."""
+    defaults = baseline_bindings()
+    for command, event in bindings.items():
+        yield command, event
+        if event is not None and event == defaults.get(command):
+            for alias in DEFAULT_ALIASES.get(command, ()):
+                yield command, {'ctrl': False, 'shift': False, 'alt': False, 'oskey': False} | alias

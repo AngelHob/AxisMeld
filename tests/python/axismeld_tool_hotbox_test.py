@@ -26,7 +26,7 @@ class ToolHotboxTest(unittest.TestCase):
                          {'W': 'Global', 'NW': 'Local', 'NE': 'Normal Average',
                           'SE': 'Keep Spacing', 'N': 'Symmetry', 'S': 'Select',
                           'E': 'Snap', 'SW': 'Axis'})
-        self.assertLessEqual(len(nodes), 512)
+        self.assertLessEqual(len(nodes), hotbox_runtime.MAX_NODES)
         self.assertEqual(len(menus), 4)
 
     def test_other_tool_slots_are_classic_maya_and_placeholders_never_dispatch(self):
@@ -54,8 +54,11 @@ class ToolHotboxTest(unittest.TestCase):
                 self.assertIn(command, COMMANDS)
                 self.assertIn(command, hotbox_runtime.SUPPORTED_COMMANDS)
                 self.assertEqual(hotbox_catalog.command_policy(command), (True, True))
-                if command.startswith(('orientation.', 'selection.marquee', 'selection.paint', 'selection.lasso', 'selection.clear')):
+                if command.startswith(('orientation.', 'selection.marquee', 'selection.paint', 'selection.lasso')):
                     self.assertNotIn(command, baseline_bindings())
+                elif command == 'selection.clear':
+                    self.assertEqual(baseline_bindings()[command]['type'], 'D')
+                    self.assertTrue(baseline_bindings()[command]['alt'])
         self.assertNotIn('orientation.move.gimbal', COMMANDS)
         self.assertNotIn('orientation.scale.gimbal', COMMANDS)
 

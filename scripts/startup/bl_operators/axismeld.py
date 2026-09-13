@@ -11,6 +11,7 @@ from axismeld.commands import PRESET_NAME
 from axismeld.hotbox_catalog import registered_menu_choices
 from axismeld.hotbox_profiles import DEFAULT_APPEARANCE
 from axismeld.tool_hotbox import TOOL_ROOTS
+from axismeld import modeling_common_ops, modeling_mesh_ops, modeling_shapes_ops
 
 
 class AXISMELD_OT_command(Operator):
@@ -24,7 +25,7 @@ class AXISMELD_OT_command(Operator):
 
     @classmethod
     def poll(cls, context):
-        return adapter.modeling_context(context)
+        return adapter.modeling_adapter.menu_context(context)
 
     def _run(self, context, invoke, keyboard_tool_session=False):
         try:
@@ -272,13 +273,14 @@ class AXISMELD_Preferences(KeyConfigPreferences):
         layout.prop(self, 'hotbox_center_leftmouse')
         layout.prop(self, 'hotbox_center_middlemouse')
         layout.prop(self, 'hotbox_center_rightmouse')
-        layout.label(text='Hotbox menus and seven views are adapted; modeling/UV directories remain disabled')
+        layout.label(text='Modeling menus use Blender operations; unavailable Maya features link to plans')
         for message in runtime.diagnostics:
             layout.label(text=message, icon='ERROR')
 
 
 classes = (AXISMELD_OT_command, AXISMELD_OT_reload_profile, AXISMELD_OT_hotbox_dispatch,
-           AXISMELD_OT_hotbox_setting, AXISMELD_OT_hotbox_refresh, AXISMELD_OT_hotbox_reset_appearance)
+           AXISMELD_OT_hotbox_setting, AXISMELD_OT_hotbox_refresh, AXISMELD_OT_hotbox_reset_appearance,
+           *modeling_common_ops.classes, *modeling_mesh_ops.classes, *modeling_shapes_ops.classes)
 
 
 def register():

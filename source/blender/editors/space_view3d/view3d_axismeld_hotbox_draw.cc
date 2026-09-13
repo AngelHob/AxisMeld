@@ -17,6 +17,9 @@ namespace blender::axismeld {
 namespace {
 int menu_radio_icon(const MenuSnapshot &snapshot, const MenuNode &node)
 {
+  if (node.kind == MenuKind::Command && node.indicator == "checkbox") {
+    return node.checked ? ICON_CHECKBOX_HLT : ICON_CHECKBOX_DEHLT;
+  }
   switch (menu_radio_state(snapshot, node)) {
     case MenuRadioState::Selected:
       return ICON_RADIOBUT_ON;

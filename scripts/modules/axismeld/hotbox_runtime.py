@@ -9,13 +9,14 @@ from threading import Lock
 from .commands import COMMANDS, PRESET_NAME
 from .tool_hotbox import DIRECTIONS, MENU_COMMANDS
 from .creation_hotbox import CREATE_COMMANDS
+from .modeling_registry import SPECS as MODELING_SPECS
 from .hotbox_catalog import default_catalog, command_policy
 from .hotbox_profiles import (CANONICAL_ROWS, DEFAULT_APPEARANCE, DEFAULT_SETTINGS, MENU_IDS, MOUSE_BUTTONS,
                               load_hotbox_profiles, resolve_hotbox, save_hotbox_user,
                               validate_settings)
 
 
-MAX_NODES = 512
+MAX_NODES = 2048
 MAX_DEPTH = 8
 MAX_JSON_BYTES = 256 * 1024
 MAX_TEXT = 128
@@ -40,6 +41,7 @@ _session_document = {'schema_version': 1, 'settings': {}}
 # Deliberately independent of the general adapter registry: new-window/file and interactive
 # navigation actions must not become callable through this batch's menu bridge.
 SUPPORTED_COMMANDS = frozenset({
+    *MODELING_SPECS,
     *CREATE_COMMANDS,
     *MENU_COMMANDS, 'mode.object',
     'view.perspective', 'view.side', 'view.bottom', 'view.front', 'view.back',
@@ -326,7 +328,8 @@ def validate_snapshot(value):
         if not isinstance(node, dict):
             raise ValueError('menu node must be an object')
         fields = set(node)
-        if not NODE_FIELDS <= fields or fields - (NODE_FIELDS | {'value', 'direction', 'presentation'}):
+        if not NODE_FIELDS <= fields or fields - (NODE_FIELDS | {'value', 'direction', 'presentation',
+                                                                  'indicator', 'checked'}):
             raise ValueError('menu node contains unknown or missing fields')
 
         identifier = node['id']
@@ -341,6 +344,10 @@ def validate_snapshot(value):
             raise ValueError(f'menu tree exceeds {MAX_NODES} nodes')
 
         kind = node['kind']
+        if 'indicator' in node or 'checked' in node:
+            if (kind != 'command' or node.get('indicator') not in {'radio', 'checkbox'} or
+                    type(node.get('checked')) is not bool):
+                raise ValueError('Invalid read-only command indicator')
         if not isinstance(kind, str) or kind not in NODE_KINDS:
             raise ValueError('unknown menu node kind')
         if 'direction' in node or parent_presentation == 'radial':
@@ -454,15 +461,26 @@ def _apply_runtime_capabilities(context, menus):
     # Importing adapter imports bpy, so keep it out of module initialization and pure tests.
     from . import adapter
 
+    # One construction only: aliases share selected-domain counts. Dispatch does
+    # not receive this cache and always validates the current scene/selection.
+    capability_cache = {}
     pending = list(menus)
     while pending:
         node = pending.pop()
         pending.extend(node['children'])
         if node['kind'] != 'command' or not node['enabled']:
             continue
-        enabled, reason = adapter.available(context, node['command'])
+        if node['command'] in MODELING_SPECS:
+            enabled, reason = adapter.modeling_adapter.available(
+                context, node['command'], cache=capability_cache)
+        else:
+            enabled, reason = adapter.available(context, node['command'])
         node['enabled'] = bool(enabled)
         node['reason'] = '' if enabled else str(reason)
+        if node['command'] in MODELING_SPECS:
+            state = adapter.modeling_adapter.command_state(context, node['command'])
+            if state is not None:
+                node['indicator'], node['checked'] = state
     return menus
 
 

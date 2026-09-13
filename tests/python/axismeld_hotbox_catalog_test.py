@@ -37,7 +37,7 @@ def menu_node(identifier, children=()):
 
 
 class HotboxCatalogTest(unittest.TestCase):
-    def test_selection_actions_are_registered_unbound_and_have_explicit_contracts(self):
+    def test_selection_actions_have_verified_keys_and_explicit_contracts(self):
         expected = ('selection.select_all', 'selection.grow', 'selection.shrink')
         expected_differences = {
             'selection.select_all':
@@ -49,7 +49,9 @@ class HotboxCatalogTest(unittest.TestCase):
         }
         for identifier in expected:
             with self.subTest(identifier=identifier):
-                self.assertIsNone(COMMANDS[identifier].key)
+                self.assertEqual(COMMANDS[identifier].key,
+                                 {'selection.select_all': 'A', 'selection.grow': 'PERIOD',
+                                  'selection.shrink': 'COMMA'}[identifier])
                 self.assertEqual(COMMANDS[identifier].status, 'adapted')
                 self.assertEqual(COMMANDS[identifier].difference,
                                  expected_differences[identifier])
@@ -91,7 +93,7 @@ class HotboxCatalogTest(unittest.TestCase):
             'selection.toggle_component', 'selection.vertex_mode',
             'selection.edge_mode', 'selection.face_mode',
             'selection.select_all', 'selection.grow', 'selection.shrink'])
-        self.assertEqual([node['id'] for node in node_by_id(catalog, 'common.select')['children']], [
+        self.assertEqual([node['id'] for node in node_by_id(catalog, 'common.select')['children'][:8]], [
             'context.components', 'common.select.object_component',
             'common.select.vertex', 'common.select.edge', 'common.select.face',
             'common.select.all', 'common.select.grow', 'common.select.shrink'])
@@ -356,8 +358,8 @@ class HotboxCatalogTest(unittest.TestCase):
             hotbox_runtime.validate_snapshot(too_deep)
 
         too_many = hotbox_runtime.make_snapshot(generation=1)
-        too_many['menus'][0]['children'] = [menu_node(f'many.{index}') for index in range(513)]
-        with self.assertRaisesRegex(ValueError, '512'):
+        too_many['menus'][0]['children'] = [menu_node(f'many.{index}') for index in range(2049)]
+        with self.assertRaisesRegex(ValueError, '2048'):
             hotbox_runtime.validate_snapshot(too_many)
 
         too_large = hotbox_runtime.make_snapshot(generation=1)

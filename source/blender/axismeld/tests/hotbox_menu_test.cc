@@ -13,6 +13,16 @@
 namespace blender::axismeld::tests {
 #include "hotbox_menu_fixture.hh"
 
+/* Keep exercising the legacy ellipse mechanism separately from the expanded M3 list. */
+static MenuSnapshot legacy_select_snapshot()
+{
+  auto snapshot = default_snapshot();
+  auto &selection = snapshot.menus[0].children[3];
+  selection.presentation.clear();
+  selection.children.resize(8);
+  return snapshot;
+}
+
 static void visit(const std::vector<MenuNode> &nodes,
                   const std::function<void(const MenuNode &)> &fn)
 {
@@ -611,7 +621,7 @@ TEST(axismeld_hotbox_menu, ReferenceCentralSpacingDoesNotStretchSideHitTargets)
 
 TEST(axismeld_hotbox_menu, SecondaryCommandsOccupyAnEllipseInsteadOfAColumn)
 {
-  const auto snapshot = default_snapshot();
+  const auto snapshot = legacy_select_snapshot();
   auto widths = measured(snapshot);
   visit(snapshot.menus, [&](const MenuNode &node) { widths[node.id] = node.label.size() * 7.0f; });
   const auto layout = layout_menu(snapshot, 1920, 1080, 960, 540, {"common.select"}, {}, widths);
@@ -670,7 +680,7 @@ TEST(axismeld_hotbox_menu, EqualWidthRingExposesExtendedEdgesWithoutOverlap)
 
 TEST(axismeld_hotbox_menu, CompactSecondaryHitTargetsDoNotInheritPrimaryPadding)
 {
-  const auto snapshot = default_snapshot();
+  const auto snapshot = legacy_select_snapshot();
   const auto widths = measured(snapshot);
   for (const std::vector<std::string> path :
        {std::vector<std::string>{"center", "views"}, std::vector<std::string>{"common.select"}})
@@ -1066,7 +1076,7 @@ TEST(axismeld_hotbox_menu, NativeMappingScrollTransitionUsesTheDisplayedPageBoun
 
 TEST(axismeld_hotbox_menu, FullNativeMappingListsDoNotDriftAndLegacyEllipsesStayUnchanged)
 {
-  const auto snapshot = default_snapshot();
+  const auto snapshot = legacy_select_snapshot();
   const auto widths = measured(snapshot);
   const std::string mapping_owner = "center.controls.buttons.rightmouse";
   const auto full = layout_menu(snapshot,
@@ -1575,11 +1585,24 @@ TEST(axismeld_hotbox_menu, MissingInvalidOrUnrenderableMeasurementsRefuseAtomica
   {
     widths = measured(snapshot);
     widths["views.left"] = invalid;
-    const MenuLayout layout = layout_menu(snapshot, 480, 320, 240, 160, {}, {}, widths);
+    const MenuLayout layout = layout_menu(snapshot, 480, 320, 240, 160, {"center", "views"}, {}, widths);
     EXPECT_FALSE(layout.supported);
     EXPECT_TRUE(layout.rects.empty());
   }
   EXPECT_FALSE(layout_menu(snapshot, NAN, 320, 240, 160, {}, {}, measured(snapshot)).supported);
+}
+
+TEST(axismeld_hotbox_menu, VisibleViewsCenterRefusesAnOversizedLabelAtomically)
+{
+  MenuSnapshot snapshot = default_snapshot();
+  auto widths = measured(snapshot);
+  widths["views"] = 2000;
+  for (const char *style : {"rows", "zones", "center"}) {
+    snapshot.style = style;
+    const MenuLayout layout = layout_menu(snapshot, 480, 320, 240, 160, {}, {}, widths);
+    EXPECT_FALSE(layout.supported) << style;
+    EXPECT_TRUE(layout.rects.empty()) << style;
+  }
 }
 
 TEST(axismeld_hotbox_menu, DeepestRectangleWinsAndDisabledOccludesWithoutDispatch)
@@ -1985,11 +2008,10 @@ TEST(axismeld_hotbox_menu, TheSameMenuUsesAnExplicitTitleOrCentralAnchor)
   ASSERT_NE(a, nullptr);
   ASSERT_NE(b, nullptr);
   EXPECT_NE(a->y, b->y);
-  const auto *origin_a = rect(title, "@back:common.select"),
-             *origin_b = rect(central, "@back:common.select");
-  ASSERT_NE(origin_a, nullptr);
-  ASSERT_NE(origin_b, nullptr);
-  EXPECT_NE(origin_a->y, origin_b->y);
+  EXPECT_TRUE(a->native_menu);
+  EXPECT_TRUE(b->native_menu);
+  EXPECT_EQ(rect(title, "@back:common.select"), nullptr);
+  EXPECT_EQ(rect(central, "@back:common.select"), nullptr);
   EXPECT_NE(rect(title, "views"), nullptr);
   EXPECT_NE(rect(central, "views"), nullptr);
 }
@@ -2014,6 +2036,49 @@ TEST(axismeld_hotbox_menu, CenterRootMappingIsNotMistakenForAPathCycle)
   EXPECT_EQ(hit_menu(layout, style->x + style->width / 2, style->y + style->height / 2),
             style->id);
 }
+TEST(axismeld_hotbox_menu, UnopenedLongLabelsCannotDisableViewsOrTools)
+{
+  auto snapshot = default_snapshot();
+  auto widths = measured(snapshot);
+  widths["common.file"] = 2000.0f;  // A visible impossible title must still fail atomically.
+  auto visible = layout_menu(snapshot, 480, 320, 240, 160, {}, {}, widths);
+  EXPECT_FALSE(visible.supported);
+  widths = measured(snapshot);
+  widths["center.controls.buttons.rightmouse.none"] = 2000.0f;
+  const auto main = layout_menu(snapshot, 480, 320, 240, 160, {}, {}, widths);
+  EXPECT_TRUE(main.supported);
+  const auto tools = layout_menu(snapshot, 480, 320, 240, 160,
+                                {"tools.move"}, {}, widths, nullptr, "tools.move");
+  EXPECT_TRUE(tools.supported);
+}
+
+TEST(axismeld_hotbox_menu, LongModelingNativeListsPageWithoutChangingSafetyMargins)
+{
+  auto snapshot = default_snapshot();
+  MenuNode owner{"modeling.long_test", "Long list", "", "", "", MenuKind::Menu, true, {}};
+  owner.presentation = "list";
+  for (int i = 0; i < 60; i++) {
+    owner.children.push_back({"test.item" + std::to_string(i), "Action", "selection.clear",
+                              "", "", MenuKind::Command, true, {}});
+  }
+  snapshot.menus.back().children.push_back(owner);
+  snapshot.center_buttons[0] = owner.id;
+  const auto widths = measured(snapshot);
+  const auto first = layout_menu(snapshot, 480, 320, 240, 160,
+                                 {"center", owner.id}, {}, widths);
+  ASSERT_TRUE(first.supported);
+  ASSERT_NE(rect(first, "test.item0"), nullptr);
+  EXPECT_EQ(rect(first, "test.item59"), nullptr);
+  ASSERT_TRUE(first.native_scroll_bounds.contains(owner.id));
+  const int last_offset = first.native_scroll_bounds.at(owner.id).maximum_first;
+  const auto last = layout_menu(snapshot, 480, 320, 240, 160,
+                                {"center", owner.id}, {{owner.id, last_offset}}, widths);
+  ASSERT_TRUE(last.supported);
+  ASSERT_NE(rect(last, "test.item59"), nullptr);
+  EXPECT_EQ(rect(last, "test.item0"), nullptr);
+  EXPECT_TRUE(hit_menu(last, 240, 160).empty());
+}
+
 TEST(axismeld_hotbox_menu, RectHitPreservesVisibleOccurrenceAndDisabledOcclusion)
 {
   MenuLayout layout{{{"views", 0, 0, 100, 28, 0},

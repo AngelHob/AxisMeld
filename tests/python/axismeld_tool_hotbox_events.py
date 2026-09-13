@@ -577,8 +577,10 @@ def suite():
         event('MOUSEMOVE', 'NOTHING', middle(modify))
         event('LEFTMOUSE')
         yield from settle()
-        tools_entry = ellipse_page(modify, ['Move Tool', 'Rotate Tool', 'Scale Tool', 'Tool Settings'],
-                                   measure, bounds, scale)['items'][3]
+        from axismeld.hotbox_catalog import default_catalog
+        entries = next(n for n in default_catalog()[0]['children'] if n['id'] == 'common.modify')['children']
+        tools_entry = native_page(modify, [n['label'] for n in entries], measure, bounds, scale,
+                                  submenu_indices=[i for i, n in enumerate(entries) if n['kind'] == 'menu'])['items'][3]
         event('MOUSEMOVE', 'NOTHING', middle(tools_entry))
         yield from settle()
         move_entry = native_page(tools_entry, ['Select Tool', 'Move Tool', 'Rotate Tool', 'Scale Tool'],

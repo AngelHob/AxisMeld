@@ -550,8 +550,7 @@ def suite():
     blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
     icon_labels = {'AxisMeld', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls',
                    'Wireframe', 'Solid', 'Perspective View', 'Right View', 'Bottom View',
-                   'Front View', 'Back View', 'Top View', 'Left View', 'Vertex', 'Edge', 'Face',
-                   'Select All', 'Grow Selection', 'Shrink Selection'}
+                   'Front View', 'Back View', 'Top View', 'Left View', 'Vertex', 'Edge', 'Face'}
     def label_width(label):
         native_icon = label in icon_labels or label.startswith(('Entry ', 'Parent ', 'Child '))
         return blf.dimensions(0, label)[0] / scale + (20 if native_icon else 0)
@@ -655,6 +654,7 @@ def suite():
         def quad_snapshot(context):
             value = json.loads(original_snapshot(context))
             value['settings']['center_buttons']['RIGHTMOUSE'] = 'common.select'
+            value['menus'][0]['children'][3].pop('presentation', None)
             value['menus'][0]['children'][3]['children'] = [
                 dict(id=f'quad.{i}', kind='command', label=f'Entry {i:02}',
                      command='view.top' if i == 17 else 'view.front', enabled=True,
@@ -728,6 +728,7 @@ def suite():
         def navigation_snapshot(context):
             value = json.loads(original_snapshot(context))
             value['settings']['center_buttons']['RIGHTMOUSE'] = 'common.select'
+            value['menus'][0]['children'][3].pop('presentation', None)
             if os.environ.get('AXISMELD_TEST_NAVIGATION_PROBE') == 'title':
                 value['settings']['center_buttons']['RIGHTMOUSE'] = 'center.controls'
             if os.environ.get('AXISMELD_TEST_NAVIGATION_PROBE') == 'gap':
@@ -845,8 +846,14 @@ def suite():
 
     # Close-before mode command: no stale draw pointer and no residual Space playback.
     select = row_title(common_labels, 3, 96)
-    select_items = popup(select, ['Active Mesh Components', 'Object / Component', 'Vertex', 'Edge', 'Face',
-                                  'Select All', 'Grow Selection', 'Shrink Selection'])
+    select_nodes = json.loads(hotbox_runtime.snapshot(bpy.context))['menus'][0]['children'][3]['children']
+    indicators = {node['label'] for node in select_nodes if node.get('indicator')}
+    def selection_width(label):
+        return label_width(label) + (20 if label in indicators and label not in icon_labels else 0)
+    select_items = native_page(
+        select, [node['label'] for node in select_nodes], selection_width,
+        (region.x, region.y, region.width, region.height), scale,
+        submenu_indices=[i for i, node in enumerate(select_nodes) if node['kind'] == 'menu'])['items']
     yield from open_box()
     yield from move(midpoint(select))
     event('LEFTMOUSE')
@@ -1362,6 +1369,7 @@ def suite():
         value = json.loads(real_snapshot(context))
         value['settings']['center_buttons']['RIGHTMOUSE'] = 'common.select'
         parent = value['menus'][0]['children'][3]
+        parent.pop('presentation', None)
         def leaf(identifier, label, command):
             return dict(id=identifier, kind='command', label=label, command=command,
                         enabled=True, reason='', children=[])
