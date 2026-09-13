@@ -845,13 +845,13 @@ def suite():
 
     # Close-before mode command: no stale draw pointer and no residual Space playback.
     select = row_title(common_labels, 3, 96)
-    select_items = popup(select, ['Object / Component', '', 'Vertex', 'Edge', 'Face',
+    select_items = popup(select, ['Active Mesh Components', 'Object / Component', 'Vertex', 'Edge', 'Face',
                                   'Select All', 'Grow Selection', 'Shrink Selection'])
     yield from open_box()
     yield from move(midpoint(select))
     event('LEFTMOUSE')
     yield
-    yield from move(midpoint(select_items[0]))
+    yield from move(midpoint(select_items[1]))
     event('LEFTMOUSE', 'RELEASE')
     yield from settle()
     check(bpy.context.object.mode == 'EDIT', 'mode command did not run before Space release')

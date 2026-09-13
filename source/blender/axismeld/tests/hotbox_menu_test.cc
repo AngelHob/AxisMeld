@@ -264,6 +264,107 @@ TEST(axismeld_hotbox_menu, ToolReferenceUsesContentWidthsAndInsetDiagonalRows)
   }
 }
 
+TEST(axismeld_hotbox_menu, RadialTemplateKeepsShortStrokeTargetsReachable)
+{
+  const auto snapshot = default_snapshot();
+  const auto widths = measured(snapshot);
+  const auto layout = layout_menu(
+      snapshot, 1200, 800, 600, 400, {"tools.move"}, {}, widths, nullptr, "tools.move");
+  ASSERT_TRUE(layout.supported);
+  // Eight pixels beyond the 24px center reaches the central row; diagonal rows
+  // inset a further 16px. The old 32px side clearance leaves both strokes blank.
+  EXPECT_EQ(hit_menu(layout, 576, 400), "tools.move.world");
+  EXPECT_EQ(hit_menu(layout, 590, 432), "tools.move.object");
+}
+
+TEST(axismeld_hotbox_menu, RadialOutwardHitsRetainDisplayedRowsAndDisabledTargets)
+{
+  const auto snapshot = default_snapshot();
+  auto widths = measured(snapshot);
+  visit(snapshot.menus, [&](const MenuNode &node) { widths[node.id] = node.label.size() * 7.0f; });
+  for (const std::string owner : {"tools.select", "tools.move", "tools.rotate", "tools.scale",
+                                   "context.components"}) {
+    for (const std::array<float, 2> origin :
+         {std::array<float, 2>{600, 400}, {10, 10}, {1190, 790}}) {
+      const auto layout = layout_menu(
+          snapshot, 1200, 800, origin[0], origin[1], {owner}, {}, widths, nullptr, owner);
+      ASSERT_TRUE(layout.supported) << owner;
+      const auto &center = layout.return_regions.back();
+      const float cx = center.x + center.width / 2;
+      for (const auto &item : layout.rects) {
+        const float middle = item.x + item.width / 2;
+        if (std::abs(middle - cx) < 1) {
+          continue;
+        }
+        for (const float extension : {0.5f, 8.0f, 64.0f, 256.0f}) {
+          const float x = middle < cx ? item.x - extension : item.x + item.width + extension;
+          const auto *hit = hit_marking_menu_rect(layout, owner, x, item.y + 12);
+          ASSERT_NE(hit, nullptr) << item.id;
+          EXPECT_EQ(hit->id, item.id);
+          EXPECT_EQ(hit->interactive, item.interactive);
+        }
+      }
+      EXPECT_EQ(hit_marking_menu_rect(layout, owner, cx, center.y + center.height / 2), nullptr);
+      EXPECT_EQ(hit_marking_menu_rect(layout, "unrelated", cx - 500, 400), nullptr);
+      EXPECT_EQ(hit_marking_menu_rect(layout, owner, NAN, 400), nullptr);
+    }
+  }
+}
+
+TEST(axismeld_hotbox_menu, MissingRadialDirectionsBlockInsteadOfStealingNeighbours)
+{
+  const auto snapshot = default_snapshot();
+  const auto widths = measured(snapshot);
+  const auto layout = layout_menu(snapshot, 1200, 800, 600, 400,
+                                  {"context.components"}, {}, widths, nullptr,
+                                  "context.components");
+  ASSERT_TRUE(layout.supported);
+  ASSERT_EQ(layout.rects.size(), 7);
+  ASSERT_EQ(layout.marking_gaps.size(), 1);
+  const auto *gap = hit_marking_menu_rect(layout, "context.components", 100, 432);
+  ASSERT_NE(gap, nullptr);
+  EXPECT_FALSE(gap->interactive);
+  EXPECT_EQ(gap, &layout.marking_gaps.front());
+  EXPECT_EQ(rect(layout, gap->id), nullptr);
+  // A missing slot is gesture metadata, never an extra drawn/hittable button.
+  EXPECT_EQ(hit_menu_rect(layout, gap->x + gap->width / 2, gap->y + 12), nullptr);
+}
+
+TEST(axismeld_hotbox_menu, RadialHitUsesCurrentCenterAndNeverAnOpenNativeList)
+{
+  const auto snapshot = default_snapshot();
+  const auto widths = measured(snapshot);
+  auto child = layout_menu(snapshot, 1200, 800, 600, 400,
+                            {"tools.move", "tools.move.axis"}, {}, widths, nullptr, "tools.move");
+  ASSERT_TRUE(child.supported);
+  ASSERT_EQ(child.return_regions.size(), 2);
+  const auto &center = child.return_regions.back();
+  EXPECT_EQ(hit_marking_menu_rect(child, "tools.move.axis", center.x + 21, center.y + 21),
+            nullptr);
+  const auto *east = rect(child, "tools.move.axis.view");
+  ASSERT_NE(east, nullptr);
+  const float x = east->x + east->width + 100, y = east->y + 12;
+  // A hidden ancestor center may overlap a child's outward region. It is not
+  // the active dead zone (including when an ancestor happened to be Views).
+  child.return_regions.front() = {"views", x - 10, y - 10, 20, 20, 1};
+  const auto *outward = hit_marking_menu_rect(child, "tools.move.axis", x, y);
+  ASSERT_NE(outward, nullptr);
+  EXPECT_EQ(outward->id, east->id);
+  EXPECT_EQ(hit_marking_menu_rect(child, "tools.move", x, y), nullptr);
+
+  const auto native = layout_menu(snapshot, 1200, 800, 600, 400,
+                                   {"tools.move", "tools.move.spacing"}, {}, widths, nullptr,
+                                   "tools.move");
+  ASSERT_TRUE(native.supported);
+  const auto *anchor = rect(native, "tools.move.spacing");
+  ASSERT_NE(anchor, nullptr);
+  EXPECT_EQ(hit_marking_menu_rect(native, "tools.move", 1100, anchor->y + 12), nullptr);
+  const auto *leaf = rect(native, "tools.move.spacing.options");
+  ASSERT_NE(leaf, nullptr);
+  EXPECT_EQ(hit_marking_menu_rect(native, "tools.move", leaf->x + 10, leaf->y + 12), nullptr);
+  EXPECT_EQ(hit_menu_rect(native, leaf->x + 10, leaf->y + 12), leaf);
+}
+
 TEST(axismeld_hotbox_menu, MarkingRowsStayCompactWithLongLabels)
 {
   const auto snapshot = default_snapshot();

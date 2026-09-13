@@ -77,7 +77,7 @@ def suite():
             for n in nodes:
                 w = widths[n['id']]
                 nx, ny = directions[n['direction']]
-                side = (w + 24)/2 + 32
+                side = (w + 24)/2 + 8
                 x = (0 if nx == 0 else math.copysign(side - (0 if ny == 0 else 16), nx)) - w/2
                 y = (0 if ny == 0 else math.copysign(32 * (2 if nx == 0 else 1), ny)) - 12
                 clear &= all(x+w+3.999 <= ox or ox+ow+3.999 <= x or
@@ -121,12 +121,193 @@ def suite():
         yield from settle()
         check(not modals(), 'gesture left stale modal: ' + str(modals()))
 
-    def overlap(old_key, *, old_release_first):
+    def stroke(name, direction=None, *, origin=None, disabled=False, capture=None, beyond=0):
+        """One owned mouse stroke; deliberately never send another tool-key press."""
+        point = (cx, cy) if origin is None else origin
+        event('MOUSEMOVE', 'NOTHING', point)
+        event('LEFTMOUSE')
+        yield from settle()
+        if capture:
+            screenshot(capture)
+        if disabled:
+            entry = middle(ring(name, point)['N'])
+            event('MOUSEMOVE', 'NOTHING', entry)
+            yield from settle()
+            event('MOUSEMOVE', 'NOTHING', middle(ring(name + '.symmetry', entry)['W']))
+        elif direction is not None:
+            rect = ring(name, point)[direction]
+            target = middle(rect)
+            if beyond:
+                # Follow the displayed row past its horizontal edge. Diagonal rays do
+                # not preserve a row when tool labels have unequal widths.
+                event('MOUSEMOVE', 'NOTHING', target)
+                yield from settle()
+                target = (rect[0] - beyond if 'W' in direction else rect[0] + rect[2] + beyond,
+                          target[1])
+            event('MOUSEMOVE', 'NOTHING', target)
+        yield from settle()
+        event('LEFTMOUSE', 'RELEASE')
+        yield from settle()
+
+    def check_armed(message):
+        check(modals() == ['VIEW3D_OT_axismeld_hotbox'], message + ': ' + str(modals()))
+
+    def repeat_strokes(key, name, slot_index=None, *, capture=False):
+        # Observe real tool/orientation changes, in addition to modal ownership. A second
+        # keyboard PRESS would hide the reported bug and is forbidden within this sequence.
+        scale = bpy.context.preferences.system.ui_scale
+        offset = min(90 * scale, region.width * .12, region.height * .12)
+        first = (cx - offset, cy - offset)
+        second = (cx + offset, cy + offset)
+        third = (cx + offset, cy - offset)
+        selected = slot_index is None
+
+        def current():
+            return tool() if selected else bpy.context.scene.transform_orientation_slots[slot_index].type
+
+        event('MOUSEMOVE', 'NOTHING', first)
+        event(key)
+        yield from settle()
+        yield from stroke(name, 'SW' if selected else 'NW', origin=first)
+        check(current() == ('builtin.select_lasso' if selected else 'LOCAL'),
+              key + ' first held-key stroke did not commit')
+        yield from stroke(name, 'W', origin=second,
+                          capture='rearm-' + name + '-second-stroke.png' if capture else None)
+        check(current() == ('builtin.select_circle' if selected else 'GLOBAL'),
+              key + ' second LMB stroke under one held key did not reopen at the new origin')
+        check_armed(key + ' second mouse release must keep exactly one armed session')
+        if capture:
+            screenshot('rearm-' + name + '-waiting.png')
+
+        before = current()
+        event('MOUSEMOVE', 'NOTHING', middle(ring(name, second)['NW']))
+        yield from settle()
+        check(current() == before, key + ' unpressed motion after commit dispatched a command')
+        yield from stroke(name, origin=third)
+        check(current() == before, key + ' empty-center stroke committed a command')
+        check_armed(key + ' empty-center release must allow another mouse stroke')
+        yield from stroke(name, origin=first, disabled=True)
+        check(current() == before, key + ' disabled Symmetry leaf changed state')
+        check_armed(key + ' disabled leaf release must allow another mouse stroke')
+        yield from stroke(name, 'NW' if selected else 'NE', origin=third)
+        expected = 'builtin.select_box' if selected else 'NORMAL'
+        check(current() == expected, key + ' stroke after empty/disabled releases did not reopen')
+        check_armed(key + ' final mouse release must retain the held trigger')
+        event(key, 'RELEASE')
+        yield from settle()
+        check(current() == expected, key + ' final trigger release changed the committed result')
+        check(not modals(), key + ' final trigger release left ownership: ' + str(modals()))
+
+    def repeat_cancel_paths():
+        slot = bpy.context.scene.transform_orientation_slots[1]
+
+        def arm_after_commit():
+            slot.type = 'GLOBAL'
+            event('MOUSEMOVE', 'NOTHING', (cx, cy))
+            event('W')
+            yield from settle()
+            yield from stroke('move', 'NW')
+            check(slot.type == 'LOCAL', 'pre-cancel first stroke did not commit')
+            check_armed('pre-cancel first stroke must retain its held key')
+            event('MOUSEMOVE', 'NOTHING', (cx, cy))
+            yield from settle()
+
+        yield from arm_after_commit()
+        event('ESC')
+        yield from settle()
+        check('VIEW3D_OT_axismeld_hotbox' not in modals(), 'Escape must end the rearmed session')
+        event('ESC', 'RELEASE')
+        event('W', 'RELEASE')
+        yield from settle()
+        check(not modals(), 'Escape in the rearmed wait left ownership: ' + str(modals()))
+
+        for cancel in ('trigger', 'escape'):
+            yield from arm_after_commit()
+            event('LEFTMOUSE')
+            yield from settle()
+            event('MOUSEMOVE', 'NOTHING', middle(ring('move')['W']))
+            yield from settle()
+            event('W' if cancel == 'trigger' else 'ESC', 'RELEASE' if cancel == 'trigger' else 'PRESS')
+            yield from settle()
+            event('LEFTMOUSE', 'RELEASE')
+            if cancel == 'escape':
+                event('W', 'RELEASE')
+                event('ESC', 'RELEASE')
+            yield from settle()
+            check(slot.type == 'LOCAL', cancel + ' submitted the second stroke')
+            check(not modals(), cancel + ' during a reopened stroke left ownership: ' + str(modals()))
+
+        for shown in (False, True):
+            yield from arm_after_commit()
+            if shown:
+                event('LEFTMOUSE')
+                yield from settle()
+                event('MOUSEMOVE', 'NOTHING', middle(ring('move')['W']))
+                yield from settle()
+            event('WINDOW_DEACTIVATE', 'NOTHING')
+            yield from settle()
+            check(slot.type == 'LOCAL', 'focus loss submitted the reopened stroke')
+            check(not modals(), 'focus loss after rearming must clear without old releases')
+            # The old releases may be lost outside this window. A fresh key must work
+            # before we send any of them to reset the event simulator for later cases.
+            event('E')
+            yield from settle()
+            check(tool() == 'builtin.rotate', 'fresh key after rearmed focus loss did not select tool')
+            check_armed('fresh key after rearmed focus loss did not start a clean session')
+            event('E', 'RELEASE')
+            yield from settle()
+            check(not modals(), 'fresh post-focus trigger left ownership')
+            if shown:
+                event('LEFTMOUSE', 'RELEASE')
+            event('W', 'RELEASE')
+            yield from settle()
+            check(not modals(), 'late post-focus releases left ownership')
+
+    def extended_strokes():
+        scale = bpy.context.preferences.system.ui_scale
+        for key, name, slot_index in (('Q', 'select', None), ('W', 'move', 1),
+                                      ('E', 'rotate', 2), ('R', 'scale', 3)):
+            selected = slot_index is None
+            event('MOUSEMOVE', 'NOTHING', (cx, cy))
+            event(key)
+            yield from settle()
+            directions = ('SW', 'W', 'NW') if selected else ('NW', 'W', 'NE')
+            expected = ('builtin.select_lasso', 'builtin.select_circle', 'builtin.select_box') if selected else (
+                'LOCAL', 'GLOBAL', 'NORMAL')
+            for direction, result in zip(directions, expected):
+                yield from stroke(name, direction, beyond=64 * scale)
+                current = tool() if selected else bpy.context.scene.transform_orientation_slots[slot_index].type
+                check(current == result, key + ' outer extension of ' + direction + ' did not commit ' + result)
+                check_armed(key + ' outer release must keep the held-key session')
+            event('LEFTMOUSE', 'PRESS', (cx, cy))
+            yield from settle()
+            rect = ring(name)['W']
+            target = middle(rect)
+            event('MOUSEMOVE', 'NOTHING', target)
+            yield from settle()
+            event('MOUSEMOVE', 'NOTHING', (rect[0] - 64 * scale, target[1]))
+            yield from settle()
+            event('MOUSEMOVE', 'NOTHING', (cx, cy))
+            event('LEFTMOUSE', 'RELEASE')
+            yield from settle()
+            current = tool() if selected else bpy.context.scene.transform_orientation_slots[slot_index].type
+            check(current == expected[-1], key + ' outer stroke returned to center still committed')
+            check_armed(key + ' outer-center cancel must leave the session rearmed')
+            event(key, 'RELEASE')
+            yield from settle()
+            check(not modals(), key + ' outer extension sequence left ownership')
+
+    def overlap(old_key, *, old_release_first, after_stroke=False):
         slot = bpy.context.scene.transform_orientation_slots[2]
         slot.type = 'LOCAL'
         event('MOUSEMOVE', 'NOTHING', (cx, cy))
         event(old_key)
         yield from settle()
+        if after_stroke:
+            yield from stroke('move', 'NW')
+            check_armed('completed W stroke must permit the existing E handoff')
+            event('MOUSEMOVE', 'NOTHING', (cx, cy))
+            yield from settle()
         event('E')
         yield from settle()
         check(tool() == 'builtin.rotate', 'overlap must switch to Rotate immediately')
@@ -176,8 +357,19 @@ def suite():
         check(not modals(), 'tap left stale modal: ' + str(modals()))
     print('PASS immediate Q/W/E/R taps and repeat ownership', flush=True)
 
+    for key, name, slot_index in (('Q', 'select', None), ('W', 'move', 1),
+                                  ('E', 'rotate', 2), ('R', 'scale', 3)):
+        yield from repeat_strokes(key, name, slot_index, capture=True)
+    print('PASS held Q/W/E/R repeat strokes, relocated origins and empty/disabled rearming', flush=True)
+    yield from repeat_cancel_paths()
+    print('PASS rearmed trigger-first, Escape and lost-release focus cancellation', flush=True)
+    yield from extended_strokes()
+    print('PASS Q/W/E/R visible-row outer commits and return-to-origin cancellation', flush=True)
+
     yield from overlap('W', old_release_first=True)
     yield from overlap('W', old_release_first=False)
+    yield from overlap('W', old_release_first=True, after_stroke=True)
+    yield from overlap('W', old_release_first=False, after_stroke=True)
 
     # Handoff must not bypass mouse ownership or the existing Space release barrier.
     yield from open_ring('W')
@@ -304,6 +496,40 @@ def suite():
         check(bpy.context.scene.transform_orientation_slots[slot_index].type == 'VIEW',
               name + ' third-level center return did not restore Axis')
         check(not modals(), 'third-level return left modal')
+        # A hidden root return square has corners outside the real 12 px cancel disc.
+        # Crossing one must keep the current Custom Axis ring, whose View target is
+        # then selected through real motion/release. Validate the geometric premise
+        # against the displayed child targets before choosing the point.
+        bpy.context.scene.transform_orientation_slots[slot_index].type = 'GLOBAL'
+        yield from open_ring(key)
+        axis_entry = middle(ring(name)['SW'])
+        event('MOUSEMOVE', 'NOTHING', axis_entry)
+        yield from settle()
+        axis_ring = ring(name + '.axis', axis_entry)
+        custom_entry = middle(axis_ring['SW'])
+        event('MOUSEMOVE', 'NOTHING', custom_entry)
+        yield from settle()
+        custom_ring = ring(name + '.axis.custom', custom_entry)
+        hidden_corners = [(cx + dx * scale, cy + dy * scale)
+                          for dx, dy in ((10, 10), (-10, 10), (10, -10), (-10, -10))]
+        hidden_corners = [point for point in hidden_corners
+                          if math.dist(point, (cx, cy)) > 12 * scale and
+                          not any(rect[0] <= point[0] < rect[0] + rect[2] and
+                                  rect[1] <= point[1] < rect[1] + rect[3]
+                                  for rect in custom_ring.values())]
+        check(bool(hidden_corners), name + ' hidden-root corner fixture is covered by child targets')
+        event('MOUSEMOVE', 'NOTHING', hidden_corners[0])
+        yield from settle()
+        screenshot('hidden-root-corner-' + name + '.png')
+        event('MOUSEMOVE', 'NOTHING', middle(custom_ring['NE']))
+        yield from settle()
+        event('LEFTMOUSE', 'RELEASE')
+        event(key, 'RELEASE')
+        yield from settle()
+        check(bpy.context.scene.transform_orientation_slots[slot_index].type == 'VIEW',
+              name + ' hidden ancestor center swallowed the active third-level ring')
+        check(not modals(), 'hidden ancestor corner left modal')
+    print('PASS hidden ancestor corners keep current third-level W/R ring', flush=True)
     # Child/root centers can coincide when both rings clamp inward at the corner.
     edge_origin = (region.x + 10, region.y + 10)
     bpy.context.scene.transform_orientation_slots[1].type = 'LOCAL'
@@ -333,28 +559,32 @@ def suite():
     # Reach the same child through the actual Space -> Modify -> Tool Settings path.
     sys.path.insert(0, str(Path(__file__).parent))
     from axismeld_hotbox_geometry_fixture import ellipse_page, native_page
-    measure = lambda label: blf.dimensions(0, label)[0] / scale
-    labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
-    widths = [measure(label) + 40 for label in labels]
-    left = cx - (sum(widths) + 60)*scale/2
-    modify = (left + (sum(widths[:4]) + 40)*scale, cy + 77*scale,
-              widths[4]*scale, 38*scale)
-    bounds = (region.x, region.y, region.width, region.height)
-    event('MOUSEMOVE', 'NOTHING', (cx, cy))
-    event('SPACE')
-    yield from settle()
-    event('MOUSEMOVE', 'NOTHING', middle(modify))
-    event('LEFTMOUSE')
-    yield from settle()
-    tools_entry = ellipse_page(modify, ['Move Tool', 'Rotate Tool', 'Scale Tool', 'Tool Settings'],
-                               measure, bounds, scale)['items'][3]
-    event('MOUSEMOVE', 'NOTHING', middle(tools_entry))
-    yield from settle()
-    move_entry = native_page(tools_entry, ['Select Tool', 'Move Tool', 'Rotate Tool', 'Scale Tool'],
-                              measure, bounds, scale, submenu_indices=range(4))['items'][1]
-    event('MOUSEMOVE', 'NOTHING', middle(move_entry))
-    yield from settle()
-    space_ring = ring('move', middle(move_entry))
+
+    def open_space_move():
+        measure = lambda label: blf.dimensions(0, label)[0] / scale
+        labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
+        widths = [measure(label) + 40 for label in labels]
+        left = cx - (sum(widths) + 60)*scale/2
+        modify = (left + (sum(widths[:4]) + 40)*scale, cy + 77*scale,
+                  widths[4]*scale, 38*scale)
+        bounds = (region.x, region.y, region.width, region.height)
+        event('MOUSEMOVE', 'NOTHING', (cx, cy))
+        event('SPACE')
+        yield from settle()
+        event('MOUSEMOVE', 'NOTHING', middle(modify))
+        event('LEFTMOUSE')
+        yield from settle()
+        tools_entry = ellipse_page(modify, ['Move Tool', 'Rotate Tool', 'Scale Tool', 'Tool Settings'],
+                                   measure, bounds, scale)['items'][3]
+        event('MOUSEMOVE', 'NOTHING', middle(tools_entry))
+        yield from settle()
+        move_entry = native_page(tools_entry, ['Select Tool', 'Move Tool', 'Rotate Tool', 'Scale Tool'],
+                                 measure, bounds, scale, submenu_indices=range(4))['items'][1]
+        event('MOUSEMOVE', 'NOTHING', middle(move_entry))
+        yield from settle()
+        return ring('move', middle(move_entry)), middle(modify)
+
+    space_ring, _mouse_origin = yield from open_space_move()
     space_axis_entry = middle(space_ring['SW'])
     event('MOUSEMOVE', 'NOTHING', space_axis_entry)
     yield from settle()
@@ -373,6 +603,30 @@ def suite():
           'Space tool child return did not restore root orientation command')
     check(not modals(), 'Space tool child left ownership')
     print('PASS compact child, third-level, edge-center and Space tool return', flush=True)
+    for return_to_press in (False, True):
+        bpy.context.scene.transform_orientation_slots[1].type = 'LOCAL'
+        space_ring, mouse_origin = yield from open_space_move()
+        rect = space_ring['NE']
+        target = middle(rect)
+        event('MOUSEMOVE', 'NOTHING', target)
+        yield from settle()
+        event('MOUSEMOVE', 'NOTHING', (rect[0] + rect[2] + 64 * scale, target[1]))
+        yield from settle()
+        if return_to_press:
+            # The real LMB-down was on Modify, not the Space origin or tool-ring center.
+            check(math.dist(mouse_origin, (cx, cy)) > 12 * scale,
+                  'Space origin-cancel fixture must use a distinct LMB press position')
+            event('MOUSEMOVE', 'NOTHING', mouse_origin)
+            yield from settle()
+        screenshot('space-tool-origin-cancel.png' if return_to_press else 'space-tool-outer.png')
+        event('LEFTMOUSE', 'RELEASE')
+        event('SPACE', 'RELEASE')
+        yield from settle()
+        check(bpy.context.scene.transform_orientation_slots[1].type == ('LOCAL' if return_to_press else 'NORMAL'),
+              'Space tool outer stroke failed real LMB-origin cancel' if return_to_press else
+              'Space tool radial outer release did not commit Normal')
+        check(not modals(), 'Space tool outer/origin release left ownership')
+    print('PASS Space tool outer release and actual mouse-press-origin cancellation', flush=True)
     before = bpy.context.scene.transform_orientation_slots[1].type
     yield from gesture('W', 'move', 'W', trigger_first=True)
     check(bpy.context.scene.transform_orientation_slots[1].type == before, 'trigger-first committed')
@@ -424,14 +678,25 @@ def suite():
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.ed.undo_push(message='Tool clear Edit pre-action')
     yield from settle()
-    yield from gesture('Q', 'select', 'SE')
+    event('MOUSEMOVE', 'NOTHING', (cx, cy))
+    event('Q')
+    yield from settle()
+    yield from stroke('select', 'SE')
     import bmesh
     check(not any(v.select for v in bmesh.from_edit_mesh(cube.data).verts), 'Edit clear failed')
+    check_armed('Clear Selection must retain its held Q session')
+    yield from stroke('select', 'SW')
+    check(tool() == 'builtin.select_lasso', 'Q stroke after Clear Selection did not reopen')
+    event('Q', 'RELEASE')
+    yield from settle()
+    check(not modals(), 'Clear Selection/reopen left ownership')
     with override():
         bpy.ops.ed.undo()
     yield from settle()
     cube = bpy.context.edit_object
     check(any(v.select for v in bmesh.from_edit_mesh(cube.data).verts), 'Edit clear undo failed')
+    yield from repeat_strokes('Q', 'select')
+    yield from repeat_strokes('W', 'move', 1)
     yield from gesture('W', 'move', 'NW')
     check(bpy.context.scene.transform_orientation_slots[1].type == 'LOCAL', 'Edit Object direction failed')
     with override():
@@ -503,6 +768,7 @@ def suite():
     cx, cy = region.x + region.width // 2, region.y + region.height // 2
     yield from gesture('W', 'move', 'NW')
     check(bpy.context.scene.transform_orientation_slots[1].type == 'LOCAL', 'quad tool ring failed')
+    yield from repeat_strokes('W', 'move', 1)
     with override():
         bpy.ops.view3d.axismeld_view(action='TOGGLE_QUAD')
     yield from settle()
@@ -521,6 +787,7 @@ def suite():
     yield from overlap('F13', old_release_first=False)
     yield from gesture('F13', 'move', 'W')
     check(bpy.context.scene.transform_orientation_slots[1].type == 'GLOBAL', 'remapped trigger failed')
+    yield from repeat_strokes('F13', 'move', 1)
     # keyconfigs.update rebuilds the resolved map; reacquire its current RNA item.
     binding = next(kmi for km in bpy.context.window_manager.keyconfigs.user.keymaps
                    for kmi in km.keymap_items if kmi.idname == 'axismeld.command' and

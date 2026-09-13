@@ -139,6 +139,45 @@ static bool refresh(bContext *C, HotboxData &data)
   return data.menu_layout.supported;
 }
 
+/* A held tool key owns multiple mouse strokes, just as Space owns multiple view strokes. */
+static void rearm_tool(bContext *C, HotboxData &data)
+{
+  if (data.draw_handle) {
+    ED_region_draw_cb_exit(data.region_type, data.draw_handle);
+    data.draw_handle = nullptr;
+  }
+  data.tool_shown = false;
+  data.active_mouse = 0;
+  data.open_path.clear();
+  data.return_path.clear();
+  data.scroll_offsets.clear();
+  data.center_return_armed = false;
+  data.hover_id.clear();
+  data.hover_depth = -1;
+  data.pending_leaf.clear();
+  data.candidate = HotboxAction::None;
+  data.navigation_consumed = false;
+  data.menu_entered_on_press = false;
+  data.mouse_moved_since_press = false;
+  if (source_live(C, data)) {
+    ED_region_tag_redraw(data.region);
+  }
+}
+
+static bool tool_command_rearms(const std::string_view command)
+{
+  // These adapters execute synchronously without changing the mode or viewport topology.
+  // Keep the default close-before-dispatch policy for all other and future commands.
+  constexpr std::string_view commands[] = {
+      "orientation.move.world", "orientation.move.object", "orientation.move.normal",
+      "orientation.move.view", "orientation.rotate.world", "orientation.rotate.object",
+      "orientation.rotate.normal", "orientation.rotate.view", "orientation.rotate.gimbal",
+      "orientation.scale.world", "orientation.scale.object", "orientation.scale.normal",
+      "orientation.scale.view", "selection.marquee", "selection.lasso", "selection.paint",
+      "selection.clear", "selection.select_all"};
+  return std::find(std::begin(commands), std::end(commands), command) != std::end(commands);
+}
+
 static bool component_target_valid(bContext *C, Base *base)
 {
   return base && base->object->type == OB_MESH &&
@@ -217,6 +256,18 @@ static wmOperatorStatus submit(bContext *C, wmOperator *op, const MenuNode &leaf
     cleanup(C, op);
     axismeld_hotbox_dispatch(C, command.c_str());
     return OPERATOR_FINISHED;
+  }
+  if (!data.tool_root.empty() && !setting && tool_command_rearms(command)) {
+    rearm_tool(C, data);
+    const wmOperatorStatus result = axismeld_hotbox_dispatch(C, command.c_str());
+    // An armed, hidden tool has no open path to lay out. The next mouse press
+    // refreshes both its capabilities and geometry at the new gesture origin.
+    if ((result != OPERATOR_FINISHED && result != OPERATOR_CANCELLED) ||
+        !source_context(C, data))
+    {
+      return close_guard(C, op, true);
+    }
+    return OPERATOR_RUNNING_MODAL;
   }
   if (!setting && hotbox_command_closes(command)) {
     const int trigger = data.trigger, mouse = data.component_session ? 0 : data.active_mouse;
@@ -447,6 +498,13 @@ static bool retract_at_center(HotboxData &data, const float x, const float y, co
     data.center_return_armed = false;
   }
   std::string target = menu_return_target(data.menu_layout, x, y);
+  const MenuNode *current_owner = data.open_path.empty() ? nullptr :
+                                  hotbox_find_node(data.snapshot.menus, data.open_path.back());
+  if (current_owner && current_owner->presentation == "radial" && target != current_owner->id) {
+    // Hidden ancestor centers can lie in the current ring's extended direction regions.
+    // Only returning to this ring's own center retracts it; the real origin cancels below.
+    target.clear();
+  }
   if (data.menu_layout.return_regions.size() > 1 && !data.open_path.empty()) {
     const MenuRect &current = data.menu_layout.return_regions.back();
     if (current.id == data.open_path.back() && data.open_path.size() > 1) {
@@ -462,7 +520,9 @@ static bool retract_at_center(HotboxData &data, const float x, const float y, co
       }
     }
   }
-  const float dx = x - data.origin[0], dy = y - data.origin[1];
+  const float *stroke_origin = !data.tool_root.empty() || data.marking ? data.origin :
+                                                                       data.press_position;
+  const float dx = x - stroke_origin[0], dy = y - stroke_origin[1];
   if (dx * dx + dy * dy <= 12 * 12) {
     if (!data.tool_root.empty()) {
       target = data.tool_root;
@@ -486,6 +546,19 @@ static bool retract_at_center(HotboxData &data, const float x, const float y, co
   data.candidate = HotboxAction::None;
   hotbox_layout(data);
   return true;
+}
+
+static const MenuNode *active_radial_menu(const HotboxData &data)
+{
+  const MenuNode *owner = data.open_path.empty() ? nullptr :
+                         hotbox_find_node(data.snapshot.menus, data.open_path.back());
+  return owner && owner->presentation == "radial" ? owner : nullptr;
+}
+
+static const MenuRect *radial_hover(const HotboxData &data, const float x, const float y)
+{
+  const MenuNode *owner = active_radial_menu(data);
+  return owner ? hit_marking_menu_rect(data.menu_layout, owner->id, x, y) : nullptr;
 }
 
 static wmOperatorStatus tool_modal(bContext *C, wmOperator *op, const wmEvent *event)
@@ -515,8 +588,7 @@ static wmOperatorStatus tool_modal(bContext *C, wmOperator *op, const wmEvent *e
     data.pointer_position[0] = x;
     data.pointer_position[1] = y;
     data.open_path = {data.tool_root};
-    hotbox_layout(data);
-    if (!data.menu_layout.supported) {
+    if (!refresh(C, data)) {
       return close_guard(C, op, true);
     }
     data.draw_handle = ED_region_draw_cb_activate(
@@ -535,6 +607,9 @@ static wmOperatorStatus tool_modal(bContext *C, wmOperator *op, const wmEvent *e
     // over all menu hit testing, including reopening a child after returning to cancel it.
     const MenuRect *hover = at_origin || returned ? nullptr :
                                                     hit_menu_rect(data.menu_layout, x, y);
+    if (!hover && !at_origin && !returned) {
+      hover = radial_hover(data, x, y);
+    }
     const MenuRect rect = hover ? *hover : MenuRect{};
     data.hover_id = hover ? rect.id : "";
     data.hover_depth = hover ? rect.depth : -1;
@@ -546,6 +621,10 @@ static wmOperatorStatus tool_modal(bContext *C, wmOperator *op, const wmEvent *e
       data.active_mouse = 0;
       if (node && node->enabled && ELEM(node->kind, MenuKind::Command, MenuKind::Setting)) {
         return submit(C, op, *node);
+      }
+      if (!data.component_session) {
+        rearm_tool(C, data);
+        return OPERATOR_RUNNING_MODAL;
       }
       return close_guard(C, op, !data.component_session);
     }
@@ -592,12 +671,20 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
                         (ISMOUSE_MOTION(event->type) ||
                          (event->type == data.active_mouse && event->val == KM_RELEASE)) &&
                         retract_at_center(data, x, y, ISMOUSE_MOTION(event->type));
-  const MenuRect *hover = returned ? nullptr : hit_menu_rect(data.menu_layout, x, y);
+  const bool radial_origin = data.active_mouse && active_radial_menu(data) &&
+                             (x - data.press_position[0]) * (x - data.press_position[0]) +
+                                     (y - data.press_position[1]) * (y - data.press_position[1]) <=
+                                 12 * 12;
+  const MenuRect *hover = returned || radial_origin ? nullptr :
+                                                    hit_menu_rect(data.menu_layout, x, y);
+  if (!hover && data.active_mouse && !returned && !radial_origin) {
+    hover = radial_hover(data, x, y);
+  }
   // Copy before open_menu/scroll can rebuild the owning rect vector.
   const MenuRect rect = hover ? *hover : MenuRect{};
   data.hover_id = hover ? rect.id : "";
   data.hover_depth = hover ? rect.depth : -1;
-  const std::string item = returned ? "" : hit_menu(data.menu_layout, x, y);
+  const std::string item = hover && hover->interactive ? hover->id : "";
   const MenuNode *node = hotbox_find_node(data.snapshot.menus, item);
   const bool mouse = ELEM(event->type, LEFTMOUSE, MIDDLEMOUSE, RIGHTMOUSE);
   if (ISMOUSE_MOTION(event->type) || mouse) {

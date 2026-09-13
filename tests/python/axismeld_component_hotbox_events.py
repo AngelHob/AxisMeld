@@ -82,6 +82,17 @@ def suite():
         yield from gesture(delta,cancel)
         check(bpy.context.mode == 'OBJECT', 'center/Esc/disabled directions must not execute')
     print('PASS RMB component directions, consecutive gestures, Object Mode idempotence, center/Esc/placeholders', flush=True)
+    for delta, mask in [((-280,0), (True,False,False)), ((0,260), (False,True,False)),
+                        ((0,-260), (False,False,True))]:
+        yield from gesture(delta)
+        check(bpy.context.mode == 'EDIT_MESH' and tuple(bpy.context.tool_settings.mesh_select_mode) == mask,
+              'RMB outer stroke must retain its component direction')
+    yield from gesture((280,32))
+    check(bpy.context.mode == 'OBJECT', 'RMB outer NE stroke must enter Object Mode')
+    for delta in [(-280,32), (280,0), (-280,-32), (280,-32)]:
+        yield from gesture(delta)
+        check(bpy.context.mode == 'OBJECT', 'RMB missing/disabled outer direction must not select neighbour')
+    print('PASS RMB extended directions and missing NW occlusion', flush=True)
     cube = bpy.context.active_object
     # M2b: the factory cube is under the pointer, while another mesh is active.
     with override():

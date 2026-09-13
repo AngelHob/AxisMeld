@@ -72,6 +72,21 @@ constexpr float native_entry_padding = 60.0f;  // Native submenu icon/arrow and 
 constexpr float scroll_width = 38.0f;
 constexpr float row_step = row_height + gap;
 
+std::array<float, 2> marking_position(const float nx,
+                                      const float ny,
+                                      const float button_width,
+                                      const float center_width,
+                                      const float center_height,
+                                      const bool compact)
+{
+  // All marking rings share five staggered rows. Label width changes X only.
+  const float step = std::max(secondary_height + (compact ? 4 : 8),
+                              (center_height + secondary_height) / 2 + secondary_gap);
+  const float side = (button_width + center_width) / 2 + 8;
+  return {nx == 0 ? 0 : std::copysign(side - (ny == 0 ? 0 : 16), nx),
+          ny == 0 ? 0 : std::copysign(step * (nx == 0 ? 2 : 1), ny)};
+}
+
 bool interactive(const MenuNode &node)
 {
   return node.enabled && node.kind != MenuKind::Disabled && node.kind != MenuKind::Separator;
@@ -364,11 +379,6 @@ class LayoutBuilder {
       // Tool rings keep native submenu text/arrow padding; a slightly rounder ellipse
       // fits their full labels in small panes without narrowing the actual buttons.
       const float rx = 1.7f * ry;
-      // Marking menus use five staggered rows. Label width affects X only, not
-      // the central-row reach. Arbitrary paged directories retain their ellipse.
-      const float marking_step = std::max(secondary_height + (compact ? 4 : 8),
-                                          (center_height + secondary_height) / 2 + secondary_gap);
-      const float marking_side = (button_width + center_width) / 2 + 8;
       local.clear();
       const MenuRect center = {"@back:" + owner.id,
                                -center_width / 2,
@@ -386,18 +396,11 @@ class LayoutBuilder {
         const bool tool_ring = owner.presentation == "radial";
         const float fit_width = tool_ring ? std::max(84.0f, item.width) :
                                            item.node ? button_width : item.width;
-        const float tool_side = (fit_width + center_width) / 2 + 32;
-        const float px = view_ring ?
-                             (item.nx == 0 ?
-                                  0 :
-                                  std::copysign((tool_ring ? tool_side : marking_side) -
-                                                    (item.ny == 0 ? 0 : 16), item.nx)) :
-                             item.nx * rx;
-        const float py = view_ring ?
-                             (item.ny == 0 ?
-                                  0 :
-                                  std::copysign(marking_step * (item.nx == 0 ? 2 : 1), item.ny)) :
-                             item.ny * ry;
+        const auto position = marking_position(item.nx, item.ny,
+                                                tool_ring ? fit_width : button_width,
+                                                center_width, center_height, compact);
+        const float px = view_ring ? position[0] : item.nx * rx;
+        const float py = view_ring ? position[1] : item.ny * ry;
         const MenuRect candidate{item.id,
                                  px - fit_width / 2,
                                  py - secondary_height / 2,
@@ -462,6 +465,7 @@ class LayoutBuilder {
     // Ordinary directories retain one active ring and explicit Back/page navigation.
     // The root remains a draw-only background; the Views ring has no center control.
     std::erase_if(result.rects, [](const MenuRect &item) { return item.depth > 0; });
+    result.marking_gaps.clear();
     for (int i = view_ring ? 1 : 0; i < int(local.size()); i++) {
       MenuRect item = local[i];
       item.x += cx;
@@ -558,6 +562,24 @@ class LayoutBuilder {
       ring_anchor.y += (anchor.height - 24) / 2;
       ring_anchor.width = ring_anchor.height = 24;
       result.supported &= ellipse(owner, ring_anchor, depth, items, 0, nullptr, true);
+      if (result.supported) {
+        // Absent directions block gestures but never consume viewport fitting space
+        // or become visible entries. Use the same template at the clamped center.
+        const auto &center = result.return_regions.back();
+        for (const auto &[direction, vector] : directions) {
+          if (std::any_of(owner.children.begin(), owner.children.end(), [&](const MenuNode &node) {
+                return node.direction == direction;
+              })) {
+            continue;
+          }
+          const float w = 84;
+          const auto position = marking_position(vector[0], vector[1], w, 24, 24, false);
+          result.marking_gaps.push_back({"@gap:" + owner.id + ":" + direction,
+                                         center.x + center.width / 2 + position[0] - w / 2,
+                                         center.y + center.height / 2 + position[1] - 12,
+                                         w, secondary_height, depth, false, true});
+        }
+      }
       return;
     }
     if (owner.id == "views") {
@@ -992,8 +1014,11 @@ const MenuRect *hit_menu_rect(const MenuLayout &layout, const float x, const flo
   return hit;
 }
 
-const MenuRect *nearest_marking_rect(const MenuLayout &layout, const float x, const float y,
-                                    const std::array<float, 2> *gesture_origin)
+static const MenuRect *nearest_marking_rect_impl(const MenuLayout &layout,
+                                                const float x,
+                                                const float y,
+                                                const std::array<float, 2> *gesture_origin,
+                                                const MenuRect *active_center)
 {
   if (!layout.supported || !std::isfinite(x) || !std::isfinite(y)) {
     return nullptr;
@@ -1005,6 +1030,7 @@ const MenuRect *nearest_marking_rect(const MenuLayout &layout, const float x, co
   for (const auto *rects : {&layout.rects, &layout.marking_gaps}) {
     for (const MenuRect &item : *rects) {
       if (!item.retained_only && item.depth >= layout.hit_depth && item.direction_label &&
+          (!active_center || item.depth == active_center->depth) &&
           (!item.native_menu || item.native_menu_standalone)) {
         directions.push_back(&item);
         left = std::min(left, item.x);
@@ -1020,14 +1046,18 @@ const MenuRect *nearest_marking_rect(const MenuLayout &layout, const float x, co
   // The visual center remains the blind-gesture zone; use the layout's actual
   // dimensions, not an unrelated circular threshold that can turn Side into Bottom.
   for (const MenuRect &center : layout.return_regions) {
-    if (center.id == "views" && gesture_origin) {
+    if (active_center && &center != active_center) {
+      continue;
+    }
+    if (!active_center && center.id == "views" && gesture_origin) {
       const float dx = x - (*gesture_origin)[0], dy = y - (*gesture_origin)[1];
       const float radius = std::min(center.width, center.height) / 2;
       if (dx * dx + dy * dy <= radius * radius) {
         return nullptr;
       }
     }
-    if (center.id == "views" && x >= center.x && x <= center.x + center.width &&
+    if ((active_center || center.id == "views") &&
+        x >= center.x && x <= center.x + center.width &&
         y >= center.y && y <= center.y + center.height) {
       return nullptr;
     }
@@ -1039,6 +1069,20 @@ const MenuRect *nearest_marking_rect(const MenuLayout &layout, const float x, co
                          ((*gesture_origin)[1] < bottom && y < bottom) ||
                          ((*gesture_origin)[1] > top && y > top))) {
     return nullptr;
+  }
+  if (active_center) {
+    // Content-sized radial labels have different outer edges. Continue an actual
+    // row as soon as its edge is crossed, before the whole ring's bounding edge;
+    // otherwise a longer neighbouring row can capture the short button's tail.
+    const float cx = active_center->x + active_center->width / 2;
+    for (const MenuRect *item : directions) {
+      const float item_cx = item->x + item->width / 2;
+      if (y >= item->y && y <= item->y + item->height &&
+          ((item_cx <= cx && x < item->x) ||
+           (item_cx >= cx && x > item->x + item->width))) {
+        return item;
+      }
+    }
   }
   // Continue the outer edge regions outward. Otherwise a farther horizontal stroke
   // eventually prefers the slightly protruding middle row over its adjacent row.
@@ -1060,6 +1104,32 @@ const MenuRect *nearest_marking_rect(const MenuLayout &layout, const float x, co
     }
   }
   return nearest;
+}
+
+const MenuRect *nearest_marking_rect(const MenuLayout &layout, const float x, const float y,
+                                    const std::array<float, 2> *gesture_origin)
+{
+  return nearest_marking_rect_impl(layout, x, y, gesture_origin, nullptr);
+}
+
+const MenuRect *hit_marking_menu_rect(const MenuLayout &layout, const std::string_view owner,
+                                    const float x, const float y)
+{
+  if (!layout.supported || !std::isfinite(x) || !std::isfinite(y) ||
+      layout.return_regions.empty() || layout.return_regions.back().id != owner) {
+    return nullptr;
+  }
+  const MenuRect &center = layout.return_regions.back();
+  for (const MenuRect &item : layout.rects) {
+    if (!item.retained_only && item.depth >= center.depth && item.native_menu &&
+        !item.native_menu_standalone) {
+      return nullptr;
+    }
+  }
+  if (const MenuRect *hit = hit_menu_rect(layout, x, y)) {
+    return hit->depth == center.depth && hit->direction_label ? hit : nullptr;
+  }
+  return nearest_marking_rect_impl(layout, x, y, nullptr, &center);
 }
 
 bool hotbox_command_closes(const std::string_view command)
