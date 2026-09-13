@@ -83,6 +83,10 @@ def suite():
     # minimum-size buttons. Outcomes are asserted from actual scene geometry.
     targets = {'N': (0, 64), 'NE': (46, 32), 'E': (62, 0), 'SE': (46, -32),
                'S': (0, -64), 'SW': (-46, -32), 'W': (-62, 0), 'NW': (-46, 32)}
+    blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
+    reference_expansion = (blf.dimensions(0, 'AxisMeld')[0]/scale + 20 + 40 - 24)/2
+    targets = {direction: (x + (reference_expansion if x > 0 else -reference_expansion if x < 0 else 0), y)
+               for direction, (x, y) in targets.items()}
     outer = {'N': (0, 260), 'NE': (280, 32), 'E': (280, 0), 'SE': (280, -32),
              'S': (0, -260), 'SW': (-280, -32), 'W': (-280, 0), 'NW': (-280, 32)}
 

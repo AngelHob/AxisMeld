@@ -556,11 +556,15 @@ class LayoutBuilder {
                          interactive(node),
                          true});
       }
-      // The hole belongs to the gesture, not the width of the directory that opened it.
+      // Match the actual Views center, not the width of the directory that opened
+      // this ring. A 24px center with the same side padding leaves only 8px between
+      // diagonal rows. Keep the gesture origin and vertical spacing unchanged.
+      const float center_width = widths.at("views") + padding;
       MenuRect ring_anchor = anchor;
-      ring_anchor.x += (anchor.width - 24) / 2;
+      ring_anchor.x += (anchor.width - center_width) / 2;
       ring_anchor.y += (anchor.height - 24) / 2;
-      ring_anchor.width = ring_anchor.height = 24;
+      ring_anchor.width = center_width;
+      ring_anchor.height = 24;
       result.supported &= ellipse(owner, ring_anchor, depth, items, 0, nullptr, true);
       if (result.supported) {
         // Absent directions block gestures but never consume viewport fitting space
@@ -573,7 +577,7 @@ class LayoutBuilder {
             continue;
           }
           const float w = 84;
-          const auto position = marking_position(vector[0], vector[1], w, 24, 24, false);
+          const auto position = marking_position(vector[0], vector[1], w, center_width, 24, false);
           result.marking_gaps.push_back({"@gap:" + owner.id + ":" + direction,
                                          center.x + center.width / 2 + position[0] - w / 2,
                                          center.y + center.height / 2 + position[1] - 12,

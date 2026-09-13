@@ -264,17 +264,147 @@ TEST(axismeld_hotbox_menu, ToolReferenceUsesContentWidthsAndInsetDiagonalRows)
   }
 }
 
-TEST(axismeld_hotbox_menu, RadialTemplateKeepsShortStrokeTargetsReachable)
+TEST(axismeld_hotbox_menu, EveryRadialMatchesViewsHorizontalClearanceAndCenterCancellation)
+{
+  const auto snapshot = default_snapshot();
+  std::vector<const MenuNode *> owners;
+  visit(snapshot.menus, [&](const MenuNode &node) {
+    if (node.presentation == "radial") {
+      owners.push_back(&node);
+    }
+  });
+  ASSERT_GE(owners.size(), 24);
+  const std::unordered_map<std::string, std::string> reference_ids = {
+      {"N", "views.perspective"}, {"NE", "views.camera"}, {"E", "views.side"},
+      {"SE", "views.bottom"}, {"S", "views.front"}, {"SW", "views.back"},
+      {"W", "views.top"}, {"NW", "views.left"}};
+  for (const float title_width : {40.0f, 80.0f}) {
+    auto widths = measured(snapshot);
+    widths["views"] = title_width;
+    for (const auto size : {std::array<float, 2>{1920, 1080}, {480, 320}}) {
+      for (const auto origin : {std::array<float, 2>{size[0] / 2, size[1] / 2},
+                                {0, 0}, {size[0], 0}, {0, size[1]}, {size[0], size[1]}}) {
+        const auto views = layout_menu(snapshot, size[0], size[1], origin[0], origin[1],
+                                       {"center", "views"}, {}, widths);
+        ASSERT_TRUE(views.supported);
+        const auto &reference_center = views.return_regions.back();
+        const float reference_cx = reference_center.x + reference_center.width / 2;
+        for (const MenuNode *owner : owners) {
+          SCOPED_TRACE(testing::Message() << owner->id << " title=" << title_width << " size="
+                                         << size[0] << "x" << size[1] << " origin="
+                                         << origin[0] << "," << origin[1]);
+          const auto layout = layout_menu(snapshot, size[0], size[1], origin[0], origin[1],
+                                          {owner->id}, {}, widths, nullptr, owner->id);
+          ASSERT_TRUE(layout.supported);
+          const auto &center = layout.return_regions.back();
+          const float cx = center.x + center.width / 2, cy = center.y + center.height / 2;
+          EXPECT_FLOAT_EQ(center.width, reference_center.width);
+          EXPECT_FLOAT_EQ(center.height, 40);
+          auto compare_inner_edge = [&](const MenuRect &item, const std::string &direction) {
+            const auto *reference = rect(views, reference_ids.at(direction));
+            ASSERT_NE(reference, nullptr);
+            if (direction == "N" || direction == "S") {
+              EXPECT_FLOAT_EQ(item.x + item.width / 2, cx);
+            }
+            else {
+              const bool west = direction.find('W') != std::string::npos;
+              const float actual_edge = item.x + (west ? item.width : 0) - cx;
+              const float reference_edge = reference->x + (west ? reference->width : 0) -
+                                           reference_cx;
+              EXPECT_FLOAT_EQ(actual_edge, reference_edge) << direction;
+            }
+          };
+          for (const MenuNode &node : owner->children) {
+            const auto *item = rect(layout, node.id);
+            ASSERT_NE(item, nullptr);
+            compare_inner_edge(*item, node.direction);
+            EXPECT_FLOAT_EQ(item->width, std::max(84.0f, widths.at(node.id) +
+                                           (node.kind == MenuKind::Menu ? 60 : 16)));
+            EXPECT_FLOAT_EQ(item->height, 24);
+            EXPECT_GE(item->x, 12);
+            EXPECT_LE(item->x + item->width, size[0] - 12);
+            EXPECT_GE(item->y, 12);
+            EXPECT_LE(item->y + item->height, size[1] - 12);
+            const auto *hit = hit_marking_menu_rect(layout, owner->id,
+                                                    item->x + item->width / 2, item->y + 12);
+            ASSERT_NE(hit, nullptr);
+            EXPECT_EQ(hit->id, node.id);
+          }
+          for (const auto &empty : layout.marking_gaps) {
+            compare_inner_edge(empty, empty.id.substr(empty.id.rfind(':') + 1));
+            EXPECT_FALSE(empty.interactive);
+            EXPECT_EQ(rect(layout, empty.id), nullptr);
+          }
+          // These points lie inside the actual Views central-row clearance. A larger
+          // painted hole must also cancel, rather than selecting a nearby diagonal.
+          for (const float dx : {-reference_center.width / 2 + .5f, -24.0f, 24.0f,
+                                  reference_center.width / 2 - .5f}) {
+            EXPECT_EQ(hit_menu_rect(layout, cx + dx, cy), nullptr);
+            EXPECT_EQ(hit_marking_menu_rect(layout, owner->id, cx + dx, cy), nullptr);
+            EXPECT_EQ(menu_return_target(layout, cx + dx, cy), owner->id);
+          }
+        }
+      }
+    }
+  }
+}
+
+TEST(axismeld_hotbox_menu, NarrowRadialsRejectAtomicallyInsteadOfReducingViewsClearance)
 {
   const auto snapshot = default_snapshot();
   const auto widths = measured(snapshot);
-  const auto layout = layout_menu(
-      snapshot, 1200, 800, 600, 400, {"tools.move"}, {}, widths, nullptr, "tools.move");
-  ASSERT_TRUE(layout.supported);
-  // Eight pixels beyond the 24px center reaches the central row; diagonal rows
-  // inset a further 16px. The old 32px side clearance leaves both strokes blank.
-  EXPECT_EQ(hit_menu(layout, 576, 400), "tools.move.world");
-  EXPECT_EQ(hit_menu(layout, 590, 432), "tools.move.object");
+  for (const std::string owner : {"tools.select", "tools.move", "tools.rotate", "tools.scale"}) {
+    for (const auto origin : {std::array<float, 2>{0, 0}, {196, 105}, {392, 210}}) {
+      const auto narrow = layout_menu(snapshot, 392, 210, origin[0], origin[1],
+                                      {owner}, {}, widths, nullptr, owner);
+      EXPECT_FALSE(narrow.supported) << owner;
+      EXPECT_TRUE(narrow.rects.empty());
+      EXPECT_TRUE(narrow.return_regions.empty());
+      EXPECT_TRUE(narrow.marking_gaps.empty());
+    }
+    const auto roomy = layout_menu(snapshot, 480, 320, 240, 160,
+                                   {owner}, {}, widths, nullptr, owner);
+    ASSERT_TRUE(roomy.supported) << owner;
+  }
+  for (const std::string owner : {"context.components", "context.create", "tools.move.axis"}) {
+    const auto narrow = layout_menu(snapshot, 392, 210, 196, 105,
+                                    {owner}, {}, widths, nullptr, owner);
+    EXPECT_TRUE(narrow.supported) << owner;
+  }
+}
+
+TEST(axismeld_hotbox_menu, WideRadialChildCenterAndOutwardHitsIgnoreHiddenAncestors)
+{
+  const auto snapshot = default_snapshot();
+  const auto widths = measured(snapshot);
+  for (const bool space_entry : {false, true}) {
+    const std::vector<std::string> path = space_entry ?
+        std::vector<std::string>{"common.modify", "common.modify.tools", "tools.move",
+                                 "tools.move.axis", "tools.move.axis.custom"} :
+        std::vector<std::string>{"tools.move", "tools.move.axis", "tools.move.axis.custom"};
+    auto child = layout_menu(snapshot, 1920, 1080, 960, 540, path, {}, widths, nullptr,
+                              space_entry ? "" : "tools.move");
+    ASSERT_TRUE(child.supported);
+    ASSERT_GE(child.return_regions.size(), 3);
+    const std::string owner = "tools.move.axis.custom";
+    const auto &center = child.return_regions.back();
+    const float cx = center.x + center.width / 2, cy = center.y + center.height / 2;
+    EXPECT_EQ(center.id, owner);
+    EXPECT_EQ(menu_return_target(child, cx, cy), owner);
+    EXPECT_EQ(hit_marking_menu_rect(child, owner, cx, cy), nullptr);
+    const auto *east = rect(child, owner + ".custom");
+    ASSERT_NE(east, nullptr);
+    EXPECT_TRUE(menu_return_target(child, east->x + east->width / 2, east->y + 12).empty());
+    const float x = east->x + east->width + 100, y = east->y + 12;
+    child.return_regions.front() = {"tools.move", x - 50, y - 20, 100, 40, 1};
+    const auto *outward = hit_marking_menu_rect(child, owner, x, y);
+    ASSERT_NE(outward, nullptr);
+    EXPECT_EQ(outward->id, east->id);
+    EXPECT_EQ(hit_marking_menu_rect(child, "tools.move", x, y), nullptr);
+    // Returning after the outer stroke still identifies only the current child;
+    // the operator uses this owner to retract exactly one path level.
+    EXPECT_EQ(menu_return_target(child, cx, cy), owner);
+  }
 }
 
 TEST(axismeld_hotbox_menu, RadialOutwardHitsRetainDisplayedRowsAndDisabledTargets)

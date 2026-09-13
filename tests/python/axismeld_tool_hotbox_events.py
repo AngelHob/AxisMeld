@@ -68,16 +68,19 @@ def suite():
         blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
         widths = {n['id']: max(84, blf.dimensions(0, n['label'])[0] / scale +
                   (60 if n['kind'] == 'menu' else 16)) for n in nodes}
+        # Views owns the spacing reference: title, icon, then primary-button padding.
+        # Native tests compare inner edges against actual Views layouts independently.
+        center_width = blf.dimensions(0, 'AxisMeld')[0] / scale + 20 + 40
         d = math.sqrt(.5)
         directions = {'N': (0, 1), 'NE': (d, d), 'E': (1, 0), 'SE': (d, -d),
                       'S': (0, -1), 'SW': (-d, -d), 'W': (-1, 0), 'NW': (-d, d)}
         for ry in (0,):
-            rects = [(-12, -12, 24, 24)]
+            rects = [(-center_width/2, -12, center_width, 24)]
             clear = True
             for n in nodes:
                 w = widths[n['id']]
                 nx, ny = directions[n['direction']]
-                side = (w + 24)/2 + 8
+                side = (w + center_width)/2 + 8
                 x = (0 if nx == 0 else math.copysign(side - (0 if ny == 0 else 16), nx)) - w/2
                 y = (0 if ny == 0 else math.copysign(32 * (2 if nx == 0 else 1), ny)) - 12
                 clear &= all(x+w+3.999 <= ox or ox+ow+3.999 <= x or
