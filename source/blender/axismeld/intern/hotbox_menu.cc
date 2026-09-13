@@ -6,6 +6,38 @@
 #include <cmath>
 
 namespace blender::axismeld {
+MenuRadioState menu_radio_state(const MenuSnapshot &snapshot, const MenuNode &node)
+{
+  if (node.kind != MenuKind::Setting) {
+    return MenuRadioState::None;
+  }
+  std::string_view current;
+  const std::string transparency = std::to_string(snapshot.transparency);
+  if (node.command == "style") {
+    current = snapshot.style;
+  }
+  else if (node.command == "transparency") {
+    current = transparency;
+  }
+  else if (node.command == "center.LEFTMOUSE") {
+    current = snapshot.center_buttons[0];
+  }
+  else if (node.command == "center.MIDDLEMOUSE") {
+    current = snapshot.center_buttons[1];
+  }
+  else if (node.command == "center.RIGHTMOUSE") {
+    current = snapshot.center_buttons[2];
+  }
+  else {
+    return MenuRadioState::None;
+  }
+  /* The snapshot parser represents a disabled (JSON null) button mapping as empty. */
+  if (node.command.starts_with("center.") && current.empty()) {
+    current = "none";
+  }
+  return node.value == current ? MenuRadioState::Selected : MenuRadioState::Unselected;
+}
+
 std::string menu_return_target(const MenuLayout &layout, const float x, const float y)
 {
   if (!layout.supported) {

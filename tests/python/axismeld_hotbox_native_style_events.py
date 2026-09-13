@@ -44,6 +44,33 @@ def settle(count=4):
         yield
 
 
+def check_radio_image(path, choices, selected_index, scale):
+    """Inspect native circle pixels independently of the C++ state helper and hover flag."""
+    image = bpy.data.images.load(str(path), check_existing=False)
+    try:
+        pixels, width = list(image.pixels), image.size[0]
+        states = []
+        for rect in choices:
+            if rect is None:
+                states.append(None)
+                continue
+            x, y, w, h = rect
+            ink = sum(min(pixels[(yy*width+xx)*4:(yy*width+xx)*4+3]) > .55
+                      for yy in range(int(y+h/2-6*scale), int(y+h/2+6*scale))
+                      for xx in range(int(x+8*scale), int(x+20*scale)))
+            check(ink > 8*scale*scale, f'{path.name}: missing circle at {rect}')
+            center = [min(pixels[(yy*width+xx)*4:(yy*width+xx)*4+3])
+                      for yy in range(int(y+h/2-scale), int(y+h/2+scale))
+                      for xx in range(int(x+13*scale), int(x+15*scale))]
+            states.append(sum(center)/len(center) > .55)
+        check(states == [None if rect is None else i == selected_index
+                         for i, rect in enumerate(choices)],
+              f'{path.name}: rendered radio state {states}, expected index {selected_index}')
+        print('RADIO_PIXELS_PASS', path.name, states, flush=True)
+    finally:
+        bpy.data.images.remove(image)
+
+
 def mapping_suite():
     """Actual Center Mouse Buttons lists, pagination, release ownership and persistence."""
     win = bpy.context.window
@@ -140,6 +167,7 @@ def mapping_suite():
     bounds = (region.x, region.y, region.width, region.height)
     blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
     icon_labels = {'AxisMeld', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls'}
+    icon_labels.update(MAPPING_LABELS)
 
     def measure(label):
         return blf.dimensions(0, label)[0] / scale + (20 if label in icon_labels else 0)
@@ -582,8 +610,10 @@ def mapping_suite():
               'standard mapping list must show all 13 choices without pagination')
         normal_path = screenshot('mapping-standard-left-full.png')
         check_native_page(normal_path, page, 'standard full mapping list')
+        check_radio_image(normal_path, page['items'], 1, scale)
         yield from move(page['items'][9])
         hover_path = screenshot('mapping-standard-left-hover.png')
+        check_radio_image(hover_path, page['items'], 1, scale)
         normal_image, normal_pixels, normal_width = image_pixels(normal_path)
         hover_image, hover_pixels, hover_width = image_pixels(hover_path)
         try:
@@ -628,9 +658,16 @@ def mapping_suite():
             'LEFTMOUSE': None, 'MIDDLEMOUSE': 'common', 'RIGHTMOUSE': 'pane.shading'},
             'standard mappings did not reload from the persisted user layer')
         _owner, _buttons, _page = yield from open_mapping(2)
+        check_radio_image(screenshot('radio-mapping-right-reloaded.png'), _page['items'], 9, scale)
         check(settings()['center_buttons']['RIGHTMOUSE'] == 'pane.shading',
               'reopened nested mapping lost persisted Right Mouse setting')
         yield from close_box()
+
+        for button_index, selected_index in ((0, 0), (1, 4)):
+            _owner, _buttons, _page = yield from open_mapping(button_index)
+            check_radio_image(screenshot(f'radio-mapping-{button_index}-reloaded.png'),
+                              _page['items'], selected_index, scale)
+            yield from close_box()
 
         # Held leaf selection owns its release; another mouse release cannot commit it.
         reset_settings()
@@ -1012,7 +1049,8 @@ def suite():
         bounds = (region.x, region.y, region.width, region.height)
         blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
         def measure(label):
-            return blf.dimensions(0, label)[0] / scale
+            return blf.dimensions(0, label)[0] / scale + (
+                20 if label in STYLE_LABELS + TRANSPARENCY_LABELS else 0)
         center_width = (measure('AxisMeld') + 60)*scale
         center = (cx-center_width/2, cy-19*scale, center_width, 38*scale)
         control_labels = ['Menu Rows', 'Hotbox Style', 'Transparency', 'Center Mouse Buttons']
@@ -1111,7 +1149,8 @@ def suite():
         bounds = (region.x, region.y, region.width, region.height)
         blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
         def measure(label):
-            return blf.dimensions(0, label)[0] / scale
+            return blf.dimensions(0, label)[0] / scale + (
+                20 if label in STYLE_LABELS + TRANSPARENCY_LABELS else 0)
         center_width = (measure('AxisMeld') + 60)*scale
         center = (cx-center_width/2, cy-19*scale, center_width, 38*scale)
         cases = (
@@ -1149,7 +1188,10 @@ def suite():
                 yield from click(list_anchor)
             choices = native_list(list_anchor, labels, measure, bounds, scale,
                                   marking_origin=(cx, cy) if controls_index is None else None)
-            screenshot(f'native-style-{entry}-{requested_scale}-normal.png')
+            normal_path = screenshot(f'native-style-{entry}-{requested_scale}-normal.png')
+            initial_radio = 0 if entry.startswith('style') else 1
+            if not entry.startswith('rows'):
+                check_radio_image(normal_path, choices, initial_radio, scale)
             theme.wcol_menu_back.inner = (.8, .12, .04, 1)
             area.tag_redraw()
             yield from settle()
@@ -1213,6 +1255,8 @@ def suite():
             bpy.data.images.remove(image)
             yield from move(choices[selected_index])
             hover_path = screenshot(f'native-style-{entry}-{requested_scale}-hover.png')
+            if not entry.startswith('rows'):
+                check_radio_image(hover_path, choices, initial_radio, scale)
             hover_image = bpy.data.images.load(str(hover_path), check_existing=False)
             hover_pixels, hover_width = list(hover_image.pixels), hover_image.size[0]
             hx, hy, hw, hh = choices[selected_index]
@@ -1243,6 +1287,13 @@ def suite():
                 check(settings['transparency'] == 75 and
                       hotbox_runtime.current_settings()['transparency'] == 75,
                       f'{entry} {requested_scale}x transparency setting not applied')
+            if controls_index is not None and not entry.startswith('rows'):
+                # Settings refresh clears the submenu path but retains the parent hotbox.
+                # Reopen without another Space press and verify the newly selected glyph.
+                yield from click(control)
+                yield from click(list_anchor)
+                check_radio_image(screenshot(f'radio-{entry}-{requested_scale}-after-click.png'),
+                                  choices, selected_index, scale)
             event('SPACE', 'RELEASE')
             yield from settle()
             check(not win.screen.is_animation_playing, 'native menu leaked Space release')

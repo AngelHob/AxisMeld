@@ -65,6 +65,57 @@ static bool separated_by(const MenuRect &a, const MenuRect &b, const float dista
          a.y >= b.y + b.height + distance || b.y >= a.y + a.height + distance;
 }
 
+TEST(axismeld_hotbox_menu, RadioSettingsFollowSnapshotAndKeepGroupsIndependent)
+{
+  auto snapshot = default_snapshot();
+  auto check = [&]() {
+    std::map<std::string, int> selected;
+    visit(snapshot.menus, [&](const MenuNode &node) {
+      const auto state = menu_radio_state(snapshot, node);
+      if (state == MenuRadioState::Selected) {
+        selected[node.command]++;
+      }
+      if (node.kind != MenuKind::Setting || node.command.starts_with("row.")) {
+        EXPECT_EQ(state, MenuRadioState::None) << node.id;
+      }
+      if (node.kind == MenuKind::Setting && node.command == "style") {
+        EXPECT_EQ(state, node.value == snapshot.style ? MenuRadioState::Selected :
+                                                       MenuRadioState::Unselected) << node.id;
+      }
+      if (node.kind == MenuKind::Setting && node.command == "transparency") {
+        EXPECT_EQ(state, node.value == std::to_string(snapshot.transparency) ?
+                             MenuRadioState::Selected : MenuRadioState::Unselected) << node.id;
+      }
+      const std::array<std::string, 3> commands = {
+          "center.LEFTMOUSE", "center.MIDDLEMOUSE", "center.RIGHTMOUSE"};
+      for (int i = 0; i < 3; i++) {
+        if (node.kind == MenuKind::Setting && node.command == commands[i]) {
+          const std::string current = snapshot.center_buttons[i].empty() ? "none" :
+                                                                          snapshot.center_buttons[i];
+          EXPECT_EQ(state, node.value == current ? MenuRadioState::Selected :
+                                                                     MenuRadioState::Unselected)
+              << node.id;
+        }
+      }
+    });
+    EXPECT_EQ(selected["style"], 2);  // Both occurrences share the same live setting.
+    for (const auto command : {"center.LEFTMOUSE", "center.MIDDLEMOUSE", "center.RIGHTMOUSE"}) {
+      EXPECT_EQ(selected[command], 1);
+    }
+    EXPECT_EQ(selected["transparency"], snapshot.transparency == 37 ? 0 : 1);
+  };
+  check();
+  snapshot.style = "zones";
+  snapshot.transparency = 37;
+  snapshot.center_buttons = {"", "center.recent", "center.controls"};
+  check();
+  snapshot.style = "center";
+  snapshot.transparency = 100;
+  check();
+  const MenuNode unsupported{"test", "Test", "unknown", "", "value", MenuKind::Setting, true, {}};
+  EXPECT_EQ(menu_radio_state(snapshot, unsupported), MenuRadioState::None);
+}
+
 TEST(axismeld_hotbox_menu, RoomierMainTargetsKeepTenPixelGaps)
 {
   const auto snapshot = default_snapshot();

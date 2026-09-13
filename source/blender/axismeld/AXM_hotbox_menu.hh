@@ -36,6 +36,9 @@ struct MenuSnapshot {
   std::vector<MenuNode> menus;
   MenuAppearance appearance;
 };
+enum class MenuRadioState { None, Unselected, Selected };
+/* Derived display state only; native option rows consume it without new persisted data. */
+MenuRadioState menu_radio_state(const MenuSnapshot &snapshot, const MenuNode &node);
 struct MenuRect {
   std::string id;
   float x, y, width, height;

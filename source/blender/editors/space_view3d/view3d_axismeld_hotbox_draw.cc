@@ -15,6 +15,19 @@
 
 namespace blender::axismeld {
 namespace {
+int menu_radio_icon(const MenuSnapshot &snapshot, const MenuNode &node)
+{
+  switch (menu_radio_state(snapshot, node)) {
+    case MenuRadioState::Selected:
+      return ICON_RADIOBUT_ON;
+    case MenuRadioState::Unselected:
+      return ICON_RADIOBUT_OFF;
+    case MenuRadioState::None:
+      return ICON_NONE;
+  }
+  return ICON_NONE;
+}
+
 int menu_icon(const MenuNode &node)
 {
   if (node.id == "views" || node.value == "views") {
@@ -78,7 +91,10 @@ void hotbox_measure(HotboxVisual &data)
       const bool view_label = node.id.starts_with("views.") && node.kind == MenuKind::Command;
       const std::string_view label = node.label;
       data.label_widths[node.id] = BLF_width(font, label.data(), label.size()) / data.scale +
-                                   (!view_label && menu_icon(node) != ICON_NONE ? 20.0f : 0.0f);
+                                   (!view_label && (menu_icon(node) != ICON_NONE ||
+                                                    menu_radio_icon(data.snapshot, node) != ICON_NONE) ?
+                                        20.0f :
+                                        0.0f);
       if (view_label) {
         const auto compact = hotbox_view_short_label(node.command);
         data.label_widths["@compact:" + node.id] = BLF_width(
@@ -296,7 +312,9 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
                                      !entry.disabled,
                                      submenu,
                                      icon_only,
-                                     r.native_menu ? ICON_NONE : entry.icon,
+                                     r.native_menu ? (node ? menu_radio_icon(data.snapshot, *node) :
+                                                             ICON_NONE) :
+                                                     entry.icon,
                                      !r.native_menu && !submenu,
                                      entry.separator});
     }
