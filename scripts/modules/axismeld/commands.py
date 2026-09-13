@@ -4,6 +4,7 @@
 from dataclasses import dataclass
 from types import MappingProxyType
 from .tool_hotbox import ORIENTATIONS
+from .creation_hotbox import CREATE_HOTBOX, PRIMITIVES
 
 PRESET_NAME = 'AxisMeld_Maya_2026'
 SOURCE_URL = ('https://help.autodesk.com/cloudhelp/2026/ENU/Maya-KeyboardShortcuts/files/'
@@ -16,11 +17,22 @@ class Command:
     label: str
     key: str | None = None
     alt: bool = False
+    ctrl: bool = False
+    shift: bool = False
+    oskey: bool = False
     status: str = 'adapted'
     difference: str = 'Uses Blender semantics; Maya hold menus are not implemented.'
 
 
 COMMANDS = MappingProxyType({command.id: command for command in (
+    *(Command('mesh.create_' + name, label,
+              difference=('Creates a native Blender primitive at the 3D Cursor with Blender dimensions, '
+                          'Z-up and topology; Maya interactive placement is not reproduced.' +
+                          (' Disc is a filled NGON circle.' if name == 'disc' else '') +
+                          (' Torus follows Blender\'s Enter Edit Mode preference.' if name == 'torus' else '')))
+      for name, label, _direction, _operator, _properties in PRIMITIVES),
+    Command(CREATE_HOTBOX, 'Empty Context Create Hotbox', 'RIGHTMOUSE', shift=True,
+            difference='Object-only empty-selection creation menu; direct mouse entry requires empty pointer space.'),
     *(Command(identifier, label,
               difference='Uses a persistent Blender selection tool; Paint is circle selection, not Maya brush semantics.')
       for identifier, label in (('selection.marquee', 'Marquee Select'),
@@ -85,5 +97,5 @@ RESERVED_KEYS = ('D', 'X', 'C', 'V', 'J', 'F12', 'ONE', 'TWO', 'THREE')
 
 def baseline_bindings():
     return {key: {'type': command.key, 'value': 'PRESS', 'alt': command.alt,
-                  'ctrl': False, 'shift': False, 'oskey': False}
+                  'ctrl': command.ctrl, 'shift': command.shift, 'oskey': command.oskey}
             for key, command in COMMANDS.items() if command.key is not None}

@@ -116,6 +116,13 @@ bool appearance(const DictionaryValue &dict, MenuAppearance &out)
 }
 
 const std::unordered_set<std::string> commands = {"tool.select",
+                                                  "mesh.create_disc",
+                                                  "mesh.create_sphere",
+                                                  "mesh.create_torus",
+                                                  "mesh.create_cube",
+                                                  "mesh.create_cone",
+                                                  "mesh.create_cylinder",
+                                                  "mesh.create_plane",
                                                   "selection.marquee",
                                                   "selection.lasso",
                                                   "selection.paint",

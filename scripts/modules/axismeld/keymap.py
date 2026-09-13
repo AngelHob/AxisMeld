@@ -4,8 +4,11 @@
 from copy import deepcopy
 
 from .context_hotbox import COMPONENT_HOTBOX
+from .creation_hotbox import CREATE_HOTBOX
 from .commands import baseline_bindings, RESERVED_KEYS
 from .profiles import MODIFIERS
+
+CONTEXT_HOTBOXES = frozenset({COMPONENT_HOTBOX, CREATE_HOTBOX})
 
 
 def overlaps(event, owned):
@@ -57,8 +60,8 @@ def validate_global_bindings(base, bindings):
 def generate_keymaps(base, bindings):
     result = deepcopy(base)
     # Context sessions must retain the native fallback for rejected contexts and rebinds.
-    owned = [*(value for key, value in baseline_bindings().items() if key != COMPONENT_HOTBOX),
-             *(value for key, value in bindings.items() if value and key != COMPONENT_HOTBOX),
+    owned = [*(value for key, value in baseline_bindings().items() if key not in CONTEXT_HOTBOXES),
+             *(value for key, value in bindings.items() if value and key not in CONTEXT_HOTBOXES),
              *({'type': key} for key in RESERVED_KEYS)]
     for name, args, content in result:
         # Native operators poll the Maya preset, modeling context and highlighted/armed
@@ -69,8 +72,9 @@ def generate_keymaps(base, bindings):
         if not modeling_keymap(name, args):
             continue
         content['items'] = [item for item in content['items']
-                            if not (item[0] == 'axismeld.command' and item[2] and
-                                    ('command', COMPONENT_HOTBOX) in item[2].get('properties', ()))
+                             if not (item[0] == 'axismeld.command' and item[2] and
+                                     any(('command', command) in item[2].get('properties', ())
+                                         for command in CONTEXT_HOTBOXES))
                             and not any(overlaps(item[1], event) for event in owned)]
         for command, event in bindings.items():
             if command == 'hotbox.open':
@@ -79,7 +83,7 @@ def generate_keymaps(base, bindings):
             if name in target and event is not None:
                 item = ('axismeld.command', dict(event),
                         {'properties': [('command', command)]})
-                if command == COMPONENT_HOTBOX:
+                if command in CONTEXT_HOTBOXES:
                     content['items'].insert(0, item)
                 else:
                     content['items'].append(item)

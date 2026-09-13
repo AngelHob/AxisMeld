@@ -52,6 +52,8 @@ struct HotboxData : HotboxVisual {
   bool mouse_moved_since_press = false;
   bool tool_shown = false;
   bool component_session = false;
+  bool creation_session = false;
+  wmEventModifierFlag required_modifiers = wmEventModifierFlag(0);
   unsigned int component_target_uid = 0;
   ViewLayer *component_view_layer = nullptr;
   std::vector<std::string> return_path;
@@ -117,8 +119,9 @@ static bool source_context(bContext *C, const HotboxData &data)
 static wmOperatorStatus close_guard(bContext *C, wmOperator *op, const bool trigger_down)
 {
   const auto &data = *static_cast<HotboxData *>(op->customdata);
-  const int trigger = data.trigger, mouse = data.component_session ? 0 : data.active_mouse;
-  const bool tool_session = !data.tool_root.empty();
+  const int trigger = data.trigger;
+  const int mouse = data.component_session || data.creation_session ? 0 : data.active_mouse;
+  const bool tool_session = !data.tool_root.empty() && !data.creation_session;
   cleanup(C, op);
   if (trigger_down || mouse) {
     axismeld_hotbox_guard_begin(C, trigger, mouse, trigger_down, mouse != 0, tool_session);
@@ -187,6 +190,21 @@ static bool component_target_valid(bContext *C, Base *base)
          !ID_IS_OVERRIDE_LIBRARY(base->object->data);
 }
 
+static bool empty_creation_context(bContext *C)
+{
+  if (CTX_data_mode_enum(C) != CTX_MODE_OBJECT) {
+    return false;
+  }
+  ViewLayer *view_layer = CTX_data_view_layer(C);
+  BKE_view_layer_synced_ensure(*CTX_data_main(C), CTX_data_scene(C), view_layer);
+  for (const Base &base : *BKE_view_layer_object_bases_get(view_layer)) {
+    if (base.flag & BASE_SELECTED) {
+      return false;
+    }
+  }
+  return true;
+}
+
 static bool component_command(const std::string &command)
 {
   return command == "selection.vertex_mode" || command == "selection.edge_mode" ||
@@ -248,6 +266,16 @@ static wmOperatorStatus submit(bContext *C, wmOperator *op, const MenuNode &leaf
   // Strings must outlive cleanup and Python rebuilding its catalog/context.
   const std::string command = leaf.command, value = leaf.value;
   const bool setting = leaf.kind == MenuKind::Setting;
+  if (data.creation_session) {
+    if (setting || !command.starts_with("mesh.create_") || !empty_creation_context(C)) {
+      cleanup(C, op);
+      return OPERATOR_CANCELLED;
+    }
+    // The owned trigger release already arrived. No release guard remains to create.
+    cleanup(C, op);
+    axismeld_hotbox_dispatch(C, command.c_str());
+    return OPERATOR_FINISHED;
+  }
   if (data.component_session) {
     if (!component_command(command) || !commit_component_target(C, data)) {
       cleanup(C, op);
@@ -380,10 +408,12 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
 {
   const std::string tool_root = RNA_string_get(op->ptr, "tool_menu");
   const bool component = tool_root == "context.components";
+  const bool creation = tool_root == "context.create";
+  const bool direct = component || creation;
   if ((!ISKEYBOARD(event->type) &&
-       !(component && ELEM(event->type, LEFTMOUSE, MIDDLEMOUSE, RIGHTMOUSE))) ||
+       !(direct && ELEM(event->type, LEFTMOUSE, MIDDLEMOUSE, RIGHTMOUSE))) ||
       event->val != KM_PRESS || (event->flag & WM_EVENT_IS_REPEAT) ||
-      (component && event->modifier)) {
+      (component && event->modifier) || (creation && (event->modifier & ~(KM_SHIFT | KM_CTRL)))) {
     return OPERATOR_PASS_THROUGH;
   }
   wmWindow *window = CTX_wm_window(C);
@@ -408,13 +438,25 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   if (!tool_root.empty()) {
     const MenuNode *root = hotbox_find_node(snapshot.menus, tool_root);
     if ((tool_root != "tools.select" && tool_root != "tools.move" && tool_root != "tools.rotate" &&
-         tool_root != "tools.scale" && !component) ||
+         tool_root != "tools.scale" && !direct) ||
         !root || root->kind != MenuKind::Menu || !root->enabled || root->presentation != "radial")
     {
       return OPERATOR_CANCELLED;
     }
   }
   unsigned int target_uid = 0;
+  if (creation) {
+    if (!empty_creation_context(C)) {
+      return OPERATOR_PASS_THROUGH;
+    }
+    if (ELEM(event->type, LEFTMOUSE, MIDDLEMOUSE, RIGHTMOUSE)) {
+      const int mval[2] = {event->xy[0] - CTX_wm_region(C)->winrct.xmin,
+                           event->xy[1] - CTX_wm_region(C)->winrct.ymin};
+      if (ED_view3d_give_nearest_selectable_base_under_cursor(C, mval)) {
+        return OPERATOR_PASS_THROUGH;
+      }
+    }
+  }
   if (component && CTX_data_mode_enum(C) == CTX_MODE_OBJECT) {
     Base *target = nullptr;
     if (ELEM(event->type, LEFTMOUSE, MIDDLEMOUSE, RIGHTMOUSE)) {
@@ -439,6 +481,8 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   data->component_view_layer = CTX_data_view_layer(C);
   data->tool_root = tool_root;
   data->component_session = component;
+  data->creation_session = creation;
+  data->required_modifiers = creation ? event->modifier : wmEventModifierFlag(0);
   data->tap_eligible = tool_root.empty();
   data->snapshot = std::move(snapshot);
   data->window = window;
@@ -471,7 +515,7 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
     data->draw_handle = ED_region_draw_cb_activate(
         data->region_type, draw, data, REGION_DRAW_POST_PIXEL);
   }
-  if (component) {
+  if (direct) {
     data->tool_shown = true;
     data->active_mouse = event->type;
     data->origin[0] = data->press_position[0] = data->pointer_position[0] = data->center[0];
@@ -566,8 +610,9 @@ static wmOperatorStatus tool_modal(bContext *C, wmOperator *op, const wmEvent *e
   auto &data = *static_cast<HotboxData *>(op->customdata);
   const float x = (event->xy[0] - data.region->winrct.xmin) / data.scale;
   const float y = (event->xy[1] - data.region->winrct.ymin) / data.scale;
-  const int owned = data.component_session ? data.trigger : LEFTMOUSE;
-  if (event->modifier ||
+  const bool direct = data.component_session || data.creation_session;
+  const int owned = direct ? data.trigger : LEFTMOUSE;
+  if (event->modifier != data.required_modifiers ||
       (!ISTIMER(event->type) && !ISMOUSE_MOTION(event->type) && event->type != owned))
   {
     // A modified release still relinquishes its owner; never wait for a second release.
@@ -622,11 +667,11 @@ static wmOperatorStatus tool_modal(bContext *C, wmOperator *op, const wmEvent *e
       if (node && node->enabled && ELEM(node->kind, MenuKind::Command, MenuKind::Setting)) {
         return submit(C, op, *node);
       }
-      if (!data.component_session) {
+      if (!direct) {
         rearm_tool(C, data);
         return OPERATOR_RUNNING_MODAL;
       }
-      return close_guard(C, op, !data.component_session);
+      return close_guard(C, op, false);
     }
     ED_region_tag_redraw(data.region);
   }
@@ -642,14 +687,15 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
     cleanup(C, op);
     return OPERATOR_CANCELLED | OPERATOR_PASS_THROUGH;
   }
-  if (event->type == WINDEACTIVATE || event->type == EVT_ESCKEY || !source_context(C, data)) {
+  if (event->type == WINDEACTIVATE || event->type == EVT_ESCKEY || !source_context(C, data) ||
+      (data.creation_session && !empty_creation_context(C))) {
     if (event->type == data.active_mouse && event->val == KM_RELEASE) {
       data.active_mouse = 0;
     }
     return close_guard(C, op, !(event->type == data.trigger && event->val == KM_RELEASE));
   }
   data.state.advance(BLI_time_now_seconds());
-  if (event->type == data.trigger && !data.component_session) {
+  if (event->type == data.trigger && !data.component_session && !data.creation_session) {
     if (event->val == KM_RELEASE) {
       const bool tap = data.tap_eligible && data.state.release_trigger(BLI_time_now_seconds()) ==
                                                 HotboxAction::ToggleQuad;

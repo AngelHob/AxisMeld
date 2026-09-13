@@ -3,6 +3,7 @@
 """Declarative AxisMeld hotbox menu catalog without Blender dependencies."""
 from copy import deepcopy
 from .context_hotbox import component_menu
+from .creation_hotbox import CREATE_COMMANDS, creation_menu
 from .tool_hotbox import MENU_COMMANDS, tool_menus
 
 
@@ -12,6 +13,7 @@ _VIEW_REPLAYABLE = frozenset({
     'view.wireframe', 'view.shaded',
 })
 _CLOSE_REPLAYABLE = frozenset({
+    *CREATE_COMMANDS,
     'mode.object', 'view.toggle_quad', 'selection.toggle_component', 'selection.vertex_mode',
     'selection.edge_mode', 'selection.face_mode', 'selection.select_all',
     'selection.grow', 'selection.shrink', 'transform.move',
@@ -127,7 +129,7 @@ def _catalog():
     common = _menu('common', 'Common', (
         _disabled('common.file', 'File'),
         _disabled('common.edit', 'Edit'),
-        _disabled('common.create', 'Create'),
+        _node('common.create', 'menu', 'Create', children=(creation_menu(_node),), presentation='list'),
         _menu('common.select', 'Select', (
             component_menu(_node),
             _command('common.select.object_component', 'Object / Component',

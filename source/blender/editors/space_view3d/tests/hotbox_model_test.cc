@@ -45,6 +45,23 @@ TEST(hotbox_model, ExpandedToolTreeRetainsBoundedAtomicParsing)
   EXPECT_EQ(out.menus.front().children.size(), 300);
 }
 
+TEST(hotbox_model, CreationCommandsAreExplicitAndUnknownGeometryIsRejected)
+{
+  MenuSnapshot out{};
+  std::string error;
+  const auto command_node = [](const std::string &command) {
+    return "{\"id\":\"create\",\"kind\":\"command\",\"label\":\"Create\",\"command\":\"" +
+           command + "\",\"enabled\":true,\"reason\":\"\",\"children\":[]}";
+  };
+  for (const std::string name : {"disc", "sphere", "torus", "cube", "cone", "cylinder", "plane"}) {
+    EXPECT_TRUE(parse_menu_snapshot(snapshot(command_node("mesh.create_" + name)), out, error))
+        << name << ": " << error;
+  }
+  for (const std::string name : {"unknown", "extrude", "eval"}) {
+    EXPECT_FALSE(parse_menu_snapshot(snapshot(command_node("mesh.create_" + name)), out, error));
+  }
+}
+
 TEST(hotbox_model, DirectionMetadataIsOptionalStrictAndAtomic)
 {
   const std::string child = replace(

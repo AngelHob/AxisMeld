@@ -4,6 +4,7 @@
 import bpy
 
 from .context_hotbox import COMPONENT_HOTBOX, COMPONENT_ROOT
+from .creation_hotbox import CREATE_HOTBOX, CREATE_OPERATORS, CREATE_ROOT
 from .commands import COMMANDS
 from .tool_hotbox import TOOL_ROOTS, ORIENTATIONS, SELECTION_TOOLS
 
@@ -43,6 +44,22 @@ def available(context, command):
         return False, 'Unknown AxisMeld command'
     if not modeling_context(context):
         return False, 'Requires a 3D View window in Object or mesh Edit Mode'
+    if command == CREATE_HOTBOX or command in CREATE_OPERATORS:
+        # AddTorus has no native poll; enforce the scene check used by C++ primitives.
+        if not context.scene or not context.scene.is_editable:
+            return False, 'Primitive creation requires an editable scene'
+    if command == CREATE_HOTBOX:
+        if context.mode != 'OBJECT' or context.selected_objects:
+            return False, 'Creation hotbox requires Object Mode with no selected objects'
+        if not bpy.ops.view3d.axismeld_hotbox.poll():
+            return False, 'Creation hotbox is unavailable in this context'
+    if command in CREATE_OPERATORS:
+        if context.mode != 'OBJECT':
+            return False, 'Primitive creation requires Object Mode'
+        operator_name, _properties = CREATE_OPERATORS[command]
+        operation = getattr(bpy.ops.mesh, operator_name, None)
+        if operation is None or not operation.poll():
+            return False, 'Native primitive creation is unavailable in this context'
     if command in MODE_COMMANDS:
         obj = context.active_object
         if not (obj and obj.type == 'MESH' and obj.is_editable and obj.data.is_editable and
@@ -70,6 +87,18 @@ def run(context, command, *, invoke=True, keyboard_tool_session=False):
     valid, reason = available(context, command)
     if not valid:
         raise ValueError(reason)
+    if command in CREATE_OPERATORS:
+        operator_name, properties = CREATE_OPERATORS[command]
+        # The native child owns its geometry and single undo entry; wrappers remain non-undoable.
+        return getattr(bpy.ops.mesh, operator_name)(
+            'EXEC_DEFAULT', True, align='WORLD', location=tuple(context.scene.cursor.location),
+            rotation=(0.0, 0.0, 0.0), **properties)
+    if command == CREATE_HOTBOX:
+        if not invoke:
+            raise ValueError('Creation hotbox requires an invoke event')
+        from . import hotbox_runtime
+        return bpy.ops.view3d.axismeld_hotbox(
+            'INVOKE_DEFAULT', menu_json=hotbox_runtime.snapshot(context), tool_menu=CREATE_ROOT)
     if command in TOOLS:
         # Explicit selection is idempotent; repeated W must not cycle tools.
         result = bpy.ops.wm.tool_set_by_id('EXEC_DEFAULT', name=TOOLS[command], cycle=False)

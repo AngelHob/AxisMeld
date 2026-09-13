@@ -8,6 +8,7 @@ from threading import Lock
 
 from .commands import COMMANDS, PRESET_NAME
 from .tool_hotbox import DIRECTIONS, MENU_COMMANDS
+from .creation_hotbox import CREATE_COMMANDS
 from .hotbox_catalog import default_catalog, command_policy
 from .hotbox_profiles import (CANONICAL_ROWS, DEFAULT_APPEARANCE, DEFAULT_SETTINGS, MENU_IDS, MOUSE_BUTTONS,
                               load_hotbox_profiles, resolve_hotbox, save_hotbox_user,
@@ -39,6 +40,7 @@ _session_document = {'schema_version': 1, 'settings': {}}
 # Deliberately independent of the general adapter registry: new-window/file and interactive
 # navigation actions must not become callable through this batch's menu bridge.
 SUPPORTED_COMMANDS = frozenset({
+    *CREATE_COMMANDS,
     *MENU_COMMANDS, 'mode.object',
     'view.perspective', 'view.side', 'view.bottom', 'view.front', 'view.back',
     'view.top', 'view.left', 'view.focus_selected', 'view.frame_all', 'view.wireframe',
