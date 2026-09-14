@@ -33,6 +33,7 @@ if(WITH_GTESTS)
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/tool_hotbox.py
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/creation_hotbox.py
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/context_modeling_hotbox.py
+      ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/object_modeling_hotbox.py
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/modeling_schema.py
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/modeling_registry.py
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/modeling_catalog.py

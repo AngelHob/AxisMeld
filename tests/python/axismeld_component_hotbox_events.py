@@ -282,13 +282,27 @@ def suite():
     check(not modals(), 'focus loss left an owner waiting for an impossible release')
     yield from gesture((0,0))
     for modifier in ('alt', 'ctrl', 'shift', 'oskey'):
+        before_modified = (bpy.context.mode, bpy.context.active_object.name,
+                           tuple(sorted(o.name for o in bpy.context.selected_objects)))
         event('RIGHTMOUSE', **{modifier:True})
         yield from settle()
-        check('VIEW3D_OT_axismeld_hotbox' not in modals(), 'modified RMB must retain native handling')
-        event('RIGHTMOUSE', 'RELEASE')
+        if modifier == 'shift':
+            # M2d owns Shift+RMB on selected Object Mesh independently of the
+            # unmodified component entry. Other modifiers still fall through.
+            check(modals().count('VIEW3D_OT_axismeld_hotbox') == 1,
+                  'Shift+RMB must open one Object modeling session')
+        else:
+            check('VIEW3D_OT_axismeld_hotbox' not in modals(),
+                  modifier + '+RMB must retain native handling')
+        event('RIGHTMOUSE', 'RELEASE', **{modifier:True})
         event('ESC')
         event('ESC', 'RELEASE')
         yield from settle()
+        if modifier == 'shift':
+            check(not modals() and before_modified == (
+                bpy.context.mode, bpy.context.active_object.name,
+                tuple(sorted(o.name for o in bpy.context.selected_objects))),
+                'Object modeling center cancellation changed context or left ownership')
     with override():
         bpy.ops.object.select_all(action='DESELECT')
     event('LEFTMOUSE', delta=(0,0))

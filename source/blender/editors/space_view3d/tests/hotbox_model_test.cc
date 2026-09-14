@@ -74,6 +74,38 @@ TEST(hotbox_model, ModelingCommandsAndReadOnlyIndicatorsRemainExplicit)
   EXPECT_EQ(menu_radio_state(out, out.menus[0].children[0]), MenuRadioState::Selected);
 }
 
+TEST(hotbox_model, ObjectToolCatalogLeavesAreExplicitAndUnknownToolsAreRejectedAtomically)
+{
+  MenuSnapshot out{};
+  std::string error;
+  const auto leaf = [](const std::string &command, const std::string &direction) {
+    return "{\"id\":\"" + command +
+           "\",\"kind\":\"command\",\"label\":\"Object Tool\",\"command\":\"" + command +
+           "\",\"enabled\":true,\"reason\":\"\",\"children\":[],\"direction\":\"" + direction + "\"}";
+  };
+  const auto root = [](const std::string &children) {
+    return replace(menu("context.modeling_object", children),
+                   "\"kind\":\"menu\"", "\"kind\":\"menu\",\"presentation\":\"radial\"");
+  };
+  // Independent catalog spellings: do not let a shared misspelled allowlist define the test.
+  const std::string children = leaf("tool.object_mesh_poly_build", "E") + "," +
+                               leaf("tool.object_mesh_loopcut", "SW") + "," +
+                               leaf("tool.object_mesh_knife", "W");
+  ASSERT_TRUE(parse_menu_snapshot(snapshot(root(children)), out, error)) << error;
+  ASSERT_EQ(out.menus[0].children[0].children.size(), 3);
+  for (const auto command : {"tool.object_mesh_poly_build", "tool.object_mesh_loopcut",
+                             "tool.object_mesh_knife"}) {
+    EXPECT_TRUE(parse_menu_snapshot(snapshot(root(leaf(command, "W"))), out, error))
+        << command << ": " << error;
+  }
+  for (const auto command : {"tool.object_mesh_loop_cut", "tool.object_mesh_knife.extra",
+                             "tool.object_mesh_eval", "object_modeling.execute_arbitrary"}) {
+    out.generation = 99;
+    EXPECT_FALSE(parse_menu_snapshot(snapshot(root(leaf(command, "W"))), out, error)) << command;
+    EXPECT_EQ(out.generation, 99);
+  }
+}
+
 TEST(hotbox_model, CreationCommandsAreExplicitAndUnknownGeometryIsRejected)
 {
   MenuSnapshot out{};

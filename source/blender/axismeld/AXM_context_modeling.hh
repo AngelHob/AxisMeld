@@ -9,6 +9,9 @@ namespace blender::axismeld {
 /* Keep this bounded direct-session contract in sync with the Python catalog fixture. */
 inline constexpr std::string_view modeling_roots[] = {
     "context.modeling_vertex", "context.modeling_edge", "context.modeling_face"};
+inline constexpr std::string_view object_modeling_root = "context.modeling_object";
+inline constexpr std::string_view object_modeling_commands[] = {
+    "tool.object_mesh_poly_build", "tool.object_mesh_loopcut", "tool.object_mesh_knife"};
 
 inline int modeling_root_domain(const std::string_view root)
 {
@@ -55,6 +58,14 @@ inline constexpr ModelingCommand modeling_commands[] = {
 inline bool modeling_root_allows_command(const std::string_view root,
                                          const std::string_view command)
 {
+  if (root == object_modeling_root) {
+    for (const auto allowed : object_modeling_commands) {
+      if (command == allowed) {
+        return true;
+      }
+    }
+    return false;
+  }
   const int domain = modeling_root_domain(root);
   if (domain < 0) {
     return false;

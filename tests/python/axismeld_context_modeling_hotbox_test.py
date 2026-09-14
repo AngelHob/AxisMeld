@@ -62,7 +62,7 @@ class ModelingInputTest(unittest.TestCase):
             after = next(content['items'] for name, _, content in current if name == '3D View')
             self.assertTrue(all(item in after for item in before))
 
-    def test_default_pair_is_valid_and_generated_targets_are_disjoint(self):
+    def test_default_pair_is_valid_and_context_targets_preserve_create_scope(self):
         defaults = baseline_bindings()
         self.assertIn(MODEL, defaults)
         self.assertEqual(defaults[CREATE], defaults[MODEL])
@@ -70,7 +70,8 @@ class ModelingInputTest(unittest.TestCase):
         maps = generate_keymaps([(name, {}, {'items': []}) for name in ('Mesh', 'Object Mode')], defaults)
         for name, expected in (('Mesh', MODEL), ('Object Mode', CREATE)):
             self.assertEqual(len(items_for(maps, name, expected)), 1)
-            self.assertFalse(items_for(maps, name, CREATE if expected == MODEL else MODEL))
+        self.assertEqual(len(items_for(maps, 'Object Mode', MODEL)), 1)
+        self.assertFalse(items_for(maps, 'Mesh', CREATE))
 
     def test_pair_rebinds_disable_and_invalid_layers_are_atomic(self):
         for event in ({'type': 'F13'}, {'type': 'F13', 'ctrl': True},

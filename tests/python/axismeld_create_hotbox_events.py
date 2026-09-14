@@ -266,7 +266,14 @@ def suite():
               and bpy.context.mode == before_mode, label + ' changed geometry or selection context')
         check(not modals(), label + ' left native/AxisMeld modal handlers: ' + str(modals()))
 
+    # Test CREATE's own fallback with the independent Object MODEL entry disabled.
+    # Default selected/preselected Object routing is covered by object-modeling.
+    from axismeld import runtime
     with override():
+        config = runtime.load(session={'schema_version': 1, 'bindings': {
+            'context.modeling_hotbox': None}})
+        bpy.context.window_manager.keyconfigs.active = config
+        bpy.context.window_manager.keyconfigs.update()
         bpy.ops.mesh.primitive_cube_add(location=(0, 0, 0))
         existing_name = bpy.context.active_object.name
     yield from native_fallback('selected Object', (200, 100))
@@ -285,7 +292,12 @@ def suite():
     yield from native_fallback('Mesh Edit empty selection')
     with override():
         bpy.ops.object.mode_set(mode='OBJECT')
-    print('PASS selected Object, empty Edit and unselected pointer-target native fallback', flush=True)
+    print('PASS CREATE independent selected Object, empty Edit and pointer-target fallback', flush=True)
+    with override():
+        config = runtime.load(session={'schema_version': 1, 'bindings': {}})
+        bpy.context.window_manager.keyconfigs.active = config
+        bpy.context.window_manager.keyconfigs.update()
+    yield from settle()
 
     # Real Space -> Create -> native list -> shared radial. Retain an existing
     # selected object to prove this explicit entry has a different scope to RMB.

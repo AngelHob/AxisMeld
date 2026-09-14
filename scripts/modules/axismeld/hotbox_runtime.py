@@ -10,6 +10,7 @@ from .commands import COMMANDS, PRESET_NAME
 from .tool_hotbox import DIRECTIONS, MENU_COMMANDS
 from .creation_hotbox import CREATE_COMMANDS
 from .context_modeling_hotbox import modeling_root
+from .object_modeling_hotbox import OBJECT_TOOLS
 from .modeling_registry import SPECS as MODELING_SPECS
 from .hotbox_catalog import default_catalog, command_policy
 from .hotbox_profiles import (CANONICAL_ROWS, DEFAULT_APPEARANCE, DEFAULT_SETTINGS, MENU_IDS, MOUSE_BUTTONS,
@@ -42,6 +43,7 @@ _session_document = {'schema_version': 1, 'settings': {}}
 # Deliberately independent of the general adapter registry: new-window/file and interactive
 # navigation actions must not become callable through this batch's menu bridge.
 SUPPORTED_COMMANDS = frozenset({
+    *OBJECT_TOOLS,
     *MODELING_SPECS,
     *CREATE_COMMANDS,
     *MENU_COMMANDS, 'mode.object',
@@ -88,7 +90,7 @@ def dispatch(context, command):
         logging.getLogger(__name__).error(
             'Hotbox command %s failed: %s: %s', command, type(error).__name__, error)
         return {'CANCELLED'}
-    if result == {'FINISHED'}:
+    if result == {'FINISHED'} and command not in OBJECT_TOOLS:
         recent.record(command)
     return result
 

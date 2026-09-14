@@ -8,6 +8,8 @@ from axismeld import adapter, runtime, hotbox_runtime
 from axismeld.context_hotbox import COMPONENT_HOTBOX
 from axismeld.creation_hotbox import CREATE_HOTBOX
 from axismeld.context_modeling_hotbox import MODEL_HOTBOX
+from axismeld.object_modeling_hotbox import OBJECT_ROOT
+from axismeld import object_modeling_ops
 from axismeld.commands import PRESET_NAME
 from axismeld.hotbox_catalog import registered_menu_choices
 from axismeld.hotbox_profiles import DEFAULT_APPEARANCE
@@ -47,6 +49,13 @@ class AXISMELD_OT_command(Operator):
         return self._run(context, False)
 
     def invoke(self, context, event):
+        if (self.command == MODEL_HOTBOX and context.mode == 'OBJECT' and
+                event.type in {'LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE'}):
+            if event.value != 'PRESS' or event.is_repeat or event.alt or event.oskey:
+                return {'PASS_THROUGH'}
+            result = bpy.ops.view3d.axismeld_hotbox(
+                'INVOKE_DEFAULT', menu_json=hotbox_runtime.snapshot(context), tool_menu=OBJECT_ROOT)
+            return {'FINISHED'} if 'RUNNING_MODAL' in result else result
         if self.command in {CREATE_HOTBOX, MODEL_HOTBOX} and (
                 event.value != 'PRESS' or event.is_repeat or event.alt or event.oskey or
                 not adapter.available(context, self.command)[0]):
@@ -281,7 +290,8 @@ class AXISMELD_Preferences(KeyConfigPreferences):
 
 classes = (AXISMELD_OT_command, AXISMELD_OT_reload_profile, AXISMELD_OT_hotbox_dispatch,
            AXISMELD_OT_hotbox_setting, AXISMELD_OT_hotbox_refresh, AXISMELD_OT_hotbox_reset_appearance,
-           *modeling_common_ops.classes, *modeling_mesh_ops.classes, *modeling_shapes_ops.classes)
+           *modeling_common_ops.classes, *modeling_mesh_ops.classes, *modeling_shapes_ops.classes,
+           *object_modeling_ops.classes)
 
 
 def register():

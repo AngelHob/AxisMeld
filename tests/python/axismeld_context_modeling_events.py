@@ -648,8 +648,10 @@ def suite():
     yield from fallback('mixed component domains')
     with override():
         bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.select_all(action='DESELECT')
+        bpy.ops.curve.primitive_bezier_curve_add()
     yield from settle()
-    yield from fallback('selected Object')
+    yield from fallback('selected Curve Object')
     clear()
     with override():
         bpy.ops.curve.primitive_bezier_curve_add()

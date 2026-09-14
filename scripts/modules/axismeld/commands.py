@@ -6,6 +6,7 @@ from types import MappingProxyType
 from .tool_hotbox import ORIENTATIONS
 from .creation_hotbox import CREATE_HOTBOX, PRIMITIVES
 from .context_modeling_hotbox import MODEL_HOTBOX
+from .object_modeling_hotbox import OBJECT_TOOLS
 from .modeling_registry import SPECS as MODELING_SPECS
 
 PRESET_NAME = 'AxisMeld_Maya_2026'
@@ -27,6 +28,9 @@ class Command:
 
 
 COMMANDS = MappingProxyType({command.id: command for command in (
+    *(Command(identifier, tool.replace('builtin.', '').replace('_', ' ').title(),
+              difference='Enter native Mesh Edit Mode and activate a persistent tool; its next stroke owns geometry undo.')
+      for identifier, tool in OBJECT_TOOLS.items()),
     *(Command(spec.id, spec.label, spec.key, alt=spec.alt, ctrl=spec.ctrl, shift=spec.shift,
               status=spec.classification, difference=spec.difference)
       for spec in MODELING_SPECS.values()),
@@ -38,8 +42,8 @@ COMMANDS = MappingProxyType({command.id: command for command in (
       for name, label, _direction, _operator, _properties in PRIMITIVES),
     Command(CREATE_HOTBOX, 'Empty Context Create Hotbox', 'RIGHTMOUSE', shift=True,
             difference='Object-only empty-selection creation menu; direct mouse entry requires empty pointer space.'),
-    Command(MODEL_HOTBOX, 'Selected Component Modeling Hotbox', 'RIGHTMOUSE', shift=True,
-            difference='Single explicit Edit Mesh domain with visible editable selection; uses existing Blender modeling operations.'),
+    Command(MODEL_HOTBOX, 'Context Modeling Hotbox', 'RIGHTMOUSE', shift=True,
+            difference='Selected Mesh Objects or empty-selection pointer Mesh tools; single selected Edit domain modeling.'),
     *(Command(identifier, label,
               difference='Uses a persistent Blender selection tool; Paint is circle selection, not Maya brush semantics.')
       for identifier, label in (('selection.marquee', 'Marquee Select'),

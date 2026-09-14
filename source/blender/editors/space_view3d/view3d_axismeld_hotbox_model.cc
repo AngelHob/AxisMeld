@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 AxisMeld Authors
  * SPDX-License-Identifier: GPL-2.0-or-later */
 #include "AXM_hotbox_menu.hh"
+#include "AXM_context_modeling.hh"
 #include "BLI_serialize.hh"
 #include <algorithm>
 #include <sstream>
@@ -222,7 +223,9 @@ struct Parser {
         return false;
       if (kind == "command") {
         out.kind = MenuKind::Command;
-        if (!commands.contains(out.command) || !out.value.empty())
+        if ((!commands.contains(out.command) &&
+             !modeling_root_allows_command(object_modeling_root, out.command)) ||
+            !out.value.empty())
           return false;
       }
       else if (kind == "setting") {

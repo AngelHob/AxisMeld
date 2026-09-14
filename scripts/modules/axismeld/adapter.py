@@ -6,6 +6,7 @@ import bpy
 from .context_hotbox import COMPONENT_HOTBOX, COMPONENT_ROOT
 from .creation_hotbox import CREATE_HOTBOX, CREATE_OPERATORS, CREATE_ROOT
 from .context_modeling_hotbox import MODEL_HOTBOX, modeling_root
+from .object_modeling_hotbox import OBJECT_ROOT, OBJECT_TOOLS, object_modeling_targets
 from .commands import COMMANDS
 from .tool_hotbox import TOOL_ROOTS, ORIENTATIONS, SELECTION_TOOLS
 from . import modeling_adapter
@@ -53,8 +54,10 @@ def available(context, command):
             False, 'Requires a supported modeling 3D View window')
     if not modeling_context(context):
         return False, 'Requires a 3D View window in Object or mesh Edit Mode'
+    if command in OBJECT_TOOLS:
+        return (True, '') if object_modeling_targets(context) else (False, 'Requires selected editable Mesh Objects')
     if command == MODEL_HOTBOX:
-        if modeling_root(context) is None:
+        if not (object_modeling_targets(context) if context.mode == 'OBJECT' else modeling_root(context)):
             return False, 'Requires a single Edit Mesh domain with visible editable component selection'
         if not bpy.ops.view3d.axismeld_hotbox.poll():
             return False, 'Component modeling hotbox is unavailable in this context'
@@ -103,6 +106,9 @@ def run(context, command, *, invoke=True, keyboard_tool_session=False):
         raise ValueError(reason)
     if command in MODELING_SPECS:
         return modeling_adapter.run(context, command, invoke=invoke)
+    if command in OBJECT_TOOLS:
+        # Explicit outer undo: bpy calls otherwise suppress this transaction's undo push.
+        return bpy.ops.axismeld.object_modeling_tool('EXEC_DEFAULT', True, command=command)
     if command in CREATE_OPERATORS:
         operator_name, properties = CREATE_OPERATORS[command]
         # The native child owns its geometry and single undo entry; wrappers remain non-undoable.
@@ -114,7 +120,8 @@ def run(context, command, *, invoke=True, keyboard_tool_session=False):
             raise ValueError('Component modeling hotbox requires an invoke event')
         from . import hotbox_runtime
         return bpy.ops.view3d.axismeld_hotbox(
-            'INVOKE_DEFAULT', menu_json=hotbox_runtime.snapshot(context), tool_menu=modeling_root(context))
+            'INVOKE_DEFAULT', menu_json=hotbox_runtime.snapshot(context),
+            tool_menu=OBJECT_ROOT if context.mode == 'OBJECT' else modeling_root(context))
     if command == CREATE_HOTBOX:
         if not invoke:
             raise ValueError('Creation hotbox requires an invoke event')

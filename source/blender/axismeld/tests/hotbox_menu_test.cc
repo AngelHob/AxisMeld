@@ -111,6 +111,43 @@ TEST(axismeld_hotbox_menu, ModelingDirectRootsAndLeavesMatchTheRealCatalog)
   EXPECT_FALSE(modeling_root_allows_command("context.modeling_fake", "mesh.merge_center"));
 }
 
+TEST(axismeld_hotbox_menu, ObjectDirectRootHasOnlyFixedToolsAndDisabledMayaDirections)
+{
+  const auto snapshot = default_snapshot();
+  const MenuNode *root = nullptr;
+  visit(snapshot.menus, [&](const MenuNode &node) {
+    if (node.id == object_modeling_root) {
+      root = &node;
+    }
+  });
+  ASSERT_NE(root, nullptr);
+  EXPECT_EQ(root->presentation, "radial");
+  EXPECT_EQ(root->children.size(), 8);
+  EXPECT_EQ(modeling_root_domain(root->id), -1);
+  std::set<std::string_view> actual;
+  for (const MenuNode &child : root->children) {
+    EXPECT_NE(child.kind, MenuKind::Setting);
+    if (child.kind == MenuKind::Command) {
+      EXPECT_TRUE(modeling_root_allows_command(root->id, child.command));
+      actual.insert(child.command);
+    }
+    else {
+      EXPECT_EQ(child.kind, MenuKind::Disabled);
+      EXPECT_FALSE(child.enabled);
+      EXPECT_TRUE(child.command.empty());
+    }
+  }
+  for (const auto command : object_modeling_commands) {
+    EXPECT_TRUE(actual.contains(command));
+    for (const auto edit_root : modeling_roots) {
+      EXPECT_FALSE(modeling_root_allows_command(edit_root, command));
+    }
+  }
+  EXPECT_EQ(actual.size(), 3);
+  EXPECT_FALSE(modeling_root_allows_command(root->id, "mesh.extrude_region"));
+  EXPECT_FALSE(modeling_root_allows_command(root->id, "mesh.create_cube"));
+}
+
 TEST(axismeld_hotbox_menu, RadioSettingsFollowSnapshotAndKeepGroupsIndependent)
 {
   auto snapshot = default_snapshot();
@@ -1082,7 +1119,7 @@ TEST(axismeld_hotbox_menu, VisibleBoundsTranslateAllGeometryAndPreserveViewsClea
   const MenuBounds bounds{51.5f, 32.5f, 851.5f, 632.5f};
   int compared_gaps = 0;
   for (const std::string owner : {"views", "tools.select", "tools.move", "tools.rotate",
-                                  "tools.scale", "context.components", "context.create",
+                                  "tools.scale", "context.components", "context.create", "context.modeling_object",
                                   "tools.move.axis"}) {
     const bool views = owner == "views";
     for (const auto center : {std::array<float, 2>{0, 0}, {400, 300}, {800, 600}}) {

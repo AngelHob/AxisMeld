@@ -4,6 +4,7 @@
 from copy import deepcopy
 from .context_hotbox import component_menu
 from .context_modeling_hotbox import modeling_menus
+from .object_modeling_hotbox import object_modeling_menu
 from .creation_hotbox import CREATE_COMMANDS, creation_menu
 from .tool_hotbox import MENU_COMMANDS, tool_menus
 
@@ -145,6 +146,7 @@ def _catalog():
             _command('common.select.grow', 'Grow Selection', 'selection.grow'),
             _command('common.select.shrink', 'Shrink Selection', 'selection.shrink'),
             *modeling_menus(_node),
+            object_modeling_menu(_node),
         )),
         _menu('common.modify', 'Modify', (
             _command('common.modify.move', 'Move Tool', 'transform.move'),

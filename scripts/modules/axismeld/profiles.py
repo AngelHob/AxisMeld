@@ -67,7 +67,7 @@ def _apply(bindings, document):
         if event is None:
             continue
         signature = event_signature(event)
-        # Only this exact pair has disjoint generated Object Mode / Mesh targets.
+        # Only this exact pair has mutually exclusive runtime context predicates.
         # Compare every previous owner; a third binding must never inherit the exemption.
         for owner in seen.get(signature, ()):
             if frozenset({owner, command}) != frozenset({CREATE_HOTBOX, MODEL_HOTBOX}):

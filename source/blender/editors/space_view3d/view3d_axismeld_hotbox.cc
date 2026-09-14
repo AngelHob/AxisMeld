@@ -58,6 +58,11 @@ struct HotboxData : HotboxVisual {
   bool component_session = false;
   bool creation_session = false;
   bool modeling_session = false;
+  bool object_modeling_session = false;
+  unsigned int object_target_uid = 0;
+  unsigned int object_target_data_uid = 0;
+  unsigned int object_active_uid = 0;
+  std::vector<std::pair<unsigned int, unsigned int>> object_selection;
   wmEventModifierFlag required_modifiers = wmEventModifierFlag(0);
   unsigned int component_target_uid = 0;
   ViewLayer *component_view_layer = nullptr;
@@ -238,6 +243,8 @@ static bool modeling_tree_allowed(const MenuNode &node, const std::string_view r
   });
 }
 
+static bool object_modeling_context(bContext *C, const HotboxData &data);
+
 static bool source_context(bContext *C, const HotboxData &data)
 {
   if (!source_live(C, data)) {
@@ -249,7 +256,8 @@ static bool source_context(bContext *C, const HotboxData &data)
          modeling_menu_poll(C) &&
          (!data.modeling_session ||
           (CTX_data_view_layer(C) == data.component_view_layer &&
-           selected_modeling_context(C, data.tool_root)));
+            (data.object_modeling_session ? object_modeling_context(C, data) :
+                                            selected_modeling_context(C, data.tool_root))));
 }
 
 static wmOperatorStatus close_guard(bContext *C, wmOperator *op, const bool trigger_down)
@@ -318,7 +326,7 @@ static bool tool_command_rearms(const std::string_view command)
   return std::find(std::begin(commands), std::end(commands), command) != std::end(commands);
 }
 
-static bool component_target_valid(bContext *C, Base *base)
+static bool component_target_valid(bContext *C, const Base *base)
 {
   return base && base->object->type == OB_MESH &&
          base->object->mode == OB_MODE_OBJECT && BASE_SELECTABLE(CTX_wm_view3d(C), base) &&
@@ -340,6 +348,75 @@ static bool empty_creation_context(bContext *C)
     }
   }
   return true;
+}
+
+/* Full base selection, including hidden bases: never silently trim an editing set. */
+static bool object_selection_signature(
+    bContext *C,
+    std::vector<std::pair<unsigned int, unsigned int>> &selection,
+    unsigned int &active_uid)
+{
+  if (CTX_data_mode_enum(C) != CTX_MODE_OBJECT || !ID_IS_EDITABLE(CTX_data_scene(C))) {
+    return false;
+  }
+  ViewLayer *view_layer = CTX_data_view_layer(C);
+  BKE_view_layer_synced_ensure(*CTX_data_main(C), CTX_data_scene(C), view_layer);
+  Base *active = CTX_data_active_base(C);
+  active_uid = active ? active->object->id.session_uid : 0;
+  for (const Base &base : *BKE_view_layer_object_bases_get(view_layer)) {
+    if (!(base.flag & BASE_SELECTED)) {
+      continue;
+    }
+    if (!component_target_valid(C, &base) ||
+        !BASE_VISIBLE(CTX_wm_view3d(C), &base))
+    {
+      return false;
+    }
+    selection.emplace_back(base.object->id.session_uid,
+                           static_cast<ID *>(base.object->data)->session_uid);
+  }
+  std::sort(selection.begin(), selection.end());
+  return selection.empty() ||
+         (active && (active->flag & BASE_SELECTED) && component_target_valid(C, active));
+}
+
+static bool object_modeling_context(bContext *C, const HotboxData &data)
+{
+  std::vector<std::pair<unsigned int, unsigned int>> selection;
+  unsigned int active_uid = 0;
+  if (!object_selection_signature(C, selection, active_uid) ||
+      selection != data.object_selection || active_uid != data.object_active_uid)
+  {
+    return false;
+  }
+  if (!data.object_target_uid) {
+    return !selection.empty();
+  }
+  for (Base &base : *BKE_view_layer_object_bases_get(CTX_data_view_layer(C))) {
+    if (base.object->id.session_uid == data.object_target_uid) {
+      return component_target_valid(C, &base) && BASE_VISIBLE(CTX_wm_view3d(C), &base) &&
+             static_cast<ID *>(base.object->data)->session_uid == data.object_target_data_uid;
+    }
+  }
+  return false;
+}
+
+static wmOperatorStatus dispatch_object_modeling(bContext *C,
+                                                const std::string &command,
+                                                const unsigned int target_uid)
+{
+  if (!WM_operatortype_find("AXISMELD_OT_object_modeling_tool", true)) {
+    return OPERATOR_CANCELLED;
+  }
+  PointerRNA props = WM_operator_properties_create("AXISMELD_OT_object_modeling_tool");
+  const std::string target_text = target_uid ? std::to_string(target_uid) : "";
+  RNA_string_set(&props, "command", command.c_str());
+  RNA_string_set(&props, "target_uid", target_text.c_str());
+  /* Direct outer UNDO operator keeps captured preselection inside the undo boundary. */
+  const wmOperatorStatus result = WM_operator_name_call(
+      C, "AXISMELD_OT_object_modeling_tool", wm::OpCallContext::ExecDefault, &props, nullptr);
+  WM_operator_properties_free(&props);
+  return result;
 }
 
 static bool component_command(const std::string &command)
@@ -412,6 +489,11 @@ static wmOperatorStatus submit(bContext *C, wmOperator *op, const MenuNode &leaf
     }
     // Only the owned trigger release submits. Close before a native modal or persistent
     // tool starts, leaving its next stroke and its own undo transaction unguarded.
+    if (data.object_modeling_session) {
+      const unsigned int target_uid = data.object_target_uid;
+      cleanup(C, op);
+      return dispatch_object_modeling(C, command, target_uid);
+    }
     cleanup(C, op);
     axismeld_hotbox_dispatch(C, command.c_str());
     return OPERATOR_FINISHED;
@@ -562,7 +644,8 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   }
   const bool component = tool_root == "context.components";
   const bool creation = tool_root == "context.create";
-  const bool modeling = modeling_root_domain(tool_root) >= 0;
+  const bool object_modeling = tool_root == object_modeling_root;
+  const bool modeling = object_modeling || modeling_root_domain(tool_root) >= 0;
   const bool direct = component || creation || modeling;
   if ((!ISKEYBOARD(event->type) &&
        !(direct && ELEM(event->type, LEFTMOUSE, MIDDLEMOUSE, RIGHTMOUSE))) ||
@@ -602,10 +685,48 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
       return OPERATOR_CANCELLED;
     }
   }
-  if (modeling && !selected_modeling_context(C, tool_root)) {
+  if (modeling && !object_modeling && !selected_modeling_context(C, tool_root)) {
     return OPERATOR_PASS_THROUGH;
   }
   unsigned int target_uid = 0;
+  unsigned int object_target_uid = 0, object_target_data_uid = 0, object_active_uid = 0;
+  std::vector<std::pair<unsigned int, unsigned int>> object_selection;
+  if (object_modeling) {
+    if (!object_selection_signature(C, object_selection, object_active_uid)) {
+      return OPERATOR_PASS_THROUGH;
+    }
+    if (object_selection.empty()) {
+      if (!ELEM(event->type, LEFTMOUSE, MIDDLEMOUSE, RIGHTMOUSE)) {
+        return OPERATOR_PASS_THROUGH;
+      }
+      const int mval[2] = {event->xy[0] - CTX_wm_region(C)->winrct.xmin,
+                           event->xy[1] - CTX_wm_region(C)->winrct.ymin};
+      Base *target = ED_view3d_give_nearest_selectable_base_under_cursor(C, mval);
+      if (!component_target_valid(C, target) || !BASE_VISIBLE(CTX_wm_view3d(C), target)) {
+        return OPERATOR_PASS_THROUGH;
+      }
+      object_target_uid = target->object->id.session_uid;
+      object_target_data_uid = static_cast<ID *>(target->object->data)->session_uid;
+    }
+    /* Only these three leaves are enabled for a validated future target, never arbitrary mesh ops. */
+    const auto enable = [&](auto &&self, std::vector<MenuNode> &nodes) -> void {
+      for (MenuNode &node : nodes) {
+        if (node.id == object_modeling_root) {
+          for (MenuNode &child : node.children) {
+            if (child.kind == MenuKind::Command &&
+                modeling_root_allows_command(object_modeling_root, child.command))
+            {
+              child.enabled = true;
+              child.reason.clear();
+            }
+          }
+          return;
+        }
+        self(self, node.children);
+      }
+    };
+    enable(enable, snapshot.menus);
+  }
   if (creation) {
     if (!empty_creation_context(C)) {
       return OPERATOR_PASS_THROUGH;
@@ -644,6 +765,11 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   data->component_session = component;
   data->creation_session = creation;
   data->modeling_session = modeling;
+  data->object_modeling_session = object_modeling;
+  data->object_target_uid = object_target_uid;
+  data->object_target_data_uid = object_target_data_uid;
+  data->object_active_uid = object_active_uid;
+  data->object_selection = std::move(object_selection);
   data->required_modifiers = creation || modeling ? event->modifier : wmEventModifierFlag(0);
   data->tap_eligible = tool_root.empty();
   data->snapshot = std::move(snapshot);
