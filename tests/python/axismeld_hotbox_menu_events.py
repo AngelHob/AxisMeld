@@ -556,6 +556,15 @@ def suite():
 
     def state_label_width(label):
         return label_width(label) + 20
+    control_labels = ['Show Modeling', 'Show Rigging', 'Show Animation', 'Show FX',
+                      'Show All', 'Hide All', 'Show Rendering', 'Show Common Menus',
+                      'Show Pane Specific Menus', 'Show Custom Menu Set Menus',
+                      'Set Transparency', 'Hotbox Style', '', 'Window Options', '',
+                      'AxisMeld Center Mouse Buttons']
+    control_submenus = (0, 1, 2, 3, 6, 10, 11, 13, 15)
+    control_style_labels = ['Zones and Menu Rows', 'Zones Only', 'Center Zone Only',
+                            '', 'Center Zone RMB Popups']
+    modeling_control_labels = ['Modeling Only', 'Show/Hide Modeling']
     common_labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
     common_span = sum(label_width(label) + 40 for label in common_labels) + 60
     center_span = common_span / .72
@@ -574,15 +583,20 @@ def suite():
     def page(anchor, labels, first=0):
         native_labels = (
             ['Zones and Menu Rows', 'Zones Only', 'Center Zone Only'],
-            ['Show Common Menus', 'Show Pane Specific Menus', 'Show Modeling'],
+            modeling_control_labels,
+            control_style_labels,
             ['0%', '25%', '50%', '75%', '100%'],
         )
         button_labels = ['Left Mouse Button', 'Middle Mouse Button', 'Right Mouse Button']
         mapping_labels = ['Disabled', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls',
                           'Common', 'Select', 'Modify', 'Current Pane', 'Pane View',
                           'Pane Shading', 'Panels', 'Panel Views', 'Modeling']
+        if labels == control_labels:
+            return native_page(anchor, labels, state_label_width,
+                               (region.x, region.y, region.width, region.height), scale,
+                               first=first, submenu_indices=control_submenus)
         if labels in native_labels:
-            measure = state_label_width if labels != native_labels[1] else label_width
+            measure = state_label_width
             return {'items': native_list(anchor, labels, measure,
                                         (region.x, region.y, region.width, region.height), scale)}
         if labels == button_labels:
@@ -752,10 +766,9 @@ def suite():
         event('RIGHTMOUSE', 'RELEASE')
         yield from settle()
         if os.environ.get('AXISMELD_TEST_NAVIGATION_PROBE') == 'title':
-            controls = popup(anchor, ['Menu Rows', 'Hotbox Style', 'Transparency',
-                                       'Center Mouse Buttons'])
-            yield from click(midpoint(controls[1]))
-            choices = popup(controls[1], ['Zones and Menu Rows', 'Zones Only', 'Center Zone Only'])
+            controls = popup(anchor, control_labels)
+            yield from click(midpoint(controls[11]))
+            choices = popup(controls[11], control_style_labels)
             yield from click(midpoint(choices[2]))
             check(hotbox_runtime.current_settings()['style'] == 'center',
                   'latched child-directory click bounced immediately through its new Back control')
@@ -1083,7 +1096,7 @@ def suite():
     event('RIGHTMOUSE', 'RELEASE')
     yield from settle()
     check(len(observed) == count and len(settings_observed) == settings_count,
-          'disabled New Camera must neither dispatch nor fall back to a direction')
+          'empty NE gap must neither dispatch nor fall back to a direction')
     yield from close_box()
 
     yield from open_box()
@@ -1098,17 +1111,16 @@ def suite():
     check(len(observed) == count and len(settings_observed) == settings_count and
           not win.screen.is_animation_playing,
           'Space release in Style must cancel without applying a setting or leaking playback')
-    print('PASS held Style selection, center backtracking, disabled New Camera and Space cleanup', flush=True)
+    print('PASS held Style selection, center backtracking, empty NE gap and Space cleanup', flush=True)
 
     # Ordinary Controls settings still rebuild the same live hotbox through the native bridge.
     control_width = (label_width('Hotbox Controls') + 40)*scale
     controls = (center[0]+center[2]+83.6*scale, cy-19*scale, control_width, 38*scale)
-    control_items = popup(controls, ['Menu Rows', 'Hotbox Style', 'Transparency',
-                                     'Center Mouse Buttons'])
+    control_items = popup(controls, control_labels)
     yield from open_box()
     yield from click(midpoint(controls))
-    yield from click(midpoint(control_items[1]))
-    style_items = popup(control_items[1], ['Zones and Menu Rows', 'Zones Only', 'Center Zone Only'])
+    yield from click(midpoint(control_items[11]))
+    style_items = popup(control_items[11], control_style_labels)
     yield from click(midpoint(style_items[2]))
     with bpy.context.temp_override(window=win, area=area, region=region):
         check(json.loads(hotbox_runtime.snapshot(bpy.context))['settings']['style'] == 'center',
@@ -1124,22 +1136,21 @@ def suite():
     yield from open_box()
     yield from click(midpoint(controls))
     yield from click(midpoint(control_items[0]))
-    row_items = popup(control_items[0],
-                      ['Show Common Menus', 'Show Pane Specific Menus', 'Show Modeling'])
+    row_items = popup(control_items[0], modeling_control_labels)
     screenshot('menus-rows-open.png')
-    yield from click(midpoint(row_items[2]))
+    yield from click(midpoint(row_items[1]))
     with bpy.context.temp_override(window=win, area=area, region=region):
         check(json.loads(hotbox_runtime.snapshot(bpy.context))['settings']['rows'] ==
-              ['common', 'pane'], 'actual Menu Rows leaf did not update settings')
+              ['common', 'pane'], 'actual Show/Hide Modeling leaf did not update settings')
     check(settings_observed[-1][:2] == ('row.modeling', 'toggle'),
-          'actual Menu Rows leaf bypassed shared settings dispatch')
+          'actual Show/Hide Modeling leaf bypassed shared settings dispatch')
     yield from close_box()
     reset_hotbox_settings()
 
     yield from open_box()
     yield from click(midpoint(controls))
-    yield from click(midpoint(control_items[2]))
-    transparency_items = popup(control_items[2], ['0%', '25%', '50%', '75%', '100%'])
+    yield from click(midpoint(control_items[10]))
+    transparency_items = popup(control_items[10], ['0%', '25%', '50%', '75%', '100%'])
     screenshot('menus-transparency-open.png')
     yield from click(midpoint(transparency_items[3]))
     with bpy.context.temp_override(window=win, area=area, region=region):
@@ -1149,13 +1160,13 @@ def suite():
           'actual Transparency leaf bypassed shared settings dispatch')
     yield from close_box()
     reset_hotbox_settings()
-    print('PASS visible Menu Rows and Transparency lists changed shared runtime settings', flush=True)
+    print('PASS visible Modeling and Set Transparency lists changed shared runtime settings', flush=True)
 
     # Configure the same center-button model through the visible Controls tree.
     yield from open_box()
     yield from click(midpoint(controls))
-    yield from click(midpoint(control_items[3]))
-    button_items = popup(control_items[3], ['Left Mouse Button', 'Middle Mouse Button',
+    yield from click(midpoint(control_items[15]))
+    button_items = popup(control_items[15], ['Left Mouse Button', 'Middle Mouse Button',
                                             'Right Mouse Button'])
     yield from click(midpoint(button_items[2]))
     mapping_labels = ['Disabled', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls',

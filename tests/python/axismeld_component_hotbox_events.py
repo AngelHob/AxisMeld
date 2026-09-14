@@ -83,16 +83,36 @@ def suite():
         check(bpy.context.mode == 'OBJECT', 'center/Esc/disabled directions must not execute')
     print('PASS RMB component directions, consecutive gestures, Object Mode idempotence, center/Esc/placeholders', flush=True)
     for delta, mask in [((-280,0), (True,False,False)), ((0,260), (False,True,False)),
-                        ((0,-260), (False,False,True))]:
-        yield from gesture(delta)
+                        ((0,-64), (False,False,True))]:
+        def capture_outer():
+            with override():bpy.ops.screen.screenshot(filepath=str(Path(os.environ.get('AXISMELD_TEST_ARTIFACTS',root))/('component-outer-'+str(delta)+'.png')))
+        yield from gesture(delta,during=capture_outer)
         check(bpy.context.mode == 'EDIT_MESH' and tuple(bpy.context.tool_settings.mesh_select_mode) == mask,
-              'RMB outer stroke must retain its component direction')
+              'RMB outer stroke must retain its component direction: '+repr((delta,bpy.context.mode,tuple(bpy.context.tool_settings.mesh_select_mode))))
+    # The new lower companion owns the former S extension. In this actual
+    # factory viewport -260 reaches Invert Selection; -265 reaches its separator.
+    import bmesh
+    def occluded_state():
+        bm=bmesh.from_edit_mesh(bpy.context.active_object.data)
+        return (bpy.context.mode,tuple(bpy.context.tool_settings.mesh_select_mode),
+                tuple(tuple(e.select for e in getattr(bm,key)) for key in ('verts','edges','faces')))
+    before_occluded=occluded_state()
+    yield from gesture((0,-260))
+    after_occluded=occluded_state()
+    print('COMPANION_OCCLUDED_S',repr(before_occluded),repr(after_occluded),flush=True)
+    check(after_occluded[:2]==before_occluded[:2] and
+          after_occluded[2]==tuple(tuple(not flag for flag in flags) for flags in before_occluded[2]),
+          'covered S extension must execute actual Invert Selection instead of Face')
+    before_occluded=occluded_state()
+    yield from gesture((0,-265))
+    check(occluded_state()==before_occluded,
+          'companion separator must cancel instead of falling through to S')
     yield from gesture((280,32))
     check(bpy.context.mode == 'OBJECT', 'RMB outer NE stroke must enter Object Mode')
     for delta in [(-280,32), (280,0), (-280,-32), (280,-32)]:
         yield from gesture(delta)
         check(bpy.context.mode == 'OBJECT', 'RMB missing/disabled outer direction must not select neighbour')
-    print('PASS RMB extended directions and missing NW occlusion', flush=True)
+    print('PASS RMB unobstructed extended directions, S main-row release, companion separator cancellation and missing NW occlusion', flush=True)
     cube = bpy.context.active_object
     # M2b: the factory cube is under the pointer, while another mesh is active.
     with override():

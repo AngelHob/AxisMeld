@@ -462,6 +462,7 @@ def suite():
     yield from settle()
     check(bpy.context.scene.transform_orientation_slots[1].type == 'GLOBAL',
           'visual-center return failed to retract native child immediately')
+    bpy.context.scene.transform_orientation_slots[1].type = 'LOCAL'
     yield from open_ring('W')
     axis_rect = ring('move')['SW']
     event('MOUSEMOVE', 'NOTHING', middle(axis_rect))
@@ -469,11 +470,19 @@ def suite():
     scale = bpy.context.preferences.system.ui_scale
     child = ring('move.axis', middle(axis_rect))
     screenshot('compact-tool-axis.png')
-    event('MOUSEMOVE', 'NOTHING', middle(child['E']))
+    # Maya Axis has no Blender View leaf. Exercise its existing Parent row,
+    # return one level, then prove the root command really runs.
+    event('MOUSEMOVE', 'NOTHING', middle(child['W']))
+    yield from settle()
+    north = middle(child['N'])
+    event('MOUSEMOVE', 'NOTHING', (north[0], north[1] - 64*scale))
+    yield from settle(1)
+    event('MOUSEMOVE', 'NOTHING', middle(ring('move')['W']))
     event('LEFTMOUSE', 'RELEASE')
     event('W', 'RELEASE')
     yield from settle()
-    check(bpy.context.scene.transform_orientation_slots[1].type == 'VIEW', 'child Axis ring View action failed')
+    check(bpy.context.scene.transform_orientation_slots[1].type == 'GLOBAL',
+          'child Axis return did not restore the actual root World command')
     check(not modals(), 'child Axis ring left modal')
     for key, name, slot_index in (('W', 'move', 1), ('R', 'scale', 3)):
         bpy.context.scene.transform_orientation_slots[slot_index].type = 'LOCAL'
@@ -492,16 +501,24 @@ def suite():
         north = middle(custom_ring['N'])
         event('MOUSEMOVE', 'NOTHING', (north[0], north[1] - 64*scale))
         yield from settle(1)
-        event('MOUSEMOVE', 'NOTHING', middle(axis_ring['E']))
+        # Axis itself is now Maya-only and all its leaves are unavailable.
+        # A second one-level return must expose the real root World command.
+        event('MOUSEMOVE', 'NOTHING', middle(axis_ring['W']))
+        yield from settle()
+        north = middle(axis_ring['N'])
+        event('MOUSEMOVE', 'NOTHING', (north[0], north[1] - 64*scale))
+        yield from settle(1)
+        event('MOUSEMOVE', 'NOTHING', middle(ring(name)['W']))
         event('LEFTMOUSE', 'RELEASE')
         event(key, 'RELEASE')
         yield from settle()
-        check(bpy.context.scene.transform_orientation_slots[slot_index].type == 'VIEW',
-              name + ' third-level center return did not restore Axis')
+        check(bpy.context.scene.transform_orientation_slots[slot_index].type == 'GLOBAL',
+              name + ' third-level then Axis center return did not restore root World')
         check(not modals(), 'third-level return left modal')
         # A hidden root return square has corners outside the real 12 px cancel disc.
-        # Crossing one must keep the current Custom Axis ring, whose View target is
-        # then selected through real motion/release. Validate the geometric premise
+        # Crossing one must keep the current Custom ring. Two subsequent visible
+        # center returns must reach the root Object command; an early ancestor
+        # return changes this navigation chain. Validate the geometric premise
         # against the displayed child targets before choosing the point.
         bpy.context.scene.transform_orientation_slots[slot_index].type = 'GLOBAL'
         yield from open_ring(key)
@@ -524,12 +541,21 @@ def suite():
         event('MOUSEMOVE', 'NOTHING', hidden_corners[0])
         yield from settle()
         screenshot('hidden-root-corner-' + name + '.png')
-        event('MOUSEMOVE', 'NOTHING', middle(custom_ring['NE']))
+        event('MOUSEMOVE', 'NOTHING', middle(custom_ring['W']))
         yield from settle()
+        north = middle(custom_ring['N'])
+        event('MOUSEMOVE', 'NOTHING', (north[0], north[1] - 64*scale))
+        yield from settle(1)
+        event('MOUSEMOVE', 'NOTHING', middle(axis_ring['W']))
+        yield from settle()
+        north = middle(axis_ring['N'])
+        event('MOUSEMOVE', 'NOTHING', (north[0], north[1] - 64*scale))
+        yield from settle(1)
+        event('MOUSEMOVE', 'NOTHING', middle(ring(name)['NW']))
         event('LEFTMOUSE', 'RELEASE')
         event(key, 'RELEASE')
         yield from settle()
-        check(bpy.context.scene.transform_orientation_slots[slot_index].type == 'VIEW',
+        check(bpy.context.scene.transform_orientation_slots[slot_index].type == 'LOCAL',
               name + ' hidden ancestor center swallowed the active third-level ring')
         check(not modals(), 'hidden ancestor corner left modal')
     print('PASS hidden ancestor corners keep current third-level W/R ring', flush=True)
@@ -563,7 +589,7 @@ def suite():
     sys.path.insert(0, str(Path(__file__).parent))
     from axismeld_hotbox_geometry_fixture import ellipse_page, native_page
 
-    def open_space_move():
+    def open_space_modify():
         measure = lambda label: blf.dimensions(0, label)[0] / scale + 20
         labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
         widths = [measure(label) + 40 for label in labels]
@@ -579,8 +605,13 @@ def suite():
         yield from settle()
         from axismeld.hotbox_catalog import default_catalog
         entries = next(n for n in default_catalog()[0]['children'] if n['id'] == 'common.modify')['children']
-        tools_entry = native_page(modify, [n['label'] for n in entries], measure, bounds, scale,
-                                  submenu_indices=[i for i, n in enumerate(entries) if n['kind'] == 'menu'])['items'][3]
+        page = native_page(modify, [n['label'] for n in entries], measure, bounds, scale,
+                           submenu_indices=[i for i, n in enumerate(entries) if n['kind'] == 'menu'])
+        return modify, entries, page, measure, bounds
+
+    def open_space_move():
+        modify, entries, page, measure, bounds = yield from open_space_modify()
+        tools_entry = page['items'][next(i for i,n in enumerate(entries) if n['id']=='common.modify.tools')]
         event('MOUSEMOVE', 'NOTHING', middle(tools_entry))
         yield from settle()
         move_entry = native_page(tools_entry, ['Select Tool', 'Move Tool', 'Rotate Tool', 'Scale Tool'],
@@ -588,6 +619,41 @@ def suite():
         event('MOUSEMOVE', 'NOTHING', middle(move_entry))
         yield from settle()
         return ring('move', middle(move_entry)), middle(modify)
+
+    # Relocated Blender View actions remain reachable through real Space input.
+    # Every tool is checked both for successful dispatch and original-press cancel.
+    for name, slot_index in (('move', 1), ('rotate', 2), ('scale', 3)):
+        for cancel in (False, True):
+            bpy.context.scene.transform_orientation_slots[slot_index].type = 'LOCAL'
+            recent_before = hotbox_runtime.recent.items()
+            modify, entries, page, measure, bounds = yield from open_space_modify()
+            index = next(i for i,n in enumerate(entries) if n['id']=='common.modify.view_orientations')
+            parent = page['items'][index]
+            event('MOUSEMOVE', 'NOTHING', middle(parent))
+            yield from settle()
+            children = entries[index]['children']
+            # These three live orientations expose a separate native state column.
+            child_page = native_page(parent, [n['label'] for n in children],
+                                     lambda label: measure(label) + 20, bounds, scale)
+            child_index = next(i for i,n in enumerate(children)
+                               if n['command']=='orientation.' + name + '.view')
+            event('MOUSEMOVE', 'NOTHING', middle(child_page['items'][child_index]))
+            yield from settle()
+            if cancel:
+                event('MOUSEMOVE', 'NOTHING', middle(modify))
+                yield from settle()
+            event('LEFTMOUSE', 'RELEASE')
+            event('SPACE', 'RELEASE')
+            yield from settle()
+            check(bpy.context.scene.transform_orientation_slots[slot_index].type == ('LOCAL' if cancel else 'VIEW'),
+                  name + ' relocated Space View action/cancel failed')
+            check(not modals(), name + ' relocated View left modal ownership')
+            if cancel:
+                check(hotbox_runtime.recent.items()==recent_before, 'cancelled View changed Recent')
+            else:
+                check(hotbox_runtime.recent.items()[0]=='orientation.' + name + '.view',
+                      'successful relocated View did not enter Recent')
+    print('PASS Space Blender View Orientations for Move/Rotate/Scale and original-press cancellation', flush=True)
 
     space_ring, _mouse_origin = yield from open_space_move()
     space_axis_entry = middle(space_ring['SW'])

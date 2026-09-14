@@ -9,11 +9,11 @@
     "planned": 197,
     "dynamic_dependency": 3
   },
-  "command_count": 562,
+  "command_count": 564,
   "category_commands": {
     "Select": 94,
     "Modify": 89,
-    "Display": 63,
+    "Display": 65,
     "Edit": 25,
     "Create": 31,
     "Mesh": 44,
@@ -4446,6 +4446,88 @@
       "maya": [
         "ToggleBackfaceGeometry"
       ],
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "manual_status": "待人工测试",
+      "default_bindings": [],
+      "parameter_entry": "Edit > Adjust Last Operation / native tool or modifier properties"
+    },
+    {
+      "id": "display.backface_culling_on",
+      "label": "Backface Culling on for All Polys",
+      "category": "Display",
+      "calls": [
+        {
+          "operator": "axismeld.m3_setting",
+          "modes": [
+            "OBJECT",
+            "EDIT_MESH",
+            "EDIT_CURVE",
+            "EDIT_SURFACE",
+            "EDIT_LATTICE"
+          ],
+          "kwargs": [
+            [
+              "action",
+              "display.backface_culling_on"
+            ]
+          ],
+          "invoke": false,
+          "undo": false
+        }
+      ],
+      "section": [
+        "Viewport Settings"
+      ],
+      "requires": "",
+      "replayable": false,
+      "classification": "blender",
+      "difference": "Edits only the named Blender viewport/tool setting; no geometry or temporary hold-key emulation.",
+      "source": "scripts/modules/axismeld/modeling_common_ops.py; native axismeld.m3_setting; Blender extension",
+      "maya": [],
+      "key": null,
+      "ctrl": false,
+      "shift": false,
+      "alt": false,
+      "manual_status": "待人工测试",
+      "default_bindings": [],
+      "parameter_entry": "Edit > Adjust Last Operation / native tool or modifier properties"
+    },
+    {
+      "id": "display.backface_culling_off",
+      "label": "Backface Culling off for All Polys",
+      "category": "Display",
+      "calls": [
+        {
+          "operator": "axismeld.m3_setting",
+          "modes": [
+            "OBJECT",
+            "EDIT_MESH",
+            "EDIT_CURVE",
+            "EDIT_SURFACE",
+            "EDIT_LATTICE"
+          ],
+          "kwargs": [
+            [
+              "action",
+              "display.backface_culling_off"
+            ]
+          ],
+          "invoke": false,
+          "undo": false
+        }
+      ],
+      "section": [
+        "Viewport Settings"
+      ],
+      "requires": "",
+      "replayable": false,
+      "classification": "blender",
+      "difference": "Edits only the named Blender viewport/tool setting; no geometry or temporary hold-key emulation.",
+      "source": "scripts/modules/axismeld/modeling_common_ops.py; native axismeld.m3_setting; Blender extension",
+      "maya": [],
       "key": null,
       "ctrl": false,
       "shift": false,

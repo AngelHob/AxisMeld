@@ -67,6 +67,10 @@ struct HotboxData : HotboxVisual {
   std::vector<std::pair<unsigned int, unsigned int>> object_selection;
   wmEventModifierFlag required_modifiers = wmEventModifierFlag(0);
   unsigned int component_target_uid = 0;
+  unsigned int component_data_uid = 0;
+  unsigned int component_active_uid = 0;
+  bool component_selected_target = false;
+  std::vector<std::pair<unsigned int, unsigned int>> component_selection;
   ViewLayer *component_view_layer = nullptr;
   std::vector<std::string> return_path;
   bool center_return_armed = false;
@@ -261,6 +265,26 @@ static bool object_companion_tree_allowed(const MenuNode &node)
   return std::all_of(node.children.begin(), node.children.end(), object_companion_tree_allowed);
 }
 
+static bool component_companion_tree_allowed(const MenuNode &node)
+{
+  if (node.kind == MenuKind::Setting ||
+      (node.kind == MenuKind::Command && !component_menu_allows_command(node.id, node.command))) {
+    return false;
+  }
+  return std::all_of(node.children.begin(), node.children.end(), component_companion_tree_allowed);
+}
+
+static bool modeling_companion_tree_allowed(const MenuNode &node, const std::string_view root)
+{
+  if (node.kind == MenuKind::Setting ||
+      (node.kind == MenuKind::Command && !modeling_menu_allows_command(root, node.id, node.command))) {
+    return false;
+  }
+  return std::all_of(node.children.begin(), node.children.end(), [&](const MenuNode &child) {
+    return modeling_companion_tree_allowed(child, root);
+  });
+}
+
 static bool creation_tree_allowed(const MenuNode &node)
 {
   if (node.kind == MenuKind::Setting ||
@@ -318,6 +342,7 @@ static bool source_context(bContext *C, const HotboxData &data)
          CTX_wm_region(C) == data.region && CTX_data_mode_enum(C) == data.mode &&
          CTX_data_scene(C) && CTX_data_scene(C)->id.session_uid == data.scene_uid &&
          modeling_menu_poll(C) &&
+         (!data.component_session || CTX_data_view_layer(C) == data.component_view_layer) &&
          (!data.modeling_session ||
           (CTX_data_view_layer(C) == data.component_view_layer &&
             (data.object_modeling_session ? object_modeling_context(C, data) :
@@ -465,6 +490,41 @@ static bool object_modeling_context(bContext *C, const HotboxData &data)
   return false;
 }
 
+/* Capture the complete selection without filtering other object types or changing flags. */
+static void component_selection_signature(
+    bContext *C,
+    std::vector<std::pair<unsigned int, unsigned int>> &selection,
+    unsigned int &active_uid)
+{
+  ViewLayer *layer = CTX_data_view_layer(C);
+  BKE_view_layer_synced_ensure(*CTX_data_main(C), CTX_data_scene(C), layer);
+  const Base *active = CTX_data_active_base(C);
+  active_uid = active ? active->object->id.session_uid : 0;
+  for (const Base &base : *BKE_view_layer_object_bases_get(layer)) {
+    if (base.flag & BASE_SELECTED) {
+      selection.emplace_back(base.object->id.session_uid,
+          base.object->data ? static_cast<ID *>(base.object->data)->session_uid : 0);
+    }
+  }
+  std::sort(selection.begin(), selection.end());
+}
+
+static bool component_selected_context(bContext *C, const HotboxData &data)
+{
+  if (!data.component_selected_target || CTX_data_mode_enum(C) != CTX_MODE_OBJECT ||
+      CTX_data_view_layer(C) != data.component_view_layer) {
+    return false;
+  }
+  std::vector<std::pair<unsigned int, unsigned int>> selection;
+  unsigned int active_uid = 0;
+  component_selection_signature(C, selection, active_uid);
+  Base *active = CTX_data_active_base(C);
+  return active_uid == data.component_target_uid && active_uid == data.component_active_uid &&
+         selection == data.component_selection && component_target_valid(C, active) &&
+         (active->flag & BASE_SELECTED) && BASE_VISIBLE(CTX_wm_view3d(C), active) &&
+         static_cast<ID *>(active->object->data)->session_uid == data.component_data_uid;
+}
+
 static wmOperatorStatus dispatch_object_modeling(bContext *C,
                                                 const std::string &command,
                                                 const unsigned int target_uid)
@@ -551,7 +611,8 @@ static wmOperatorStatus submit(bContext *C, wmOperator *op, const MenuNode &leaf
   const std::string command = leaf.command, value = leaf.value;
   const bool setting = leaf.kind == MenuKind::Setting;
   if (data.modeling_session) {
-    const bool companion = data.object_modeling_session && object_menu_allows_command(leaf.id, command);
+    const bool companion = data.object_modeling_session ? object_menu_allows_command(leaf.id, command) :
+        modeling_menu_allows_command(data.tool_root, leaf.id, command);
     if (setting || (!companion && !modeling_root_allows_command(data.tool_root, command)) ||
         !source_context(C, data))
     {
@@ -589,6 +650,17 @@ static wmOperatorStatus submit(bContext *C, wmOperator *op, const MenuNode &leaf
     return (result & OPERATOR_RUNNING_MODAL) ? OPERATOR_FINISHED : result;
   }
   if (data.component_session) {
+    if (component_menu_allows_command(leaf.id, command)) {
+      if (setting || !source_context(C, data) ||
+          (!component_menu_selection_wide(command) && !component_selected_context(C, data))) {
+        cleanup(C, op);
+        return OPERATOR_CANCELLED;
+      }
+      // Companion selection operations never preselect the captured pointer target.
+      cleanup(C, op);
+      const auto result = axismeld_hotbox_dispatch(C, command.c_str());
+      return (result & OPERATOR_RUNNING_MODAL) ? OPERATOR_FINISHED : result;
+    }
     if (!component_command(command) || !commit_component_target(C, data)) {
       cleanup(C, op);
       return OPERATOR_CANCELLED;
@@ -670,10 +742,9 @@ static void open_menu(HotboxData &data, const MenuRect &rect)
 
 static void scroll_owner(HotboxData &data, const std::string &owner, const int delta)
 {
-  if (owner == object_modeling_menu || owner.starts_with("context.modeling_object_menu.") ||
-      owner == creation_menu || owner.starts_with("context.create_menu.")) {
-    if (data.companion_path.empty()) {
-      data.companion_path = {std::string(owner.starts_with("context.create_menu") ? creation_menu : object_modeling_menu)};
+  if (const auto root = companion_owner(owner); !root.empty()) {
+    if (data.companion_path.empty() || data.companion_path.front() != root) {
+      data.companion_path = {std::string(root)};
     }
     const auto found = std::find(data.companion_path.begin(), data.companion_path.end(), owner);
     if (found != data.companion_path.end()) { data.companion_path.erase(found + 1, data.companion_path.end()); }
@@ -726,7 +797,7 @@ static void scroll_control(HotboxData &data, const std::string &id)
 /* The companion shares the original held mouse; paging never creates another owner. */
 static bool companion_navigation(HotboxData &data, const wmEvent *event)
 {
-  if ((data.object_modeling_session || data.creation_session) && event->modifier != data.required_modifiers) { return false; }
+  if ((data.modeling_session || data.creation_session || data.component_session) && event->modifier != data.required_modifiers) { return false; }
   const bool motion = ISMOUSE_MOTION(event->type);
   const bool wheel = ELEM(event->type, WHEELUPMOUSE, WHEELDOWNMOUSE);
   if (motion || wheel) {
@@ -849,6 +920,16 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
       return OPERATOR_CANCELLED;
     }
   }
+  if (component) {
+    if (const auto *menu = hotbox_find_node(snapshot.menus, "context.component_menu")) {
+      if (!component_companion_tree_allowed(*menu)) { return OPERATOR_CANCELLED; }
+    }
+  }
+  if (modeling && !object_modeling) {
+    if (const auto *menu = hotbox_find_node(snapshot.menus, companion_root(tool_root))) {
+      if (!modeling_companion_tree_allowed(*menu, tool_root)) { return OPERATOR_CANCELLED; }
+    }
+  }
   if (modeling && !object_modeling && !selected_modeling_context(C, tool_root)) {
     return OPERATOR_PASS_THROUGH;
   }
@@ -943,6 +1024,41 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   auto *data = new HotboxData();
   data->component_target_uid = target_uid;
   data->component_view_layer = CTX_data_view_layer(C);
+  if (component) {
+    Base *target = nullptr;
+    BKE_view_layer_synced_ensure(*CTX_data_main(C), CTX_data_scene(C), data->component_view_layer);
+    for (Base &base : *BKE_view_layer_object_bases_get(data->component_view_layer)) {
+      if (base.object->id.session_uid == target_uid) { target = &base; break; }
+    }
+    if (!target && CTX_data_mode_enum(C) == CTX_MODE_EDIT_MESH) { target = CTX_data_active_base(C); }
+    if (CTX_data_mode_enum(C) == CTX_MODE_OBJECT) {
+      component_selection_signature(C, data->component_selection, data->component_active_uid);
+      data->component_selected_target = target && target == CTX_data_active_base(C) &&
+                                        (target->flag & BASE_SELECTED);
+      data->component_data_uid = target && target->object->data ?
+          static_cast<ID *>(target->object->data)->session_uid : 0;
+    }
+    const auto prepare = [&](auto &&self, std::vector<MenuNode> &nodes) -> void {
+      for (MenuNode &node : nodes) {
+        if (node.id == "context.component_menu.object" && target) {
+          // ID names are already bounded UTF-8. Replace ASCII controls without
+          // truncating or modifying any byte of a multibyte character.
+          node.label = std::string(target->object->id.name + 2);
+          for (char &byte : node.label) {
+            if (static_cast<unsigned char>(byte) < 32 || byte == 127) { byte = ' '; }
+          }
+          node.label += "...";
+        }
+        if (node.kind == MenuKind::Command && component_menu_allows_command(node.id, node.command) &&
+            !component_menu_selection_wide(node.command) && !data->component_selected_target) {
+          node.enabled = false;
+          node.reason = "Requires the captured target to be the selected active Object; selection is not changed on open";
+        }
+        self(self, node.children);
+      }
+    };
+    prepare(prepare, snapshot.menus);
+  }
   data->tool_root = tool_root;
   data->component_session = component;
   data->creation_session = creation;

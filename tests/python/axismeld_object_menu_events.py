@@ -38,9 +38,9 @@ OBJECT = 'context.modeling_object'
 COMPANION = 'context.modeling_object_menu'
 MAIN_LABELS = (
     'Offset Edge Loop Tool', 'Smooth', 'Unsmooth', 'Subdiv Proxy', 'Crease Tool',
-    'Project Curve on Mesh', 'Split Mesh with Projected Curve', 'Mirror', 'Mapping',
+    'Project Curve on mesh', 'Split mesh with projected curve', 'Mirror', 'Mapping',
     'Triangulate', 'Quadrangulate', 'Reduce', 'Remesh', 'Retopologize',
-    'Transfer Vertex Order', 'Separate', 'Combine', 'Booleans', 'Cleanup',
+    'Transfer Vertex Order', 'Separate', 'Combine', 'Booleans', 'Cleanup...',
     'Connect Tool', 'Quad Draw Tool', 'Polygon Display')
 PLANE = [(-2, -2, 0), (2, -2, 0), (2, 2, 0), (-2, 2, 0)]
 
@@ -403,7 +403,7 @@ def suite():
     yield from begin()
     seen = []
     separator_pairs=set()
-    expected_separators={'Crease Tool','Split Mesh with Projected Curve','Mapping',
+    expected_separators={'Crease Tool','Split mesh with projected curve','Mapping',
                          'Retopologize','Transfer Vertex Order','Booleans','Quad Draw Tool'}
     last_page = None
     unchanged_pages = 0
@@ -552,7 +552,7 @@ def suite():
     CHILD_LABELS = {
         'Mapping': ('Planar Map X','Planar Map Y','Planar Map Z','Planar Map',
                     'Cylindrical Map','Spherical Map','Automatic Map','Camera Based Map','Normal Based Map'),
-        'Booleans': ('Union','Difference A - B','Difference B - A','Intersection',
+        'Booleans': ('Union','Difference (A - B)','Difference B - A','Intersection',
                      'Slice','Hole Punch','Cut Out','Split Edges'),
         'Polygon Display': ('Backface Culling','Border Edges','Texture Border Edges','Face Normals',
                             'Vertex Normals','Face Centers','Hidden Triangles','Vertices','Reset Polygon Display'),
@@ -599,7 +599,7 @@ def suite():
           'Polygon Display cascade failed actual viewport culling toggle')
     area.spaces.active.shading.show_backface_culling = old_culling
 
-    for label,volume,target_name in (('Union',12,'Composition A'),('Difference A - B',4,'Composition A'),
+    for label,volume,target_name in (('Union',12,'Composition A'),('Difference (A - B)',4,'Composition A'),
                                     ('Difference B - A',4,'Composition B'),('Intersection',4,'Composition A')):
         cube_scene(pair=True)
         yield from settle(8)
@@ -660,7 +660,7 @@ def suite():
     print('PASS lower-list Offset Edge Loop and Quad Draw startup and one Undo',flush=True)
 
 
-    def radial_rectangles(pixels):
+    def radial_rectangles(pixels, expected=None):
         rgb=pixels[:,:,:3]
         colored=((rgb[:,:,0]>.3)&(rgb[:,:,2]>.25)&(np.minimum(rgb[:,:,0],rgb[:,:,2])>2.2*rgb[:,:,1]))
         groups={}
@@ -695,7 +695,7 @@ def suite():
                 rect=(x0,y0,x1,y1)
                 if direction not in found or (x1-x0)*(y1-y0)>(found[direction][2]-found[direction][0])*(found[direction][3]-found[direction][1]):
                     found[direction]=rect
-        check(set(found)=={'N','NE','E','SE','S','SW','W','NW'},
+        check(set(found)==(set(expected) if expected is not None else {'N','NE','E','SE','S','SW','W','NW'}),
               'actual screenshot did not expose all eight radial button rectangles: '+repr(found))
         return found
 
@@ -791,7 +791,7 @@ def suite():
         yield from settle(16)
         event('LEFTMOUSE')
         yield from settle(8)
-        reference=radial_rectangles(capture('composition-'+layout+'-views'))
+        reference=radial_rectangles(capture('composition-'+layout+'-views'),{'N','E','SE','S','SW','W','NW'})
         event('LEFTMOUSE','RELEASE')
         event('SPACE','RELEASE')
         yield from settle(8)
@@ -802,7 +802,8 @@ def suite():
         actual=radial_rectangles(picture)
         companion=companion_rect(picture)
         for left,right in (('NW','NE'),('W','E'),('SW','SE')):
-            reference_gap=reference[right][0]-reference[left][2]-1
+            rl,rr=(left,right) if right in reference else ('SW','SE')
+            reference_gap=reference[rr][0]-reference[rl][2]-1
             actual_gap=actual[right][0]-actual[left][2]-1
             check(abs(reference_gap-actual_gap)<=3*scale,
                   layout+' actual radial inner edges do not match same-instance Views: '+repr((left,actual_gap,reference_gap)))

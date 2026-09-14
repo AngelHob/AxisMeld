@@ -174,6 +174,8 @@ SETTINGS = {
     'display.curve_normals': ('OVERLAY', 'show_curve_normals', None, 'checkbox'),
     'display.statistics': ('OVERLAY', 'show_stats', None, 'checkbox'),
     'display.backface_culling': ('SHADING', 'show_backface_culling', None, 'checkbox'),
+    'display.backface_culling_on': ('SHADING', 'show_backface_culling', True, None),
+    'display.backface_culling_off': ('SHADING', 'show_backface_culling', False, None),
     'display.color_object': ('SHADING', 'color_type', 'OBJECT', 'radio'),
     'display.color_material': ('SHADING', 'color_type', 'MATERIAL', 'radio'),
     'display.color_random': ('SHADING', 'color_type', 'RANDOM', 'radio'),
@@ -186,7 +188,9 @@ for kind in ('mesh', 'curve', 'surf', 'lattice', 'light', 'camera'):
     del SETTINGS['display.type_' + kind]
     for verb, value in (('hide', False), ('show', True)):
         SETTINGS['display.' + verb + '_type_' + kind] = ('SPACE', 'show_object_viewport_' + kind, value, 'radio')
-_setting_labels = {'pivot.median': 'Median Point', 'pivot.active': 'Active Element', 'pivot.cursor': '3D Cursor',
+_setting_labels = {'display.backface_culling_on': 'Backface Culling on for All Polys',
+                   'display.backface_culling_off': 'Backface Culling off for All Polys',
+                   'pivot.median': 'Median Point', 'pivot.active': 'Active Element', 'pivot.cursor': '3D Cursor',
                    'pivot.individual': 'Individual Origins', 'pivot.bounds': 'Bounding Box Center',
                    'snap.enabled': 'Enable Snapping', 'transform.proportional': 'Proportional Editing',
                    'transform.proportional_objects': 'Object Proportional Editing',

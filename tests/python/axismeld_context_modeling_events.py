@@ -716,7 +716,7 @@ def suite():
         print('SCREENSHOT', path, flush=True)
         return path
 
-    def rendered_gaps(path):
+    def rendered_gaps(path, reference=False):
         """Find colored button spans from pixels, without calling the layout builder."""
         image = bpy.data.images.load(str(path), check_existing=False)
         try:
@@ -757,8 +757,12 @@ def suite():
                 spans = [span for span in spans if span[1] - span[0] >= 18*scale]
                 left = [span for span in spans if span[1] < cx - 6*scale]
                 right = [span for span in spans if span[0] > cx + 6*scale]
+                if reference and row==1 and left and not right:
+                    results.append(None)
+                    continue
                 check(left and right, f'{path.name}: no independent left/right rendered spans for row {row}: {spans}')
                 results.append((min(span[0] for span in right) - max(span[1] for span in left) - 1) / scale)
+            if reference and results[0] is None:results[0]=results[2]
             return tuple(results)
         finally:
             bpy.data.images.remove(image)
@@ -771,7 +775,7 @@ def suite():
         event('LEFTMOUSE')
         yield from settle(8)
         check('VIEW3D_OT_axismeld_hotbox' in modals(), 'Views reference failed to open')
-        measured = rendered_gaps(screenshot(label + '-views.png'))
+        measured = rendered_gaps(screenshot(label + '-views.png'),reference=True)
         # The diagonal visual gap is outside the center return rectangle. Views
         # selects its nearest direction there: prove NW with real view rotation,
         # so visual spacing is not mistaken for a larger cancellation contract.

@@ -74,7 +74,12 @@ class HotboxCatalogTest(unittest.TestCase):
 
     def test_catalog_has_canonical_rows_and_top_level_order(self):
         catalog = default_catalog()
-        self.assertEqual([row['id'] for row in catalog], ['common', 'pane', 'center', 'modeling', 'context.modeling_object_menu', 'context.create_menu'])
+        self.assertEqual([row['id'] for row in catalog], [
+            'common', 'pane', 'center', 'modeling', 'context.modeling_object_menu', 'context.create_menu',
+            'context.component_menu', 'context.modeling_vertex_menu', 'context.modeling_edge_menu',
+            'context.modeling_face_menu', 'tools.select_menu', 'tools.move_menu', 'tools.rotate_menu',
+            'tools.scale_menu', 'tools.select.select_menu', 'tools.move.select_menu',
+            'tools.rotate.select_menu', 'tools.scale.select_menu'])
         expected = {
             'common': ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows'],
             'pane': ['View', 'Shading', 'Lighting', 'Show', 'Renderer', 'Panels'],
@@ -135,17 +140,22 @@ class HotboxCatalogTest(unittest.TestCase):
         for identifier in ('views.style', 'center.controls.style'):
             menu = node_by_id(catalog, identifier)
             self.assertEqual([(node['label'], node['command'], node['value'])
-                              for node in menu['children']], [
+                              for node in menu['children'] if node['kind'] == 'setting'], [
                 ('Zones and Menu Rows', 'style', 'rows'),
                 ('Zones Only', 'style', 'zones'),
                 ('Center Zone Only', 'style', 'center'),
             ])
-        rows = node_by_id(catalog, 'center.controls.rows')
+        self.assertEqual([n['kind'] for n in node_by_id(catalog, 'views.style')['children']],
+                         ['setting', 'setting', 'setting'])
+        self.assertEqual([n['id'] for n in node_by_id(catalog, 'center.controls.style')['children'][3:]],
+                         ['center.controls.style.separator.popups', 'center.controls.style.rmb_popups'])
+        rows = [node_by_id(catalog, 'center.controls.rows.' + name)
+                for name in ('common', 'pane', 'modeling')]
         self.assertEqual([(node['label'], node['command'], node['value'])
-                          for node in rows['children']], [
+                          for node in rows], [
             ('Show Common Menus', 'row.common', 'toggle'),
             ('Show Pane Specific Menus', 'row.pane', 'toggle'),
-            ('Show Modeling', 'row.modeling', 'toggle'),
+            ('Show/Hide Modeling', 'row.modeling', 'toggle'),
         ])
         transparency = node_by_id(catalog, 'center.controls.transparency')
         self.assertEqual([node['value'] for node in transparency['children']],
@@ -289,7 +299,7 @@ class HotboxCatalogTest(unittest.TestCase):
         self.assertEqual(parsed['generation'], 7)
         self.assertEqual(parsed['settings']['transparency'], 25)
         self.assertEqual([row['id'] for row in parsed['menus']],
-                         ['common', 'pane', 'center', 'modeling', 'context.modeling_object_menu', 'context.create_menu'])
+                         [row['id'] for row in first['menus']])
         parsed['settings']['center_buttons']['RIGHTMOUSE'] = None
         parsed['menus'][0]['children'][0]['label'] = 'Changed'
         second = hotbox_runtime.make_snapshot(generation=8)

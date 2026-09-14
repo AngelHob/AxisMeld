@@ -400,6 +400,21 @@ TEST(hotbox_model, CreationCompanionIsOnlyTheFixedSixthRootAndWorkflowStateIsRea
   }
 }
 
+TEST(hotbox_model, DisabledMetadataStateHasAnExactReadonlyContract)
+{
+  const std::string state = R"({"id":"context.component_menu.metadata.visualize","kind":"disabled","label":"Visualize Metadata","command":"","enabled":false,"reason":"Unavailable","indicator":"checkbox","checked":false,"children":[]})";
+  MenuSnapshot out{};
+  std::string error;
+  EXPECT_TRUE(parse_menu_snapshot(snapshot(state), out, error));
+  for (const auto &invalid : {
+      replace(state, "\"checked\":false", "\"checked\":true"),
+      replace(state, "\"checkbox\"", "\"radio\""),
+      replace(state, "metadata.visualize", "metadata.unknown"),
+      replace(state, "\"enabled\":false", "\"enabled\":true")}) {
+    EXPECT_FALSE(parse_menu_snapshot(snapshot(invalid), out, error));
+  }
+}
+
 TEST(hotbox_model, ExtendedSnapshotByteLimitStillRejectsOversizeAtomically)
 {
   auto json = snapshot();

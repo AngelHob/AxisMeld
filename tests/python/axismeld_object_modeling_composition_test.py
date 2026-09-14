@@ -60,6 +60,13 @@ class CompositionTest(unittest.TestCase):
         for command in candidates[:10]:
             recent.record(command)
         self.assertEqual(len(recent.items()), 10)
+        # Runtime state now reads real tool orientation and Marquee state, while
+        # component companion availability must observe an explicit Object context.
+        context = NS(area=NS(type='VIEW_3D'), region=NS(type='WINDOW'), mode='OBJECT',
+                     active_object=None,
+                     scene=NS(is_editable=True, transform_orientation_slots=[
+                         NS(use=False, type='GLOBAL') for _ in range(4)]),
+                     workspace=NS(tools=NS(from_space_view3d_mode=lambda *args, **kw: None)))
         for reason in hotbox_runtime._CAPABILITY_REASONS:
             adapter = NS(available=lambda *args: (False, reason),
                          modeling_adapter=NS(available=lambda *args, **kw: (False, reason),
@@ -68,7 +75,7 @@ class CompositionTest(unittest.TestCase):
                  patch.object(hotbox_runtime, 'object_modeling_targets', return_value=()):
                 menus = hotbox_runtime._catalog_with_recent()
                 gaps = {n['id']: n['reason'] for n in walk(menus) if n['kind'] == 'disabled'}
-                hotbox_runtime._apply_runtime_capabilities(NS(), menus)
+                hotbox_runtime._apply_runtime_capabilities(context, menus)
                 self.assertEqual({n['id']: n['reason'] for n in walk(menus) if n['kind'] == 'disabled'}, gaps)
                 snapshot = hotbox_runtime.make_snapshot(generation=1, menus=menus)
                 payload = hotbox_runtime.serialize_snapshot(snapshot)
@@ -93,9 +100,9 @@ class CompositionTest(unittest.TestCase):
         self.assertEqual(companion['presentation'], 'list')
         self.assertEqual([n['label'] for n in companion['children'] if n['kind'] != 'separator'], [
             'Offset Edge Loop Tool', 'Smooth', 'Unsmooth', 'Subdiv Proxy', 'Crease Tool',
-            'Project Curve on Mesh', 'Split Mesh with Projected Curve', 'Mirror', 'Mapping',
+            'Project Curve on mesh', 'Split mesh with projected curve', 'Mirror', 'Mapping',
             'Triangulate', 'Quadrangulate', 'Reduce', 'Remesh', 'Retopologize',
-            'Transfer Vertex Order', 'Separate', 'Combine', 'Booleans', 'Cleanup',
+            'Transfer Vertex Order', 'Separate', 'Combine', 'Booleans', 'Cleanup...',
             'Connect Tool', 'Quad Draw Tool', 'Polygon Display'])
         before = []
         last = None
@@ -104,8 +111,11 @@ class CompositionTest(unittest.TestCase):
                 before.append(last)
             else:
                 last = row['label']
-        self.assertEqual(before, ['Crease Tool', 'Split Mesh with Projected Curve', 'Mapping',
+        self.assertEqual(before, ['Crease Tool', 'Split mesh with projected curve', 'Mapping',
                                   'Retopologize', 'Transfer Vertex Order', 'Booleans', 'Quad Draw Tool'])
+        # MayaStrings + contextPolyToolsObjectMM.mel:442 preserve punctuation.
+        difference = next(n for n in walk([companion]) if n['id'].endswith('.booleans.difference'))
+        self.assertEqual(difference['label'], 'Difference (A - B)')
 
     def test_options_are_independent_strict_leaves(self):
         companion = self.companion()

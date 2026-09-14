@@ -87,6 +87,8 @@
 "display.axis_y",
 "display.axis_z",
 "display.backface_culling",
+"display.backface_culling_on",
+"display.backface_culling_off",
 "display.bounds",
 "display.color_material",
 "display.color_object",

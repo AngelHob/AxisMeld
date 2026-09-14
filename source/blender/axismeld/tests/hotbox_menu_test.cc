@@ -14,6 +14,37 @@
 namespace blender::axismeld::tests {
 #include "hotbox_menu_fixture.hh"
 
+TEST(axismeld_hotbox_menu, MayaContentCompanionMappingsAreExact)
+{
+  for (const std::string root : {"context.modeling_vertex", "context.modeling_edge",
+                                  "context.modeling_face", "tools.select", "tools.move",
+                                  "tools.rotate", "tools.scale", "tools.move.select",
+                                  "tools.rotate.select", "tools.scale.select", "tools.select.select"}) {
+    EXPECT_EQ(companion_root(root), root + "_menu") << root;
+  }
+  EXPECT_EQ(companion_root("context.components"), "context.component_menu");
+  EXPECT_TRUE(companion_root("tools.move.fake").empty());
+  EXPECT_EQ(active_companion_root({"tools.move", "tools.move.select"}), "tools.move.select_menu");
+  EXPECT_EQ(active_companion_root({"tools.move"}), "tools.move_menu");
+  EXPECT_TRUE(active_companion_root({"views"}).empty());
+  EXPECT_EQ(companion_owner("tools.move.select_menu.automatic_camera"), "tools.move.select_menu");
+  EXPECT_TRUE(companion_owner("tools.move_menu_typo").empty());
+}
+
+TEST(axismeld_hotbox_menu, MayaCompanionCommandsCannotCrossTargetsOrDomains)
+{
+  EXPECT_TRUE(component_menu_allows_command("context.component_menu.select_all", "selection.select_all"));
+  EXPECT_FALSE(component_menu_allows_command("context.component_menu.select", "selection.select_all"));
+  EXPECT_FALSE(component_menu_allows_command("context.component_menu.select_all.options", "selection.select_all"));
+  EXPECT_TRUE(component_menu_selection_wide("selection.invert"));
+  EXPECT_FALSE(component_menu_selection_wide("edit.unparent"));
+  EXPECT_TRUE(modeling_menu_allows_command("context.modeling_face", "context.modeling_face_menu.triangulate", "mesh.triangulate"));
+  EXPECT_FALSE(modeling_menu_allows_command("context.modeling_edge", "context.modeling_face_menu.triangulate", "mesh.triangulate"));
+  EXPECT_FALSE(modeling_menu_allows_command("context.modeling_face", "context.modeling_face_menu.triangulate.options", "mesh.triangulate"));
+  EXPECT_TRUE(creation_allows_command("context.create_menu.polygon_display_all.backface_culling_on", "display.backface_culling_on"));
+  EXPECT_FALSE(creation_allows_command("context.create_menu.polygon_display_all.backface_culling_on", "display.backface_culling_off"));
+}
+
 /* Keep exercising the legacy ellipse mechanism separately from the expanded M3 list. */
 static MenuSnapshot legacy_select_snapshot()
 {
@@ -52,6 +83,33 @@ static const MenuRect *rect(const MenuLayout &layout, const std::string &id)
     }
   }
   return nullptr;
+}
+
+// The absent Maya NE view remains a non-painted cancellation gap.
+static const MenuRect *view_reference_rect(const MenuLayout &layout, const std::string &id)
+{
+  if (const auto *item = rect(layout, id)) { return item; }
+  for (const auto &item : layout.marking_gaps) {
+    if (item.id == id) { return &item; }
+  }
+  return nullptr;
+}
+
+TEST(axismeld_hotbox_menu, DeepestSelectCompanionReplacesParentAndDropsStaleCascade)
+{
+  const auto snapshot = default_snapshot();
+  const auto widths = measured(snapshot);
+  const auto child = layout_menu(snapshot, 2400, 1600, 1200, 900,
+      {"tools.move", "tools.move.select"}, {}, widths, nullptr, "tools.move",
+      {"tools.move_menu", "tools.move_menu.transform_constraints"});
+  ASSERT_TRUE(child.supported);
+  EXPECT_NE(rect(child, "tools.move.select_menu.automatic"), nullptr);
+  EXPECT_EQ(rect(child, "tools.move_menu.options"), nullptr);
+  const auto parent = layout_menu(snapshot, 2400, 1600, 1200, 900,
+      {"tools.move"}, {}, widths, nullptr, "tools.move", {"tools.move.select_menu"});
+  ASSERT_TRUE(parent.supported);
+  EXPECT_NE(rect(parent, "tools.move_menu.options"), nullptr);
+  EXPECT_EQ(rect(parent, "tools.move.select_menu.automatic"), nullptr);
 }
 
 static const std::array<const char *, 13> mapping_suffixes = {
@@ -163,7 +221,7 @@ TEST(axismeld_hotbox_menu, CreationCompanionAndRadialCommandAdmissionStayExact)
 {
   EXPECT_TRUE(creation_allows_command("context.create_menu.type", "object.create_text"));
   EXPECT_TRUE(creation_allows_command("context.create_menu.pyramid", "mesh.create_pyramid"));
-  EXPECT_TRUE(creation_allows_command("context.create_menu.polygon_display_all.backface_culling", "display.backface_culling"));
+  EXPECT_TRUE(creation_allows_command("context.create_menu.polygon_display_all.backface_culling_on", "display.backface_culling_on"));
   EXPECT_FALSE(creation_allows_command("context.create_menu.pyramid.options", "mesh.create_pyramid"));
   EXPECT_FALSE(creation_allows_command("context.create_menu.pyramid", "mesh.create_cube"));
   EXPECT_FALSE(creation_allows_command("context.create.fake", "mesh.create_fake"));
@@ -504,7 +562,7 @@ TEST(axismeld_hotbox_menu, VisibleDirectionEdgesKeepNearestButtonAndDisabledOccl
                                     {"center", "views"}, {}, widths, &origin);
     ASSERT_TRUE(layout.supported);
     for (const std::string id : {"views.left", "views.back", "views.bottom", "views.camera"}) {
-      const auto *item = rect(layout, id);
+      const auto *item = view_reference_rect(layout, id);
       ASSERT_NE(item, nullptr);
       const bool left = id == "views.left" || id == "views.back";
       for (const float extension : {0.5f, 4.0f, 8.0f, 64.0f, 256.0f}) {
@@ -554,12 +612,13 @@ TEST(axismeld_hotbox_menu, ToolReferenceUsesContentWidthsAndInsetDiagonalRows)
     ASSERT_TRUE(layout.supported);
     std::set<float> sizes;
     for (const auto &item : layout.rects) {
+      if (item.companion) { continue; }
       sizes.insert(item.width);
       EXPECT_GE(item.width, 84);
       EXPECT_GE(item.width, widths.at(item.id) + 16);
       EXPECT_EQ(item.height, 24);
       for (const auto &other : layout.rects) {
-        if (&item != &other) {
+        if (&item != &other && !other.companion) {
           EXPECT_TRUE(separated_by(item, other, 4));
         }
       }
@@ -611,7 +670,7 @@ TEST(axismeld_hotbox_menu, EveryRadialMatchesViewsHorizontalClearanceAndCenterCa
           EXPECT_FLOAT_EQ(center.width, reference_center.width);
           EXPECT_FLOAT_EQ(center.height, 40);
           auto compare_inner_edge = [&](const MenuRect &item, const std::string &direction) {
-            const auto *reference = rect(views, reference_ids.at(direction));
+            const auto *reference = view_reference_rect(views, reference_ids.at(direction));
             ASSERT_NE(reference, nullptr);
             if (direction == "N" || direction == "S") {
               EXPECT_FLOAT_EQ(item.x + item.width / 2, cx);
@@ -689,11 +748,16 @@ TEST(axismeld_hotbox_menu, NarrowRadialsRejectAtomicallyInsteadOfReducingViewsCl
                                    {owner}, {}, widths, nullptr, owner);
     ASSERT_TRUE(roomy.supported) << owner;
   }
-  for (const std::string owner : {"context.components", "tools.move.axis"}) {
+  for (const std::string owner : {"tools.move.axis"}) {
     const auto narrow = layout_menu(snapshot, 392, 210, 196, 105,
                                     {owner}, {}, widths, nullptr, owner);
     EXPECT_TRUE(narrow.supported) << owner;
   }
+  const auto component = layout_menu(snapshot, 392, 210, 196, 105,
+                                      {"context.components"}, {}, widths, nullptr, "context.components");
+  EXPECT_FALSE(component.supported);
+  EXPECT_TRUE(component.rects.empty());
+  EXPECT_TRUE(component.occlusion_regions.empty());
   // Eight creation parameter cells increase the complete ring width beyond 392px.
   // Preserve the same Views clearances and reject the whole composition atomically.
   const auto creation = layout_menu(snapshot, 392, 210, 196, 105,
@@ -758,6 +822,7 @@ TEST(axismeld_hotbox_menu, RadialOutwardHitsRetainDisplayedRowsAndDisabledTarget
       const auto &center = layout.return_regions.back();
       const float cx = center.x + center.width / 2;
       for (const auto &item : layout.rects) {
+        if (item.companion) { continue; }
         const float middle = item.x + item.width / 2;
         if (std::abs(middle - cx) < 1) {
           continue;
@@ -765,6 +830,15 @@ TEST(axismeld_hotbox_menu, RadialOutwardHitsRetainDisplayedRowsAndDisabledTarget
         for (const float extension : {0.5f, 8.0f, 64.0f, 256.0f}) {
           const float x = middle < cx ? item.x - extension : item.x + item.width + extension;
           const auto *hit = hit_marking_menu_rect(layout, owner, x, item.y + 12);
+          const bool covered = std::any_of(layout.occlusion_regions.begin(), layout.occlusion_regions.end(),
+              [&](const MenuRect &region) {
+                return x >= region.x && x <= region.x + region.width &&
+                       item.y + 12 >= region.y && item.y + 12 <= region.y + region.height;
+              });
+          if (covered) {
+            EXPECT_EQ(hit, nullptr) << item.id;
+            continue;
+          }
           ASSERT_NE(hit, nullptr) << item.id;
           EXPECT_EQ(hit->id, item.id);
           EXPECT_EQ(hit->interactive, item.interactive);
@@ -785,7 +859,8 @@ TEST(axismeld_hotbox_menu, MissingRadialDirectionsBlockInsteadOfStealingNeighbou
                                   {"context.components"}, {}, widths, nullptr,
                                   "context.components");
   ASSERT_TRUE(layout.supported);
-  ASSERT_EQ(layout.rects.size(), 7);
+  ASSERT_EQ(std::count_if(layout.rects.begin(), layout.rects.end(),
+                          [](const MenuRect &item) { return !item.companion; }), 7);
   ASSERT_EQ(layout.marking_gaps.size(), 1);
   const auto *gap = hit_marking_menu_rect(layout, "context.components", 100, 432);
   ASSERT_NE(gap, nullptr);
@@ -796,9 +871,29 @@ TEST(axismeld_hotbox_menu, MissingRadialDirectionsBlockInsteadOfStealingNeighbou
   EXPECT_EQ(hit_menu_rect(layout, gap->x + gap->width / 2, gap->y + 12), nullptr);
 }
 
+// This unit exercises native-child ownership independently of Maya's Keep Spacing checkbox.
+static MenuSnapshot native_child_snapshot()
+{
+  auto snapshot = default_snapshot();
+  const auto adapt = [&](auto &&self, std::vector<MenuNode> &nodes) -> void {
+    for (auto &node : nodes) {
+      if (node.id == "tools.move.spacing") {
+        node.kind = MenuKind::Menu;
+        node.enabled = true;
+        node.presentation = "list";
+        node.indicator.clear();
+        node.children = {{"fixture.native_child", "Fixture action", "", "", "", MenuKind::Disabled, false}};
+      }
+      self(self, node.children);
+    }
+  };
+  adapt(adapt, snapshot.menus);
+  return snapshot;
+}
+
 TEST(axismeld_hotbox_menu, RadialHitUsesCurrentCenterAndNeverAnOpenNativeList)
 {
-  const auto snapshot = default_snapshot();
+  const auto snapshot = native_child_snapshot();
   const auto widths = measured(snapshot);
   auto child = layout_menu(snapshot, 1200, 800, 600, 400,
                             {"tools.move", "tools.move.axis"}, {}, widths, nullptr, "tools.move");
@@ -807,7 +902,7 @@ TEST(axismeld_hotbox_menu, RadialHitUsesCurrentCenterAndNeverAnOpenNativeList)
   const auto &center = child.return_regions.back();
   EXPECT_EQ(hit_marking_menu_rect(child, "tools.move.axis", center.x + 21, center.y + 21),
             nullptr);
-  const auto *east = rect(child, "tools.move.axis.view");
+  const auto *east = rect(child, "tools.move.axis.rotation");
   ASSERT_NE(east, nullptr);
   const float x = east->x + east->width + 100, y = east->y + 12;
   // A hidden ancestor center may overlap a child's outward region. It is not
@@ -825,7 +920,7 @@ TEST(axismeld_hotbox_menu, RadialHitUsesCurrentCenterAndNeverAnOpenNativeList)
   const auto *anchor = rect(native, "tools.move.spacing");
   ASSERT_NE(anchor, nullptr);
   EXPECT_EQ(hit_marking_menu_rect(native, "tools.move", 1100, anchor->y + 12), nullptr);
-  const auto *leaf = rect(native, "tools.move.spacing.options");
+  const auto *leaf = rect(native, "fixture.native_child");
   ASSERT_NE(leaf, nullptr);
   EXPECT_EQ(hit_marking_menu_rect(native, "tools.move", leaf->x + 10, leaf->y + 12), nullptr);
   EXPECT_EQ(hit_menu_rect(native, leaf->x + 10, leaf->y + 12), leaf);
@@ -890,7 +985,7 @@ TEST(axismeld_hotbox_menu, ToolChildRingReplacesParentButSpaceDirectoryRemains)
 
 TEST(axismeld_hotbox_menu, VisualCenterReturnIsImmediateWithoutStealingVisibleLeaves)
 {
-  const auto snapshot = default_snapshot();
+  const auto snapshot = native_child_snapshot();
   const auto widths = measured(snapshot);
   const auto layout = layout_menu(snapshot,
                                   1200,
@@ -904,7 +999,7 @@ TEST(axismeld_hotbox_menu, VisualCenterReturnIsImmediateWithoutStealingVisibleLe
                                   "tools.move");
   ASSERT_TRUE(layout.supported);
   EXPECT_EQ(menu_return_target(layout, 614, 414), "tools.move");
-  const auto *leaf = rect(layout, "tools.move.spacing.options");
+  const auto *leaf = rect(layout, "fixture.native_child");
   ASSERT_NE(leaf, nullptr);
   EXPECT_TRUE(menu_return_target(layout, leaf->x + leaf->width / 2, leaf->y + 12).empty());
   const auto edge = layout_menu(
@@ -980,7 +1075,7 @@ TEST(axismeld_hotbox_menu, EqualWidthRingExposesExtendedEdgesWithoutOverlap)
   widths["views.front"] = 25;
   widths["center.controls.buttons"] = 151;
   for (const std::vector<std::string> path :
-       {std::vector<std::string>{"center", "views"}, std::vector<std::string>{"center.controls"}})
+       {std::vector<std::string>{"center", "views"}})
   {
     const auto layout = layout_menu(snapshot, 1920, 1080, 960, 540, path, {}, widths);
     ASSERT_TRUE(layout.supported);
@@ -1020,7 +1115,7 @@ TEST(axismeld_hotbox_menu, CompactSecondaryHitTargetsDoNotInheritPrimaryPadding)
       }
       EXPECT_FLOAT_EQ(item.height, 24);
       if (!item.id.starts_with("@")) {
-        EXPECT_FLOAT_EQ(item.width, item.id == "views.style" ? 140 : 96) << item.id;
+        EXPECT_FLOAT_EQ(item.width, item.id == "views.style" ? 140 : item.id.starts_with("views.") ? 54 : 96) << item.id;
         EXPECT_GE(item.width, widths.at(item.id) + (item.native_menu ? 60 : 16)) << item.id;
       }
       const float x = item.x + item.width / 2, y = item.y + item.height / 2;
@@ -1059,43 +1154,26 @@ TEST(axismeld_hotbox_menu, BothStyleDirectoriesUseContiguousMenuRows)
   }
 }
 
-TEST(axismeld_hotbox_menu, ControlsRowsUsesAContiguousNativeMenu)
+TEST(axismeld_hotbox_menu, ControlsRowsRemainInTheirMayaDirectories)
 {
   const auto snapshot = default_snapshot();
   const auto widths = measured(snapshot);
-  const auto root = layout_menu(snapshot, 1920, 1080, 960, 540, {}, {}, widths);
-  const auto layout = layout_menu(
-      snapshot, 1920, 1080, 960, 540, {"center.controls", "center.controls.rows"}, {}, widths);
-  ASSERT_TRUE(root.supported);
+  const auto layout = layout_menu(snapshot, 1920, 1080, 960, 540,
+                                  {"center.controls", "center.controls.modeling"}, {}, widths);
   ASSERT_TRUE(layout.supported);
-  const auto *entry = rect(layout, "center.controls.rows");
-  ASSERT_NE(entry, nullptr);
-  EXPECT_TRUE(entry->native_menu);
-  EXPECT_FLOAT_EQ(entry->height, 24);
-  EXPECT_FLOAT_EQ(entry->width, widths.at("center.controls.rows") + 60);
-  const std::array<const char *, 3> ids = {
-      "center.controls.rows.common", "center.controls.rows.pane", "center.controls.rows.modeling"};
-  const auto *first = rect(layout, ids.front());
-  ASSERT_NE(first, nullptr);
-  const MenuRect *previous = nullptr;
-  for (const char *id : ids) {
-    const auto *item = rect(layout, id);
-    ASSERT_NE(item, nullptr) << id;
-    EXPECT_TRUE(item->native_menu);
-    EXPECT_FLOAT_EQ(item->height, 24);
-    EXPECT_FLOAT_EQ(item->x, first->x);
-    if (previous) {
-      EXPECT_FLOAT_EQ(previous->y, item->y + 24);
-    }
-    previous = item;
+  const auto *common = rect(layout, "center.controls.rows.common");
+  const auto *pane = rect(layout, "center.controls.rows.pane");
+  const auto *modeling = rect(layout, "center.controls.rows.modeling");
+  ASSERT_NE(common, nullptr); ASSERT_NE(pane, nullptr); ASSERT_NE(modeling, nullptr);
+  EXPECT_EQ(common->x, pane->x);
+  EXPECT_EQ(common->y, pane->y + 24);
+  EXPECT_EQ(common->depth, pane->depth);
+  EXPECT_EQ(modeling->depth, common->depth + 1);
+  for (const auto *item : {common, pane, modeling}) {
+    EXPECT_TRUE(item->native_menu); EXPECT_EQ(item->height, 24);
+    EXPECT_EQ(hit_menu(layout, item->x + item->width / 2, item->y + 12), item->id);
   }
-  EXPECT_EQ(rect(layout, "@back:center.controls.rows"), nullptr);
-  for (const MenuRect &original : root.rects) {
-    const auto *preserved = rect(layout, original.id);
-    ASSERT_NE(preserved, nullptr) << original.id;
-    EXPECT_EQ(preserved->depth, 0) << original.id;
-    EXPECT_FALSE(preserved->native_menu) << original.id;
-  }
+  EXPECT_EQ(rect(layout, "center.controls.rows"), nullptr);
 }
 
 TEST(axismeld_hotbox_menu, ControlsTransparencyUsesAContiguousNativeMenu)
@@ -1186,7 +1264,7 @@ TEST(axismeld_hotbox_menu, MappingMenusUseContinuousNativeBlocksAtDesktopSize)
     const auto *entry = rect(layout, "center.controls.buttons");
     ASSERT_NE(entry, nullptr);
     EXPECT_TRUE(entry->native_menu);
-    EXPECT_TRUE(entry->native_menu_standalone);
+    EXPECT_FALSE(entry->native_menu_standalone);
     const auto *button = rect(layout, owner);
     ASSERT_NE(button, nullptr);
     EXPECT_TRUE(button->native_menu);
@@ -1550,10 +1628,8 @@ TEST(axismeld_hotbox_menu, ShortNativeSettingsListsFitNarrowViewportCornersWitho
   snapshot.center_buttons[2] = "center.controls";
   const auto widths = measured(snapshot);
   const std::array<std::pair<const char *, std::vector<const char *>>, 2> lists = {{
-      {"center.controls.rows",
-       {"center.controls.rows.common",
-        "center.controls.rows.pane",
-        "center.controls.rows.modeling"}},
+      {"center.controls.modeling",
+       {"center.controls.modeling.only", "center.controls.rows.modeling"}},
       {"center.controls.transparency",
        {"center.controls.transparency.0",
         "center.controls.transparency.25",
@@ -1747,7 +1823,7 @@ TEST(axismeld_hotbox_menu, ViewStyleOpensAParentRetainingVerticalList)
   EXPECT_EQ(rect(layout, "@back:views.style"), nullptr);
 }
 
-TEST(axismeld_hotbox_menu, ViewOverlayUsesFullLabelsAndDisabledNorthEastCamera)
+TEST(axismeld_hotbox_menu, ViewOverlayUsesFullLabelsAndAbsentNorthEastCamera)
 {
   const auto snapshot = default_snapshot();
   auto widths = measured(snapshot);
@@ -1756,7 +1832,7 @@ TEST(axismeld_hotbox_menu, ViewOverlayUsesFullLabelsAndDisabledNorthEastCamera)
   const auto layout = layout_menu(
       snapshot, 1920, 1080, 960, 540, {"center", "views"}, {}, widths, &origin);
   ASSERT_TRUE(layout.supported);
-  const auto *root = rect(layout, "views"), *camera = rect(layout, "views.camera");
+  const auto *root = rect(layout, "views"), *camera = view_reference_rect(layout, "views.camera");
   ASSERT_NE(root, nullptr);
   ASSERT_NE(camera, nullptr);
   EXPECT_FLOAT_EQ(root->x + root->width / 2, 960);
@@ -1764,6 +1840,7 @@ TEST(axismeld_hotbox_menu, ViewOverlayUsesFullLabelsAndDisabledNorthEastCamera)
   EXPECT_GT(camera->x + camera->width / 2, origin[0]);
   EXPECT_GT(camera->y + camera->height / 2, origin[1]);
   EXPECT_FALSE(camera->interactive);
+  EXPECT_EQ(rect(layout, "views.camera"), nullptr);
   EXPECT_TRUE(
       hit_menu(layout, camera->x + camera->width / 2, camera->y + camera->height / 2).empty());
   for (const auto &item : layout.rects) {
@@ -1774,7 +1851,7 @@ TEST(axismeld_hotbox_menu, ViewOverlayUsesFullLabelsAndDisabledNorthEastCamera)
   EXPECT_FLOAT_EQ(perspective->width, widths.at("views.perspective") + 16);
 }
 
-TEST(axismeld_hotbox_menu, NativeCascadeDoesNotHitUnrelatedRetainedHotboxes)
+TEST(axismeld_hotbox_menu, NativeCascadeKeepsVisibleParentNativeSiblingsReachable)
 {
   const auto snapshot = default_snapshot();
   for (const std::vector<std::string> path :
@@ -1788,7 +1865,8 @@ TEST(axismeld_hotbox_menu, NativeCascadeDoesNotHitUnrelatedRetainedHotboxes)
     ASSERT_NE(other, nullptr);
     const auto *hit = hit_menu_rect(
         layout, other->x + other->width / 2, other->y + other->height / 2);
-    EXPECT_TRUE(!hit || hit->id != other->id);
+    ASSERT_NE(hit, nullptr);
+    EXPECT_EQ(hit->id, other->id);
     const auto *entry = rect(layout, "center.controls.buttons");
     ASSERT_NE(entry, nullptr);
     hit = hit_menu_rect(layout, entry->x + entry->width / 2, entry->y + entry->height / 2);
@@ -1856,7 +1934,7 @@ TEST(axismeld_hotbox_menu, ActiveNativeListDoesNotExposeUnderlyingRootHitTargets
   const auto *button = rect(layout, "center.controls.buttons.leftmouse");
   ASSERT_NE(entry, nullptr);
   ASSERT_NE(button, nullptr);
-  EXPECT_TRUE(entry->native_menu_standalone);
+  EXPECT_FALSE(entry->native_menu_standalone);
   EXPECT_FALSE(button->native_menu_standalone);
 }
 
@@ -2126,7 +2204,12 @@ TEST(axismeld_hotbox_menu, RealDefaultTreeHasClickablePathsAtCornersAndCenter)
                    std::unordered_map<std::string, int> offsets, const bool companion) {
         for (int scroll = 0; scroll < int(nodes.size()); scroll++) {
           offsets[owner] = scroll;
-          const auto radial_root = !path.empty() && path.front() == creation_menu ? creation_root : object_modeling_root;
+          std::string_view radial_root = object_modeling_root;
+          if (companion && !path.empty()) {
+            for (const auto &[root, menu] : companion_roots) {
+              if (path.front() == menu) { radial_root = root; break; }
+            }
+          }
           const auto layout = companion ?
               layout_menu(snapshot, size[0], size[1], point[0], point[1],
                           {std::string(radial_root)}, offsets, widths, nullptr,
@@ -2192,7 +2275,7 @@ TEST(axismeld_hotbox_menu, RealDefaultTreeHasClickablePathsAtCornersAndCenter)
         }
       };
       for (const MenuNode &row : snapshot.menus) {
-        if (row.id == object_modeling_menu || row.id == creation_menu) {
+        if (companion_owner(row.id) == row.id) {
           // Companion roots enter only through their associated radial tool roots.
           browse(row.children, row.id, {row.id}, {}, true);
         }

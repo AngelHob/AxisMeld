@@ -21,9 +21,23 @@ bpy.context.preferences.use_preferences_save = False
 bpy.context.preferences.view.show_splash = False
 artifacts = Path(os.environ.get('AXISMELD_TEST_ARTIFACTS', root))
 STYLE_LABELS = ('Zones and Menu Rows', 'Zones Only', 'Center Zone Only')
-ROW_LABELS = ('Show Common Menus', 'Show Pane Specific Menus', 'Show Modeling')
+MODELING_LABELS = ('Modeling Only', 'Show/Hide Modeling')
+CONTROL_STYLE_LABELS = STYLE_LABELS + ('', 'Center Zone RMB Popups')
 TRANSPARENCY_LABELS = ('0%', '25%', '50%', '75%', '100%')
-CONTROL_LABELS = ('Menu Rows', 'Hotbox Style', 'Transparency', 'Center Mouse Buttons')
+CONTROL_LABELS = ('Show Modeling', 'Show Rigging', 'Show Animation', 'Show FX',
+                  'Show All', 'Hide All', 'Show Rendering', 'Show Common Menus',
+                  'Show Pane Specific Menus', 'Show Custom Menu Set Menus',
+                  'Set Transparency', 'Hotbox Style', '', 'Window Options', '',
+                  'AxisMeld Center Mouse Buttons')
+CONTROL_SUBMENUS = (0, 1, 2, 3, 6, 10, 11, 13, 15)
+
+def controls_layout(anchor, measure, bounds, scale, first=0):
+    # Complete native sibling group owns both the semantic and state columns.
+    page = native_page(anchor, CONTROL_LABELS,
+                       lambda label: blf.dimensions(0, label)[0]/scale + (40 if label else 0),
+                       bounds, scale, first=first, submenu_indices=CONTROL_SUBMENUS)
+    page['back'] = None
+    return page
 BUTTON_LABELS = ('Left Mouse Button', 'Middle Mouse Button', 'Right Mouse Button')
 MAPPING_LABELS = ('Disabled', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls',
                   'Common', 'Select', 'Modify', 'Current Pane', 'Pane View', 'Pane Shading',
@@ -269,21 +283,21 @@ def mapping_suite():
             event(opener_button[0], 'RELEASE')
             yield from settle()
             controls_anchor = center
-        controls_page = ellipse_page(controls_anchor, CONTROL_LABELS, measure, bounds, scale,
+        controls_page = controls_layout(controls_anchor, measure, bounds, scale,
                                      first=controls_first[0])
-        while controls_page['items'][3] is None:
+        while controls_page['items'][15] is None:
             count, setting_count = len(observed), len(settings_observed)
             yield from click(controls_page['next'])
             check(len(observed) == count and len(settings_observed) == setting_count,
                   'Controls navigation reached a command or setting dispatcher')
-            controls_page = ellipse_page(controls_anchor, CONTROL_LABELS, measure, bounds, scale,
+            controls_page = controls_layout(controls_anchor, measure, bounds, scale,
                                          first=controls_page['first']+1)
         controls_first[0] = controls_page['first']
         controls = controls_page['items']
-        yield from click(controls[3])
-        buttons = native_page(controls[3], BUTTON_LABELS, measure, bounds, scale,
+        yield from click(controls[15])
+        buttons = native_page(controls[15], BUTTON_LABELS, measure, bounds, scale,
                               submenu_indices=range(3))
-        return controls[3], buttons
+        return controls[15], buttons
 
     def open_buttons():
         event('MOUSEMOVE', 'NOTHING', (cx, cy))
@@ -838,14 +852,15 @@ def mapping_suite():
         else:
             check(feedback_probe == 'drag', 'unknown feedback probe')
             owner, buttons = yield from open_buttons()
-            controls = ellipse_page(control, CONTROL_LABELS, measure, bounds, scale)['items']
+            controls = controls_layout(control, measure, bounds, scale, first=controls_first[0])['items']
             yield from move(owner)
             event('LEFTMOUSE')
             yield from settle()
             # Continuous held motion deliberately crosses a retained, unrelated hotbox title.
             # Do not teleport straight to the child: that hid the original input-stealing bug.
             start = midpoint(owner)
-            for target in (midpoint(controls[2]), midpoint(buttons['items'][0])):
+            for target in (midpoint(next(item for index,item in enumerate(controls)
+                                             if item is not None and index != 15 and CONTROL_LABELS[index])), midpoint(buttons['items'][0])):
                 for step in range(1, 17):
                     point = tuple(a+(b-a)*step/16 for a, b in zip(start, target))
                     event('MOUSEMOVE', 'NOTHING', point)
@@ -1378,10 +1393,10 @@ def suite():
         blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
         def measure(label):
             return blf.dimensions(0, label)[0] / scale + 20 + (
-                20 if label in STYLE_LABELS + TRANSPARENCY_LABELS else 0)
+                20 if label in CONTROL_STYLE_LABELS + TRANSPARENCY_LABELS + MODELING_LABELS else 0)
         center_width = (measure('AxisMeld') + 40)*scale
         center = (cx-center_width/2, cy-19*scale, center_width, 38*scale)
-        control_labels = ['Menu Rows', 'Hotbox Style', 'Transparency', 'Center Mouse Buttons']
+        control_labels = CONTROL_LABELS
 
         def open_list(index, labels):
             event('MOUSEMOVE', 'NOTHING', (cx, cy))
@@ -1391,21 +1406,24 @@ def suite():
             yield from settle()
             event('RIGHTMOUSE', 'RELEASE')
             yield from settle()
-            controls_page = ellipse_page(center, control_labels, measure, bounds, scale)
+            controls_page = controls_layout(center, measure, bounds, scale)
             while controls_page['items'][index] is None:
                 yield from click(controls_page['next'])
-                controls_page = ellipse_page(center, control_labels, measure, bounds, scale,
+                controls_page = controls_layout(center, measure, bounds, scale,
                                              first=controls_page['first']+1)
             owner = controls_page['items'][index]
+            if index in (7, 8):
+                # These active checkboxes now live directly in Controls.
+                return center, [owner]
             yield from click(owner)
-            return owner, native_list(owner, labels, measure, bounds, scale)
+            choices = native_list(owner, labels, measure, bounds, scale)
+            return owner, choices[1:] if index == 0 else choices
 
         cases = (
-            ('rows', 0, ROW_LABELS,
-             (('common', ['pane', 'modeling']),
-              ('pane', ['common', 'modeling']),
-              ('modeling', ['common', 'pane']))),
-            ('transparency', 2, TRANSPARENCY_LABELS,
+            ('rows-common', 7, ('Show Common Menus',), (('common', ['pane', 'modeling']),)),
+            ('rows-pane', 8, ('Show Pane Specific Menus',), (('pane', ['common', 'modeling']),)),
+            ('rows-modeling', 0, MODELING_LABELS, (('modeling', ['common', 'pane']),)),
+            ('transparency', 10, TRANSPARENCY_LABELS,
              ((0, 0), (25, 25), (50, 50), (75, 75), (100, 100))),
         )
         for name, controls_index, labels, options in cases:
@@ -1422,6 +1440,8 @@ def suite():
                 check(before['center_buttons']['RIGHTMOUSE'] == 'center.controls',
                       f'{layout_probe} {name} input mapping was not applied')
                 owner, choices = yield from open_list(controls_index, labels)
+                if controls_index == 0:
+                    labels = MODELING_LABELS[1:]
                 bx, by, bw, bh = bounds
                 check(len(choices) == len(labels) and all(
                     x >= bx and y >= by and x+w <= bx+bw and y+h <= by+bh
@@ -1460,7 +1480,7 @@ def suite():
                 yield from settle()
                 with bpy.context.temp_override(window=win, area=area, region=region):
                     after = json.loads(hotbox_runtime.snapshot(bpy.context))['settings']
-                if name == 'rows':
+                if name.startswith('rows'):
                     check(after['rows'] == expected,
                           f'{layout_probe} Rows choice {selected!r} was not reachable')
                 else:
@@ -1488,14 +1508,14 @@ def suite():
         blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
         def measure(label):
             return blf.dimensions(0, label)[0] / scale + 20 + (
-                20 if label in STYLE_LABELS + TRANSPARENCY_LABELS else 0)
+                20 if label in CONTROL_STYLE_LABELS + TRANSPARENCY_LABELS + MODELING_LABELS else 0)
         center_width = (measure('AxisMeld') + 40)*scale
         center = (cx-center_width/2, cy-19*scale, center_width, 38*scale)
         cases = (
             ('style-views', None, STYLE_LABELS, 1),
-            ('style-controls', 1, STYLE_LABELS, 1),
-            ('rows-controls', 0, ROW_LABELS, 2),
-            ('transparency-controls', 2, TRANSPARENCY_LABELS, 3),
+            ('style-controls', 11, CONTROL_STYLE_LABELS, 1),
+            ('rows-controls', 0, MODELING_LABELS, 1),
+            ('transparency-controls', 10, TRANSPARENCY_LABELS, 3),
         )
         for entry, controls_index, labels, selected_index in cases:
             theme.wcol_menu_back.inner = normal_background
@@ -1521,9 +1541,11 @@ def suite():
                 control = (center[0]+center[2]+83.6*scale, cy-19*scale,
                            control_width, 38*scale)
                 yield from click(control)
-                ring = ellipse_page(control, ['Menu Rows', 'Hotbox Style', 'Transparency',
-                                               'Center Mouse Buttons'], measure, bounds, scale)
-                native_siblings = tuple(ring['items'][:3])
+                ring = controls_layout(control, measure, bounds, scale)
+                while ring['items'][controls_index] is None:
+                    yield from click(ring['next'])
+                    ring = controls_layout(control, measure, bounds, scale, first=ring['first']+1)
+                native_siblings = tuple(item for item in ring['items'] if item is not None)
                 list_anchor = ring['items'][controls_index]
                 yield from click(list_anchor)
             choices = native_list(list_anchor, labels, measure, bounds, scale,
@@ -1544,7 +1566,7 @@ def suite():
             normal_path = screenshot(f'native-style-{entry}-{requested_scale}-normal.png')
             initial_radio = 0 if entry.startswith('style') else 1
             if not entry.startswith('rows'):
-                check_radio_image(normal_path, choices, initial_radio, scale)
+                check_radio_image(normal_path, choices[:3] if entry.startswith('style') else choices, initial_radio, scale)
             theme.wcol_menu_back.inner = (.8, .12, .04, 1)
             area.tag_redraw()
             yield from settle()
@@ -1558,6 +1580,9 @@ def suite():
             check(samples and all(r > .7 and g < .2 and b < .1 for r, g, b in samples),
                    f'{entry} {requested_scale}x native menu background missing or discontinuous')
             for label, (lx, ly, lw, lh) in zip(labels, choices):
+                if not label:
+                    check(abs(lh-6*scale)<.1*scale, 'Controls Style separator height changed')
+                    continue
                 ink = sum(min(pixels[(yy*width+xx)*4:(yy*width+xx)*4+3]) > .55
                           for yy in range(int(ly+3*scale), int(ly+lh-3*scale))
                           for xx in range(int(lx+3*scale), int(lx+lw-3*scale)))
@@ -1583,33 +1608,29 @@ def suite():
             check(min(abs(left-ex-ew), abs(ex-right), abs(bottom-ey-eh), abs(ey-top)) < .1*scale,
                   'native menu does not touch its direct entry')
             if native_siblings:
-                bx, by, bw, bh = ring['back']
-                back_icon_ink = sum(min(pixels[(yy*width+xx)*4:(yy*width+xx)*4+3]) > .65
-                                    for yy in range(int(by+5*scale), int(by+bh-5*scale))
-                                    for xx in range(int(bx+4*scale), int(bx+22*scale)))
-                check(back_icon_ink > 3*scale*scale,
-                      f'{entry} native Back icon must stay left of its readable label')
-                left = int(min(r[0] for r in native_siblings))
-                right = int(max(r[0]+r[2] for r in native_siblings))
-                bottom = int(min(r[1] for r in native_siblings))
-                top = int(max(r[1]+r[3] for r in native_siblings))
-                excluded = (*ring['items'], ring['back'], *choices)
-                gap_samples = []
-                for yy in range(bottom, top):
-                    for xx in range(left, right):
-                        if any(rx-2*scale <= xx <= rx+rw+2*scale and
-                               ry-2*scale <= yy <= ry+rh+2*scale
-                               for rx, ry, rw, rh in excluded):
-                            continue
-                        gap_samples.append(pixels[(yy*width+xx)*4:(yy*width+xx)*4+3])
-                red_gap = sum(r > .7 and g < .2 and b < .1 for r, g, b in gap_samples)
-                check(gap_samples and red_gap < max(3, len(gap_samples)//100),
-                      f'{entry} {requested_scale}x sibling native entries share one background')
+                check(ring['back'] is None, 'Native Controls must not invent a ring Back item')
+                # The parent is now one native list. Verify actual visible row bounds
+                # stay aligned and contiguous, including its 6px separators.
+                ordered = sorted(native_siblings, key=lambda item: item[1], reverse=True)
+                for upper, lower in zip(ordered, ordered[1:]):
+                    check(abs(upper[0]-lower[0])<.1*scale and
+                          abs(upper[1]-lower[1]-lower[3])<.1*scale,
+                          f'{entry} native Controls parent rows have a gap or misalignment')
+                # Sample the quiet right gutter of a visible unrelated parent row.
+                candidates = [r for r in ordered if r != list_anchor and r[3] >= 24*scale]
+                check(candidates, 'Retained native parent has no visible unrelated row')
+                px, py, pw, ph = candidates[0]
+                parent_background = [pixels[(yy*width+xx)*4:(yy*width+xx)*4+3]
+                                     for yy in range(int(py+2*scale), int(py+4*scale))
+                                     for xx in range(int(px+pw-3*scale), int(px+pw-scale))]
+                check(parent_background and all(r>.7 and g<.2 and b<.1
+                                                for r,g,b in parent_background),
+                      f'{entry} retained Controls list lost its continuous native theme')
             bpy.data.images.remove(image)
             yield from move(choices[selected_index])
             hover_path = screenshot(f'native-style-{entry}-{requested_scale}-hover.png')
             if not entry.startswith('rows'):
-                check_radio_image(hover_path, choices, initial_radio, scale)
+                check_radio_image(hover_path, choices[:3] if entry.startswith('style') else choices, initial_radio, scale)
             hover_image = bpy.data.images.load(str(hover_path), check_existing=False)
             hover_pixels, hover_width = list(hover_image.pixels), hover_image.size[0]
             hx, hy, hw, hh = choices[selected_index]
@@ -1646,7 +1667,7 @@ def suite():
                 yield from click(control)
                 yield from click(list_anchor)
                 check_radio_image(screenshot(f'radio-{entry}-{requested_scale}-after-click.png'),
-                                  choices, selected_index, scale)
+                                  choices[:3] if entry.startswith('style') else choices, selected_index, scale)
             event('SPACE', 'RELEASE')
             yield from settle()
             check(not win.screen.is_animation_playing, 'native menu leaked Space release')

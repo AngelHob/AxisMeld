@@ -283,14 +283,14 @@ def suite():
     yield from cancel()
     from axismeld import hotbox_runtime
     object_labels=('Offset Edge Loop Tool','Smooth','Unsmooth','Subdiv Proxy','Crease Tool',
-                   'Project Curve on Mesh','Split Mesh with Projected Curve','Mirror','Mapping',
+                   'Project Curve on mesh','Split mesh with projected curve','Mirror','Mapping',
                    'Triangulate','Quadrangulate','Reduce','Remesh','Retopologize','Transfer Vertex Order',
-                   'Separate','Combine','Booleans','Cleanup','Connect Tool','Quad Draw Tool','Polygon Display')
+                   'Separate','Combine','Booleans','Cleanup...','Connect Tool','Quad Draw Tool','Polygon Display')
     create_labels=('Platonic Solid','Pyramid','Prism','Pipe','Helix','Gear','Soccer Ball',
                    'Super Ellipse','Spherical Harmonics','Ultra Shape','Type','SVG','Quad Draw Tool',
                    'Interactive Creation','Exit On Completion','Polygon Display All')
     separators={
-        'object':{'Crease Tool','Split Mesh with Projected Curve','Mapping','Retopologize',
+        'object':{'Crease Tool','Split mesh with projected curve','Mapping','Retopologize',
                   'Transfer Vertex Order','Booleans','Quad Draw Tool'},
         'create':{'Soccer Ball','Quad Draw Tool','Exit On Completion'}}
     create_options=set(create_labels[:10])|{'Quad Draw Tool'}
@@ -412,7 +412,7 @@ def suite():
         event('MOUSEMOVE','NOTHING',origin)
         event('SPACE');yield from settle(12)
         event('LEFTMOUSE');yield from settle(7)
-        reference=radial_rectangles(capture(tag+'-views'))
+        reference=radial_rectangles(capture(tag+'-views'),{'N','E','SE','S','SW','W','NW'})
         event('LEFTMOUSE','RELEASE');event('SPACE','RELEASE')
         yield from settle(6)
         check(not list(win.modal_operators),'Views reference retained ownership')
@@ -422,7 +422,8 @@ def suite():
         observed=[]
         for left,right in (('NW','NE'),('W','E'),('SW','SE')):
             a=actual[right][0]-actual[left][2]-1
-            r=reference[right][0]-reference[left][2]-1
+            rl,rr=(left,right) if right in reference else ('SW','SE')
+            r=reference[rr][0]-reference[rl][2]-1
             check(abs(a-r)<=3*scale,'Options changed actual Views inner clearance: '+repr((tag,left,a,r)))
             observed.append((a,r))
         print('MAYA_ACTUAL_INNER_EDGES',tag,scale,observed,flush=True)
@@ -594,7 +595,8 @@ def suite():
     picture,rect,point=yield from find_row('create','Polygon Display All','maya-display-parent')
     event('MOUSEMOVE','NOTHING',point,shift=True);yield from settle(7)
     picture=capture('maya-display-child');child=companion_rect(picture,exclude=rect)
-    text,_=locate(picture,child,'Backface Culling')
+    prior_culling=area.spaces.active.shading.show_backface_culling
+    text,_=locate(picture,child,'Backface Culling off for All Polys' if prior_culling else 'Backface Culling on for All Polys')
     prior_culling=area.spaces.active.shading.show_backface_culling
     event('MOUSEMOVE','NOTHING',((text[0]+text[2])/2,(text[1]+text[3])/2),shift=True)
     yield from settle(3);event('RIGHTMOUSE','RELEASE',shift=True);event('LEFT_SHIFT','RELEASE')

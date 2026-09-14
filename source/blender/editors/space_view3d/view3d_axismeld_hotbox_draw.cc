@@ -13,12 +13,18 @@
 #include "UI_menu_overlay.hh"
 #include "UI_resources.hh"
 #include "view3d_axismeld_hotbox_icons.hh"
+#include "AXM_context_modeling.hh"
 #include "view3d_axismeld_hotbox_internal.hh"
 
 namespace blender::axismeld {
 namespace {
 int menu_radio_icon(const MenuSnapshot &snapshot, const MenuNode &node)
 {
+  if (node.kind == MenuKind::Setting && node.command.starts_with("row.")) {
+    const std::string row = node.command.substr(4);
+    return std::find(snapshot.rows.begin(), snapshot.rows.end(), row) != snapshot.rows.end() ?
+               ICON_CHECKBOX_HLT : ICON_CHECKBOX_DEHLT;
+  }
   if ((node.kind == MenuKind::Command || node.kind == MenuKind::Disabled) &&
       node.indicator == "checkbox") {
     return node.checked ? ICON_CHECKBOX_HLT : ICON_CHECKBOX_DEHLT;
@@ -88,6 +94,13 @@ void hotbox_measure(HotboxVisual &data)
 
 void hotbox_layout(HotboxVisual &data)
 {
+  const auto companion = active_companion_root(data.open_path);
+  if (companion.empty()) {
+    data.companion_path.clear();
+  }
+  else if (data.companion_path.empty() || data.companion_path.front() != companion) {
+    data.companion_path = {std::string(companion)};
+  }
   const std::array<float, 2> origin = {data.origin[0], data.origin[1]};
   data.menu_layout = layout_menu_in_bounds(data.snapshot,
                                             data.safe_bounds,

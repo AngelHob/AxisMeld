@@ -107,7 +107,7 @@ def suite():
                 if direction not in found or (x1-x0)*(y1-y0)>(found[direction][2]-found[direction][0])*(found[direction][3]-found[direction][1]):
                     found[direction]=rect
         check(set(found)==(set(expected) if expected is not None else {'N','NE','E','SE','S','SW','W','NW'}),
-              'actual screenshot did not expose all eight radial button rectangles: '+repr(found))
+              'actual screenshot did not expose the expected visible radial button rectangles: '+repr(found))
         return found
 
     def companion_rect(pixels, exclude=None):
@@ -196,7 +196,7 @@ def suite():
         check(score>.75,'actual full label not independently identified: '+repr((label,score,rect)))
         return (x+x0,y+y0,x+x0+gw,y+y0+gh),score
 
-    def semantic_icon(pixels,rect,label,state=False):
+    def semantic_icon(pixels,rect,label,state=False,disabled_state=False):
         # Semantic and state cells are independently observed on the left of
         # actual text, not inferred from catalog icon data or C++ layout math.
         text,score=locate(pixels,rect,label)
@@ -218,7 +218,32 @@ def suite():
         check(amount>=10*scale*scale,'visible '+label+' button lacks a separate semantic icon left of its rendered label')
         check(xend<int(rect[2])-2,'full label is clipped against right button edge: '+label)
         if state:
-            state_ink=foreground(pixels[low:high,max(int(rect[0])+2,int(x-44*scale)):int(x-23*scale)])
+            state_pixels=pixels[low:high,max(int(rect[0])+2,int(x-44*scale)):int(x-23*scale)]
+            state_ink=foreground(state_pixels)
+            if disabled_state:
+                # Native disabled checkbox alpha produces green .22-.26 on this
+                # magenta fixture, below the enabled near-neutral-color predicate.
+                # Use the existing disabled semantic-icon contrast contract only
+                # for this authored unavailable checkbox, and require its outline.
+                state_ink=state_pixels[:,:,1]>.18
+                sy,sx=np.nonzero(state_ink)
+                check(len(sx)>=8*scale*scale,
+                      'disabled checkbox outline is missing: '+label)
+                left,right,top,bottom=int(sx.min()),int(sx.max()),int(sy.min()),int(sy.max())
+                check(8*scale<=right-left+1<=14*scale and
+                      8*scale<=bottom-top+1<=14*scale,
+                      'disabled checkbox has the wrong measured shape: '+label)
+                outline=state_ink[top:bottom+1,left:right+1]
+                edge=max(1,int(scale))
+                check(all(np.count_nonzero(side)>=6*scale for side in
+                          (outline[:edge,:],outline[-edge:,:],
+                           outline[:,:edge],outline[:,-edge:])),
+                      'disabled checkbox must expose all four outline sides: '+label)
+                cy,cx=(top+bottom)//2,(left+right)//2
+                check(not np.any(state_ink[cy:cy+edge,cx:cx+edge]),
+                      'unavailable checkbox must remain visibly unchecked: '+label)
+                check(float(np.quantile(state_pixels[:,:,1][state_ink],.8))<.4,
+                      'disabled checkbox lost its reduced native alpha: '+label)
             check(np.count_nonzero(state_ink)>=8*scale*scale,
                   'state indicator and semantic icon must both appear separately: '+label)
             print('STATE_AND_SEMANTIC',label,int(np.count_nonzero(state_ink)),amount,flush=True)
@@ -247,15 +272,15 @@ def suite():
     object_labels={'N':'Target Weld Tool','NW':'Sculpt Tool','NE':'Fill Holes',
                    'W':'Multi-Cut','E':'Append to Polygon Tool',
                    'SW':'Insert Edge Loop Tool','SE':'Soften/Harden Edges','S':'Extrude'}
-    views_labels={'N':'Perspective View','NW':'Left View','NE':'New Camera',
+    views_labels={'N':'Perspective View','NW':'Left View',
                   'W':'Top View','E':'Right View','SW':'Back View','SE':'Bottom View','S':'Front View'}
     component_labels={'N':'Edge','W':'Vertex','S':'Face','NE':'Object Mode',
-                      'E':'UV','SW':'Vertex Face','SE':'Multi Component'}
+                      'E':'UV','SW':'Vertex Face','SE':'Multi'}
     create_labels={'N':'Create Polygon Tool','NW':'Plane','NE':'Disc','W':'Cylinder',
                    'E':'Sphere','SW':'Cone','SE':'Torus','S':'Cube'}
-    q_labels={'N':'Symmetry','NW':'Marquee Select','NE':'Drag Select','W':'Paint Selection',
-              'E':'Camera Based Selection','SW':'Lasso Select','SE':'Clear Selection','S':'Select'}
-    transform_labels={'N':'Symmetry','NW':'Local','NE':'Normal Average','W':'Global',
+    q_labels={'N':'Symmetry','NW':'Marquee','NE':'Drag','W':'Paint Select',
+              'E':'Camera-Based Selection','SW':'Lasso','SE':'Clear Selection','S':'Select'}
+    transform_labels={'N':'Symmetry','NW':'Object','NE':'Component','W':'World',
                       'E':'Snap','SW':'Axis','SE':'Keep Spacing','S':'Select'}
 
     def settings(center='views',primary=False):
@@ -311,7 +336,10 @@ def suite():
             if left not in rectangles or right not in rectangles:
                 continue
             actual=rectangles[right][0]-rectangles[left][2]-1
-            expected=reference[right][0]-reference[left][2]-1
+            # Views has no visible NE command. Its measured lower diagonal pair
+            # supplies the symmetric upper-row clearance; no synthetic button width.
+            ref_left,ref_right=('SW','SE') if right not in reference else (left,right)
+            expected=reference[ref_right][0]-reference[ref_left][2]-1
             check(abs(actual-expected)<=3*scale,
                   label+' actual inner-edge clearance differs from Views: '+repr((left,actual,expected)))
             values.append((left,actual,expected))
@@ -363,9 +391,9 @@ def suite():
         for key in ('Q','W','E','R'):
             labels=dict(q_labels if key=='Q' else transform_labels)
             if key=='E':
-                labels.update(E='Gimbal',SW='Custom Axis',SE='Discrete Rotate')
+                labels.update(E='Gimbal',SW='Custom',SE='Discrete Rotate')
             elif key=='R':
-                labels.update(E='Discrete Scale',SE='Relative')
+                labels.update(E='Snap Scale',SE='Relative')
             yield from begin(key)
             actual,_=observe_ring(tag+'-'+key,labels)
             gaps(actual,reference,key)
@@ -375,8 +403,7 @@ def suite():
                 event('MOUSEMOVE','NOTHING',point)
                 yield from settle(7)
                 child=capture(tag+'-W-axis-child')
-                for label in ('Parent Axis','Component Axis','Live Object Axis','Rotation Axis',
-                              'Custom Axis','View (Blender)','Tool Options'):
+                for label in ('Parent','Normal','Live Object Axis','Along Rotation Axis','Custom'):
                     semantic_icon(child,whole_region(),label)
                 event('ESC');event('ESC','RELEASE')
                 event('LEFTMOUSE','RELEASE');event(key,'RELEASE')
@@ -461,8 +488,11 @@ def suite():
 
         # Native radio and checkbox state get their own glyph, in addition to
         # the semantic icon. Enter through Space's actual configured center.
-        for menu,labels in (('center.controls.style',('Zones and Menu Rows','Zones Only','Center Zone Only')),
-                            ('center.controls.rows',('Show Common Menus','Show Pane Specific Menus','Show Modeling'))):
+        for menu,labels in (('center.controls.style',('Zones and Menu Rows','Zones Only','Center Zone Only',
+                                                     'Center Zone RMB Popups')),
+                            ('center.controls.modeling',('Show/Hide Modeling',)),
+                            ('context.create_menu.polygon_display_all',
+                             ('Backface Culling on for All Polys','Backface Culling off for All Polys'))):
             settings(menu)
             yield from settle(6)
             yield from begin()
@@ -471,7 +501,8 @@ def suite():
             # treating their contiguous backdrops as one tall rectangle.
             rect=whole_region()
             for label in labels:
-                semantic_icon(pixels,rect,label,state=menu.endswith('.style'))
+                semantic_icon(pixels,rect,label,state=menu.startswith('center.controls.'),
+                              disabled_state=label=='Center Zone RMB Popups')
             yield from cancel()
         settings()
 
@@ -483,10 +514,94 @@ def suite():
         yield from begin()
         quad_reference,_=observe_ring(tag+'-quad-views',views_labels)
         yield from cancel()
-        yield from begin('W')
-        actual,_=observe_ring(tag+'-quad-W',transform_labels)
-        gaps(actual,quad_reference,'quad W')
-        yield from cancel('W')
+        if requested_scale==2.0:
+            # This short physical quad cannot fit the complete W ring and its
+            # new paged companion at 2x. Rejection must be atomic, including the
+            # held gesture; record the actual dimensions instead of hiding it.
+            print('QUAD_W_UNSUPPORTED_BOUNDS','physical',region.width,region.height,
+                  'logical',region.width/scale,region.height/scale,'scale',scale,flush=True)
+            check(region.height/scale<250,'unsupported W fixture is no longer a short quad region')
+            def scene_tool_state():
+                with override():
+                    active=bpy.context.view_layer.objects.active
+                    objects=[]
+                    for obj in sorted(bpy.context.scene.objects,key=lambda item:item.name):
+                        mesh=() if obj.type!='MESH' else (
+                            tuple((tuple(v.co),v.select,v.hide) for v in obj.data.vertices),
+                            tuple((tuple(e.vertices),e.select,e.hide) for e in obj.data.edges),
+                            tuple((tuple(f.vertices),f.select,f.hide) for f in obj.data.polygons))
+                        objects.append((obj.as_pointer(),obj.name,obj.mode,obj.select_get(),
+                                        obj.hide_get(),obj.hide_viewport,
+                                        tuple(tuple(row) for row in obj.matrix_world),
+                                        obj.parent.as_pointer() if obj.parent else None,
+                                        tuple((m.name,m.type) for m in obj.modifiers),mesh))
+                    tools=[]
+                    for mode in ('OBJECT','EDIT_MESH'):
+                        tool=bpy.context.workspace.tools.from_space_view3d_mode(mode,create=False)
+                        tools.append(None if tool is None else tool.idname)
+                    return (bpy.context.mode,active.as_pointer() if active else None,
+                            tuple(objects),tuple(tools),hotbox_runtime.recent.items())
+            before=scene_tool_state()
+            event('MOUSEMOVE','NOTHING',origin)
+            event('W')
+            yield from settle(12)
+            check([op.bl_idname for op in win.modal_operators]==['VIEW3D_OT_axismeld_hotbox'],
+                  'W press must own its ordinary invisible hold phase')
+            held=scene_tool_state()
+            print('QUAD_W_STATE_BEFORE',repr(before),flush=True)
+            print('QUAD_W_STATE_HELD',repr(held),flush=True)
+            check(held[:3]==before[:3] and held[4]==before[4],
+                  'W hold phase changed scene/selection/Recent before display')
+            check(held[3][0]=='builtin.move','ordinary W press did not activate Move')
+            before=held
+            event('LEFTMOUSE')
+            yield from settle(9)
+            capture(tag+'-quad-W-unsupported')
+            check([op.bl_idname for op in win.modal_operators]==['VIEW3D_OT_axismeld_hotbox_release_guard'],
+                  'layout rejection must retain only the physical release guard')
+            print('QUAD_W_STATE_FAILED',repr(scene_tool_state()),flush=True)
+            check(scene_tool_state()==before,'unsupported short W display changed normal held scene/tool/Recent')
+            event('LEFTMOUSE','RELEASE');event('W','RELEASE')
+            yield from settle(6)
+            print('QUAD_W_STATE_RELEASED',repr(scene_tool_state()),flush=True)
+            check(not list(win.modal_operators) and scene_tool_state()==before,
+                  'unsupported short W release left handler or scene/tool/Recent changes')
+            yield from begin()
+            observe_ring(tag+'-quad-views-after-W-unsupported',views_labels)
+            yield from cancel()
+            check(scene_tool_state()==before,'next Views cancellation changed scene/tool/Recent')
+            print('PASS 2x short quad W safely unsupported; release and next Views recovered',flush=True)
+
+            # Keep the same real quad, increase logical room through the public
+            # UI scale preference, and measure both rings afresh at that scale.
+            bpy.context.preferences.view.ui_scale=1.5
+            yield from settle(10)
+            region=min((r for r in area.regions if r.type=='WINDOW'),key=lambda r:(r.y,r.x))
+            scale=bpy.context.preferences.system.ui_scale
+            check(abs(scale-1.5)<.01,'bounded W supplement did not apply actual 1.5x scale')
+            print('QUAD_W_SUPPORTED_BOUNDS','physical',region.width,region.height,
+                  'logical',region.width/scale,region.height/scale,'scale',scale,flush=True)
+            yield from begin()
+            roomy_reference,_=observe_ring(tag+'-quad-1.5-views',views_labels)
+            yield from cancel()
+            yield from begin('W')
+            actual,_=observe_ring(tag+'-quad-1.5-W',transform_labels)
+            gaps(actual,roomy_reference,'quad W 1.5x complete composition')
+            pixels=capture(tag+'-quad-1.5-W-companion')
+            companion=companion_rect(pixels)
+            semantic_icon(pixels,companion,'Selection Constraints')
+            yield from cancel('W')
+            bpy.context.preferences.view.ui_scale=2.0
+            yield from settle(10)
+            region=min((r for r in area.regions if r.type=='WINDOW'),key=lambda r:(r.y,r.x))
+            scale=bpy.context.preferences.system.ui_scale
+            check(abs(scale-2.0)<.01,'quad Object boundary did not restore actual 2x scale')
+            origin[:]=[region.x+region.width/2,region.y+region.height/2]
+        else:
+            yield from begin('W')
+            actual,_=observe_ring(tag+'-quad-W',transform_labels)
+            gaps(actual,quad_reference,'quad W')
+            yield from cancel('W')
         if requested_scale==1.0:
             yield from begin(None,'RIGHTMOUSE',True)
             actual,_=observe_ring(tag+'-quad-object',object_labels)

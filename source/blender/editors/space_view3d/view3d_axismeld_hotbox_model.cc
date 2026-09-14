@@ -196,11 +196,12 @@ struct Parser {
     if (dict->lookup("indicator") || dict->lookup("checked")) {
       const auto checked = dict->lookup_bool("checked");
       const bool readonly_workflow = kind == "disabled" && !out.enabled && out.command.empty() &&
-                                     creation_workflow_indicator(out.id);
+                                     !unavailable_indicator(out.id).empty();
       if ((kind != "command" && !readonly_workflow) ||
           !text(*dict, "indicator", out.indicator) || !checked ||
           (out.indicator != "radio" && out.indicator != "checkbox") ||
-          (readonly_workflow && out.indicator != "checkbox"))
+          (readonly_workflow && (out.indicator != unavailable_indicator(out.id) ||
+                                (*checked && out.id != "context.create_menu.exit_on_completion"))))
         return false;
       out.checked = *checked;
     }
@@ -230,7 +231,8 @@ struct Parser {
         out.kind = MenuKind::Command;
         if ((!commands.contains(out.command) &&
              !modeling_root_allows_command(object_modeling_root, out.command) &&
-             !object_menu_command_registered(out.command)) ||
+             !object_menu_command_registered(out.command) &&
+             !creation_allows_command(out.id, out.command)) ||
             !out.value.empty())
           return false;
       }
@@ -349,16 +351,15 @@ bool parse_menu_snapshot(const std::string_view json, MenuSnapshot &out, std::st
     next.menus.push_back(std::move(node));
   }
   const char *groups[] = {"common", "pane", "center", "modeling"};
-  if (next.menus.size() < 4 || next.menus.size() > 6)
+  if (next.menus.size() < 4 || next.menus.size() > 4 + std::size(companion_roots)) {
     return false;
-  if (next.menus.size() >= 5 &&
-      (next.menus[4].id != object_modeling_menu || next.menus[4].kind != MenuKind::Menu ||
-       next.menus[4].presentation != "list"))
-    return false;
-  if (next.menus.size() == 6 &&
-      (next.menus[5].id != creation_menu || next.menus[5].kind != MenuKind::Menu ||
-       next.menus[5].presentation != "list"))
-    return false;
+  }
+  for (size_t i = 4; i < next.menus.size(); i++) {
+    if (next.menus[i].id != companion_roots[i - 4].second ||
+        next.menus[i].kind != MenuKind::Menu || next.menus[i].presentation != "list") {
+      return false;
+    }
+  }
   for (int i = 0; i < 4; i++) {
     if (next.menus[i].id != groups[i] || next.menus[i].kind != MenuKind::Menu)
       return false;

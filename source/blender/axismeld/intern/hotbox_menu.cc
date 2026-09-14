@@ -9,7 +9,7 @@
 namespace blender::axismeld {
 MenuRadioState menu_radio_state(const MenuSnapshot &snapshot, const MenuNode &node)
 {
-  if (node.kind == MenuKind::Command && node.indicator == "radio") {
+  if ((node.kind == MenuKind::Command || node.kind == MenuKind::Disabled) && node.indicator == "radio") {
     return node.checked ? MenuRadioState::Selected : MenuRadioState::Unselected;
   }
   if (node.kind != MenuKind::Setting) {
@@ -812,6 +812,19 @@ class LayoutBuilder {
         }
       }
       if (ellipse(owner, anchor, depth, items, 0, style, true)) {
+        if (!find_node(owner.children, "views.camera")) {
+          for (const MenuRect &item : result.rects) {
+            if (item.id == "views.left") {
+              const MenuRect &center = result.return_regions.back();
+              MenuRect empty = item;
+              empty.id = "views.camera";
+              empty.x = 2 * (center.x + center.width / 2) - item.x - item.width;
+              empty.interactive = false;
+              result.marking_gaps.push_back(empty);
+              break;
+            }
+          }
+        }
         return;
       }
       // Small panes retain the established seven-direction gestures, not tiny targets.
@@ -1044,11 +1057,14 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
                            std::find(open_path.begin(), open_path.end(), item.id) ==
                                open_path.end();
     }
-    if (const auto companion_id = companion_root(tool_root); !companion_id.empty()) {
+    if (const auto companion_id = active_companion_root(open_path); !companion_id.empty()) {
       if (const MenuNode *companion = find_node(snapshot.menus, std::string(companion_id))) {
-        build.companion(*companion, companion_path);
+        build.companion(*companion,
+            !companion_path.empty() && companion_path.front() == companion_id ? companion_path :
+                                                                               std::vector<std::string>{});
       }
     }
+    if (!build.result.supported) { return {{}, false}; }
     build.split_options(snapshot);
     return build.result;
   }
@@ -1207,14 +1223,14 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
                                open_path.end();
     }
   }
-  for (const auto &root : open_path) {
-    if (const auto companion_id = companion_root(root); !companion_id.empty()) {
-      if (const MenuNode *companion = find_node(snapshot.menus, std::string(companion_id))) {
-        build.companion(*companion, companion_path);
-      }
-      break;
+  if (const auto companion_id = active_companion_root(open_path); !companion_id.empty()) {
+    if (const MenuNode *companion = find_node(snapshot.menus, std::string(companion_id))) {
+      build.companion(*companion,
+          !companion_path.empty() && companion_path.front() == companion_id ? companion_path :
+                                                                             std::vector<std::string>{});
     }
   }
+  if (!build.result.supported) { return {{}, false}; }
   build.split_options(snapshot);
   return build.result;
 }

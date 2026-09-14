@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 """Run native hotbox acceptance in a disposable hidden GUI process."""
 import argparse
+import hashlib
 import os
 from pathlib import Path
 import subprocess
@@ -11,9 +12,15 @@ import tempfile
 parser = argparse.ArgumentParser()
 parser.add_argument('--blender', required=True)
 parser.add_argument('--artifacts', help='Optional directory for isolated factory-scene screenshots')
-parser.add_argument('--suite', choices=('maya-companion', 'icons', 'object-menu', 'object-modeling', 'context-modeling', 'modeling', 'create', 'components', 'tools', 'hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection', 'appearance'), default='hotbox')
+parser.add_argument('--suite', choices=('maya-content-state', 'maya-content', 'maya-companion', 'icons', 'object-menu', 'object-modeling', 'context-modeling', 'modeling', 'create', 'components', 'tools', 'hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection', 'appearance'), default='hotbox')
 args = parser.parse_args()
+binary = Path(args.blender).resolve()
+with binary.open("rb") as stream:
+    digest = hashlib.file_digest(stream, "sha256").hexdigest().upper()
+print("AXISMELD_TEST_BINARY", str(binary), "SHA256", digest, "SUITE", args.suite, flush=True)
 suite_script, pass_marker = {
+    'maya-content-state': ('axismeld_maya_content_ui_events.py', b'AXISMELD_MAYA_CONTENT_STATE_EVENTS_PASS'),
+    'maya-content': ('axismeld_maya_content_ui_events.py', b'AXISMELD_MAYA_CONTENT_UI_EVENTS_PASS'),
     'maya-companion': ('axismeld_maya_companion_events.py', b'AXISMELD_MAYA_COMPANION_UI_TEST_PASS'),
     'icons': ('axismeld_hotbox_icons_events.py', b'AXISMELD_HOTBOX_ICONS_EVENTS_PASS'),
     'object-menu': ('axismeld_object_menu_events.py', b'AXISMELD_OBJECT_MENU_EVENTS_PASS'),

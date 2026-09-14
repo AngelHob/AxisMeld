@@ -23,25 +23,25 @@ class ToolHotboxTest(unittest.TestCase):
         for tool in ('select', 'move', 'rotate', 'scale'):
             self.assertIn('tools.' + tool, tuple(nodes))
         self.assertEqual({n['direction']: n['label'] for n in nodes['tools.move']['children']},
-                         {'W': 'Global', 'NW': 'Local', 'NE': 'Normal Average',
+                         {'W': 'World', 'NW': 'Object', 'NE': 'Component',
                           'SE': 'Keep Spacing', 'N': 'Symmetry', 'S': 'Select',
                           'E': 'Snap', 'SW': 'Axis'})
         self.assertLessEqual(len(nodes), hotbox_runtime.MAX_NODES)
-        self.assertEqual(len(menus), 6)
-        self.assertEqual(menus[-2]['id'], 'context.modeling_object_menu')
-        self.assertEqual(menus[-1]['id'], 'context.create_menu')
+        self.assertEqual(len(menus), 18)
+        self.assertEqual(menus[4]['id'], 'context.modeling_object_menu')
+        self.assertEqual(menus[5]['id'], 'context.create_menu')
 
     def test_other_tool_slots_are_classic_maya_and_placeholders_never_dispatch(self):
         nodes = {n['id']: n for n in walk(hotbox_catalog.default_catalog())}
         for tool, expected in {
-            'select': {'N': 'Symmetry', 'NE': 'Drag Select', 'E': 'Camera Based Selection',
-                       'SE': 'Clear Selection', 'S': 'Select', 'SW': 'Lasso Select',
-                       'W': 'Paint Selection', 'NW': 'Marquee Select'},
-            'rotate': {'N': 'Symmetry', 'NE': 'Normal Average', 'E': 'Gimbal',
-                       'SE': 'Discrete Rotate', 'S': 'Select', 'SW': 'Custom Axis',
-                       'W': 'Global', 'NW': 'Local'},
-            'scale': {'N': 'Symmetry', 'NE': 'Normal Average', 'E': 'Discrete Scale',
-                      'SE': 'Relative', 'S': 'Select', 'SW': 'Axis', 'W': 'Global', 'NW': 'Local'},
+            'select': {'N': 'Symmetry', 'NE': 'Drag', 'E': 'Camera-Based Selection',
+                       'SE': 'Clear Selection', 'S': 'Select', 'SW': 'Lasso',
+                       'W': 'Paint Select', 'NW': 'Marquee'},
+            'rotate': {'N': 'Symmetry', 'NE': 'Component', 'E': 'Gimbal',
+                       'SE': 'Discrete Rotate', 'S': 'Select', 'SW': 'Custom',
+                       'W': 'World', 'NW': 'Object'},
+            'scale': {'N': 'Symmetry', 'NE': 'Component', 'E': 'Snap Scale',
+                      'SE': 'Relative', 'S': 'Select', 'SW': 'Axis', 'W': 'World', 'NW': 'Object'},
         }.items():
             self.assertEqual({n['direction']: n['label'] for n in nodes['tools.' + tool]['children']}, expected)
         for node in nodes.values():
@@ -95,10 +95,10 @@ class ToolHotboxTest(unittest.TestCase):
             select = nodes[p + '.select']
             self.assertEqual(select['presentation'], 'radial')
             self.assertEqual({n['direction']: n['label'] for n in select['children']},
-                             {'N': 'Preselect Highlight', 'NE': 'Highlight Closest',
-                              'E': 'Highlight Backfaces', 'SE': 'Container Centric',
-                              'S': 'Soft Selection', 'SW': 'Clear Selection',
-                              'W': 'Camera Based Selection', 'NW': 'Marquee Select'})
+                             {'N': 'Preselection Highlight', 'NE': 'Highlight Nearest Component',
+                              'E': 'Highlight Backfaces', 'SE': 'Asset Centric',
+                              'S': 'Soft Select', 'SW': 'Clear Selection',
+                              'W': 'Camera-Based Selection', 'NW': 'Marquee'})
             self.assertEqual(nodes[p + '.select.clear']['command'], 'selection.clear')
             self.assertEqual(nodes[p + '.select.soft']['presentation'], 'radial')
             self.assertEqual(nodes[p + '.symmetry']['presentation'], 'radial')

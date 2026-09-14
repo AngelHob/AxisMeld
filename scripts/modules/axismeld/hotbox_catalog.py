@@ -2,11 +2,11 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 """Declarative AxisMeld hotbox menu catalog without Blender dependencies."""
 from copy import deepcopy
-from .context_hotbox import component_menu
-from .context_modeling_hotbox import modeling_menus
+from .context_hotbox import component_menu, component_companion
+from .context_modeling_hotbox import modeling_menus, modeling_companions
 from .object_modeling_hotbox import object_modeling_menu, object_modeling_companion
 from .creation_hotbox import CREATE_COMMANDS, creation_menu, creation_companion
-from .tool_hotbox import MENU_COMMANDS, tool_menus
+from .tool_hotbox import MENU_COMMANDS, tool_menus, tool_companions
 
 
 _VIEW_REPLAYABLE = frozenset({
@@ -78,7 +78,7 @@ def _setting(identifier, label, setting, value):
 def _view_items(prefix):
     items = (
         ('perspective', 'Perspective View', 'view.perspective', True),
-        ('side', 'Right View', 'view.side', True),
+        ('side', 'Side View', 'view.side', True),
         ('bottom', 'Bottom View', 'view.bottom', True),
         ('front', 'Front View', 'view.front', True),
         ('back', 'Back View', 'view.back', True),
@@ -90,12 +90,66 @@ def _view_items(prefix):
             for suffix, label, command, operational in items]
 
 
-def _style_menu(prefix):
-    return _menu(prefix, 'Hotbox Style', (
+def _style_menu(prefix, *, controls=False):
+    children = [
         _setting(f'{prefix}.rows', 'Zones and Menu Rows', 'style', 'rows'),
         _setting(f'{prefix}.zones', 'Zones Only', 'style', 'zones'),
         _setting(f'{prefix}.center', 'Center Zone Only', 'style', 'center'),
-    ))
+    ]
+    if controls:
+        children += [_separator(prefix + '.separator.popups'),
+                     _control_unavailable(prefix + '.rmb_popups', 'Center Zone RMB Popups')]
+    return _node(prefix, 'menu', 'Hotbox Style', children=children, presentation='list')
+
+
+CONTROL_UNAVAILABLE_INDICATORS = {
+    **{f'center.controls.{domain}.toggle': 'checkbox'
+       for domain in ('rigging', 'animation', 'fx', 'rendering')},
+    'center.controls.custom': 'checkbox',
+    'center.controls.style.rmb_popups': 'checkbox',
+    'center.controls.window.main': 'checkbox',
+    'center.controls.window.pane': 'checkbox',
+}
+
+
+def _control_unavailable(identifier, label):
+    result = _disabled(identifier, label, 'Maya control state not adapted')
+    indicator = CONTROL_UNAVAILABLE_INDICATORS.get(identifier)
+    if indicator:
+        result.update(indicator=indicator, checked=False)
+    return result
+
+
+def _controls_menu():
+    p = 'center.controls'
+    children = []
+    for domain in ('modeling', 'rigging', 'animation', 'fx'):
+        title = 'FX' if domain == 'fx' else domain.title()
+        toggle = (_setting(p + '.rows.modeling', 'Show/Hide Modeling', 'row.modeling', 'toggle')
+                  if domain == 'modeling' else _control_unavailable(p + '.' + domain + '.toggle', 'Show/Hide ' + title))
+        children.append(_node(p + '.' + domain, 'menu', 'Show ' + title, presentation='list', children=(
+            _control_unavailable(p + '.' + domain + '.only', title + ' Only'), toggle)))
+    children += [_control_unavailable(p + '.show_all', 'Show All'),
+                 _control_unavailable(p + '.hide_all', 'Hide All'),
+                 _node(p + '.rendering', 'menu', 'Show Rendering', presentation='list', children=(
+                     _control_unavailable(p + '.rendering.only', 'Rendering Only'),
+                     _control_unavailable(p + '.rendering.toggle', 'Show/Hide Rendering'))),
+                 _setting(p + '.rows.common', 'Show Common Menus', 'row.common', 'toggle'),
+                 _setting(p + '.rows.pane', 'Show Pane Specific Menus', 'row.pane', 'toggle'),
+                 _control_unavailable(p + '.custom', 'Show Custom Menu Set Menus'),
+                 _node(p + '.transparency', 'menu', 'Set Transparency', presentation='list', children=tuple(
+                     _setting(f'{p}.transparency.{value}', f'{value}%', 'transparency', str(value))
+                     for value in (0, 25, 50, 75, 100))),
+                 _style_menu(p + '.style', controls=True), _separator(p + '.separator.window'),
+                 _node(p + '.window', 'menu', 'Window Options', presentation='list', children=(
+                     _control_unavailable(p + '.window.main', 'Show Main Menubar'),
+                     _control_unavailable(p + '.window.pane', 'Show Pane Menubars'))),
+                 _separator(p + '.separator.axismeld'),
+                 _node(p + '.buttons', 'menu', 'AxisMeld Center Mouse Buttons', presentation='list', children=(
+                     _center_button_menu('LEFTMOUSE', 'Left Mouse Button'),
+                     _center_button_menu('MIDDLEMOUSE', 'Middle Mouse Button'),
+                     _center_button_menu('RIGHTMOUSE', 'Right Mouse Button')))]
+    return _node(p, 'menu', 'Hotbox Controls', children=children, presentation='list')
 
 
 _CENTER_MENU_CHOICES = (
@@ -154,6 +208,11 @@ def _catalog():
             _command('common.modify.scale', 'Scale Tool', 'transform.scale'),
             _node('common.modify.tools', 'menu', 'Tool Settings',
                   children=tool_menus(_node), presentation='list'),
+            _node('common.modify.view_orientations', 'menu', 'Blender View Orientations',
+                  presentation='list', children=tuple(
+                      _command(f'common.modify.view_orientations.{tool}', title + ' View Orientation',
+                               f'orientation.{tool}.view')
+                      for tool, title in (('move', 'Move'), ('rotate', 'Rotate'), ('scale', 'Scale')))),
         )),
         _disabled('common.display', 'Display'),
         _disabled('common.windows', 'Windows'),
@@ -180,25 +239,8 @@ def _catalog():
     ))
 
     views_children = _view_items('views')
-    views_children.extend((_separator('views.separator.style'), _style_menu('views.style'),
-                           _disabled('views.camera', 'New Camera')))
-    controls = _menu('center.controls', 'Hotbox Controls', (
-        _menu('center.controls.rows', 'Menu Rows', (
-            _setting('center.controls.rows.common', 'Show Common Menus', 'row.common', 'toggle'),
-            _setting('center.controls.rows.pane', 'Show Pane Specific Menus', 'row.pane', 'toggle'),
-            _setting('center.controls.rows.modeling', 'Show Modeling', 'row.modeling', 'toggle'),
-        )),
-        _style_menu('center.controls.style'),
-        _menu('center.controls.transparency', 'Transparency', tuple(
-            _setting(f'center.controls.transparency.{value}', f'{value}%', 'transparency', str(value))
-            for value in (0, 25, 50, 75, 100)
-        )),
-        _menu('center.controls.buttons', 'Center Mouse Buttons', (
-            _center_button_menu('LEFTMOUSE', 'Left Mouse Button'),
-            _center_button_menu('MIDDLEMOUSE', 'Middle Mouse Button'),
-            _center_button_menu('RIGHTMOUSE', 'Right Mouse Button'),
-        )),
-    ))
+    views_children.append(_style_menu('views.style'))
+    controls = _controls_menu()
     center = _menu('center', 'Center', (
         _menu('center.recent', 'Recent Commands', ()),
         _menu('views', 'AxisMeld', views_children),
@@ -220,7 +262,8 @@ def _catalog():
     ))
     from .modeling_catalog import extend_catalog
     return extend_catalog((common, pane, center, modeling, object_modeling_companion(_node),
-                           creation_companion(_node)), _node)
+                           creation_companion(_node), component_companion(_node),
+                           *modeling_companions(_node), *tool_companions(_node)), _node)
 
 
 _DEFAULT_CATALOG = _catalog()

@@ -9,7 +9,8 @@ CREATE_MENU_COMMANDS = {
     CREATE_MENU + '.pyramid': 'mesh.create_pyramid',
     CREATE_MENU + '.prism': 'mesh.create_prism',
     CREATE_MENU + '.type': 'object.create_text',
-    CREATE_MENU + '.polygon_display_all.backface_culling': 'display.backface_culling',
+    CREATE_MENU + '.polygon_display_all.backface_culling_on': 'display.backface_culling_on',
+    CREATE_MENU + '.polygon_display_all.backface_culling_off': 'display.backface_culling_off',
 }
 CREATE_WORKFLOW_INDICATORS = frozenset({CREATE_MENU + '.interactive_creation',
                                        CREATE_MENU + '.exit_on_completion'})
@@ -66,15 +67,22 @@ def creation_companion(node):
 
     display = node(CREATE_MENU + '.polygon_display_all', 'menu', 'Polygon Display All',
                    presentation='list', children=(
-        row('polygon_display_all.backface_culling', 'Backface Culling',
-            reason='Current viewport backface culling; not Maya per-object polygon display'),
-        *(row('polygon_display_all.' + suffix, label,
-              reason='M2c-P05.' + suffix + ': All-object display adaptation not implemented')
-          for suffix, label in (('border_edges', 'Border Edges'),
-                                ('texture_border_edges', 'Texture Border Edges'),
-                                ('face_normals', 'Face Normals'), ('vertex_normals', 'Vertex Normals'),
-                                ('face_centers', 'Face Centers'), ('hidden_triangles', 'Hidden Triangles'),
-                                ('vertices', 'Vertices'), ('reset', 'Reset Polygon Display'))),
+        row('polygon_display_all.backface_culling_on', 'Backface Culling on for All Polys',
+            reason='Set current viewport backface culling on; not Maya global polygon display'),
+        row('polygon_display_all.backface_culling_off', 'Backface Culling off for All Polys',
+            reason='Set current viewport backface culling off; not Maya global polygon display'),
+        sep('display_culling'),
+        row('polygon_display_all.border_edges', 'Toggle All Geometry Border Edges'),
+        row('polygon_display_all.texture_border_edges', 'Toggle All Texture Border Edges'),
+        sep('display_borders'),
+        row('polygon_display_all.face_normals', 'Toggle All Face Normals'),
+        row('polygon_display_all.vertex_normals', 'Toggle All Vertex Normals'),
+        sep('display_normals'),
+        row('polygon_display_all.face_centers', 'Toggle All Face Centers'),
+        row('polygon_display_all.hidden_triangles', 'Toggle All Hidden Triangles'),
+        row('polygon_display_all.vertices', 'Toggle All Vertices'),
+        sep('display_vertices'),
+        row('polygon_display_all.reset', 'Reset Display for All Polys'),
     ))
     return node(CREATE_MENU, 'menu', 'Polygon Primitives', presentation='list', children=(
         row('platonic', 'Platonic Solid', options=True,

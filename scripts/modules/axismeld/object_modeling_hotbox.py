@@ -140,7 +140,7 @@ def object_modeling_companion(node):
             reason=('Exact Boolean modifier; requires exactly two selected Meshes; originals remain' if suffix in
                     ('union', 'difference', 'difference_reverse', 'intersection') else
                     'M3-P-MESH.' + suffix + ': Maya Boolean mode not implemented'))
-        for suffix, label in (('union', 'Union'), ('difference', 'Difference A - B'),
+        for suffix, label in (('union', 'Union'), ('difference', 'Difference (A - B)'),
                               ('difference_reverse', 'Difference B - A'), ('intersection', 'Intersection'),
                               ('slice', 'Slice'), ('hole_punch', 'Hole Punch'),
                               ('cut_out', 'Cut Out'), ('split_edges', 'Split Edges'))))
@@ -159,8 +159,8 @@ def object_modeling_companion(node):
             row('smooth', 'Smooth', options=True, reason='Add Subdivision Surface modifier to active Mesh; other selected objects are unchanged'),
             row('unsmooth', 'Unsmooth', options=True), row('subdiv_proxy', 'Subdiv Proxy', options=True),
             row('crease', 'Crease Tool', options=True), sep('crease'),
-            row('project_curve', 'Project Curve on Mesh', options=True),
-            row('split_projected', 'Split Mesh with Projected Curve', options=True), sep('projected'),
+            row('project_curve', 'Project Curve on mesh', options=True),
+            row('split_projected', 'Split mesh with projected curve', options=True), sep('projected'),
             row('mirror', 'Mirror', options=True, reason='Add Mirror modifier to active Mesh; default X bisect and merge'), mapping, sep('mapping'),
             row('triangulate', 'Triangulate'), row('quadrangulate', 'Quadrangulate', options=True),
             row('reduce', 'Reduce', options=True, reason='Add Decimate modifier to active Mesh; default ratio 50 percent'),
@@ -168,7 +168,7 @@ def object_modeling_companion(node):
             row('retopologize', 'Retopologize', options=True, reason='M2d-P02.Retopologize: Target-pinned QuadriFlow confirmation not implemented; native entry remains in Mesh menu'),
             sep('retopologize'), row('transfer_order', 'Transfer Vertex Order'), sep('transfer'),
             row('separate', 'Separate'), row('combine', 'Combine', options=True, reason='Join selected editable Meshes into the active Mesh'), booleans,
-            sep('booleans'), row('cleanup', 'Cleanup', reason='M2d-P02.Cleanup: Whole-object cleanup parameters are not implemented; individual Edit cleanup actions remain in Mesh menus'),
+            sep('booleans'), row('cleanup', 'Cleanup...', reason='M2d-P02.Cleanup: Whole-object cleanup parameters are not implemented; individual Edit cleanup actions remain in Mesh menus'),
             row('connect', 'Connect Tool', options=True),
             row('quad_draw', 'Quad Draw Tool', options=True, reason='Blender Poly Build adaptation; not Maya Quad Draw algorithm'),
             sep('quad_draw'), display,

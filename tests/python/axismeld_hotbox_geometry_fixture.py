@@ -71,7 +71,7 @@ def view_page(anchor, labels, measure, bounds, scale):
     for compact, with_style in ((False, True), (True, True), (True, False)):
         names = (['Persp', 'Side', 'Bottom', 'Front', 'Back', 'Top', 'Left'] if compact else
                  ['Perspective View', 'Right View', 'Bottom View', 'Front View',
-                  'Back View', 'Top View', 'Left View', 'New Camera'])
+                  'Back View', 'Top View', 'Left View'])
         widths = [measure(label) + 20 + 16 for label in names]
         widths = [max(widths)] * len(widths)
         for ry in (0,):
@@ -105,8 +105,10 @@ def view_page(anchor, labels, measure, bounds, scale):
                       'previous': None, 'next': None, 'capacity': len(names), 'first': 0}
             for i in range(7):
                 result['items'][i] = translated(rectangles[i+1])
-            if not compact:
-                result['items'][9] = translated(rectangles[8])
+            # Legacy index9 is the non-drawn NE cancellation gap. Mirror
+            # the actual NW rectangle without treating it as a visible item.
+            nw=rectangles[7]
+            result['items'][9]=translated((-nw[0]-nw[2],nw[1],nw[2],nw[3]))
             if with_style:
                 result['items'][8] = translated(rectangles[-1])
             return result
@@ -143,29 +145,39 @@ def native_page(anchor, labels, measure, bounds, scale=1, marking_origin=None, f
                 return cx, cy
         return None
 
-    for capacity in range(len(labels), 0, -1):
-        paged = capacity < len(labels)
-        h = (capacity + (2 if paged else 0))*24
-        if h > bh-24:
-            continue
-        origin = position(h)
-        if origin is None:
-            continue
-        x, y = origin
-        offset = min(max(first, 0), len(labels)-capacity) if paged else 0
-        items = [None]*len(labels)
-        row = 0
-        previous = next_row = None
+    heights=[6 if label=='' else 24 for label in labels]
+    for room in range(int(bh-24),5,-6):
+        paged=sum(heights)>room
         if paged:
-            previous = (x*scale, (y+h-(row+1)*24)*scale, w*scale, 24*scale)
-            row += 1
-        for index in range(offset, offset+capacity):
-            items[index] = (x*scale, (y+h-(row+1)*24)*scale, w*scale, 24*scale)
-            row += 1
+            available=room-48
+            maximum=len(labels)
+            used=0
+            while maximum>0 and used+heights[maximum-1]<=available:
+                maximum-=1;used+=heights[maximum]
+            if maximum==len(labels):continue
+            offset=min(max(first,0),maximum)
+            end=offset;used=0
+            while end<len(labels) and used+heights[end]<=available:
+                used+=heights[end];end+=1
+            h=used+48
+        else:
+            offset=0;end=len(labels);h=sum(heights)
+        if end==offset:continue
+        origin=position(h)
+        if origin is None:continue
+        x,y=origin
+        items=[None]*len(labels)
+        top=y+h
+        previous=next_row=None
         if paged:
-            next_row = (x*scale, (y+h-(row+1)*24)*scale, w*scale, 24*scale)
-        return {'items': items, 'previous': previous, 'next': next_row,
-                'capacity': capacity, 'first': offset}
+            top-=24;previous=(x*scale,top*scale,w*scale,24*scale)
+        for index in range(offset,end):
+            top-=heights[index]
+            items[index]=(x*scale,top*scale,w*scale,heights[index]*scale)
+        if paged:
+            top-=24;next_row=(x*scale,top*scale,w*scale,24*scale)
+        return {'items':items,'previous':previous,'next':next_row,'back':None,
+                'capacity':end-offset,'first':offset}
     raise AssertionError(f'Native list cannot fit without covering its entry in {bounds!r}')
 
 

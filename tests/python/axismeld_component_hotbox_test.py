@@ -23,7 +23,10 @@ class ComponentHotboxTest(unittest.TestCase):
         self.assertEqual({d: ring[d]['command'] for d in ('N', 'W', 'S', 'NE')},
                          {'N': 'selection.edge_mode', 'W': 'selection.vertex_mode',
                           'S': 'selection.face_mode', 'NE': 'mode.object'})
-        for direction, reason in [('E', 'deferred-uv'), ('SW', 'M2-vertex-face'), ('SE', 'M2-multi-component')]:
+        self.assertEqual(ring['E']['kind'], 'menu')
+        self.assertEqual([n['label'] for n in ring['E']['children']], ['UV', 'UV Shell'])
+        self.assertTrue(all(not n['enabled'] for n in ring['E']['children']))
+        for direction, reason in [('SW', 'M2-vertex-face'), ('SE', 'M2-multi-component')]:
             self.assertFalse(ring[direction]['enabled'])
             self.assertEqual(ring[direction]['command'], '')
             self.assertIn(reason, ring[direction]['reason'])

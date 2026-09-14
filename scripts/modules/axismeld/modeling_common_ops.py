@@ -386,6 +386,8 @@ def command_state(context, identifier):
     if identifier not in SETTINGS or not _setting_available(context, identifier):
         return None
     owner, attribute, value, kind = SETTINGS[identifier]
+    if kind is None:
+        return None  # Explicit On/Off actions are ordinary rows, not toggle indicators.
     current = getattr(_setting_owner(context, owner), attribute)
     expected = set(value) if isinstance(value, tuple) else value
     return (kind, bool(current) if value is None else current == expected)

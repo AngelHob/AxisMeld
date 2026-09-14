@@ -7,13 +7,17 @@ import logging
 from threading import Lock
 
 from .commands import COMMANDS, PRESET_NAME
-from .tool_hotbox import DIRECTIONS, MENU_COMMANDS
+from .tool_hotbox import (DIRECTIONS, MENU_COMMANDS, ORIENTATIONS,
+                         COMPANION_ROOTS as TOOL_COMPANION_ROOTS,
+                         UNAVAILABLE_INDICATORS as TOOL_UNAVAILABLE_INDICATORS)
 from .creation_hotbox import CREATE_COMMANDS, CREATE_ROOT, CREATE_MENU, CREATE_WORKFLOW_INDICATORS
-from .context_modeling_hotbox import modeling_root
+from .context_hotbox import COMPONENT_MENU, UNAVAILABLE_INDICATORS as COMPONENT_UNAVAILABLE_INDICATORS
+from .context_modeling_hotbox import (modeling_root, MODEL_ROOTS, MODEL_COMPANION_MAP,
+                                     MODEL_COMPANION_ROOTS, MODEL_MENU_COMMANDS)
 from .object_modeling_hotbox import (OBJECT_ROOT, OBJECT_MENU, OBJECT_TOOLS, OBJECT_ACTION_COMMANDS,
                                      OBJECT_MENU_COMMANDS, OBJECT_OPTION_COMMANDS, object_modeling_targets)
 from .modeling_registry import SPECS as MODELING_SPECS
-from .hotbox_catalog import default_catalog, command_policy
+from .hotbox_catalog import default_catalog, command_policy, CONTROL_UNAVAILABLE_INDICATORS
 from .hotbox_profiles import (CANONICAL_ROWS, DEFAULT_APPEARANCE, DEFAULT_SETTINGS, MENU_IDS, MOUSE_BUTTONS,
                               load_hotbox_profiles, resolve_hotbox, save_hotbox_user,
                               validate_settings)
@@ -25,6 +29,12 @@ MAX_JSON_BYTES = 512 * 1024
 MAX_TEXT = 128
 NODE_KINDS = frozenset({'menu', 'command', 'separator', 'disabled', 'setting'})
 NODE_FIELDS = frozenset({'id', 'kind', 'label', 'command', 'enabled', 'reason', 'children'})
+UNAVAILABLE_INDICATORS = {
+    **TOOL_UNAVAILABLE_INDICATORS,
+    **COMPONENT_UNAVAILABLE_INDICATORS,
+    **CONTROL_UNAVAILABLE_INDICATORS,
+    **{identifier: 'checkbox' for identifier in CREATE_WORKFLOW_INDICATORS},
+}
 SETTING_VALUES = {
     'style': frozenset({'rows', 'zones', 'center'}),
     'transparency': frozenset({'0', '25', '50', '75', '100'}),
@@ -312,9 +322,11 @@ def validate_snapshot(value):
     if not all(isinstance(node, dict) for node in menus):
         raise ValueError('root menu groups must be objects')
     canonical = ['common', 'pane', 'center', 'modeling']
+    complete = [*canonical, OBJECT_MENU, CREATE_MENU, COMPONENT_MENU,
+                *MODEL_COMPANION_ROOTS, *TOOL_COMPANION_ROOTS.values()]
     if [node.get('id') for node in menus] not in (canonical, [*canonical, OBJECT_MENU],
-                                                [*canonical, OBJECT_MENU, CREATE_MENU]):
-        raise ValueError('root menus must be canonical, optionally followed by Object and creation companions')
+                                                [*canonical, OBJECT_MENU, CREATE_MENU], complete):
+        raise ValueError('root menus must match a canonical catalog or the complete companion catalog')
     if not all(node.get('kind') == 'menu' for node in menus):
         raise ValueError('root menu groups must have menu kind')
 
@@ -351,9 +363,11 @@ def validate_snapshot(value):
 
         kind = node['kind']
         if 'indicator' in node or 'checked' in node:
-            disabled_workflow = (kind == 'disabled' and identifier in CREATE_WORKFLOW_INDICATORS and
-                                 node.get('indicator') == 'checkbox' and node.get('enabled') is False and
-                                 node.get('command') == '')
+            disabled_workflow = (kind == 'disabled' and
+                                 node.get('indicator') == UNAVAILABLE_INDICATORS.get(identifier) and
+                                 node.get('enabled') is False and node.get('command') == '' and
+                                 (node.get('checked') is False or
+                                  identifier == CREATE_MENU + '.exit_on_completion'))
             if ((kind != 'command' and not disabled_workflow) or node.get('indicator') not in {'radio', 'checkbox'} or
                     type(node.get('checked')) is not bool):
                 raise ValueError('Invalid read-only command indicator')
@@ -506,10 +520,18 @@ def _apply_runtime_capabilities(context, menus):
     # One construction only: aliases share selected-domain counts. Dispatch does
     # not receive this cache and always validates the current scene/selection.
     capability_cache = {}
+    active_model_root = None
+    model_root_resolved = False
     pending = list(menus)
     while pending:
         node = pending.pop()
         pending.extend(node['children'])
+        identifier = node.get('id', '')
+        if identifier == COMPONENT_MENU + '.object':
+            active = getattr(context, 'active_object', None)
+            if active is not None:
+                label = ''.join(' ' if ord(character) < 32 else character for character in active.name)
+                node['label'] = label[:MAX_TEXT - 3] + '...'
         if node['kind'] != 'command' or not node['enabled']:
             continue
         if node['command'] in MODELING_SPECS:
@@ -517,17 +539,37 @@ def _apply_runtime_capabilities(context, menus):
                 context, node['command'], cache=capability_cache)
         else:
             enabled, reason = adapter.available(context, node['command'])
-        identifier = node.get('id', '')
         if identifier.startswith(OBJECT_MENU + '.') and node['command'] not in OBJECT_ACTION_COMMANDS and node['command'] not in OBJECT_TOOLS:
             if not object_modeling_targets(context):
                 enabled, reason = False, 'Select eligible Mesh Objects first; this action does not commit pointer preselection'
+        if identifier in MODEL_MENU_COMMANDS:
+            if not model_root_resolved:
+                active_model_root = modeling_root(context)
+                model_root_resolved = True
+            menu_root = MODEL_COMPANION_MAP.get(active_model_root)
+            if not menu_root or not identifier.startswith(menu_root + '.'):
+                enabled, reason = False, 'Requires the matching selected Mesh component domain'
         node['enabled'] = bool(enabled)
         node['reason'] = (node['reason'] if identifier.startswith((OBJECT_MENU + '.', OBJECT_ROOT + '.',
-                                                                  CREATE_MENU + '.', CREATE_ROOT + '.')) else '') if enabled else _CAPABILITY_REASONS.get(str(reason), str(reason))
+                                                                  CREATE_MENU + '.', CREATE_ROOT + '.',
+                                                                  COMPONENT_MENU + '.',
+                                                                  *(root + '.' for root in (*MODEL_ROOTS, *MODEL_COMPANION_ROOTS))))
+                          else '') if enabled else _CAPABILITY_REASONS.get(str(reason), str(reason))
         if node['command'] in MODELING_SPECS:
             state = adapter.modeling_adapter.command_state(context, node['command'])
             if state is not None:
                 node['indicator'], node['checked'] = state
+        elif node['command'] in ORIENTATIONS:
+            slot, orientation = ORIENTATIONS[node['command']]
+            slots = context.scene.transform_orientation_slots
+            effective = slots[slot] if slots[slot].use else slots[0]
+            node['indicator'] = 'checkbox'
+            node['checked'] = effective.type == orientation
+        elif identifier == 'tools.select.marquee' or identifier in {
+                f'tools.{tool}.select.marquee' for tool in ('select', 'move', 'rotate', 'scale')}:
+            active_tool = context.workspace.tools.from_space_view3d_mode(context.mode, create=False)
+            node['indicator'] = 'checkbox'
+            node['checked'] = active_tool is not None and active_tool.idname == 'builtin.select_box'
     return menus
 
 

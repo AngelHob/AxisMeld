@@ -2,7 +2,7 @@
 
 日期：2026-09-14。来源为本机 Maya 2026 官方菜单、运行时命令身份与默认键位文件，以及本机 Blender 源码。只整理功能身份和差异，没有复制 Autodesk 实现。
 
-新增 562 个语义命令。Maya 去重动作分类：adapted 301；deferred 262；planned 197；dynamic_dependency 3。
+新增 564 个语义命令。Maya 去重动作分类：adapted 301；deferred 262；planned 197；dynamic_dependency 3。
 
 M3 的交付边界是原生能力接入、默认键位核实、逐项映射和确实缺失能力的独立计划；不是 Maya 所有算法完全等价。完整绘制/动画/绑定及 UV 后置。
 
@@ -128,6 +128,8 @@ M3 的交付边界是原生能力接入、默认键位核实、逐项映射和�
 | display.curve_normals / Display > Viewport Settings | Curve Normals / adapted | OBJECT,EDIT_MESH,EDIT_CURVE,EDIT_SURFACE,EDIT_LATTICE / axismeld.m3_setting EXEC | 无AxisMeld专用绑定 / Edit > Adjust Last Operation 或原生属性 | Edits only the named Blender viewport/tool setting; no geometry or temporary hold-key emulation. |
 | display.statistics / Display > Viewport Settings | Statistics / blender | OBJECT,EDIT_MESH,EDIT_CURVE,EDIT_SURFACE,EDIT_LATTICE / axismeld.m3_setting EXEC | 无AxisMeld专用绑定 / Edit > Adjust Last Operation 或原生属性 | Edits only the named Blender viewport/tool setting; no geometry or temporary hold-key emulation. |
 | display.backface_culling / Display > Viewport Settings | Backface Culling / adapted | OBJECT,EDIT_MESH,EDIT_CURVE,EDIT_SURFACE,EDIT_LATTICE / axismeld.m3_setting EXEC | 无AxisMeld专用绑定 / Edit > Adjust Last Operation 或原生属性 | Edits only the named Blender viewport/tool setting; no geometry or temporary hold-key emulation. |
+| display.backface_culling_on / Display > Viewport Settings | Backface Culling on for All Polys / blender | OBJECT,EDIT_MESH,EDIT_CURVE,EDIT_SURFACE,EDIT_LATTICE / axismeld.m3_setting EXEC | 无AxisMeld专用绑定 / Edit > Adjust Last Operation 或原生属性 | Edits only the named Blender viewport/tool setting; no geometry or temporary hold-key emulation. |
+| display.backface_culling_off / Display > Viewport Settings | Backface Culling off for All Polys / blender | OBJECT,EDIT_MESH,EDIT_CURVE,EDIT_SURFACE,EDIT_LATTICE / axismeld.m3_setting EXEC | 无AxisMeld专用绑定 / Edit > Adjust Last Operation 或原生属性 | Edits only the named Blender viewport/tool setting; no geometry or temporary hold-key emulation. |
 | display.color_object / Display > Viewport Settings | Color Object / blender | OBJECT,EDIT_MESH,EDIT_CURVE,EDIT_SURFACE,EDIT_LATTICE / axismeld.m3_setting EXEC | 无AxisMeld专用绑定 / Edit > Adjust Last Operation 或原生属性 | Edits only the named Blender viewport/tool setting; no geometry or temporary hold-key emulation. |
 | display.color_material / Display > Viewport Settings | Color Material / blender | OBJECT,EDIT_MESH,EDIT_CURVE,EDIT_SURFACE,EDIT_LATTICE / axismeld.m3_setting EXEC | 无AxisMeld专用绑定 / Edit > Adjust Last Operation 或原生属性 | Edits only the named Blender viewport/tool setting; no geometry or temporary hold-key emulation. |
 | display.color_random / Display > Viewport Settings | Color Random / blender | OBJECT,EDIT_MESH,EDIT_CURVE,EDIT_SURFACE,EDIT_LATTICE / axismeld.m3_setting EXEC | 无AxisMeld专用绑定 / Edit > Adjust Last Operation 或原生属性 | Edits only the named Blender viewport/tool setting; no geometry or temporary hold-key emulation. |

@@ -1,12 +1,14 @@
 # AxisMeld 待人工测试清单
 
-更新：2026-09-14。人工测试继续暂缓。S/P/C/V/T/R 共47项保持已测试（用户确认，未逐项报告通过/失败）；原 G/K/L/M3/VR/D/O/OM 共116项仍待测。前轮 IC-01至IC-14 热盒与菜单统一图标14项保留。本轮追加 MC-01至MC-14 Maya组合菜单对齐14项。历史177项及其47项已测试状态不变；现合计191项：已测试47项，待测144项。自动化不覆盖历史人工结果，也不将待测项自动改为通过。
+更新：2026-09-14。人工测试继续暂缓。S/P/C/V/T/R 共47项保持已测试（用户确认，未逐项报告通过/失败）；原 G/K/L/M3/VR/D/O/OM 共116项仍待测。前轮 IC-01至IC-14 热盒与菜单统一图标14项保留。本轮追加 MC-01至MC-14 Maya组合菜单对齐14项。本轮再追加 HC-01至HC-20 全热盒菜单内容核对20项。历史191项及其47项已测试状态不变；现合计211项：已测试47项，待测164项。自动化不覆盖历史人工结果，也不将待测项自动改为通过。
 
 ## 测试准备与反馈
 
 本文件保存测试目录、操作预期和历史初始状态；私人测试网页的服务端记录保存此后每次人工勾选、结果、备注与版本。网页是后续个人测试进度的记录入口，不能用此文件中的初始状态覆盖网页记录。追加或更新目录只更新条目说明，保留已有编号及用户已保存的进度。“已测试”与“通过/失败”分别记录，历史已测试条目不补造结果。
 
-本轮 MC 候选已构建到 `D:/source/AxisMeld-build/maya-companion-test-install/blender.exe`，程序哈希前12位 `9E84E857BB414`；安装及回归证据见 `2026-09-14-maya-companion-acceptance.md`。先保存原场景，再使用临时 Cube 场景，选择 AxisMeld Maya 2026 键位。前轮图标候选为 `D:/source/AxisMeld-build/hotbox-icons-test-install/blender.exe`；其安装证据见 `2026-09-14-hotbox-icons-acceptance.md`，程序哈希前12位 `C2B75B7D1999`；历史批次哈希不代表当前安装。
+本轮 HC 使用独立候选 `D:/source/AxisMeld-build/maya-content-test-install/blender.exe`；构建与验证记录见 `2026-09-14-maya-content-acceptance.md`。本轮主要对齐内容，不改变既有触发、方向和四视图布局标杆。
+
+前轮 MC 候选已构建到 `D:/source/AxisMeld-build/maya-companion-test-install/blender.exe`，程序哈希前12位 `9E84E857BB414`；安装及回归证据见 `2026-09-14-maya-companion-acceptance.md`。先保存原场景，再使用临时 Cube 场景，选择 AxisMeld Maya 2026 键位。前轮图标候选为 `D:/source/AxisMeld-build/hotbox-icons-test-install/blender.exe`；其安装证据见 `2026-09-14-hotbox-icons-acceptance.md`，程序哈希前12位 `C2B75B7D1999`；历史批次哈希不代表当前安装。
 
 前批OM组合菜单的构建与资源核验见 `2026-09-14-object-menu-acceptance.md`，程序哈希前12位 `51B833EBCB4E`。前批Object工具入口证据见 `2026-09-14-object-tools-acceptance.md`；VR/D前批证据保留在 `2026-09-14-visible-region-m2d-acceptance.md`。旧M3安装及当前运行的旧M2d窗口保留，不用旧入口验证本轮新功能。开始测试前核对主入口，避免混入另一个旧安装。破坏性编辑、Cut、转换、绑定与颜色测试只在临时场景进行，每组先保存一个可还原副本。四种新修改器可从右侧参数入口调整；其他原生参数使用 **Space → Edit → Adjust Last Operation**，修改器也可在原生Modifier属性中继续调整；**F9仍是Vertex入口**。Vertex Paint入口只切换到Blender原生绘制模式，不代表本批实现了完整Maya绘制工具链。
 
@@ -17,8 +19,8 @@
 | 编号 | 前置条件与操作 | 预期 | 人工状态 |
 |---|---|---|---|
 | G-01 | QWER与四视图二级热盒对照，单/四视图查看 | 以四视图Views热盒实际横向留白为标杆，第2/4行和第3行左右按钮内缘间距分别对齐；不缩小Views迁就其他菜单，不只凭“未重叠”判定；标签完整、方向不变 | 待测 |
-| G-02 | W/E/R经过Global/Local按钮后继续水平向外滑出很远，再松LMB | 对应方向仍高亮且提交，不要求停在按钮上；远处不跳相邻行 | 待测 |
-| G-03 | Q选择工具与组件RMB环，在按钮外释放；划向禁用方向或缺席的NW | 有效方向提交正确命令；禁用/空方向不误选相邻项，组件取消不改变目标 | 待测 |
+| G-02 | W/E/R经过World/Object按钮后继续水平向外滑出很远，再松LMB | 对应方向仍高亮且提交，不要求停在按钮上；远处不跳相邻行 | 待测 |
+| G-03 | Q选择工具与组件RMB环，在未被伴随列表覆盖的按钮外延释放；划向禁用方向或缺席的NW；组件S方向另从Face主按钮提交 | 未遮挡有效外延提交正确命令；列表和分隔线优先命中，不穿透执行S方向；禁用/空方向不误选相邻项，组件取消不改变目标 | 待测 |
 | G-04 | 进入Axis/Custom Axis/Select子环继续外划，再回当前中心后重新划选 | 外延按当前子环计算；只返回一层，隐藏父环不夺取选择 | 待测 |
 | G-05 | 从Space→Modify→Tool Settings打开工具热盒，外划释放或回最初LMB点 | 与QWER外延一致；返回真实按下点取消，不误执行 | 待测 |
 | G-06 | 分别持续按住Q/W/E/R，反复按住/松开LMB至少三次，在不同鼠标位置唤出 | 每次都在新的位置开环；松LMB隐藏本次热盒，持键可继续，无需重新按QWER | 待测 |
@@ -310,3 +312,30 @@
 | MC-12 | 在四个视口角落及125/150/200%DPI展开伴随列表与末页子菜单，再回真实按下点 | 菜单/参数/级联夹紧在有效视口内，必要时分页；显示与命中一致，原起点仍能取消；Tool Header/侧栏不被当作可用空间 | 待测 |
 | MC-13 | 创建与Object连续开关各三次；Q/W/E/R持键LMB重复唤出；Space中心目录交替进入 | 伴随列表不会遗留到另一根，分页/悬停状态按当前会话正确重置；旧QWER持键重复规则与鼠标释放所有权不变 | 待测 |
 | MC-14 | 径向主项/参数/下拉/级联中分别Esc、先松Shift、切应用、改选择/模式后释放；随后再开Views和创建 | 取消不提交动作、不污染Undo/Recent，不留粘键；失效的捕获目标不转投别的对象，后续有效输入正常 | 待测 |
+
+## P0/P1：全热盒菜单内容对齐（本轮 HC 新增20项）
+
+以本机 Maya 2026 MEL 与实际显示资源为内容依据。灰显表示能力尚未适配，人工核对菜单存在不等于该能力已实现。
+
+| 编号 | 前置条件与操作 | 预期 | 人工状态 |
+|---|---|---|---|
+| HC-01 | Object模式，无任何选择，在可见Mesh上RMB；再选A指向B重复 | 环下显示22项DAG菜单和7处分隔，首项是实际指针目标名称；从Select到材质三组的名称和顺序对齐截图；打开和关闭不改变选择 | 待测 |
+| HC-02 | RMB依次进入UV、Inputs/Outputs、Paint、Metadata、Actions、Time Editor和材质子菜单 | UV含UV/UV Shell；固定项目保持Maya顺序。动态DG、UV/颜色集、插件材质和收藏未适配处灰显说明，不显示猜造的场景数据 | 待测 |
+| HC-03 | RMB伴随列表悬停禁用项、Select Similar参数格、Metadata状态和参数格后取消 | 禁用项有原因且不能执行，参数格与正文独立；不改变选择、模式、对象属性、偏好或Recent | 待测 |
+| HC-04 | A选中指向B打开RMB，分别从列表执行Select All、Deselect All、Invert Selection | 按原始场景选择执行全局操作，不先把指针B提交为选中对象；重复、撤销与原生命令一致 | 待测 |
+| HC-05 | 指针目标为当前已选活动Mesh时测试Select Hierarchy和Actions的Template/Untemplate/Unparent；然后改为未选目标 | 只有上下文安全时可执行；未选或变化后的目标相关操作不偷偷提交指针选择，不作用到旧活动对象 | 待测 |
+| HC-06 | Edit Vertex有有效选择，Shift+RMB，并依次展开列表子菜单 | 顶点菜单下方9个主项、3处分隔；参数入口与Maya一致；Reorder Vertices依赖能力保留灰显说明 | 待测 |
+| HC-07 | Edit Edge有有效选择，Shift+RMB，核对Merge子菜单及下方列表 | 边菜单下方14个主项、3处分隔；Merge Border Edges及其参数入口存在，不把未适配参数绑定为直接执行 | 待测 |
+| HC-08 | Edit Face有有效选择，Shift+RMB，查看Mapping和Polygon Display | 面菜单下方20个主项、4处分隔，含顶部的分隔；保留Smart Extrude、完整Mapping及对应显示菜单 | 待测 |
+| HC-09 | Q+LMB，核对Marquee、Drag、Camera-Based Selection和下方菜单 | 下方为Automatic Camera-Based Selection；Marquee勾选反映实际工具，其他未适配状态灰显且不伪造选中 | 待测 |
+| HC-10 | W+LMB，核对下方主项、约束和Move Options | 下方9个主项、3处分隔，Preserve UVs/Children、Tweak Mode、Update Triad等位置正确；方向名称World/Object/Component与真实方向状态一致 | 待测 |
+| HC-11 | E+LMB，核对下方主项并展开Rotate Center | 下方11个主项、3处分隔；Rotate Center含Default/Object/Manip/Selection，保留Free Rotate、Relative和Rotate Options | 待测 |
+| HC-12 | R+LMB，核对下方主项并展开Scale Center | 下方10个主项、3处分隔；Scale Center含Default/Object/Manip，保留Prevent Negative Scale和Scale Options | 待测 |
+| HC-13 | 从Q/W/E/R各进入Select子环，然后进入Soft Select并返回 | Select子环有自己的Automatic Camera-Based Selection下方列表；切换和返回不残留父层或上一工具的菜单内容 | 待测 |
+| HC-14 | 分别进入W/E/R的Selection Constraints、Transform Constraints与中心选项 | 完整7项选择约束与4项变换约束顺序正确，单选圆圈与复选框形态准确；未适配状态均灰显且无虚假选中 | 待测 |
+| HC-15 | 逐个检查QWER的Symmetry、Soft Select、Axis/Custom和Snap子菜单 | 使用Maya实际显示标签、条目和状态形态；不添加Maya不存在的批量齿轮；Blender View方向仍可从Space→Modify→Blender View Orientations访问 | 待测 |
+| HC-16 | Space→Hotbox Controls，检查Show/Hide、Custom Menu Set、Hotbox Style、Window Options | 补齐固定菜单项和分隔；已有Common/Pane/Modeling行开关显示真实checkbox，Style和Transparency单选状态不受影响；未适配选项有原因 | 待测 |
+| HC-17 | 创建热盒→Polygon Display All，连续执行Backface Culling on两次，再off两次 | 目录10项、4处分隔，On/Off为两个独立普通命令；重复On保持开、重复Off保持关，不交替反转 | 待测 |
+| HC-18 | Object建模和创建热盒逐项对照Maya截图，并检查Mapping、Booleans和Polygon Display | Object22项与Create16项主目录保留；不单纯删除占位缩短列表；嵌套内容、名称、分隔和Options逐项匹配 | 待测 |
+| HC-19 | 全部新列表滚动到底，查看长标签、子目录箭头、Options方格和左侧图标 | 图标使用统一Blender风格；24逻辑像素行高、6像素分隔，参数背景不覆盖箭头，正文与Options可独立命中 | 待测 |
+| HC-20 | 在单/四视图、窄视口和125/150/200%DPI，重试RMB、建模与QWER嵌套菜单及取消 | 以Views实际内缘间距为标杆；未遮挡外延保持长划，被列表覆盖的方向从主按钮提交，列表与分隔不穿透执行环；子菜单夹紧/滚动及重复唤出、释放正确。200%较小四视图放不下完整环和最少分页行时取消打开且无输入残留；放大窗格后重试 | 待测 |
