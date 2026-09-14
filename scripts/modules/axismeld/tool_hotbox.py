@@ -17,6 +17,7 @@ MENU_COMMANDS = frozenset({*TOOL_ROOTS, *ORIENTATIONS, *SELECTION_TOOLS, 'select
 _TOOLS = ('select', 'move', 'rotate', 'scale')
 COMPANION_ROOTS = {f'tools.{tool}': f'tools.{tool}_menu' for tool in _TOOLS}
 COMPANION_ROOTS.update({f'tools.{tool}.select': f'tools.{tool}.select_menu' for tool in _TOOLS})
+COMPANION_ROOTS['tools.move.snap'] = 'tools.move.snap_menu'
 
 # Exact fixed IDs only. Empty checkbox/radio means unavailable, not Maya's current state.
 UNAVAILABLE_INDICATORS = {}
@@ -36,7 +37,7 @@ for _tool in _TOOLS:
         for _suffix in (('axis.custom',) if _tool == 'rotate' else
                         ('axis.normal', 'axis.parent', 'axis.rotation', 'axis.live', 'axis.custom.custom')):
             UNAVAILABLE_INDICATORS[_p + '.' + _suffix] = 'checkbox'
-        for _suffix in (('spacing', 'snap.options', 'snap.vertex', 'snap.relative', 'snap.face')
+        for _suffix in (('spacing', 'snap.options', 'snap.vertex', 'snap.face')
                         if _tool == 'move' else ('discrete',) if _tool == 'rotate'
                         else ('discrete', 'relative')):
             UNAVAILABLE_INDICATORS[_p + '.' + _suffix] = 'checkbox'
@@ -53,6 +54,8 @@ for _tool in _TOOLS:
         if _tool != 'move':
             for _suffix in ('default', 'object', 'manip', *(('selection',) if _tool == 'rotate' else ())):
                 UNAVAILABLE_INDICATORS[_menu + '.center.' + _suffix] = 'radio'
+
+UNAVAILABLE_INDICATORS['tools.move.snap_menu.relative'] = 'checkbox'
 
 
 def _disabled(node, identifier, label, direction=None):
@@ -122,7 +125,7 @@ def tool_menus(node):
             elif tool == 'move':
                 children.append(radial(p, 'snap', 'Snap', 'E', pending(p + '.snap', (
                     ('options', 'Discrete Move', 'E'), ('vertex', 'Vertex', 'SE'),
-                    ('relative', 'Relative Mode', 'S'), ('face', 'Face Center', 'SW')))))
+                    ('face', 'Face Center', 'SW')))))
                 children += pending(p, (('spacing', 'Keep Spacing', 'SE'),))
             else:
                 children += pending(p, (('discrete', 'Snap Scale', 'E'), ('relative', 'Relative', 'SE')))
@@ -181,4 +184,8 @@ def tool_companions(node):
         p = 'tools.' + tool + '.select_menu'
         roots.append(node(p, 'menu', 'Select Menu', presentation='list',
                           children=[disabled(p, 'automatic', 'Automatic Camera-Based Selection')]))
+    # Maya2026 translateMarkingMenuImpl.mel:133-138: ordinary lower row,
+    # unlike the three Snap directions. No fabricated South direction.
+    roots.append(node('tools.move.snap_menu', 'menu', 'Snap Menu', presentation='list',
+                      children=[disabled('tools.move.snap_menu', 'relative', 'Relative Mode')]))
     return roots

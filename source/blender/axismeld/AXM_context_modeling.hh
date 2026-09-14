@@ -2,6 +2,8 @@
  * SPDX-License-Identifier: GPL-2.0-or-later */
 #pragma once
 
+#include "AXM_maya_menu_reference.hh"
+
 #include <string_view>
 #include <utility>
 #include <string>
@@ -35,6 +37,7 @@ inline constexpr std::pair<std::string_view, std::string_view> companion_roots[]
     {"tools.move.select", "tools.move.select_menu"},
     {"tools.rotate.select", "tools.rotate.select_menu"},
     {"tools.scale.select", "tools.scale.select_menu"},
+    {"tools.move.snap", "tools.move.snap_menu"},
 };
 
 inline std::string_view companion_root(const std::string_view root)
@@ -216,6 +219,11 @@ inline bool modeling_root_allows_command(const std::string_view root,
 /* Fixed authored state IDs: no arbitrary disabled controls or active values. */
 inline std::string_view unavailable_indicator(const std::string_view id)
 {
+  for (const auto &[identifier, indicator] : maya_menu_unavailable_indicators) {
+    if (id == identifier) {
+      return indicator;
+    }
+  }
   constexpr std::pair<std::string_view, std::string_view> entries[] = {
       {"tools.select.symmetry.options", "checkbox"},
       {"tools.select.symmetry.world", "checkbox"},
@@ -266,7 +274,7 @@ inline std::string_view unavailable_indicator(const std::string_view id)
       {"tools.move.spacing", "checkbox"},
       {"tools.move.snap.options", "checkbox"},
       {"tools.move.snap.vertex", "checkbox"},
-      {"tools.move.snap.relative", "checkbox"},
+      {"tools.move.snap_menu.relative", "checkbox"},
       {"tools.move.snap.face", "checkbox"},
       {"tools.move_menu.extrude", "checkbox"},
       {"tools.move_menu.duplicate", "checkbox"},

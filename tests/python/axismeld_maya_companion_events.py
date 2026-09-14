@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 """Real-input acceptance of Maya companion inventory, grouping and options."""
 import os
+import json
 from pathlib import Path
 import sys
 import traceback
@@ -9,6 +10,8 @@ import numpy as np
 import imbuf
 import blf
 import bpy
+sys.path.insert(0,str(Path(__file__).parent))
+from axismeld_hotbox_image_fixture import observed_radial_rectangles,observed_menu_rectangles,menu_background_mask
 sys.path.insert(0,str(Path(__file__).parent))
 from axismeld_hotbox_geometry_fixture import label_prefix_starts
 
@@ -85,8 +88,8 @@ def suite():
                 colored[max(0,ya-3):yb+3,max(0,xa-3):xb+3] = False
             minimum_width = (100 if exclude is not None else 150)*scale
             groups = {}
-            for y in range(region.y+3, region.y+region.height-3):
-                xs = np.flatnonzero(colored[y, region.x+2:region.x+region.width-2])+region.x+2
+            for y in range(3,pixels.shape[0]-3):
+                xs = np.flatnonzero(colored[y,2:pixels.shape[1]-2])+2
                 if len(xs) < minimum_width-10*scale:
                     continue
                 cuts = np.flatnonzero(np.diff(xs) > 28*scale)+1
@@ -149,12 +152,72 @@ def suite():
         check(score>.75,'actual full label not independently identified: '+repr((label,score,rect)))
         return (x+x0,y+y0,x+x0+gw,y+y0+gh),score
 
+    def labelled_radial_rectangles(pixels, scale, expected_directions, matches):
+        """Locate a direct Object/Create/component ring after its actual translation.
+
+        Uses the diagnostic magenta theme shared by content GUI observers. It does
+        not infer motion from companion count, height, column count or source press.
+        """
+        boxes=[r for r in observed_menu_rectangles(menu_background_mask(pixels),35*scale,13*scale)
+               if r[3]-r[1]<=27*scale]
+        if not boxes: raise AssertionError('No actual radial button backgrounds')
+        # Native toolbar controls can share the diagnostic theme. Identify a full
+        # directional constellation, rather than treating the highest colored box
+        # in the entire window as its North button.
+        candidates=[]
+        for north in boxes:
+            for south in boxes:
+                ny=(north[1]+north[3])/2;sy=(south[1]+south[3])/2
+                nx=(north[0]+north[2])/2;sx=(south[0]+south[2])/2
+                if not 70*scale<ny-sy<180*scale or abs(nx-sx)>20*scale: continue
+                cx=(nx+sx)/2;cy=(ny+sy)/2;found={};duplicate=False
+                for rect in boxes:
+                    rx=(rect[0]+rect[2])/2;ry=(rect[1]+rect[3])/2
+                    if not sy<=ry<=ny or abs(rx-cx)>400*scale: continue
+                    dx=rx-cx;dy=ry-cy
+                    direction=('N' if dy>16*scale else 'S' if dy < -16*scale else '')
+                    direction+=('E' if dx>20*scale else 'W' if dx < -20*scale else '')
+                    if not direction or direction not in expected_directions or not matches(direction,rect): continue
+                    if direction in found: duplicate=True;break
+                    found[direction]=rect
+                if not duplicate and set(found)==set(expected_directions):
+                    candidates.append({'rects':found,'center':(cx,cy)})
+        if len(candidates)!=1:
+            raise AssertionError(f'Expected one complete observed radial constellation, got {candidates!r}; boxes={boxes!r}')
+        return candidates[0]
+
+    object_ring_labels={'N':'Target Weld Tool','NE':'Fill Holes','E':'Append to Polygon Tool',
+                        'SE':'Soften/Harden Edges','S':'Extrude','SW':'Insert Edge Loop Tool',
+                        'W':'Multi-Cut','NW':'Sculpt Tool'}
+    create_ring_labels={'N':'Create Polygon Tool','NE':'Disc','E':'Sphere','SE':'Torus',
+                        'S':'Cube','SW':'Cone','W':'Cylinder','NW':'Plane'}
+    move_ring_labels={'N':'Symmetry','NE':'Component','E':'Snap','SE':'Keep Spacing',
+                      'S':'Select','SW':'Axis','W':'World','NW':'Object'}
+
     def radial_rectangles(pixels, expected=None):
+        if isinstance(expected,dict):
+            def matches(direction,rect):
+                glyph=template(expected[direction]);gh,gw=glyph.shape
+                if rect[2]-rect[0]-4<gw or rect[3]-rect[1]-4<gh:return False
+                return locate(pixels,rect,expected[direction],required=False) is not None
+            observed=labelled_radial_rectangles(pixels,scale,set(expected),matches)['rects']
+            cells=observed_menu_rectangles(menu_background_mask(pixels),10*scale,13*scale)
+            for direction,rect in tuple(observed.items()):
+                adjacent=[cell for cell in cells if 18*scale<=cell[2]-cell[0]<=27*scale
+                          and 0<=cell[0]-rect[2]<=3*scale
+                          and abs(cell[1]-rect[1])<=2*scale and abs(cell[3]-rect[3])<=2*scale]
+                check(len(adjacent)<=1,'ambiguous observed Options cell '+repr(adjacent))
+                if adjacent:observed[direction]=(rect[0],rect[1],adjacent[0][2],rect[3])
+            return {direction:(r[0],r[1],r[2]-1,r[3]-1) for direction,r in observed.items()}
+
+        center=origin
+        if expected is None:
+            center=observed_radial_rectangles(pixels,scale,{'N','NW','NE','W','E','SW','SE','S'})['center']
         rgb=pixels[:,:,:3]
         colored=((rgb[:,:,0]>.3)&(rgb[:,:,2]>.25)&(np.minimum(rgb[:,:,0],rgb[:,:,2])>2.2*rgb[:,:,1]))
         groups={}
-        for yy in range(max(region.y,int(origin[1]-86*scale)),min(region.y+region.height,int(origin[1]+86*scale))):
-            xs=np.flatnonzero(colored[yy,region.x:region.x+region.width])+region.x
+        for yy in range(max(0,int(center[1]-86*scale)),min(pixels.shape[0],int(center[1]+86*scale))):
+            xs=np.flatnonzero(colored[yy,:])
             for span in np.split(xs,np.flatnonzero(np.diff(xs)>3*scale)+1):
                 if len(span) and span[-1]-span[0]>=60*scale:
                     key=(round(int(span[0])/(4*scale)),round(int(span[-1])/(4*scale)))
@@ -177,7 +240,7 @@ def suite():
             if not 13*scale<=y1-y0<=27*scale:
                 continue
             x0,x1=min(r[0] for r in rows),max(r[1] for r in rows)
-            dx,dy=(x0+x1)/2-origin[0],(y0+y1)/2-origin[1]
+            dx,dy=(x0+x1)/2-center[0],(y0+y1)/2-center[1]
             direction=('N' if dy>16*scale else 'S' if dy < -16*scale else '')
             direction+=('E' if dx>20*scale else 'W' if dx < -20*scale else '')
             if direction:
@@ -313,79 +376,89 @@ def suite():
                 bpy.ops.mesh.primitive_cube_add()
         return state()
 
+    def actual_columns(picture,labels):
+        # A complete menu may end in a single 24px row in its own column.
+        # Admit short background components only when a complete companion
+        # caption is actually rendered there; toolbar/radial boxes are not
+        # columns merely because they share the diagnostic background color.
+        candidates=observed_menu_rectangles(menu_background_mask(picture),150*scale,13*scale)
+        full_columns=[rect for rect in candidates if rect[3]-rect[1]>=58*scale]
+        columns=[]
+        for rect in candidates:
+            if rect[3]-rect[1]>=58*scale:
+                columns.append(rect)
+                continue
+            # A short final column belongs to the same complete popup: its
+            # observed top and width must agree with a full sibling column.
+            # Caption correlation alone can match a substring of a radial row.
+            if not any(abs(rect[3]-other[3])<=2*scale and
+                       abs((rect[2]-rect[0])-(other[2]-other[0]))<=2*scale
+                       for other in full_columns):
+                continue
+            if not rendered_rows(picture,rect,labels):
+                continue
+            for label in labels:
+                gh,gw=template(label).shape
+                if rect[3]-rect[1]-3<gh or rect[2]-rect[0]-3<gw:
+                    continue
+                if locate(picture,rect,label,required=False) is not None:
+                    columns.append(rect)
+                    break
+        return columns
+
     def inventory(domain,tag):
         labels=object_labels if domain=='object' else create_labels
-        seen=set();edges=set();separator_points=[];last=None;stalls=0
-        arrow_samples={}
-        for page in range(40):
-            picture=capture(tag+'-'+str(page))
-            rect=companion_rect(picture)
+        yield from settle(0)
+        picture=capture(tag+'-full')
+        columns=actual_columns(picture,labels)
+        check(columns,'no actual complete columns')
+        all_rows=[];separator_points=[];arrows={}
+        for rect in columns:
             rows=rendered_rows(picture,rect,labels)
-            check(rows,'no complete expected labels recognized in actual '+domain+' list')
-            order=[labels.index(row[0]) for row in rows]
-            check(order==sorted(set(order)),domain+' rendered rows duplicate or out of Maya order')
-            seen.update(row[0] for row in rows)
+            check(rows,'empty actual Maya column')
+            all_rows.extend(rows)
             for previous,current in zip(rows,rows[1:]):
-                if labels.index(current[0])!=labels.index(previous[0])+1:
-                    continue
+                check(labels.index(current[0])==labels.index(previous[0])+1,'Maya column skipped/duplicated a row')
                 delta=(previous[2]-current[2])/scale
                 expected=30 if previous[0] in separators[domain] else 24
-                check(abs(delta-expected)<=2,
-                      domain+' actual row/separator pitch incorrect: '+repr((previous[0],current[0],delta,expected)))
-                edges.add(previous[0])
-                if expected==30:
-                    separator_points.append(((rect[0]+rect[2])/2,(previous[2]+current[2])/2))
-            if domain=='object':
-                for row in rows:
-                    if row[0] in {'Mapping','Booleans','Polygon Display'}:
-                        cy=row[2]
-                        # Actual right-edge glyph pixels, independent of catalog
-                        # fields. These rows interrupt an adjacent Options column;
-                        # a union background used to paint over the first two.
-                        slot=foreground(picture[int(cy-8*scale):int(cy+8*scale),
-                                                int(rect[2]-22*scale):int(rect[2]-2*scale)])
-                        arrow_samples[row[0]]=int(np.count_nonzero(slot))
-                        print('MAYA_SUBMENU_ARROW_PIXELS',tag,row[0],arrow_samples[row[0]],flush=True)
-            if domain=='create':
-                for row in rows:
-                    cy=row[2]
-                    slot=picture[int(cy-9*scale):int(cy+9*scale),
-                                 int(rect[2]-24*scale):int(rect[2]-2*scale),1]>.18
+                check(abs(delta-expected)<=2,'actual24/6 row/separator pitch changed '+repr((previous[0],delta,expected)))
+                if expected==30:separator_points.append(((rect[0]+rect[2])/2,(previous[2]+current[2])/2))
+            for row in rows:
+                cy=row[2]
+                if domain=='object' and row[0] in {'Mapping','Booleans','Polygon Display'}:
+                    slot=foreground(picture[int(cy-8*scale):int(cy+8*scale),int(rect[2]-22*scale):int(rect[2]-2*scale)])
+                    arrows[row[0]]=int(np.count_nonzero(slot))
+                    check(arrows[row[0]]>=5*scale*scale,'actual submenu arrow overwritten beside Options')
+                if domain=='create':
+                    slot=picture[int(cy-9*scale):int(cy+9*scale),int(rect[2]-24*scale):int(rect[2]-2*scale),1]>.18
                     yy,xx=np.nonzero(slot)
                     gear=bool(len(xx)>8*scale*scale and xx.max()-xx.min()>=8*scale)
-                    if row[0] in create_options:
-                        check(gear,'missing independent Options gear in '+row[0])
-                    elif row[0] in {'Type','SVG','Interactive Creation','Exit On Completion'}:
-                        check(not gear,'unexpected Options gear in '+row[0])
-            if domain=='create':
-                verify_workflow(picture,rect,rows)
-            print('MAYA_ROWS',tag,page,[(r[0],round(r[2],2)) for r in rows],flush=True)
-            if seen==set(labels) and separators[domain]<=edges:
-                if domain=='object':
-                    check(set(arrow_samples)=={'Mapping','Booleans','Polygon Display'},
-                          'not every actual submenu arrow row was observed')
-                    check(all(amount>=5*scale*scale for amount in arrow_samples.values()),
-                          'actual submenu arrow overwritten beside Options column: '+repr(arrow_samples))
-                return rect,rows,separator_points
-            signature=tuple((r[0],round(r[2])) for r in rows)
-            stalls=stalls+1 if signature==last else 0;last=signature
-            check(stalls<3,'bounded real paging stalled before all Maya entries were observed')
-            event('MOUSEMOVE','NOTHING',((rect[0]+rect[2])/2,(rect[1]+rect[3])/2),shift=True)
-            event('WHEELDOWNMOUSE',shift=True)
-            yield from settle(5)
-        raise AssertionError('not all Maya '+domain+' rows/separators reached')
+                    if row[0] in create_options:check(gear,'missing independent Options gear '+row[0])
+                    elif row[0] in {'Type','SVG','Interactive Creation','Exit On Completion'}:check(not gear,'unexpected Options gear '+row[0])
+            if rows[-1][0] in separators[domain]:
+                # A column break can follow the actual trailing6px separator.
+                # Measure its retained band instead of demanding a next-row
+                # baseline in a different column.
+                tail=(rows[-1][2]-rect[1])/scale
+                check(abs(tail-17)<=2,'column-boundary6px separator band missing '+repr(tail))
+                separator_points.append(((rect[0]+rect[2])/2,rect[1]+3*scale))
+            if domain=='create':verify_workflow(picture,rect,rows)
+        check(tuple(row[0] for row in all_rows)==labels,'complete Maya order/multiplicity mismatch '+repr(all_rows))
+        height=sum(rect[3]-rect[1] for rect in columns)/scale
+        expected=len(labels)*24+len(separators[domain])*6
+        check(abs(height-expected)<=2*len(columns),'actual complete columns lost6px separators '+repr((height,expected)))
+        if domain=='object':check(set(arrows)=={'Mapping','Booleans','Polygon Display'},'missing actual submenu arrow')
+        print('MAYA_FULL_ROWS',tag,columns,[row[0] for row in all_rows],arrows,flush=True)
+        return columns[0],all_rows,separator_points
 
     def find_row(domain,label,tag):
+        yield from settle(0)
         labels=object_labels if domain=='object' else create_labels
-        for page in range(40):
-            picture=capture(tag+'-'+str(page));rect=companion_rect(picture)
+        picture=capture(tag+'-full')
+        for rect in actual_columns(picture,labels):
             for row in rendered_rows(picture,rect,labels):
-                if row[0]==label:
-                    return picture,rect,(row[1],row[2])
-            event('MOUSEMOVE','NOTHING',((rect[0]+rect[2])/2,(rect[1]+rect[3])/2),shift=True)
-            event('WHEELDOWNMOUSE',shift=True)
-            yield from settle(4)
-        raise AssertionError('actual menu label unreachable: '+label)
+                if row[0]==label:return picture,rect,(row[1],row[2])
+        raise AssertionError('actual full menu label missing: '+label)
 
     def verify_workflow(picture,rect,rows):
         indexed={row[0]:row for row in rows}
@@ -440,12 +513,13 @@ def suite():
             before=seed(domain)
             yield from settle(7)
             yield from start(point=midpoint)
-            actual=radial_rectangles(capture('maya-'+domain+'-ring-'+str(requested_scale)))
+            actual=radial_rectangles(capture('maya-'+domain+'-ring-'+str(requested_scale)),
+                                     object_ring_labels if domain=='object' else create_ring_labels)
             compare_edges(actual,reference,domain)
             rect,rows,points=yield from inventory(domain,'maya-'+domain+'-'+str(requested_scale))
             check(len(points)>=len(separators[domain]),'not all fine separator groups were visually sampled')
             yield from cancel()
-            check(state()==before,'inventory/paging changed scene/Recent')
+            check(state()==before,'complete inventory changed scene/Recent')
 
         # New radial Options are all explicit disabled placeholders. Observe
         # their actual gear pixels and release a representative tool's gear,
@@ -453,7 +527,7 @@ def suite():
         before=seed('object')
         yield from settle(6);yield from start(point=midpoint)
         picture=capture('maya-object-radial-options-'+str(requested_scale))
-        text,_=locate(picture,(region.x,origin[1]-90*scale,region.x+region.width,origin[1]+90*scale),'Multi-Cut')
+        text,_=locate(picture,(0,0,picture.shape[1],picture.shape[0]),'Multi-Cut')
         # Solid background just above glyphs exposes the actual button right edge.
         row_y=int(text[3]+3*scale)
         rgb=picture[row_y,:,:3]
@@ -484,19 +558,20 @@ def suite():
         # A separator is actual noninteractive list area, not a radial fallthrough.
         before=seed('create')
         yield from settle(6);yield from start(point=midpoint)
-        _,rect,upper=yield from find_row('create','Soccer Ball','maya-separator-hit-'+str(requested_scale))
-        # The visible Soccer/Super Ellipse pair is required before selecting their
-        # independently measured midpoint, six logical pixels of separator.
-        for pair_page in range(5):
-            picture=capture('maya-separator-hit-pair-'+str(requested_scale)+'-'+str(pair_page))
-            rect=companion_rect(picture)
-            rows={r[0]:r for r in rendered_rows(picture,rect,create_labels)}
-            if {'Soccer Ball','Super Ellipse'}<=rows.keys():
-                break
-            event('MOUSEMOVE','NOTHING',((rect[0]+rect[2])/2,(rect[1]+rect[3])/2),shift=True)
-            event('WHEELDOWNMOUSE',shift=True);yield from settle(5)
-        check({'Soccer Ball','Super Ellipse'}<=rows.keys(),'separator hit fixture must expose both neighboring labels')
-        point=((rect[0]+rect[2])/2,(rows['Soccer Ball'][2]+rows['Super Ellipse'][2])/2)
+        picture=capture('maya-separator-hit-'+str(requested_scale))
+        observed_separators=[]
+        for rect in actual_columns(picture,create_labels):
+            rows=rendered_rows(picture,rect,create_labels)
+            for upper,lower in zip(rows,rows[1:]):
+                if upper[0] not in separators['create']:
+                    continue
+                check(create_labels.index(lower[0])==create_labels.index(upper[0])+1,
+                      'separator neighbors must be consecutive complete labels')
+                check(abs((upper[2]-lower[2])/scale-30)<=2,
+                      'actual separator neighbors must preserve 24+6 pitch')
+                observed_separators.append(((rect[0]+rect[2])/2,(upper[2]+lower[2])/2))
+        check(observed_separators,'separator hit fixture must expose same-column neighboring labels')
+        point=observed_separators[0]
         event('MOUSEMOVE','NOTHING',point,shift=True);yield from settle(4)
         event('RIGHTMOUSE','RELEASE',shift=True);event('LEFT_SHIFT','RELEASE')
         yield from settle(7)
@@ -521,11 +596,70 @@ def suite():
                 point=(x1-4 if xside else x0+4,y1-4 if yside else y0+4)
                 yield from start(point=point)
                 rect=companion_rect(capture('maya-corner-'+domain+'-'+str(requested_scale)+'-'+str(xside)+str(yside)))
-                check(region.x<=rect[0]<rect[2]<=region.x+region.width and
-                      region.y<=rect[1]<rect[3]<=region.y+region.height,'actual companion escapes viewport')
+                check(0<=rect[0]<rect[2]<=win.width and
+                      0<=rect[1]<rect[3]<=win.height,'actual companion escapes whole-window surface')
                 yield from cancel()
                 check(state()==before,'clamped original-press cancel changed scene')
         origin[:]=midpoint
+
+        # Snap's Relative Mode is one native companion row, never a fourth/S radial leaf.
+        for cancel_target in ('relative-row','missing-south'):
+            before=seed('object');yield from settle(5)
+            event('MOUSEMOVE','NOTHING',origin);event('W');yield from settle(9)
+            event('LEFTMOUSE');yield from settle(8)
+            parent=radial_rectangles(capture('maya-snap-parent-'+str(scale)+'-'+cancel_target),move_ring_labels)
+            snap=parent['E']
+            event('MOUSEMOVE','NOTHING',((snap[0]+snap[2])/2,(snap[1]+snap[3])/2))
+            yield from settle(9)
+            picture=capture('maya-snap-child-'+str(scale)+'-'+cancel_target)
+            boxes=[r for r in observed_menu_rectangles(menu_background_mask(picture),35*scale,13*scale)
+                   if r[3]-r[1]<=27*scale]
+            observed={}
+            texts={}
+            for label in ('Discrete Move','Vertex','Face Center','Relative Mode'):
+                glyph=template(label);gh,gw=glyph.shape
+                choices=[]
+                for box in boxes:
+                    if box[2]-box[0]-4<gw or box[3]-box[1]-4<gh:continue
+                    match=locate(picture,box,label,required=False)
+                    if match is not None:choices.append((box,match[0]))
+                check(len(choices)==1,'Snap must expose one complete actual label '+repr((label,choices)))
+                observed[label],texts[label]=choices[0]
+            east=observed['Discrete Move'];sw=observed['Face Center'];se=observed['Vertex']
+            relative=observed['Relative Mode']
+            check(sw[2]<se[0] and abs(sw[1]-se[1])<=3*scale,'Snap SW/SE actual order or row changed')
+            check(relative[3]<min(sw[1],se[1],east[1]),'Relative Mode must be below all three actual radial leaves')
+            check(abs((relative[3]-relative[1])/scale-24)<=2,'Snap companion must be one complete24px row')
+            text=texts['Relative Mode'];x,y,x1,y1=text;cy=(y+y1)/2
+            checkbox=picture[int(cy-8*scale):int(cy+8*scale),int(x-44*scale):int(x-23*scale),1]>.18
+            check(np.count_nonzero(checkbox)>8*scale*scale,'Relative Mode disabled checkbox is not visible')
+            yy,xx=np.nonzero(checkbox);inset=int(3*scale)
+            inside=checkbox[yy.min()+inset:yy.max()+1-inset,xx.min()+inset:xx.max()+1-inset]
+            check(inside.size and np.mean(inside)<.15,'Relative Mode must render an empty checkbox interior')
+            with override():resolved=json.loads(hotbox_runtime.snapshot(bpy.context))
+            pending=list(resolved['menus']);nodes={}
+            while pending:
+                item=pending.pop();nodes[item['id']]=item;pending.extend(item['children'])
+            row=nodes['tools.move.snap_menu.relative'];ring=nodes['tools.move.snap']
+            check(row['kind']=='disabled' and not row['enabled'] and not row['command']
+                  and row.get('indicator')=='checkbox' and row.get('checked') is False
+                  and not row.get('direction'),'Relative Mode must be a readonly unchecked non-directional row')
+            check({item.get('direction') for item in ring['children']}=={'E','SE','SW'},'Snap gained an incorrect S action')
+            gap=((sw[2]+se[0])/2,(sw[1]+sw[3]+se[1]+se[3])/4)
+            check(not any(r[0]<=gap[0]<r[2] and r[1]<=gap[1]<r[3] for r in boxes),
+                  'Absent S sector contains an actual menu rectangle')
+            settings=bpy.context.scene.tool_settings
+            snap_state=(settings.use_snap,tuple(sorted(settings.snap_elements)))
+            active_tool=bpy.context.workspace.tools.from_space_view3d_mode(bpy.context.mode,create=False)
+            tool_id=active_tool.idname if active_tool else None
+            point=((relative[0]+relative[2])/2,(relative[1]+relative[3])/2) if cancel_target=='relative-row' else gap
+            event('MOUSEMOVE','NOTHING',point);yield from settle(3)
+            event('LEFTMOUSE','RELEASE');event('W','RELEASE');yield from settle(7)
+            active_tool=bpy.context.workspace.tools.from_space_view3d_mode(bpy.context.mode,create=False)
+            check(state()==before and not list(win.modal_operators),'Snap cancellation changed scene/Recent or retained owner')
+            check((settings.use_snap,tuple(sorted(settings.snap_elements)))==snap_state
+                  and (active_tool.idname if active_tool else None)==tool_id,'Snap placeholder changed snapping/tool state')
+            print('MAYA_SNAP_COMPANION',scale,cancel_target,observed,'checkbox_pixels',int(np.count_nonzero(checkbox)),flush=True)
 
     bpy.context.preferences.view.ui_scale=1.0
     yield from settle(8)
@@ -562,7 +696,7 @@ def suite():
     # All four Maya Soft/Hard entries stay in their real ordinary submenu.
     before=seed('object');yield from settle(5);yield from start(point=midpoint)
     picture=capture('maya-normals-parent')
-    text,_=locate(picture,(region.x,origin[1]-90*scale,region.x+region.width,origin[1]+90*scale),'Soften/Harden Edges')
+    text,_=locate(picture,(0,0,picture.shape[1],picture.shape[0]),'Soften/Harden Edges')
     event('MOUSEMOVE','NOTHING',((text[0]+text[2])/2,(text[1]+text[3])/2),shift=True)
     yield from settle(8)
     picture=capture('maya-normals-child')
@@ -571,7 +705,7 @@ def suite():
     # The first child row touches its radial parent. Its background can merge
     # at that y, so identify all four texts within the independently observed
     # child x-column rather than dropping the touching first row.
-    child=(child[0],region.y,child[2],region.y+region.height)
+    child=(child[0],0,child[2],picture.shape[0])
     for label in ('Toggle Soft Edge Display','Harden Edge','Soften/Harden Edges','Soften Edge'):
         locate(picture,child,label)
     event('ESC',shift=True);event('ESC','RELEASE',shift=True)
@@ -638,23 +772,24 @@ def suite():
         reference=yield from geometry_reference('maya-quad-'+str(requested_scale))
         for domain in ('create','object'):
             before=seed(domain);yield from settle(5)
-            if requested_scale==1.0:
-                yield from start()
-                picture=capture('maya-quad-'+domain+'-'+str(requested_scale))
-                compare_edges(radial_rectangles(picture),reference,'quad '+domain)
-                rect=companion_rect(picture)
-                check(region.x<=rect[0]<rect[2]<=region.x+region.width and
-                      region.y<=rect[1]<rect[3]<=region.y+region.height,'quad companion escaped actual viewport')
-                yield from cancel()
-            else:
-                check(region.height/scale<250,'short-quad unsupported fixture dimensions changed')
-                event('MOUSEMOVE','NOTHING',origin)
-                event('LEFT_SHIFT',shift=True);event('RIGHTMOUSE',shift=True)
-                yield from settle(8)
-                capture('maya-short-quad-'+domain)
-                check(not list(win.modal_operators),'short quad must safely reject a ring plus minimum companion that cannot fit')
-                event('RIGHTMOUSE','RELEASE',shift=True);event('LEFT_SHIFT','RELEASE')
-                yield from settle(6)
+            if requested_scale==2.0:
+                check(region.height/scale<250,'short-quad fixture dimensions changed')
+            yield from start()
+            picture=capture('maya-quad-'+domain+'-'+str(requested_scale))
+            compare_edges(radial_rectangles(picture,object_ring_labels if domain=='object' else create_ring_labels),reference,'quad '+domain)
+            labels=object_labels if domain=='object' else create_labels
+            columns=actual_columns(picture,labels)
+            check(columns,'quad full menu must expose actual complete columns')
+            check(all(0<=r[0]<r[2]<=win.width and 0<=r[1]<r[3]<=win.height for r in columns),
+                  'quad companion escapes whole-window surface')
+            if requested_scale==2.0:
+                check(any(r[0]<region.x or r[2]>region.x+region.width or r[1]<region.y
+                          or r[3]>region.y+region.height for r in columns),
+                      'short quad must actually use the whole-window fallback')
+            labels=object_labels if domain=='object' else create_labels
+            check(tuple(row[0] for r in columns for row in rendered_rows(picture,r,labels))==labels,
+                  'quad companion lost a complete row or changed order')
+            yield from cancel()
             check(state()==before,'quad open/cancel changed scene or Recent')
         yield from geometry_reference('maya-quad-next-input-'+str(requested_scale))
         with override():bpy.ops.view3d.axismeld_view(action='TOGGLE_QUAD')

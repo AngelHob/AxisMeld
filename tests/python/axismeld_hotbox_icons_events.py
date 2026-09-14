@@ -9,6 +9,8 @@ import numpy as np
 import imbuf
 import blf
 import bpy
+sys.path.insert(0,str(Path(__file__).parent))
+from axismeld_hotbox_image_fixture import observed_radial_rectangles, observed_menu_rectangles, menu_background_mask
 
 root=Path(os.environ['AXISMELD_TEST_ROOT']).resolve()
 assert Path(bpy.app.tempdir).resolve().is_relative_to(root)
@@ -71,12 +73,67 @@ def suite():
         rgb = pixels[:, :, :3]
         return (rgb[:, :, 1] > .24) & (rgb[:, :, 1] > np.maximum(rgb[:, :, 0], rgb[:, :, 2])*.45)
 
+    def labelled_radial_rectangles(pixels, scale, expected_directions, matches):
+        """Locate a direct Object/Create/component ring after its actual translation.
+
+        Uses the diagnostic magenta theme shared by content GUI observers. It does
+        not infer motion from companion count, height, column count or source press.
+        """
+        boxes=[r for r in observed_menu_rectangles(menu_background_mask(pixels),35*scale,13*scale)
+               if r[3]-r[1]<=27*scale]
+        if not boxes: raise AssertionError('No actual radial button backgrounds')
+        # Native toolbar controls can share the diagnostic theme. Identify a full
+        # directional constellation, rather than treating the highest colored box
+        # in the entire window as its North button.
+        candidates=[]
+        for north in boxes:
+            for south in boxes:
+                ny=(north[1]+north[3])/2;sy=(south[1]+south[3])/2
+                nx=(north[0]+north[2])/2;sx=(south[0]+south[2])/2
+                if not 70*scale<ny-sy<180*scale or abs(nx-sx)>20*scale: continue
+                cx=(nx+sx)/2;cy=(ny+sy)/2;found={};duplicate=False
+                for rect in boxes:
+                    rx=(rect[0]+rect[2])/2;ry=(rect[1]+rect[3])/2
+                    if not sy<=ry<=ny or abs(rx-cx)>400*scale: continue
+                    dx=rx-cx;dy=ry-cy
+                    direction=('N' if dy>16*scale else 'S' if dy < -16*scale else '')
+                    direction+=('E' if dx>20*scale else 'W' if dx < -20*scale else '')
+                    # A diagonal belongs between the observed N/S button edges.
+                    # Native header controls can share both this theme and a similar
+                    # glyph, but sit alongside N rather than inside the actual ring.
+                    if len(direction)==2 and not south[3]<ry<north[1]: continue
+                    if not direction or direction not in expected_directions or not matches(direction,rect): continue
+                    if direction in found: duplicate=True;break
+                    found[direction]=rect
+                if not duplicate and set(found)==set(expected_directions):
+                    candidates.append({'rects':found,'center':(cx,cy)})
+        if len(candidates)!=1:
+            raise AssertionError(f'Expected one complete observed radial constellation, got {candidates!r}; boxes={boxes!r}')
+        return candidates[0]
+
     def radial_rectangles(pixels, expected=None):
+        if isinstance(expected,dict) and 'NE' in expected:
+            def matches(direction,rect):
+                glyph=template(expected[direction]);gh,gw=glyph.shape
+                if rect[2]-rect[0]-4<gw or rect[3]-rect[1]-4<gh:return False
+                return locate(pixels,rect,expected[direction],required=False) is not None
+            observed=labelled_radial_rectangles(pixels,scale,set(expected),matches)['rects']
+            cells=observed_menu_rectangles(menu_background_mask(pixels),10*scale,13*scale)
+            for d,r in tuple(observed.items()):
+                adjacent=[c for c in cells if 18*scale<=c[2]-c[0]<=27*scale and 0<=c[0]-r[2]<=3*scale
+                          and abs(c[1]-r[1])<=2*scale and abs(c[3]-r[3])<=2*scale]
+                check(len(adjacent)<=1,'ambiguous actual Options cell '+repr(adjacent))
+                if adjacent:observed[d]=(r[0],r[1],adjacent[0][2],r[3])
+            return {d:(r[0],r[1],r[2]-1,r[3]-1) for d,r in observed.items()}
+        center=origin
+        if expected is None or len(expected)==8 or 'NE' in expected:
+            directions=set(expected) if expected is not None else {'N','NW','NE','W','E','SW','SE','S'}
+            center=observed_radial_rectangles(pixels,scale,directions)['center']
         rgb=pixels[:,:,:3]
         colored=((rgb[:,:,0]>.3)&(rgb[:,:,2]>.25)&(np.minimum(rgb[:,:,0],rgb[:,:,2])>2.2*rgb[:,:,1]))
         groups={}
-        for yy in range(max(region.y,int(origin[1]-86*scale)),min(region.y+region.height,int(origin[1]+86*scale))):
-            xs=np.flatnonzero(colored[yy,region.x:region.x+region.width])+region.x
+        for yy in range(max(0,int(center[1]-86*scale)),min(pixels.shape[0],int(center[1]+86*scale))):
+            xs=np.flatnonzero(colored[yy,:])
             for span in np.split(xs,np.flatnonzero(np.diff(xs)>3*scale)+1):
                 if len(span) and span[-1]-span[0]>=60*scale:
                     key=(round(int(span[0])/(4*scale)),round(int(span[-1])/(4*scale)))
@@ -99,7 +156,7 @@ def suite():
             if not 13*scale<=y1-y0<=27*scale:
                 continue
             x0,x1=min(r[0] for r in rows),max(r[1] for r in rows)
-            dx,dy=(x0+x1)/2-origin[0],(y0+y1)/2-origin[1]
+            dx,dy=(x0+x1)/2-center[0],(y0+y1)/2-center[1]
             direction=('N' if dy>16*scale else 'S' if dy < -16*scale else '')
             direction+=('E' if dx>20*scale else 'W' if dx < -20*scale else '')
             if direction:
@@ -122,8 +179,8 @@ def suite():
                 colored[max(0,ya-3):yb+3,max(0,xa-3):xb+3] = False
             minimum_width = (100 if exclude is not None else 150)*scale
             groups = {}
-            for y in range(region.y+3, region.y+region.height-3):
-                xs = np.flatnonzero(colored[y, region.x+2:region.x+region.width-2])+region.x+2
+            for y in range(3,pixels.shape[0]-3):
+                xs = np.flatnonzero(colored[y,2:pixels.shape[1]-2])+2
                 if len(xs) < minimum_width-10*scale:
                     continue
                 cuts = np.flatnonzero(np.diff(xs) > 28*scale)+1
@@ -172,7 +229,10 @@ def suite():
              else foreground(pixels[y0:y1-1,x0:x1-1]))
         glyph=template(label)
         gh,gw=glyph.shape
-        check(ink.shape[0]>=gh and ink.shape[1]>=gw,'observed box cannot contain '+label)
+        if ink.shape[0]<gh or ink.shape[1]<gw:
+            if not required:
+                return None
+            check(False,'observed box cannot contain '+label)
         shape=(ink.shape[0]+gh-1,ink.shape[1]+gw-1)
         product=np.fft.rfft2(ink,s=shape)*np.fft.rfft2(glyph[::-1,::-1],s=shape)
         hits=np.fft.irfft2(product,s=shape)[gh-1:ink.shape[0],gw-1:ink.shape[1]]
@@ -348,21 +408,39 @@ def suite():
     def whole_region():
         return (region.x+2,region.y+2,region.x+region.width-2,region.y+region.height-2)
 
-    def find_row(label,tag):
-        for page in range(32):
-            pixels=capture(tag+'-'+str(page))
-            rect=companion_rect(pixels)
-            located=locate(pixels,rect,label,required=False)
-            if located:
-                observed=semantic_icon(pixels,rect,label)
-                return pixels,rect,observed
-            event('MOUSEMOVE','NOTHING',((rect[0]+rect[2])/2,(rect[1]+rect[3])/2),shift=True)
-            event('WHEELDOWNMOUSE',shift=True)
-            yield from settle(4)
-        raise AssertionError('bounded real wheel paging did not expose '+label)
+    def labelled_column(pixels, label):
+        # Connected backgrounds preserve real inter-column gaps. The old span
+        # closing joined adjacent columns and placed a left-column Options hit
+        # at the right edge of a different column.
+        glyph=template(label);gh,gw=glyph.shape
+        matches=[]
+        backgrounds=observed_menu_rectangles(menu_background_mask(pixels),100*scale,13*scale)
+        columns=[rect for rect in backgrounds if rect[3]-rect[1]>27*scale]
+        # A one-row final column (e.g. Polygon Display at 2x) is still native:
+        # it shares observed width/top and an adjacent column gap with a tall
+        # sibling. Isolated radial buttons cannot establish this context.
+        for rect in backgrounds:
+            if rect in columns:
+                continue
+            if any(abs((rect[2]-rect[0])-(other[2]-other[0]))<=2*scale and
+                   abs(rect[3]-other[3])<=2*scale and
+                   0<=rect[0]-other[2]<=10*scale for other in columns):
+                columns.append(rect)
+        for rect in columns:
+            if rect[2]-rect[0]-4<gw or rect[3]-rect[1]-4<gh:
+                continue
+            if locate(pixels,rect,label,required=False) is not None:
+                matches.append(rect)
+        check(len(matches)==1,'expected one actual native column containing '+label+': '+repr(matches))
+        return matches[0]
 
-    # Keep icon and clipping coverage at both effective UI scales. All settings
-    # and geometry live only in this disposable factory process.
+    def find_row(label,tag):
+        yield from settle(1)
+        pixels=capture(tag+'-0')
+        rect=labelled_column(pixels,label)
+        observed=semantic_icon(pixels,rect,label)
+        return pixels,rect,observed
+
     for requested_scale in (1.0,2.0):
         bpy.context.preferences.view.ui_scale=requested_scale
         yield from settle(10)
@@ -454,8 +532,7 @@ def suite():
             event('MOUSEMOVE','NOTHING',observed['point'],shift=True)
             yield from settle(8)
             child=capture(tag+'-'+parent.replace(' ','-')+'-cascade')
-            childrect=companion_rect(child,exclude=rect)
-            child_labels=[semantic_icon(child,childrect,label,state=label=='Backface Culling')
+            child_labels=[semantic_icon(child,labelled_column(child,label),label,state=label=='Backface Culling')
                           for label in children]
             check(len({item['text'][0] for item in child_labels})==1,
                   'semantic/state columns misalign sibling labels: '+parent)
@@ -490,6 +567,7 @@ def suite():
         # the semantic icon. Enter through Space's actual configured center.
         for menu,labels in (('center.controls.style',('Zones and Menu Rows','Zones Only','Center Zone Only',
                                                      'Center Zone RMB Popups')),
+                            ('center.controls.transparency',('0%','25%','50%','75%','100%')),
                             ('center.controls.modeling',('Show/Hide Modeling',)),
                             ('context.create_menu.polygon_display_all',
                              ('Backface Culling on for All Polys','Backface Culling off for All Polys'))):
@@ -501,7 +579,7 @@ def suite():
             # treating their contiguous backdrops as one tall rectangle.
             rect=whole_region()
             for label in labels:
-                semantic_icon(pixels,rect,label,state=menu.startswith('center.controls.'),
+                semantic_icon(pixels,rect,label,state=(menu in ('center.controls.transparency','center.controls.modeling') or label=='Center Zone RMB Popups'),
                               disabled_state=label=='Center Zone RMB Popups')
             yield from cancel()
         settings()
@@ -515,12 +593,11 @@ def suite():
         quad_reference,_=observe_ring(tag+'-quad-views',views_labels)
         yield from cancel()
         if requested_scale==2.0:
-            # This short physical quad cannot fit the complete W ring and its
-            # new paged companion at 2x. Rejection must be atomic, including the
-            # held gesture; record the actual dimensions instead of hiding it.
-            print('QUAD_W_UNSUPPORTED_BOUNDS','physical',region.width,region.height,
+            # The old short-quad rejection now expands onto the whole window.
+            # Preserve full scene/tool/input observers around that same boundary.
+            print('QUAD_W_FULL_SURFACE_BOUNDS','physical',region.width,region.height,
                   'logical',region.width/scale,region.height/scale,'scale',scale,flush=True)
-            check(region.height/scale<250,'unsupported W fixture is no longer a short quad region')
+            check(region.height/scale<250,'2x boundary fixture is no longer a short quad region')
             def scene_tool_state():
                 with override():
                     active=bpy.context.view_layer.objects.active
@@ -556,21 +633,24 @@ def suite():
             before=held
             event('LEFTMOUSE')
             yield from settle(9)
-            capture(tag+'-quad-W-unsupported')
-            check([op.bl_idname for op in win.modal_operators]==['VIEW3D_OT_axismeld_hotbox_release_guard'],
-                  'layout rejection must retain only the physical release guard')
-            print('QUAD_W_STATE_FAILED',repr(scene_tool_state()),flush=True)
-            check(scene_tool_state()==before,'unsupported short W display changed normal held scene/tool/Recent')
+            actual,_=observe_ring(tag+'-quad-W-expanded',transform_labels)
+            gaps(actual,quad_reference,'quad W2x whole-window complete composition')
+            pixels=capture(tag+'-quad-W-expanded-companion')
+            companion=companion_rect(pixels)
+            semantic_icon(pixels,companion,'Selection Constraints')
+            check([op.bl_idname for op in win.modal_operators]==['VIEW3D_OT_axismeld_hotbox'],
+                  'whole-window W must retain one visible owner')
+            check(scene_tool_state()==before,'expanded W display changed normal held scene/tool/Recent')
+            event('MOUSEMOVE','NOTHING',origin)
             event('LEFTMOUSE','RELEASE');event('W','RELEASE')
             yield from settle(6)
-            print('QUAD_W_STATE_RELEASED',repr(scene_tool_state()),flush=True)
             check(not list(win.modal_operators) and scene_tool_state()==before,
-                  'unsupported short W release left handler or scene/tool/Recent changes')
+                  'expanded W original-source return changed scene or retained input')
             yield from begin()
-            observe_ring(tag+'-quad-views-after-W-unsupported',views_labels)
+            observe_ring(tag+'-quad-views-after-W-expanded',views_labels)
             yield from cancel()
             check(scene_tool_state()==before,'next Views cancellation changed scene/tool/Recent')
-            print('PASS 2x short quad W safely unsupported; release and next Views recovered',flush=True)
+            print('PASS2x short quad W expands across panes; original return and Views recover',flush=True)
 
             # Keep the same real quad, increase logical room through the public
             # UI scale preference, and measure both rings afresh at that scale.
@@ -602,32 +682,18 @@ def suite():
             actual,_=observe_ring(tag+'-quad-W',transform_labels)
             gaps(actual,quad_reference,'quad W')
             yield from cancel('W')
-        if requested_scale==1.0:
-            yield from begin(None,'RIGHTMOUSE',True)
-            actual,_=observe_ring(tag+'-quad-object',object_labels)
-            gaps(actual,quad_reference,'quad Object')
-            yield from cancel(None,'RIGHTMOUSE',True)
-        else:
-            # Actual old/new disposable probes both reject this 480x231 logical
-            # region: complete Object ring plus minimum paged companion cannot
-            # fit. Preserve this existing safe narrow-window boundary.
-            check(region.height/scale<250,'unsupported fixture is no longer a short quad region')
-            before=(bpy.context.mode,bpy.context.active_object.name,
-                    tuple((o.name,o.select_get(),len(o.modifiers)) for o in bpy.context.view_layer.objects))
-            event('MOUSEMOVE','NOTHING',origin)
-            event('LEFT_SHIFT',shift=True);event('RIGHTMOUSE',shift=True)
-            yield from settle(9)
-            capture(tag+'-quad-object-unsupported')
-            check(not list(win.modal_operators),'unsupported short Object region started a competing handler')
-            event('RIGHTMOUSE','RELEASE',shift=True);event('LEFT_SHIFT','RELEASE')
-            yield from settle(5)
-            check((bpy.context.mode,bpy.context.active_object.name,
-                   tuple((o.name,o.select_get(),len(o.modifiers)) for o in bpy.context.view_layer.objects))==before,
-                  'unsupported short Object region changed mode/selection/modifiers')
-            yield from begin()
-            capture(tag+'-quad-views-after-unsupported')
-            yield from cancel()
-            print('PASS existing 2x short quad Object unsupported guard and next Views input',flush=True)
+        before=(bpy.context.mode,bpy.context.active_object.name,
+                tuple((o.name,o.select_get(),len(o.modifiers)) for o in bpy.context.view_layer.objects))
+        yield from begin(None,'RIGHTMOUSE',True)
+        actual,_=observe_ring(tag+'-quad-object-expanded',object_labels)
+        gaps(actual,quad_reference,'quad Object whole-window complete composition')
+        yield from cancel(None,'RIGHTMOUSE',True)
+        check((bpy.context.mode,bpy.context.active_object.name,
+               tuple((o.name,o.select_get(),len(o.modifiers)) for o in bpy.context.view_layer.objects))==before,
+              'expanded Object cancellation changed mode/selection/modifiers')
+        yield from begin()
+        observe_ring(tag+'-quad-views-after-object',views_labels)
+        yield from cancel()
         with override():
             bpy.ops.view3d.axismeld_view(action='TOGGLE_QUAD')
         yield from settle(8)

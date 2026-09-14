@@ -30,6 +30,10 @@ if(WITH_GTESTS)
     DEPENDS
       tests/hotbox_menu_fixture.py
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/hotbox_catalog.py
+      ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/hotbox_runtime.py
+      ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/context_hotbox.py
+      ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/maya_menu_catalog.py
+      ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/maya_menu_reference.py
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/tool_hotbox.py
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/creation_hotbox.py
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/context_modeling_hotbox.py

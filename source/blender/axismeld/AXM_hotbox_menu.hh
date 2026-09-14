@@ -53,7 +53,8 @@ struct MenuRect {
   bool retained_only = false;  // Visible background, not a disabled command or hit target.
   bool option_box = false;
   bool companion = false;  // Independent Object list, not a radial child layer.
-  std::string owner;       // List owner for paging and independent cascade navigation.
+  std::string owner;       // List owner for independent cascade navigation.
+  int column = 0;          // Native backdrop identity; columns never share a hull.
 };
 struct MenuScrollBounds {
   /* Displayed native list page, independent of a stale caller-owned offset. */
@@ -70,6 +71,7 @@ struct MenuLayout {
   // Absent/compact-hidden directions occlude outward marking without affecting layout fitting.
   std::vector<MenuRect> marking_gaps;
   std::vector<MenuRect> occlusion_regions;  // Native-list gaps/corridors never dispatch.
+  std::vector<MenuRect> native_columns;     // Complete per-column backdrop and hit bounds.
 };
 
 /* Half-open layout bounds in the original WINDOW's logical coordinates. */
@@ -82,8 +84,8 @@ struct MenuBounds {
  * open_path contains menu IDs, starting with a visible title (not a root row group).
  * {"center", mapped_menu_id, ...} explicitly anchors a configured menu at the central button;
  * this leading center is an anchor marker, not a parent node (even for {"center", "center"}).
- * Offsets are first child indices, keyed independently by row/menu ID; absent means zero.
- * Layout-only @scroll:<owner>:previous/next and @back:<owner> IDs navigate, never dispatch.
+ * Legacy offsets are accepted but ignored; every opened directory is complete.
+ * No layout-only scrolling, paging or artificial Back items are generated.
  * The visible central button can extend inward at edges. Gesture origins remain caller-owned.
  * popup_origin optionally positions the view overlay without moving its retained first level.
  */
@@ -111,8 +113,7 @@ MenuLayout layout_menu_in_bounds(
     const std::array<float, 2> *popup_origin = nullptr,
     std::string_view tool_root = {},
     const std::vector<std::string> &companion_path = {});
-/* Native list pages normalize from their displayed first row; other menus retain legacy math.
- */
+/* Compatibility bridge: complete menus always return zero and ignore stale page state. */
 int menu_scroll_offset_transition(const MenuLayout &layout,
                                   std::string_view owner,
                                   int stored_offset,

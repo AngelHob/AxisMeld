@@ -132,8 +132,8 @@ def object_modeling_companion(node):
         row('mapping.cylindrical', 'Cylindrical Map', options=True),
         row('mapping.spherical', 'Spherical Map', options=True), sep('mapping_spherical'),
         row('mapping.automatic', 'Automatic Map', options=True),
-        row('mapping.camera', 'Camera Based Map', options=True),
-        row('mapping.normal', 'Normal Based Map', options=True),
+        row('mapping.camera', 'Camera-Based Map', options=True),
+        row('mapping.normal', 'Normal-Based Map', options=True),
     ))
     booleans = directory('booleans', 'Booleans', tuple(
         row('booleans.' + suffix, label, options=True,

@@ -21,6 +21,8 @@ import imbuf
 import blf
 import bmesh
 import bpy
+sys.path.insert(0,str(Path(__file__).parent))
+from axismeld_hotbox_image_fixture import observed_radial_rectangles
 from bpy_extras.view3d_utils import location_3d_to_region_2d
 from mathutils import Quaternion, Vector
 
@@ -259,8 +261,8 @@ def suite():
             colored[max(0,ya-3):yb+3,max(0,xa-3):xb+3] = False
         minimum_width = (100 if exclude is not None else 150)*scale
         groups = {}
-        for y in range(region.y+3, region.y+region.height-3):
-            xs = np.flatnonzero(colored[y, region.x+2:region.x+region.width-2])+region.x+2
+        for y in range(3,pixels.shape[0]-3):
+            xs = np.flatnonzero(colored[y,2:pixels.shape[1]-2])+2
             if len(xs) < minimum_width-10*scale:
                 continue
             cuts = np.flatnonzero(np.diff(xs) > 28*scale)+1
@@ -661,11 +663,14 @@ def suite():
 
 
     def radial_rectangles(pixels, expected=None):
+        center=origin
+        if expected is None:
+            center=observed_radial_rectangles(pixels,scale,{'N','NW','NE','W','E','SW','SE','S'})['center']
         rgb=pixels[:,:,:3]
         colored=((rgb[:,:,0]>.3)&(rgb[:,:,2]>.25)&(np.minimum(rgb[:,:,0],rgb[:,:,2])>2.2*rgb[:,:,1]))
         groups={}
-        for yy in range(max(region.y,int(origin[1]-86*scale)),min(region.y+region.height,int(origin[1]+86*scale))):
-            xs=np.flatnonzero(colored[yy,region.x:region.x+region.width])+region.x
+        for yy in range(max(0,int(center[1]-86*scale)),min(pixels.shape[0],int(center[1]+86*scale))):
+            xs=np.flatnonzero(colored[yy,:])
             for span in np.split(xs,np.flatnonzero(np.diff(xs)>3*scale)+1):
                 if len(span) and span[-1]-span[0]>=60*scale:
                     key=(round(int(span[0])/(4*scale)),round(int(span[-1])/(4*scale)))
@@ -688,7 +693,7 @@ def suite():
             if not 13*scale<=y1-y0<=27*scale:
                 continue
             x0,x1=min(r[0] for r in rows),max(r[1] for r in rows)
-            dx,dy=(x0+x1)/2-origin[0],(y0+y1)/2-origin[1]
+            dx,dy=(x0+x1)/2-center[0],(y0+y1)/2-center[1]
             direction=('N' if dy>16*scale else 'S' if dy < -16*scale else '')
             direction+=('E' if dx>20*scale else 'W' if dx < -20*scale else '')
             if direction:
@@ -825,9 +830,10 @@ def suite():
                region.y+(region.height-4 if yside else 4))
         yield from begin(point=point)
         rect=companion_rect(capture('composition-corner-'+str(xside)+str(yside)))
-        check(region.x<=rect[0]<rect[2]<=region.x+region.width
-              and region.y<=rect[1]<rect[3]<=region.y+region.height,
-              'corner companion body escaped originating viewport')
+        check(0<=rect[0]<rect[2]<=win.width and 0<=rect[1]<rect[3]<=win.height,
+              'complete corner companion body escaped whole-window surface')
+        print('CORNER_COMPLETE_SURFACE',tuple(rect),'source',(region.x,region.y,region.width,region.height),
+              'window',(win.width,win.height),flush=True)
         yield from release()
         idle('corner original-press cancel')
         check(state()==expected,'corner clamping consumed original-press cancellation')

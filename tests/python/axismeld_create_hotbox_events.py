@@ -2,6 +2,7 @@
 """Actual Shift+RMB creation, geometry, undo and scoped native fallback."""
 import os
 import json
+import numpy as np
 from pathlib import Path
 import sys
 import traceback
@@ -90,10 +91,34 @@ def suite():
     outer = {'N': (0, 260), 'NE': (280, 32), 'E': (280, 0), 'SE': (280, -32),
              'S': (0, -260), 'SW': (-280, -32), 'W': (-280, 0), 'NW': (-280, 32)}
 
-    # Actual create-s-extended-before-release.png proves the old S=-260
-    # target is now Soccer Ball. The ring-to-list gap is also an intentional
-    # no-marking corridor. Release S on Cube; retain long outside strokes
-    # for every other direction and verify companion cancellation separately.
+    sys.path.insert(0, str(Path(__file__).parent))
+    from axismeld_hotbox_image_fixture import observed_radial_rectangles
+    for colors in (bpy.context.preferences.themes[0].user_interface.wcol_menu,
+                   bpy.context.preferences.themes[0].user_interface.wcol_menu_back,
+                   bpy.context.preferences.themes[0].user_interface.wcol_menu_item):
+        colors.inner = colors.inner_sel = (.8, .04, .65, 1)
+    with override():
+        hotbox_runtime.reload_settings(bpy.context, session={'schema_version': 1, 'settings': {
+            'transparency': 0, 'appearance': {'theme_background': True, 'brightness': 0}}})
+    outer_offsets = outer.copy()
+    def observe_create():
+        path = Path(os.environ.get('AXISMELD_TEST_ARTIFACTS', root)) / 'create-input.png'
+        with override():
+            bpy.ops.screen.screenshot(filepath=str(path))
+        image = bpy.data.images.load(str(path), check_existing=False)
+        try:
+            width, height = image.size
+            pixels = np.asarray(image.pixels[:], dtype=np.float32).reshape(height, width, 4)
+            ring = observed_radial_rectangles(pixels, scale, targets)
+        finally:
+            bpy.data.images.remove(image)
+        for direction, rect in ring['rects'].items():
+            targets[direction] = (((rect[0]+rect[2])/2-cx)/scale,
+                                  ((rect[1]+rect[3])/2-cy)/scale)
+        for direction, (dx, dy) in outer_offsets.items():
+            outer[direction] = ((ring['center'][0]+dx*scale-cx)/scale,
+                                (min(win.height-2, ring['center'][1]+dy*scale)-cy)/scale)
+        return ring
 
     def begin(trigger='RIGHTMOUSE', required_shift=True, required_ctrl=False):
         event('MOUSEMOVE', 'NOTHING', (0, 0))
@@ -106,6 +131,7 @@ def suite():
         yield from settle()
         check(modals().count('VIEW3D_OT_axismeld_hotbox') == 1,
               'create gesture failed to open: ' + str(modals()))
+        observe_create()
 
     def finish(trigger='RIGHTMOUSE', required_shift=True, required_ctrl=False):
         event(trigger, 'RELEASE', shift=required_shift, ctrl=required_ctrl)
@@ -304,10 +330,11 @@ def suite():
         bpy.context.window_manager.keyconfigs.update()
     yield from settle()
 
-    # Real Space -> Create -> native list -> shared radial. Retain an existing
+    # Real Space -> Create -> Polygon Primitives -> native Cube leaf. Retain an existing
     # selected object to prove this explicit entry has a different scope to RMB.
     sys.path.insert(0, str(Path(__file__).parent))
-    from axismeld_hotbox_geometry_fixture import native_page
+    from axismeld_hotbox_geometry_fixture import native_page, native_fixture_surface
+    native_fixture_surface((0, 0, win.width, win.height))
     blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
     # Every Space title and the native Polygon Primitives entry now has one
     # semantic icon. The central AxisMeld reference above already counted its icon.
@@ -335,15 +362,24 @@ def suite():
     event('MOUSEMOVE', 'NOTHING')
     event('LEFTMOUSE')
     yield from settle()
-    primitive_rect = native_page(create_rect, ['Polygon Primitives'], measure, bounds, scale,
-                                 submenu_indices=(0,))['items'][0]
+    from axismeld_maya_hierarchy_test import normalized_reference_roots, visual_rows
+    create_reference=normalized_reference_roots()['common'][2]
+    create_rows=visual_rows(create_reference)
+    def level_page(anchor,rows):
+        state=any(r['source'].get('isCheckBox') or r['source'].get('isRadioButton') for r in rows)
+        return native_page(anchor,[r['label'] for r in rows],
+            lambda label: measure(label)+(20 if state else 0)+(24 if any(r['label']==label and r['options'] for r in rows) else 0),
+            bounds,scale,submenu_indices=[i for i,r in enumerate(rows) if r['source'].get('subMenu')])
+    primitive_index=next(i for i,r in enumerate(create_rows) if r['label']=='Polygon Primitives')
+    primitive_rect=level_page(create_rect,create_rows)['items'][primitive_index]
     absolute_middle(primitive_rect)
     event('MOUSEMOVE', 'NOTHING')
     yield from settle()
     screenshot('create-space-existing-selection.png')
-    # Release on the actual Cube row, 64px below this ring entry. The old
-    # 160px extension now enters the simultaneous companion list.
-    pos[1] -= int(64*scale)
+    primitive_rows=visual_rows(create_rows[primitive_index]['source'])
+    cube_index=next(i for i,r in enumerate(primitive_rows) if r['label']=='Cube')
+    cube_rect=level_page(primitive_rect,primitive_rows)['items'][cube_index]
+    absolute_middle(cube_rect)
     event('MOUSEMOVE', 'NOTHING')
     yield from settle()
     event('LEFTMOUSE', 'RELEASE')

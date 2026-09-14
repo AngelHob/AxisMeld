@@ -7,6 +7,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / 'scripts' / 'modules'))
 from axismeld.hotbox_catalog import default_catalog
+from axismeld.hotbox_runtime import make_snapshot, serialize_snapshot
 
 
 definitions = []
@@ -20,7 +21,9 @@ def node(value):
     initializer = ('{' + fields + ', MenuKind::' + value['kind'].title() + ', ' +
             str(value['enabled']).lower() + ', {' + children + '}, ' +
             json.dumps(value.get('direction', '')) + ', ' +
-            json.dumps(value.get('presentation', '')) + '}')
+            json.dumps(value.get('presentation', '')) + ', ' +
+            json.dumps(value.get('indicator', '')) + ', ' +
+            str(value.get('checked', False)).lower() + '}')
     # Bound each initializer's expression tree; one deeply nested default tree can
     # exhaust MSVC commit memory while compiling exception cleanup code.
     definitions.append(f'static MenuNode {name}() {{ return {initializer}; }}\n')
@@ -28,8 +31,18 @@ def node(value):
 
 
 roots = ',\n'.join(node(root) for root in default_catalog())
+serialized = serialize_snapshot(make_snapshot(generation=73))
+json_chunks = ',\n'.join(json.dumps(serialized[index:index + 4096], ensure_ascii=True)
+                         for index in range(0, len(serialized), 4096))
 Path(sys.argv[1]).write_text(
     '// Generated from the production catalog. Do not edit.\n'
+    '#ifndef AXISMELD_JSON_FIXTURE_ONLY\n'
     + ''.join(definitions) + 'static MenuSnapshot default_snapshot() { return {1, "rows", 25, '
     '{"common", "pane", "modeling"}, {"views", "views", "views"}, {' +
-    roots + '}}; }\n', encoding='utf-8')
+    roots + '}}; }\n#endif\n'
+    'static std::string default_snapshot_json() {\n'
+    '  static const char *chunks[] = {\n' + json_chunks + '\n};\n'
+    '  std::string result;\n'
+    f'  result.reserve({len(serialized.encode("utf-8"))});\n'
+    '  for (const char *chunk : chunks) { result += chunk; }\n'
+    '  return result;\n}\n', encoding='utf-8')

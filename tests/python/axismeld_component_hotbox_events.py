@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 """Actual RMB ownership, component state, cancellation and native fallback."""
 import os
+import json
+import numpy as np
 from pathlib import Path
 import sys
 import traceback
@@ -40,8 +42,32 @@ def suite():
         return bpy.context.temp_override(window=win, area=area, region=region)
     def modals():
         return [op.bl_idname for op in win.modal_operators]
+    sys.path.insert(0, str(Path(__file__).parent))
+    from axismeld_hotbox_image_fixture import (observed_radial_rectangles,
+        observed_menu_rectangles, menu_background_mask)
+    from axismeld import hotbox_runtime
+    for colors in (bpy.context.preferences.themes[0].user_interface.wcol_menu,
+                   bpy.context.preferences.themes[0].user_interface.wcol_menu_back,
+                   bpy.context.preferences.themes[0].user_interface.wcol_menu_item):
+        colors.inner = colors.inner_sel = (.8, .04, .65, 1)
+    with override():
+        hotbox_runtime.reload_settings(bpy.context, session={'schema_version': 1, 'settings': {
+            'transparency': 0, 'appearance': {'theme_background': True, 'brightness': 0}}})
+    def observe():
+        path = Path(os.environ.get('AXISMELD_TEST_ARTIFACTS', root)) / 'component-input.png'
+        with override():
+            bpy.ops.screen.screenshot(filepath=str(path))
+        image = bpy.data.images.load(str(path), check_existing=False)
+        try:
+            width, height = image.size
+            pixels = np.asarray(image.pixels[:], dtype=np.float32).reshape(height, width, 4)
+            ring = observed_radial_rectangles(pixels, scale, ('N','NE','E','SE','S','SW','W'))
+            columns = observed_menu_rectangles(menu_background_mask(pixels), 80*scale, 100*scale)
+            return ring, columns
+        finally:
+            bpy.data.images.remove(image)
     captured = False
-    def gesture(delta, cancel=False, trigger='RIGHTMOUSE', during=None):
+    def gesture(delta, cancel=False, trigger='RIGHTMOUSE', during=None, companion_row=None):
         nonlocal captured
         event('MOUSEMOVE', 'NOTHING', (0, 0))
         yield from settle()  # Scene setup must reach the GPU before the PRESS pick.
@@ -52,9 +78,38 @@ def suite():
             with override():
                 bpy.ops.screen.screenshot(filepath=str(Path(os.environ.get('AXISMELD_TEST_ARTIFACTS', root)) / 'component-ring.png'))
             captured = True
+        ring, columns = observe()
         if during is not None:
             during()
-        event('MOUSEMOVE', 'NOTHING', delta)
+        # PRESS/GPU pick and physical-origin cancellation stay at (cx, cy).
+        # Only visible target coordinates follow the actually rendered composition.
+        if companion_row is not None:
+            with override():
+                pending = list(json.loads(hotbox_runtime.snapshot(bpy.context))['menus'])
+            while pending:
+                node = pending.pop()
+                if node['id'] == 'context.component_menu':
+                    rows = node['children']; break
+                pending.extend(node['children'])
+            column = min(columns, key=lambda r: abs((r[0]+r[2])/2-ring['center'][0]))
+            check(abs((column[3]-column[1])/scale-570) <= 6,
+                  'component input fixture requires its complete 570px single column')
+            used = 0
+            for item in rows:
+                height = 6 if item['kind'] == 'separator' else 24
+                if item['id'] == 'context.component_menu.' + companion_row:
+                    # Stay away from the physical press cancel disk and Options column.
+                    pos[:] = (int(column[0]+55*scale), int(column[3]-(2+used+height/2)*scale))
+                    break
+                used += height
+            else:
+                raise AssertionError('Missing companion row ' + companion_row)
+        elif delta == (0, 0):
+            pos[:] = (cx, cy)
+        else:
+            pos[:] = (int(ring['center'][0]+delta[0]*scale),
+                      min(win.height-2, int(ring['center'][1]+delta[1]*scale)))
+        event('MOUSEMOVE', 'NOTHING')
         yield from settle()
         if cancel:
             event('ESC')
@@ -89,22 +144,22 @@ def suite():
         yield from gesture(delta,during=capture_outer)
         check(bpy.context.mode == 'EDIT_MESH' and tuple(bpy.context.tool_settings.mesh_select_mode) == mask,
               'RMB outer stroke must retain its component direction: '+repr((delta,bpy.context.mode,tuple(bpy.context.tool_settings.mesh_select_mode))))
-    # The new lower companion owns the former S extension. In this actual
-    # factory viewport -260 reaches Invert Selection; -265 reaches its separator.
+    # Full companion owns these observed rows; fixed old S offsets no longer
+    # identify them after the complete composition is bottom-aligned.
     import bmesh
     def occluded_state():
         bm=bmesh.from_edit_mesh(bpy.context.active_object.data)
         return (bpy.context.mode,tuple(bpy.context.tool_settings.mesh_select_mode),
                 tuple(tuple(e.select for e in getattr(bm,key)) for key in ('verts','edges','faces')))
     before_occluded=occluded_state()
-    yield from gesture((0,-260))
+    yield from gesture((0,-260), companion_row='invert_selection')
     after_occluded=occluded_state()
     print('COMPANION_OCCLUDED_S',repr(before_occluded),repr(after_occluded),flush=True)
     check(after_occluded[:2]==before_occluded[:2] and
           after_occluded[2]==tuple(tuple(not flag for flag in flags) for flags in before_occluded[2]),
           'covered S extension must execute actual Invert Selection instead of Face')
     before_occluded=occluded_state()
-    yield from gesture((0,-265))
+    yield from gesture((0,-265), companion_row='separator_selection')
     check(occluded_state()==before_occluded,
           'companion separator must cancel instead of falling through to S')
     yield from gesture((280,32))

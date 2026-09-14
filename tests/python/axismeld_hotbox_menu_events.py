@@ -548,7 +548,7 @@ def suite():
 
     # Measured public labels provide input positions only; all effects below are literal.
     sys.path.insert(0, str(Path(__file__).parent))
-    from axismeld_hotbox_geometry_fixture import ellipse_page, native_list, native_page, style_list
+    from axismeld_hotbox_geometry_fixture import ellipse_page, native_list, native_page, native_fixture_surface, style_list
     blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
     def label_width(label):
         # Every function/directory has one semantic icon; blank slots have none.
@@ -559,9 +559,8 @@ def suite():
     control_labels = ['Show Modeling', 'Show Rigging', 'Show Animation', 'Show FX',
                       'Show All', 'Hide All', 'Show Rendering', 'Show Common Menus',
                       'Show Pane Specific Menus', 'Show Custom Menu Set Menus',
-                      'Set Transparency', 'Hotbox Style', '', 'Window Options', '',
-                      'AxisMeld Center Mouse Buttons']
-    control_submenus = (0, 1, 2, 3, 6, 10, 11, 13, 15)
+                      'Set Transparency', 'Hotbox Style', '', 'Window Options']
+    control_submenus = (0, 1, 2, 3, 6, 10, 11, 13)
     control_style_labels = ['Zones and Menu Rows', 'Zones Only', 'Center Zone Only',
                             '', 'Center Zone RMB Popups']
     modeling_control_labels = ['Modeling Only', 'Show/Hide Modeling']
@@ -580,7 +579,38 @@ def suite():
         check(rect is not None, 'input attempted an off-page item')
         x, y, w, h = rect
         return x+w/2, y+h/2
+    def catalog_page(anchor, identifier):
+        # Public authored labels/state/Options determine input positions only.
+        # Dispatch, mode, cancellation and pixel expectations remain independent below.
+        pending = list(json.loads(hotbox_runtime.snapshot(bpy.context))['menus'])
+        while pending:
+            node = pending.pop()
+            if node['id'] == identifier:
+                break
+            pending.extend(node['children'])
+        else:
+            raise AssertionError('Missing public menu: ' + identifier)
+        children = node['children']
+        has_state = any(child.get('indicator') for child in children)
+        widths = {}
+        for child in children:
+            extra = 0 if child['kind'] == 'separator' else 20 + 20*has_state
+            if child['kind'] != 'menu' and child['children']:
+                extra += 24
+            widths[child['label']] = max(widths.get(child['label'], 0),
+                blf.dimensions(0, child['label'])[0]/scale + extra)
+        native_fixture_surface((0, 0, win.width, win.height))
+        result = native_page(anchor, [child['label'] for child in children], widths.__getitem__,
+                            (region.x, region.y, region.width, region.height), scale,
+                            submenu_indices=[i for i, child in enumerate(children) if child['kind'] == 'menu'])
+        return {child['id']: rect for child, rect in zip(children, result['items'])}
+
+    def shading_targets(anchor):
+        rows = catalog_page(anchor, 'pane.shading')
+        return [rows['maya.pane.shading.wireframe'], rows['maya.pane.shading.smooth_shade_all']]
+
     def page(anchor, labels, first=0):
+        native_fixture_surface((0, 0, win.width, win.height))
         native_labels = (
             ['Zones and Menu Rows', 'Zones Only', 'Center Zone Only'],
             modeling_control_labels,
@@ -596,7 +626,7 @@ def suite():
                                (region.x, region.y, region.width, region.height), scale,
                                first=first, submenu_indices=control_submenus)
         if labels in native_labels:
-            measure = state_label_width
+            measure = state_label_width if labels in (control_style_labels, native_labels[3]) else label_width
             return {'items': native_list(anchor, labels, measure,
                                         (region.x, region.y, region.width, region.height), scale)}
         if labels == button_labels:
@@ -686,18 +716,22 @@ def suite():
         yield from settle()
         labels = [f'Entry {i:02}' for i in range(18)]
         current = page(anchor, labels)
-        check(current['capacity'] < 8, 'quad overflow must reduce capacity, never target size')
+        check(current['capacity'] == 18 and all(current['items']) and
+              current['next'] is None and current['previous'] is None,
+              'quad complete list must expose all 18 fixed-size rows')
         screenshot('menus-quad-2x-page-first.png')
-        while current['first'] + current['capacity'] < 18:
-            yield from click(midpoint(current['next']))
-            current = page(anchor, labels, current['first']+1)
+        count = len(observed)
+        event('WHEELDOWNMOUSE')
+        event('WHEELUPMOUSE')
+        yield from settle()
+        check(len(observed) == count, 'wheel over complete list reached dispatcher')
         screenshot('menus-quad-2x-page-last.png')
         count = len(observed)
         yield from click(midpoint(current['items'][17]))
         check(len(observed) == count+1 and observed[-1] == ('view.top', {'FINISHED'}),
-              '2x quad long ellipse final page leaf')
+              '2x quad complete native list last leaf')
         yield from close_box()
-        print('PASS actual 2x quad: all seven visible views and final long-menu page', flush=True)
+        print('PASS actual 2x quad: all seven visible views and complete long-menu last leaf', flush=True)
         print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
         return
     if os.environ.get('AXISMELD_TEST_NAVIGATION_PROBE') in {'corner', 'latch'}:
@@ -717,7 +751,7 @@ def suite():
             yield
             event('RIGHTMOUSE', 'RELEASE')
             yield from settle()
-            choices = popup(anchor, ['Wireframe', 'Solid'])
+            choices = shading_targets(anchor)
             count = len(observed)
             yield from click(midpoint(choices[1]))
             check(len(observed) == count+1 and observed[-1] == ('view.shaded', {'FINISHED'}),
@@ -771,7 +805,7 @@ def suite():
             choices = popup(controls[11], control_style_labels)
             yield from click(midpoint(choices[2]))
             check(hotbox_runtime.current_settings()['style'] == 'center',
-                  'latched child-directory click bounced immediately through its new Back control')
+                  'latched child-directory click bounced immediately through its rebuilt child list')
             yield from close_box()
             print('PASS latched child directory click enters and its setting leaf executes', flush=True)
             print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
@@ -791,31 +825,40 @@ def suite():
             print('PASS active-ring gap cannot restart center-only marking', flush=True)
             print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
             return
-        while current['first'] + current['capacity'] < 18:
-            yield from click(midpoint(current['next']))
-            current = page(anchor, labels, current['first']+1)
+        count = len(observed)
+        event('WHEELDOWNMOUSE')
+        event('WHEELUPMOUSE')
+        yield from settle()
+        check(len(observed) == count, 'wheel over complete list reached dispatcher')
         screenshot('menus-next-terminal-page.png')
         count = len(observed)
         yield from click(midpoint(current['items'][17]))
         check(len(observed) == count+1 and observed[-1] == ('view.top', {'FINISHED'}),
-              'Next becoming disabled on press discarded the menu before its final leaf')
+              'complete list did not retain its last leaf after wheel consumption')
         yield from close_box()
-        print('PASS terminal Next press/release retains the final page and dispatches its leaf', flush=True)
+        print('PASS complete list retains all rows and dispatches its last leaf', flush=True)
         print('AXISMELD_HOTBOX_MENU_EVENTS_PASS', flush=True)
         return
     pane_labels = ['View', 'Shading', 'Lighting', 'Show', 'Renderer', 'Panels']
     shading = row_title(pane_labels, 1, 48)
-    shading_items = popup(shading, ['Wireframe', 'Solid'])
+    shading_items = shading_targets(shading)
     review_failures = []
     # Releasing anywhere except a title/parent must discard the old executable popup.
     common_labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
     with bpy.context.temp_override(window=win, area=area, region=region):
         common = json.loads(hotbox_runtime.snapshot(bpy.context))['menus'][0]['children']
     check([node['label'] for node in common] == common_labels and
-          common[0]['id'] == 'common.file' and not common[0]['enabled'],
-          'disabled cancellation fixture must address the actual seven-item public File row')
+          common[0]['id'] == 'common.file' and common[0]['kind'] == 'menu' and common[0]['enabled'],
+          'cancellation fixture must address the actual seven-item public Common row')
+    shading_nodes = next(node for node in json.loads(hotbox_runtime.snapshot(bpy.context))['menus'][1]['children']
+                         if node['id'] == 'pane.shading')['children']
+    disabled_id = 'maya.pane.shading.smooth_shade_selected_items'
+    disabled_node = next(node for node in shading_nodes if node['id'] == disabled_id)
+    check(disabled_node['kind'] == 'disabled' and not disabled_node['enabled'] and
+          disabled_node['command'] == '', 'cancellation requires an actual unavailable Maya Shading leaf')
+    disabled_rect = catalog_page(shading, 'pane.shading')[disabled_id]
     for target, point in (('blank', (cx-300*scale, cy-180*scale)),
-                          ('disabled', midpoint(row_title(common_labels, 0, 96)))):
+                          ('disabled', midpoint(disabled_rect))):
         yield from open_box()
         yield from move(midpoint(shading))
         event('LEFTMOUSE')
@@ -852,31 +895,26 @@ def suite():
     yield from close_box()
     print('PASS B4 click browse and held drag dispatch actual shading commands', flush=True)
 
-    # A disabled File title must neither dispatch nor turn the gesture into a tap.
+    # The genuine File directory retains a disabled New Scene placeholder.
     yield from open_box()
     count = len(observed)
-    yield from click(midpoint(row_title(common_labels, 0, 96)))
+    file_title = row_title(common_labels, 0, 96)
+    yield from click(midpoint(file_title))
+    file_rows = catalog_page(file_title, 'common.file')
+    yield from click(midpoint(file_rows['maya.common.file.new_scene']))
     screenshot('menus-disabled-file-reason.png')
     yield from close_box()
     check(len(observed) == count and len([r for r in area.regions if r.type == 'WINDOW']) == 1,
-          'disabled title executed or became tap')
+          'disabled File item executed or became tap')
 
     # Close-before mode command: no stale draw pointer and no residual Space playback.
     select = row_title(common_labels, 3, 96)
-    select_nodes = json.loads(hotbox_runtime.snapshot(bpy.context))['menus'][0]['children'][3]['children']
-    indicators = {node['label'] for node in select_nodes if node.get('indicator')}
-    def selection_width(label):
-        # The full directory reserves a state column, including unmarked siblings.
-        return label_width(label) + (20 if indicators else 0)
-    select_items = native_page(
-        select, [node['label'] for node in select_nodes], selection_width,
-        (region.x, region.y, region.width, region.height), scale,
-        submenu_indices=[i for i, node in enumerate(select_nodes) if node['kind'] == 'menu'])['items']
+    select_items = catalog_page(select, 'common.select')
     yield from open_box()
     yield from move(midpoint(select))
     event('LEFTMOUSE')
     yield
-    yield from move(midpoint(select_items[1]))
+    yield from move(midpoint(select_items['maya.common.select.object_component']))
     event('LEFTMOUSE', 'RELEASE')
     yield from settle()
     check(bpy.context.object.mode == 'EDIT', 'mode command did not run before Space release')
@@ -887,16 +925,24 @@ def suite():
         bpy.ops.object.mode_set(mode='OBJECT')
     yield from settle()
 
-    panels = row_title(pane_labels, 5, 48)
-    panel_items = popup(panels, ['Views', '', 'Single / Quad View'])
+    center = (cx-(label_width('AxisMeld')+40)*scale/2, cy-19*scale,
+              (label_width('AxisMeld')+40)*scale, 38*scale)
+    # Blender's quad toggle stays in the explicitly separate extension tree.
+    hotbox_runtime.reload_settings(bpy.context, session={
+        'schema_version': 1, 'settings': {'center_buttons': {'RIGHTMOUSE': 'internal.blender'}}})
     yield from open_box()
-    yield from click(midpoint(panels))
+    yield from move(midpoint(center))
+    event('RIGHTMOUSE')
+    yield
+    event('RIGHTMOUSE', 'RELEASE')
+    yield from settle()
+    panel_items = catalog_page(center, 'internal.blender')
     count = len(observed)
-    yield from click(midpoint(panel_items[2]))
+    yield from click(midpoint(panel_items['pane.panels.toggle_quad']))
     region = next(r for r in area.regions if r.type == 'WINDOW')
     check(len([r for r in area.regions if r.type == 'WINDOW']) == 4 and
           len(observed) == count+1 and observed[-1][0] == 'view.toggle_quad',
-          'actual Panels leaf failed to close before destroying its source region')
+          'actual Blender quad leaf failed to close before destroying its source region')
     yield from close_box()
     check(not win.screen.is_animation_playing, 'quad handoff leaked captured Space')
     with bpy.context.temp_override(window=win, area=area, region=region):
@@ -908,13 +954,11 @@ def suite():
     def settings(mapping):
         hotbox_runtime.reload_settings(bpy.context, session={
             'schema_version': 1, 'settings': {'center_buttons': {'RIGHTMOUSE': mapping}}})
-    center = (cx-(label_width('AxisMeld')+40)*scale/2, cy-19*scale,
-              (label_width('AxisMeld')+40)*scale, 38*scale)
     settings('pane.shading')
     yield from open_box()
     event('RIGHTMOUSE')
     yield
-    mapped_items = popup(center, ['Wireframe', 'Solid'])
+    mapped_items = shading_targets(center)
     yield from move(midpoint(mapped_items[0]))
     event('RIGHTMOUSE', 'RELEASE')
     yield from settle()
@@ -989,7 +1033,7 @@ def suite():
     yield from move(blank)
     event('MIDDLEMOUSE')
     yield
-    yield from move(midpoint(center))
+    # Keep the native mapped menu latched; moving to the parent center is a return.
     event('MIDDLEMOUSE', 'RELEASE')
     yield from settle()
     screenshot('menus-center-blank-mapped-shading.png')
@@ -1162,20 +1206,26 @@ def suite():
     reset_hotbox_settings()
     print('PASS visible Modeling and Set Transparency lists changed shared runtime settings', flush=True)
 
-    # Configure the same center-button model through the visible Controls tree.
+    # AxisMeld mappings belong to Blender Extensions, not Maya Hotbox Controls.
+    hotbox_runtime.reload_settings(bpy.context, session={
+        'schema_version': 1, 'settings': {'center_buttons': {'LEFTMOUSE': 'internal.blender'}}})
     yield from open_box()
-    yield from click(midpoint(controls))
-    yield from click(midpoint(control_items[15]))
-    button_items = popup(control_items[15], ['Left Mouse Button', 'Middle Mouse Button',
-                                            'Right Mouse Button'])
+    yield from move(midpoint(center))
+    event('LEFTMOUSE')
+    yield
+    event('LEFTMOUSE', 'RELEASE')
+    yield from settle()
+    extensions = catalog_page(center, 'internal.blender')
+    button_owner = extensions['center.controls.buttons']
+    yield from click(midpoint(button_owner))
+    button_items = popup(button_owner, ['Left Mouse Button', 'Middle Mouse Button',
+                                       'Right Mouse Button'])
     yield from click(midpoint(button_items[2]))
     mapping_labels = ['Disabled', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls',
                       'Common', 'Select', 'Modify', 'Current Pane', 'Pane View',
                       'Pane Shading', 'Panels', 'Panel Views', 'Modeling']
     mapping_page = page(button_items[2], mapping_labels)
-    while mapping_page['items'][9] is None:
-        yield from click(midpoint(mapping_page['next']))
-        mapping_page = page(button_items[2], mapping_labels, mapping_page['first'] + 1)
+    check(all(mapping_page['items']), 'complete mapping list omitted a choice')
     mapping_items = mapping_page['items']
     screenshot('menus-controls-center-button-open.png')
     yield from click(midpoint(mapping_items[9]))
@@ -1374,22 +1424,15 @@ def suite():
     area.spaces.active.show_region_toolbar = False
     yield from open_box()
     screenshot('menus-small-row-first.png')
-    # First Modeling page is hand calculated from measured public labels, with two 38px controls.
-    modeling_labels = ['Mesh', 'Edit Mesh', 'Mesh Tools', 'Mesh Display', 'Curves', 'Surfaces',
-                       'Deform', 'UV', 'Generate']
-    room = region.width/scale - 24 - 96
-    used = 0
-    for label in modeling_labels:
-        width = label_width(label)+40
-        if used+width > room:
-            break
-        used += width+10
-    total = used-10+96
-    next_point = (cx+(total/2-19)*scale, cy-48*scale)
-    count = len(observed)
-    yield from click(next_point)
-    screenshot('menus-small-row-scrolled.png')
-    check(len(observed) == count, 'layout-only row scroll control reached command dispatcher')
+    # Main titles are complete; wheel ownership must not zoom the source or
+    # dispatch a title where the removed paging controls used to be.
+    count, distance = len(observed), region.data.view_distance
+    event('WHEELDOWNMOUSE')
+    event('WHEELUPMOUSE')
+    yield from settle()
+    screenshot('menus-small-row-complete.png')
+    check(len(observed) == count and region.data.view_distance == distance,
+          'wheel over complete main titles dispatched or zoomed')
     yield from close_box()
 
     # A bounded native-parser fixture provides real overflow at two independent popup owners.
@@ -1425,33 +1468,31 @@ def suite():
     child_labels = [f'Child {i:02}' for i in range(18)]
     child_page = page(child_anchor, child_labels)
     screenshot('menus-small-parent-child-first.png')
-    while child_page['first'] + child_page['capacity'] < 18:
-        yield from click(midpoint(child_page['next']))
-        child_page = page(child_anchor, child_labels, child_page['first']+1)
-    screenshot('menus-small-child-scrolled.png')
+    check(all(parent_page['items']) and all(child_page['items']) and
+          child_page['back'] is None and child_page['next'] is None,
+          'complete nested directories omitted rows or invented navigation')
     count = len(observed)
-    yield from click(midpoint(child_page['back']))
-    check(len(observed) == count, 'Back release dispatched a newly exposed parent leaf')
+    # Return through a real parent row, not the removed synthetic Back button.
+    yield from move(midpoint(parent_page['items'][1]))
+    yield from settle()
+    check(len(observed) == count, 'hovering a parent leaf dispatched it')
     screenshot('menus-small-return-parent.png')
-    yield from click(midpoint(parent_page['next']))
-    parent_page = page(center, parent_labels, 1)
-    screenshot('menus-small-ancestor-scrolled.png')
     yield from click(midpoint(parent_page['items'][1]))
     check(len(observed) == count+1 and observed[-1] == ('view.side', {'FINISHED'}),
-          'parent page did not own its real leaf after returning from nested ellipse')
+          'parent did not own its leaf after returning from the nested native list')
     yield from click((cx, cy), 'RIGHTMOUSE')
-    yield from click(midpoint(parent_page['previous']))
     parent_page = page(center, parent_labels)
     child_anchor = parent_page['items'][0]
     yield from click(midpoint(child_anchor))
+    child_page = page(child_anchor, child_labels)
     count = len(observed)
     yield from click(midpoint(child_page['items'][17]))
     check(len(observed) == count+1 and observed[-1] == ('view.top', {'FINISHED'}),
-          'independent child page did not survive parent back/forward navigation')
+          'reopened child did not own its complete last leaf')
     yield from close_box()
     hotbox_runtime.snapshot = real_snapshot
-    print('PASS B9 actual small viewport, row controls and nested per-owner scrolling', flush=True)
-    # Unsupported menu dimensions still own the trigger lifecycle; no menu layout is permitted.
+    print('PASS B9 actual small source, complete main titles and nested owner navigation', flush=True)
+    # Small source panes use the whole-window fallback and retain the trigger lifecycle.
     for dimension in ('width', 'height'):
         if dimension == 'height':
             area = max((a for a in win.screen.areas if a.type == 'VIEW_3D'),
@@ -1466,15 +1507,15 @@ def suite():
         region = next(r for r in area.regions if r.type == 'WINDOW')
         check((region.width/scale < 340 and region.height/scale >= 200) if dimension == 'width'
               else (region.height/scale < 200 and region.width/scale >= 340),
-              f'unsupported {dimension} fixture must isolate one limit: {region.width}x{region.height}')
-        print('UNSUPPORTED_VIEWPORT', dimension, region.x, region.y, region.width, region.height, flush=True)
+              f'small-source {dimension} fixture must isolate one limit: {region.width}x{region.height}')
+        print('SMALL_SOURCE_VIEWPORT', dimension, region.x, region.y, region.width, region.height, flush=True)
         cx, cy = region.x+region.width//2, region.y+region.height//2
         count = len(observed)
         yield from open_box()
         yield from close_box()
         if (len(observed) != count+1 or observed[-1] != ('view.toggle_quad', {'FINISHED'})
                 or not area.spaces.active.region_quadviews):
-            review_failures.append(f'unsupported {dimension} short tap did not toggle quad')
+            review_failures.append(f'small-source {dimension} short tap did not toggle quad')
         if area.spaces.active.region_quadviews:
             region = next(r for r in area.regions if r.type == 'WINDOW')
             with bpy.context.temp_override(window=win, area=area, region=region):
@@ -1488,7 +1529,7 @@ def suite():
         screenshot(f'menus-unsupported-{dimension}-hold.png')
         yield from close_box()
         check(len(observed) == count and not area.spaces.active.region_quadviews,
-              f'unsupported {dimension} hold toggled layout')
+              f'small-source {dimension} hold toggled layout')
         yield from open_box()
         event('RIGHTMOUSE')
         yield
@@ -1496,10 +1537,10 @@ def suite():
         yield
         event('RIGHTMOUSE', 'RELEASE')
         yield from settle()
-        check(len(observed) == count, f'unsupported {dimension} mouse gesture became tap')
-        check(not win.screen.is_animation_playing, f'unsupported {dimension} leaked Space playback')
+        check(len(observed) == count, f'small-source {dimension} mouse gesture became tap')
+        check(not win.screen.is_animation_playing, f'small-source {dimension} leaked Space playback')
     check(not review_failures, '\n'.join(review_failures))
-    print('PASS review regression: ordinary cancellation and unsupported width/height tap/hold', flush=True)
+    print('PASS review regression: ordinary cancellation and small-source width/height tap/hold', flush=True)
     hotbox_runtime.dispatch = real_dispatch
     hotbox_runtime.apply_setting = real_apply_setting
     print('PASS B2/B3/B4/B8 cancel, two buttons, disabled, mode cleanup, center remaps', flush=True)

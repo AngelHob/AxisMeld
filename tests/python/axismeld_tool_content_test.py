@@ -78,15 +78,28 @@ class ToolContentTest(unittest.TestCase):
                 self.assertEqual(self.nodes[f'tools.{tool}.{name}']['command'], f'orientation.{tool}.{name}')
         self.assertEqual(self.nodes['tools.select.drag']['kind'], 'disabled')
         self.assertEqual(self.nodes['tools.move.spacing']['kind'], 'disabled')
-        self.assertEqual(self.nodes['tools.move.snap.relative']['direction'], 'S')
+        self.assertEqual({n['direction'] for n in self.nodes['tools.move.snap']['children']}, {'E', 'SE', 'SW'})
+        self.assertNotIn('tools.move.snap.relative', self.nodes)
         for tool in ('move', 'rotate', 'scale'):
             self.assertEqual(self.nodes[f'common.modify.view_orientations.{tool}']['command'],
                              f'orientation.{tool}.view')
+
+    def test_snap_relative_mode_is_a_nonradial_child_list(self):
+        # Maya2026 translateMarkingMenuImpl.mel:133-138 has no radialPosition.
+        self.assertEqual(self.labels('tools.move.snap_menu'), ['Relative Mode'])
+        item = self.nodes['tools.move.snap_menu']['children'][0]
+        self.assertEqual(item['id'], 'tools.move.snap_menu.relative')
+        self.assertNotIn('direction', item)
+        self.assertFalse(item['children'])
+        self.assertEqual((item['kind'], item['enabled'], item['command'],
+                          item['indicator'], item['checked']), ('disabled', False, '', 'checkbox', False))
+        self.assertNotIn('tools.move.snap.relative', tool_hotbox.UNAVAILABLE_INDICATORS)
 
     def test_exact_companion_and_unavailable_state_contract(self):
         expected = {f'tools.{name}': f'tools.{name}_menu' for name in ('select', 'move', 'rotate', 'scale')}
         expected.update({f'tools.{name}.select': f'tools.{name}.select_menu'
                          for name in ('select', 'move', 'rotate', 'scale')})
+        expected['tools.move.snap'] = 'tools.move.snap_menu'
         self.assertEqual(tool_hotbox.COMPANION_ROOTS, expected)
         for identifier in expected.values():
             self.assertEqual(self.nodes[identifier]['presentation'], 'list')
@@ -115,8 +128,11 @@ class ToolContentTest(unittest.TestCase):
                          ['Show Modeling', 'Show Rigging', 'Show Animation', 'Show FX',
                           'Show All', 'Hide All', 'Show Rendering', 'Show Common Menus',
                           'Show Pane Specific Menus', 'Show Custom Menu Set Menus',
-                          'Set Transparency', 'Hotbox Style', '|', 'Window Options', '|',
-                          'AxisMeld Center Mouse Buttons'])
+                          'Set Transparency', 'Hotbox Style', '|', 'Window Options'])
+        self.assertIn('center.controls.buttons',
+                      {n['id'] for n in self.nodes['internal.blender']['children']})
+        self.assertEqual(self.nodes['center.controls.buttons']['label'],
+                         'AxisMeld Center Mouse Buttons')
         for domain in ('modeling', 'rigging', 'animation', 'fx', 'rendering'):
             title = 'FX' if domain == 'fx' else domain.title()
             self.assertEqual(self.labels('center.controls.' + domain),

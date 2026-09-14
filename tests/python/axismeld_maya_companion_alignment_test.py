@@ -17,17 +17,17 @@ def walk(nodes):
 
 
 class MayaCompanionAlignmentTest(unittest.TestCase):
-    def test_full_json_preserves_unknown_reasons_at_exact_512k_boundary(self):
+    def test_full_json_preserves_unknown_reasons_at_exact_1mib_boundary(self):
         value = hotbox_runtime.make_snapshot(generation=1)
         node = next(n for n in walk(value['menus']) if n['id']=='common.file')
         node['reason'] = 'x'
         base = len(hotbox_runtime.serialize_snapshot(value).encode('utf-8'))
         node['reason'] = 'x' * (1 + hotbox_runtime.MAX_JSON_BYTES-base)
         payload = hotbox_runtime.serialize_snapshot(value)
-        self.assertEqual(len(payload.encode('utf-8')), 512*1024)
+        self.assertEqual(len(payload.encode('utf-8')), 1024*1024)
         self.assertEqual(json.loads(payload), value)
         node['reason'] += 'x'
-        with self.assertRaisesRegex(ValueError,'512 KiB'):
+        with self.assertRaisesRegex(ValueError,'1 MiB'):
             hotbox_runtime.serialize_snapshot(value)
 
     def test_creation_screenshot_order_grouping_and_honest_options(self):

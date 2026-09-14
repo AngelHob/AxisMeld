@@ -178,7 +178,7 @@ struct Parser {
             const std::string_view parent_presentation = {})
   {
     const auto *dict = value.as_dictionary_value();
-    if (depth > 8 || ids.size() >= 2048 ||
+    if (depth > 8 || ids.size() >= 4096 ||
         !fields(
             dict, {"id", "kind", "label", "command", "enabled", "reason", "children"},
             {"value", "direction", "presentation", "indicator", "checked"}))
@@ -275,7 +275,7 @@ struct Parser {
 bool parse_menu_snapshot(const std::string_view json, MenuSnapshot &out, std::string &error)
 {
   error = "Invalid hotbox snapshot";
-  if (json.size() > 512 * 1024)
+  if (json.size() > 1024 * 1024)
     return false;
   // Bound nesting before the generic JSON decoder allocates a recursively nested value tree.
   int nesting = 0;
@@ -351,10 +351,17 @@ bool parse_menu_snapshot(const std::string_view json, MenuSnapshot &out, std::st
     next.menus.push_back(std::move(node));
   }
   const char *groups[] = {"common", "pane", "center", "modeling"};
-  if (next.menus.size() < 4 || next.menus.size() > 4 + std::size(companion_roots)) {
+  const bool has_internal = !next.menus.empty() && next.menus.back().id == "internal";
+  const size_t ordinary_count = next.menus.size() - size_t(has_internal);
+  const size_t complete_count = 4 + std::size(companion_roots);
+  if ((ordinary_count != 4 && ordinary_count != 5 && ordinary_count != 6 &&
+       ordinary_count != complete_count) ||
+      (has_internal && (ordinary_count != 4 + std::size(companion_roots) ||
+                        next.menus.back().kind != MenuKind::Menu ||
+                        next.menus.back().presentation != "list"))) {
     return false;
   }
-  for (size_t i = 4; i < next.menus.size(); i++) {
+  for (size_t i = 4; i < ordinary_count; i++) {
     if (next.menus[i].id != companion_roots[i - 4].second ||
         next.menus[i].kind != MenuKind::Menu || next.menus[i].presentation != "list") {
       return false;

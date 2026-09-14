@@ -15,6 +15,9 @@ import traceback
 import blf
 import bmesh
 import bpy
+import numpy as np
+sys.path.insert(0,str(Path(__file__).parent))
+from axismeld_hotbox_image_fixture import observed_radial_rectangles
 from bpy_extras.view3d_utils import location_3d_to_region_2d
 from mathutils import Quaternion, Vector
 
@@ -75,6 +78,11 @@ def suite():
                   if (Path(p) / 'AxisMeld_Maya_2026.py').exists())
     check(bpy.utils.keyconfig_set(str(preset)), 'Maya preset activation failed')
     yield from settle(8)
+
+    theme=bpy.context.preferences.themes[0].user_interface
+    for colors in (theme.wcol_menu,theme.wcol_menu_back,theme.wcol_menu_item):
+        colors.inner=(.8,.04,.65,1)
+        colors.inner_sel=(.8,.04,.65,1)
 
     def override():
         return bpy.context.temp_override(window=win, area=area, region=region)
@@ -199,6 +207,19 @@ def suite():
 
     def rectangle_targets(root_id, anchor=None):
         """Input fixture only. Geometry outcomes and screenshot edges are independent."""
+        if anchor is None and root_id in {OBJECT,CREATE,MODEL,'context.create'}:
+            path=root/'actual-input-targets.png'
+            with override():bpy.ops.screen.screenshot(filepath=str(path))
+            picture=bpy.data.images.load(str(path),check_existing=False)
+            try:
+                width,height=picture.size
+                pixels=np.asarray(picture.pixels[:],dtype=np.float32).reshape(height,width,4).copy()
+            finally:bpy.data.images.remove(picture)
+            expected={item['direction'] for item in nodes()[root_id]['children'] if 'direction' in item}
+            observed=observed_radial_rectangles(pixels,scale,expected)
+            return {direction:((rect[0]+rect[2])/2,(rect[1]+rect[3])/2)
+                    for direction,rect in observed['rects'].items()}
+
         blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
         center_width = blf.dimensions(0, 'AxisMeld')[0] / scale + 60
         origin_x, origin_y = origin if anchor is None else anchor
@@ -797,6 +818,9 @@ def suite():
             width, height = image.size
             pixels = list(image.pixels)
             cx, cy = origin
+            if not reference:
+                rgba=np.asarray(pixels,dtype=np.float32).reshape(height,width,4)
+                cx,cy=observed_radial_rectangles(rgba,scale,{'N','NW','NE','W','E','SW','SE','S'})['center']
             results = []
             # Views and component roots may have different vertical row spacing.
             # Search a band around each row; inner x edges remain independently observed.
@@ -814,8 +838,8 @@ def suite():
                 for yy in range(int(cy + offsets[0]*scale), int(cy + offsets[1]*scale)+1):
                     if not 0 <= yy < height:
                         continue
-                    for xx in range(max(region.x + 2, int(cx - 470 * scale)),
-                                    min(region.x + region.width - 2, int(cx + 470 * scale))):
+                    for xx in range(max(2,int(cx-470*scale)),
+                                    min(width-2,int(cx+470*scale))):
                         r, g, b = pixels[(yy*width + xx)*4:(yy*width + xx)*4+3]
                         if r > .3 and b > .25 and min(r, b) > 2.2*g:
                             runs[xx] = runs.get(xx, 0)+1 if previous_y.get(xx) == yy-1 else 1
@@ -900,8 +924,10 @@ def suite():
             # visual gap above is a valid nearest-direction gesture in Views.
             for side in (-1, 1):
                 yield from begin()
-                event('MOUSEMOVE', 'NOTHING', (origin[0] + side*(reference[1]/2-10)*scale,
-                                             origin[1]), shift=True)
+                actual_targets=rectangle_targets(OBJECT)
+                center_x=(actual_targets['N'][0]+actual_targets['S'][0])/2
+                center_y=(actual_targets['N'][1]+actual_targets['S'][1])/2
+                event('MOUSEMOVE', 'NOTHING', (center_x+side*(reference[1]/2-10)*scale,center_y),shift=True)
                 yield from settle()
                 yield from release()
                 idle('center return edge release')

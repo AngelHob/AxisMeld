@@ -21,9 +21,9 @@ def walk(nodes):
 class ContentRuntimeTest(unittest.TestCase):
     def test_all_companions_survive_complete_bounded_snapshot(self):
         snap = hotbox_runtime.make_snapshot(generation=1)
-        self.assertEqual(len(snap['menus']), 18)
-        self.assertLessEqual(len(list(walk(snap['menus']))), 2048)
-        self.assertLessEqual(len(hotbox_runtime.serialize_snapshot(snap).encode()), 512 * 1024)
+        self.assertEqual(len(snap['menus']), 20)
+        self.assertLessEqual(len(list(walk(snap['menus']))), 4096)
+        self.assertLessEqual(len(hotbox_runtime.serialize_snapshot(snap).encode()), 1024 * 1024)
         for change in ('unknown', 'duplicate', 'reorder', 'missing'):
             bad = deepcopy(snap)
             if change == 'unknown':
@@ -33,7 +33,7 @@ class ContentRuntimeTest(unittest.TestCase):
             elif change == 'reorder':
                 bad['menus'][-1], bad['menus'][-2] = bad['menus'][-2], bad['menus'][-1]
             else:
-                bad['menus'].pop()
+                bad['menus'].pop(0)
             with self.subTest(change=change), self.assertRaises(ValueError):
                 hotbox_runtime.serialize_snapshot(bad)
 

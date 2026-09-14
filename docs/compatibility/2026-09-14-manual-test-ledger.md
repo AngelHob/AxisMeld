@@ -1,16 +1,20 @@
 # AxisMeld 待人工测试清单
 
-更新：2026-09-14。人工测试继续暂缓。S/P/C/V/T/R 共47项保持已测试（用户确认，未逐项报告通过/失败）；原 G/K/L/M3/VR/D/O/OM 共116项仍待测。前轮 IC-01至IC-14 热盒与菜单统一图标14项保留。本轮追加 MC-01至MC-14 Maya组合菜单对齐14项。本轮再追加 HC-01至HC-20 全热盒菜单内容核对20项。历史191项及其47项已测试状态不变；现合计211项：已测试47项，待测164项。自动化不覆盖历史人工结果，也不将待测项自动改为通过。
+更新：2026-09-15。人工测试继续暂缓。S/P/C/V/T/R 共47项保持已测试（用户确认，未逐项报告通过/失败）；此前221项与稳定编号保留。本轮追加 MT-01至MT-32，逐一检查22个Maya主菜单及热盒层级、Options、状态和布局；同时修正待测项的旧目录路径与Display平铺假设。现合计253项：历史已测试47项，待测206项。自动化不覆盖历史人工结果，也不将待测项自动改为通过。
 
 ## 测试准备与反馈
 
+本轮 MT 的内容依据为隔离 Maya 2026 的22个真实菜单树及热盒MEL复核，设计见 `../development/2026-09-14-maya-complete-menu-hierarchy.md`。Blender Extensions、Marking Menus及中心按钮设置可从键位偏好的Left/Middle/Right Mouse Button菜单映射进入；不把这些扩展插入Maya Modify或Controls。S/P/C/V/T/R保留当时版本原文，其中旧路径和Style圆圈描述仅是历史记录；当前验证以MT与更新后的待测项为准。
+
 本文件保存测试目录、操作预期和历史初始状态；私人测试网页的服务端记录保存此后每次人工勾选、结果、备注与版本。网页是后续个人测试进度的记录入口，不能用此文件中的初始状态覆盖网页记录。追加或更新目录只更新条目说明，保留已有编号及用户已保存的进度。“已测试”与“通过/失败”分别记录，历史已测试条目不补造结果。
 
-本轮 HC 使用独立候选 `D:/source/AxisMeld-build/maya-content-test-install/blender.exe`；构建与验证记录见 `2026-09-14-maya-content-acceptance.md`。本轮主要对齐内容，不改变既有触发、方向和四视图布局标杆。
+前轮 HC 使用独立候选 `D:/source/AxisMeld-build/maya-content-test-install/blender.exe`；构建与验证记录见 `2026-09-14-maya-content-acceptance.md`。该轮主要对齐内容，不改变既有触发、方向和四视图布局标杆。
+
+本轮 FM 的布局设计见 `../development/2026-09-14-full-hotbox-menus.md`。本轮FM与MT共同使用独立候选 `D:/source/AxisMeld-build/maya-hierarchy-test-install/blender.exe`，程序哈希前12位 `7BE40DAFC873`，资源指纹前12位 `B1370714D294`；最终验证见 `2026-09-15-maya-hierarchy-acceptance.md`。以下待测预期采用完整展开契约；47项历史已测试行原文及状态保留，其旧分页表述仅记录当时版本，不作为本轮新预期。
 
 前轮 MC 候选已构建到 `D:/source/AxisMeld-build/maya-companion-test-install/blender.exe`，程序哈希前12位 `9E84E857BB414`；安装及回归证据见 `2026-09-14-maya-companion-acceptance.md`。先保存原场景，再使用临时 Cube 场景，选择 AxisMeld Maya 2026 键位。前轮图标候选为 `D:/source/AxisMeld-build/hotbox-icons-test-install/blender.exe`；其安装证据见 `2026-09-14-hotbox-icons-acceptance.md`，程序哈希前12位 `C2B75B7D1999`；历史批次哈希不代表当前安装。
 
-前批OM组合菜单的构建与资源核验见 `2026-09-14-object-menu-acceptance.md`，程序哈希前12位 `51B833EBCB4E`。前批Object工具入口证据见 `2026-09-14-object-tools-acceptance.md`；VR/D前批证据保留在 `2026-09-14-visible-region-m2d-acceptance.md`。旧M3安装及当前运行的旧M2d窗口保留，不用旧入口验证本轮新功能。开始测试前核对主入口，避免混入另一个旧安装。破坏性编辑、Cut、转换、绑定与颜色测试只在临时场景进行，每组先保存一个可还原副本。四种新修改器可从右侧参数入口调整；其他原生参数使用 **Space → Edit → Adjust Last Operation**，修改器也可在原生Modifier属性中继续调整；**F9仍是Vertex入口**。Vertex Paint入口只切换到Blender原生绘制模式，不代表本批实现了完整Maya绘制工具链。
+前批OM组合菜单的构建与资源核验见 `2026-09-14-object-menu-acceptance.md`，程序哈希前12位 `51B833EBCB4E`。前批Object工具入口证据见 `2026-09-14-object-tools-acceptance.md`；VR/D前批证据保留在 `2026-09-14-visible-region-m2d-acceptance.md`。旧M3安装及当前运行的旧M2d窗口保留，不用旧入口验证本轮新功能。开始测试前核对主入口，避免混入另一个旧安装。破坏性编辑、Cut、转换、绑定与颜色测试只在临时场景进行，每组先保存一个可还原副本。四种新修改器可从右侧参数入口调整；其他原生参数使用 **Blender Extensions → Edit → History → Adjust Last Operation**，修改器也可在原生Modifier属性中继续调整；**F9仍是Vertex入口**。Vertex Paint入口只切换到Blender原生绘制模式，不代表本批实现了完整Maya绘制工具链。
 
 先跑优先级 P0，再跑 P1。反馈格式：`编号 / 通过或失败 / Object或Edit / 单或四视图 / 实际结果`。涉及误触时补充鼠标路线与释放顺序；涉及显示时补充 Windows 缩放比例和视口大小。通过与失败均保留日期、版本；未反馈不推定通过。
 
@@ -22,12 +26,12 @@
 | G-02 | W/E/R经过World/Object按钮后继续水平向外滑出很远，再松LMB | 对应方向仍高亮且提交，不要求停在按钮上；远处不跳相邻行 | 待测 |
 | G-03 | Q选择工具与组件RMB环，在未被伴随列表覆盖的按钮外延释放；划向禁用方向或缺席的NW；组件S方向另从Face主按钮提交 | 未遮挡有效外延提交正确命令；列表和分隔线优先命中，不穿透执行S方向；禁用/空方向不误选相邻项，组件取消不改变目标 | 待测 |
 | G-04 | 进入Axis/Custom Axis/Select子环继续外划，再回当前中心后重新划选 | 外延按当前子环计算；只返回一层，隐藏父环不夺取选择 | 待测 |
-| G-05 | 从Space→Modify→Tool Settings打开工具热盒，外划释放或回最初LMB点 | 与QWER外延一致；返回真实按下点取消，不误执行 | 待测 |
+| G-05 | 在键位偏好将一个中心鼠标按钮映射为Marking Menus，再从该入口打开工具热盒，外划释放或回最初LMB点 | 与QWER外延一致；返回真实按下点取消，不误执行；Maya Modify不混入Tool Settings假目录 | 待测 |
 | G-06 | 分别持续按住Q/W/E/R，反复按住/松开LMB至少三次，在不同鼠标位置唤出 | 每次都在新的位置开环；松LMB隐藏本次热盒，持键可继续，无需重新按QWER | 待测 |
 | G-07 | 同次QWER持键先空中心松LMB，再禁用项松LMB，再选择有效项 | 前两次取消后仍可重新唤出，有效项正确提交，无残留高亮/子菜单 | 待测 |
 | G-08 | 第二次开环后分别先松QWER、Esc、切应用、W切E并交换释放顺序 | 不提交取消中的动作，无粘键；新工具及重新进入窗口后正常 | 待测 |
 | G-09 | Edit中Q Clear Selection后仍持Q再次LMB切Lasso，松Q后撤销；个人改键也重复 | 选择撤销仍一条原生步骤；键位映射与多次唤出一致 | 待测 |
-| G-10 | 四角/窄视口与125/150/200%DPI，进入原生列表/单选设置后滑出列表 | 夹紧中心可取消；列表外不虚选列表项，radio与分页/返回不变 | 待测 |
+| G-10 | 四角/窄视口与125/150/200%DPI，进入完整原生列表/单选设置后滑出列表 | 平移后的中心可取消；列表外不虚选列表项，radio和真实父子返回正常；不出现分页箭头或人工返回页 | 待测 |
 
 ## P0：空白创建热盒（本批新增12项）
 
@@ -132,18 +136,18 @@
 |---|---|---|---|
 | L-01 | 同一窗口与缩放下，依次打开Views、Q/W/E/R主环；截取或目视比较第2/4行和第3行左右内缘 | 两类横向净距分别与Views对应行一致；Views本身不被压窄，文字与箭头不挤入留白 | 待测 |
 | L-02 | 在临时Cube上打开组件RMB，再到空白无选择处打开Shift+RMB创建环，与Views比较；只在中心取消 | 组件与创建环采用同一横距标杆；五行方向不变，取消不换选择或创建物体 | 待测 |
-| L-03 | W/E/R进入Axis与Custom Axis子环，Q进入选择子环，再从Space→Modify→Tool Settings进入相同子环 | 深层环不退回旧窄间距；短长标签均完整，父级不可见部分不抢子环命中 | 待测 |
+| L-03 | W/E/R进入Axis与Custom Axis子环，Q进入选择子环，再通过中心按钮映射Marking Menus进入相同子环 | 深层环不退回旧窄间距；短长标签均完整，父级不可见部分不抢子环命中 | 待测 |
 | L-04 | 单视口将鼠标移入第2/4行左右内缘之间的新留白，分别原地松键、回起点释放；再向对应按钮外侧远划释放 | 内侧留白不因旧命中范围误触邻项；有效外划仍保持正确方向，回真实起点取消 | 待测 |
 | L-05 | 在四视图各分区和视口四角打开Views、W与创建环；重复有效外划、缺席/禁用方向、回中心 | 夹紧后的显示与命中一致，缺席方向不借邻项执行；当前中心返回层级正确 | 待测 |
 | L-06 | 分别在125/150/200%系统缩放和较窄视口重做L-01/L-04；同时查看长标签原生列表 | 相同缩放下横距仍按Views对齐，标签/箭头/圆圈不重叠；列表与径向命中分离；记录实际宽度，极窄Tool Header已知问题单独记录 | 待测 |
 
 ## P0/P1：M3建模菜单与快捷键（本轮新增34项，全部待人工验证）
 
-默认从Space目录寻找表中原生名称；部分项位于下一页或子组。菜单中的“适配”需按其差异说明验收，例如曲线采样精度不是保形重建、Mesh Deform不是Maya的Proximity Wrap算法。灰显计划项以本批覆盖记录的唯一计划编号为准，不执行占位命令。
+Maya菜单从Space目录进入；Blender专有名称通过键位偏好将一个中心按钮映射为Blender Extensions后按功能分组寻找。原生动作的旧适配边界仍有效；当前目录全部条目同时显示，真实子组需逐层进入，超高列表按原顺序分列。菜单中的“适配”需按其差异说明验收，例如曲线采样精度不是保形重建、Mesh Deform不是Maya的Proximity Wrap算法。灰显计划项以本批覆盖记录的唯一计划编号为准，不执行占位命令。
 
 | 编号 | 前置条件与操作 | 预期 | 人工状态 |
 |---|---|---|---|
-| M3-01 | Object临时场景按住Space，依次进入Select、Modify、Edit、Create、Display、Mesh、Edit Mesh、Mesh Tools、Mesh Display、Curves、Surfaces、Deform；浏览子组与后页 | 12组均有可读目录和实际项；标签不显示资源键；各项按当前模式启用或灰显，返回不串组 | 待测 |
+| M3-01 | Object临时场景按住Space，逐个进入22个Maya主菜单；再从中心映射的Blender Extensions浏览原生扩展能力 | Maya菜单按实际父子、标题及顺序显示；扩展按既有功能分组独立访问，所有旧命令ID保留；当前层完整显示，不出现分页后页 | 待测 |
 | M3-02 | 空场景、仅Empty、Mesh Object、Mesh Edit空选择分别检查Mesh/Deform/组件编辑项；尝试点击灰显项 | 无有效对象/域/目标的项不可执行，不创建空修改器、不报脚本异常；有效Create入口仍可用 | 待测 |
 | M3-03 | Select：准备两个Mesh和一条Curve，依次使用All、None、Invert及按类型选择；再在Mesh Edit重复全选/反选 | 对象与组件命令处理各自域；按类型不误选其他类型，非选择对象不被编辑；操作可按原生规则撤销 | 待测 |
 | M3-04 | Select：在带规则四边面的网格选一圈边，测试相邻扩展/收缩、Loop/Ring以及点边面转换；从Convert Selection→Multi-Component及F7同时启用三域；在两个独立Edit对象各选一个点再看Connect/Merge | 选择结果符合菜单所写原生拓扑规则；菜单与F7均启用Blender点/边/面组合，不假装独立Vertex Face域；不足的独立选区不跨对象累加为有效连接/合并输入 | 待测 |
@@ -175,21 +179,21 @@
 | M3-30 | Deform：两个同索引拓扑且形状不同Mesh，活动源执行Selected Targets to Shape Keys；另在Edit选少量点Hook；分别单Undo | Shape Key实际改变源并保留目标，拓扑不匹配不可用；Hook控制器只驱动所选点；一次Undo还原key/basis或hook/empty全套 | 待测 |
 | M3-31 | 成功执行可重复的非modal命令后查看Recent并重放；对modal启动后取消、参数窗取消、灰显计划释放分别检查Recent；切不支持模式再看旧Recent项 | 仅可重放成功动作进入历史；启动/取消/计划不记成功；历史项按当前上下文灰显，重放保留单Undo语义 | 待测 |
 | M3-32 | 两个Blender窗口或单/四视图之间切换，保持Space进深层列表后先松Space、Esc、切应用；紧接着按QWER和普通RMB重试 | 新目录不遗留鼠标/修饰键所有权；已支持的QWER/RMB流程保持；Curve/Surface新增Space范围不等于扩展旧网格工具手势 | 待测 |
-| M3-33 | 窄视口/四视图/125–200%DPI打开M3长列表，翻页、返回、悬停最下项与移出列表；在设置项重复改变值 | 长标签、radio和分页互不遮挡；原生菜单当前不显示快捷键文本，快捷键另按M3-15/16/18实际按键验证；移出不虚选列表项，翻页后命令/状态对应正确；Tool Header避让按VR项回归 | 待测 |
+| M3-33 | 窄视口/四视图/125–200%DPI打开M3长列表，检查全部条目、真实子菜单、最下项与移出列表；在设置项重复改变值 | 长标签、radio和完整列表互不遮挡；必要时跨同窗pane并按原序分列，不分页或滚动；原生菜单当前不显示快捷键文本，快捷键另按M3-15/16/18验证；移出不虚选，命令/状态对应正确 | 待测 |
 | M3-34 | 备份个人配置；临时改一个M3快捷键、保留原QWER/底色/透明度，重载并重启；浏览M3灰显计划、UV及M2后续占位 | 改键生效且无旧绑定残留，其他配置不被覆盖；计划显示明确理由/编号且不执行；UV与独立M2后续不因本批菜单接入被误标完成 | 待测 |
 
 ## P0：可见区域与原地取消恢复（本轮新增8项，人工暂缓）
 
 | 编号 | 前置条件与操作 | 预期 | 人工状态 |
 |---|---|---|---|
-| VR-01 | 窄视口保留Tool Header，打开Controls长列表并翻页/返回，悬停上下禁用箭头 | 标签、radio、导航与命中均位于工具横条下方，不出现画面移走但旧位置仍可点的情况 | 待测 |
-| VR-02 | 在VR-01禁用箭头上保持鼠标不动，分别先松Space、Esc及交换拥有鼠标释放顺序，再直接按W/E/R | 取消不改变设置、不遗留modal；同一点能切Move/Rotate/Scale，随后可重新开热盒 | 待测 |
-| VR-03 | 分别保留左工具栏、右侧栏及二者同时可见，在四角打开方向热盒和原生长列表 | 菜单避开真实输入区域，标签可读；工具栏显隐与宽度不被热盒擅自改变 | 待测 |
+| VR-01 | 窄视口保留Tool Header，打开Controls完整列表，进入真实子目录并返回，悬停禁用项 | 区域内可容纳时优先避让工具横条；需要更大空间时使用同窗绘制表面，所有条目完整且显示与命中一致，源操作仍归原视口 | 待测 |
+| VR-02 | 在VR-01禁用项上保持鼠标不动，分别先松Space、Esc及交换拥有鼠标释放顺序，再直接按W/E/R | 取消不改变设置、不遗留modal；同一点能切Move/Rotate/Scale，随后可重新开热盒 | 待测 |
+| VR-03 | 分别保留左工具栏、右侧栏及二者同时可见，在四角打开方向热盒和原生长列表 | 区域内可容纳时避让覆盖栏；必要时跨同窗pane完整显示，输入仍由原视口会话持有；工具栏显隐与宽度不被热盒改变 | 待测 |
 | VR-04 | 热盒开启后切换Tool Header/左工具栏/右侧栏显隐，并调整侧栏宽度 | 可用区域改变后旧热盒取消并清除画面，不提交旧选项；补齐释放后普通操作正常 | 待测 |
-| VR-05 | 开启动画，在侧栏显隐动画过程中反复打开热盒，再等动画结束 | 按完整输入区域避让，动画结束可用空间改变时旧会话取消；不落到尚会接收输入的透明/滑动区域 | 待测 |
-| VR-06 | 四视图保留Tool Header与侧栏，在四个分窗分别测试VR-01/02/03；125/150/200%DPI重试 | 只依据与当前分窗相交的障碍避让，下方分窗不被上方不相交横条额外裁短，显示与命中一致 | 待测 |
+| VR-05 | 开启动画，在侧栏显隐动画过程中反复打开热盒，再等动画结束 | 区域优先布局按覆盖栏完整输入边界计算；空间不足可用同窗表面；动画导致源可用空间改变时旧会话取消，不把按下点改为其他区域的操作源 | 待测 |
+| VR-06 | 四视图保留Tool Header与侧栏，在四个分窗分别测试VR-01/02/03；125/150/200%DPI重试 | 区域优先布局只计与源分窗相交的覆盖栏，必要时跨同窗pane；下方分窗不被上方不相交横条额外裁短，显示与命中一致 | 待测 |
 | VR-07 | 四角打开Views、QWER、普通组件RMB与创建环，向按钮外延划选，再回真实按下点 | Views标杆净距不缩；外延、缺席方向、中心取消及父子返回保持原有语义 | 待测 |
-| VR-08 | 将视口缩到不足以完整容纳热盒，再恢复大小 | 不显示残缺按钮或缩窄净距，不留下热盒输入拦截；恢复后可正常重开 | 待测 |
+| VR-08 | 先缩小视口，再缩小整个窗口直到所有固定尺寸列也无法容纳，随后恢复大小 | 小视口可跨同窗显示；整窗仍无法容纳时安全拒绝，不显示残缺按钮、不缩窄净距、不留下输入拦截；恢复后可正常重开 | 待测 |
 
 ## P0：M2d 已选组件建模热盒（本轮新增14项，人工暂缓）
 
@@ -227,7 +231,7 @@
 | O-11 | 开盒后通过外部操作更改选择/active、锁定集合、移除目标或替换其Mesh data，再释放 | 直接MODEL会取消原手势；不转投新目标，不撤回外部修改；恢复条件后新手势可用 | 待测 |
 | O-12 | 分别改绑/禁用CREATE和MODEL，测试Shift+RMB、Ctrl+Shift+MMB及键盘映射 | 两个配置独立；MODEL覆盖Object与Mesh，CREATE仅空白Object；第三命令冲突仍拒绝，旧输入保留适用的原生回退 | 待测 |
 | O-13 | MODEL改绑键盘，完全无选择时将鼠标停在网格上按键；已有选择时再按 | 键盘入口不做鼠标预选；已有合格选择可打开Object根并提交 | 待测 |
-| O-14 | 从Space Select目录或自定义中心按钮进入Object根，提交W；开着目录时更换有效选择再提交 | 目录使用提交时的有效选择，不做鼠标预选；工具可执行且一次Undo恢复提交前模式/选择，不出现启用却无响应的项 | 待测 |
+| O-14 | 通过中心按钮映射Marking Menus或Object Modeling进入Object根并提交W；开着目录时更换有效选择再提交 | 目录使用提交时的有效选择，不做鼠标预选；工具可执行且一次Undo恢复提交前模式/选择；Maya Select无伪造Object Modeling入口 | 待测 |
 | O-15 | 单/四视图、四角、125/150/200%DPI，将Object根与Views比较并外划释放 | 第2/4行及第3行真实内缘间距对齐Views，标签完整；真实起点可取消，未遮挡外延有效；伴随列表及连接间隔按列表优先或取消处理，对角视觉空白不擅自扩大为取消区 | 待测 |
 | O-16 | 尝试N/NE/S/NW占位及SE Soften/Harden目录，再测试普通RMB、QWER持键重复开盒、已有Edit根及Recent | 占位有明确缺失原因且不执行；Object NW仍Sculpt缺口；SE以普通目录呈现，仅已有安全动作可用，其余内容灰显；旧入口可用，单纯激活持久工具不写Recent | 待测 |
 
@@ -238,7 +242,7 @@
 | 编号 | 前置条件与操作 | 预期 | 人工状态 |
 |---|---|---|---|
 | OM-01 | Object选中Cube，Shift+RMB唤出；与提供的Maya截图对照 | 八向热盒和下方列表同时显示；下方22个主条目按Maya顺序排列，不精简删除缺口；保留7条6逻辑像素分隔、Mapping/Booleans/Polygon Display三个目录；不必另进Space | 待测 |
-| OM-02 | 持住RMB在长列表滚轮翻页，再展开三个目录，移回父项和主环 | 条目均可达，分页不执行建模、不关闭父热盒；子菜单按普通列表展开，返回仍看见主环与主列表 | 待测 |
+| OM-02 | 持住RMB检查完整长列表并滚动滚轮，再展开三个目录，移回父项和主环 | 全部当前层条目同时可达；滚轮不翻页、不执行建模、不关闭父热盒或缩放视图；真实子目录展开后父环与主列表保留 | 待测 |
 | OM-03 | 分别在Smooth/Mirror/Reduce/Remesh主文字与右侧方框释放RMB | 主按钮执行默认操作，方框独立打开参数；两块命中无重叠，不会打开参数同时执行主按钮 | 待测 |
 | OM-04 | 对四种参数框分别点取消或Esc；无选择鼠标预选对象时也重复 | 打开与取消不改变模式、对象选择、活动对象、修改器或几何；不新增撤销步骤 | 待测 |
 | OM-05 | 调Smooth层级、Mirror轴/剖切/合并、Reduce比例、Remesh体素大小后确认，再撤销 | 参数真实影响新修改器；只增加一个，确认操作可一步撤销；原有修改器保留 | 待测 |
@@ -251,7 +255,7 @@
 | OM-12 | 中心释放、移出再返回、Esc、提前松Shift、切应用；顺序交替重复 | 整会话取消不修改场景、不粘键；下一次Shift+RMB、普通选择和QWER正常 | 待测 |
 | OM-13 | 完全无选择，指向可选Mesh开盒，取消或选modifier/工具；再指向前景非Mesh | 开盒不提交预选；已提供预选事务的命令确认时才提交；Combine/Boolean仍要求真实选择，Retopologize本入口灰显；不穿透非Mesh | 待测 |
 | OM-14 | 将MODEL及Object专用命令改绑、禁用、恢复；在Object和Edit分别测试 | 主热盒与列表共用正确触发/释放；Object专用快捷键不抢占Edit/3D View原生同键，旧生成项正确清理 | 待测 |
-| OM-15 | 单/四视图、视口四角、Sidebar打开、125/150/200%DPI下使用组合菜单 | 实际八向内缘留白仍对齐Views；列表/方框可读且不覆盖真实按下取消区；空间不足分页或无重叠翻边，不缩小径向间距 | 待测 |
+| OM-15 | 单/四视图、视口四角、Sidebar打开、125/150/200%DPI下使用组合菜单 | 实际八向内缘留白仍对齐Views；列表/方框可读且真实按下点可取消；下方不足时整组底对齐，不把伴随列表整体侧翻；必要时跨同窗并分列，不缩小径向间距 | 待测 |
 | OM-16 | 检查灰显缺口与适配说明，特别是Retopologize主项及参数方框 | UV/Proxy/Connect/Transfer/整体拓扑等未实现项不伪装成可用；新菜单的Retopologize两入口明确灰显，说明缺少确认时的目标身份适配，不能转投新active；既有Space原生入口语义不变 | 待测 |
 
 ## P0/P1：热盒与菜单统一图标（新增14项）
@@ -264,14 +268,14 @@
 | IC-04 | Object及Edit分别用组件RMB热盒切点/边/面和其他现有选择入口 | 左图标与功能一致；状态可识别，空方向/禁用方向不误选 | 待测 |
 | IC-05 | 无选择在空白Shift+RMB打开基本体创建热盒，再经Space→Create查看列表 | Cube/Sphere/Cylinder等使用相应Blender图标，同一创建功能跨入口图标一致；创建和取消正常 | 待测 |
 | IC-06 | 选中Object与Edit单域组件，Shift+RMB检查建模环及Object下方列表 | 每个工具和灰显缺口左侧都有图标；上下两部分间距保留，标签和右侧参数格不重叠 | 待测 |
-| IC-07 | 展开Edit/Create/Mapping/Booleans等普通菜单和多级目录，滚动翻页 | 目录与叶项均有左图标，右侧级联箭头保留；翻页前后文字和图标列对齐，边缘不裁切 | 待测 |
-| IC-08 | 打开含radio/checkbox的设置列表，切换选项、重新开盒，再翻页 | 功能图标和单选圈/勾选各自显示；有状态与无状态的兄弟条目列对齐；状态随实际设置刷新 | 待测 |
+| IC-07 | 展开Edit/Create/Mapping/Booleans等完整普通菜单和多级目录，检查必要的多列布局 | 目录与叶项均有左图标，右侧级联箭头保留；所有列文字与图标对齐，边缘不裁切，不出现翻页控件 | 待测 |
+| IC-08 | 打开含radio/checkbox的完整设置列表，切换选项并重新开盒，检查各列 | 功能图标和单选圈/勾选各自显示；有状态与无状态的兄弟条目列对齐；状态随实际设置刷新 | 待测 |
 | IC-09 | 在Smooth/Mirror/Reduce/Remesh文字与右侧Options格分别释放 | 主文字左侧是对应功能图标；参数格只有一个齿轮，仍独立命中且不同时执行主功能 | 待测 |
 | IC-10 | 比较同一热盒或列表内的可用项与灰显项，悬停及尝试释放 | 禁用功能的图标和文字同步变灰；禁用原因可见，禁用图标不制造可执行错觉 | 待测 |
-| IC-11 | 100/125/150/200% UI缩放，检查短标签、最长标签和级联目录 | 图标随界面清晰缩放，左图标/文字/状态/右箭头不相互覆盖；窄区域按既有规则夹紧或分页 | 待测 |
+| IC-11 | 100/125/150/200% UI缩放，检查短标签、最长标签和级联目录 | 图标随界面清晰缩放，左图标/文字/状态/右箭头不相互覆盖；窄区域必要时跨同窗并分列，仍保持固定字号和行高 | 待测 |
 | IC-12 | 使用Blender深色和浅色主题，比较普通/悬停/禁用状态 | 图标沿用Blender原生主题风格，对比清楚，尺寸与文字协调，无混入emoji或外部图标风格 | 待测 |
 | IC-13 | 同一实例将Views与QWER/组件/创建/建模五行热盒对照，经过第2/4行及第3行间隙后外划 | 新增宽度向外容纳；真实内缘和命中间隔以Views为标杆；取消区、外延提交和原有方向不变 | 待测 |
-| IC-14 | 执行一个进入Recent的功能，再从Recent/普通菜单比较；切换个人热盒配置和中英文标签 | 同一命令在不同入口保持同一图标，翻译不改变语义；返回/翻页仍为单一导航图标，无重复图标 | 待测 |
+| IC-14 | 执行一个进入Recent的功能，再从Recent/普通菜单比较；切换个人热盒配置和中英文标签 | 同一命令在不同入口保持同一图标，翻译不改变语义；Options为单一参数图标，无重复图标或分页导航图标 | 待测 |
 
 ## 已知问题与后续范围
 
@@ -298,8 +302,8 @@
 
 | 编号 | 前置条件与操作 | 预期 | 人工状态 |
 |---|---|---|---|
-| MC-01 | 选中Object Mesh，Shift+RMB，与本轮Maya建模截图逐行对照并滚动到末尾；1x/2x检查右侧目录箭头 | 22个主项全部保留且顺序一致，Mapping/Booleans/Polygon Display目录及所有未实现占位仍可见；目录箭头不被相邻参数列背景遮住，未擅自精简占位 | 待测 |
-| MC-02 | Object无选择且鼠标为空白，Shift+RMB，逐组检查创建下拉并翻页 | 依次为Platonic Solid、Pyramid、Prism、Pipe、Helix、Gear、Soccer Ball；Super Ellipse、Spherical Harmonics、Ultra Shape、Type、SVG、Quad Draw Tool；Interactive Creation、Exit On Completion；Polygon Display All，共16主项、3分隔 | 待测 |
+| MC-01 | 选中Object Mesh，Shift+RMB，与Maya建模截图逐行对照完整列表；1x/2x检查右侧目录箭头 | 22个主项全部保留且顺序一致，Mapping/Booleans/Polygon Display目录及所有未实现占位同时可见；目录箭头不被相邻参数列背景遮住，未擅自精简占位 | 待测 |
+| MC-02 | Object无选择且鼠标为空白，Shift+RMB，逐组检查完整创建下拉 | 依次为Platonic Solid、Pyramid、Prism、Pipe、Helix、Gear、Soccer Ball；Super Ellipse、Spherical Harmonics、Ultra Shape、Type、SVG、Quad Draw Tool；Interactive Creation、Exit On Completion；Polygon Display All，共16主项、3分隔 | 待测 |
 | MC-03 | 单视图1x/2x对照普通行和每个分隔，慢移鼠标跨过所有分隔 | 功能行24逻辑像素、细分隔6逻辑像素；分组清楚，布局/点击/高亮使用同一实际高度，分隔不占完整功能行 | 待测 |
 | MC-04 | 持住RMB在Object及创建的分隔线上释放，再在其左右列表背景释放 | 不穿透执行径向按钮、不执行上下邻行，不新增物体/修改器、Recent或Undo；新手势可重开 | 待测 |
 | MC-05 | 检查Object N Target Weld、NW Sculpt、W Multi-Cut、E Append、SW Insert Edge Loop的参数格，各在格内释放 | 五个径向参数格独立可见，本轮新增Options全部禁用；参数格不误执行主工具，也不改变原方向命中与Views内缘 | 待测 |
@@ -308,9 +312,9 @@
 | MC-08 | Object径向SE Soften/Harden展开，查看子目录并返回主环；创建Polygon Display All也展开 | 都以普通目录呈现；仅已有可验证适配动作启用，其余保留灰显与原因；父环/伴随列表保持，级联不出现孤立handler | 待测 |
 | MC-09 | 检查创建Interactive Creation与Exit On Completion，点击后重开；记录相关偏好前后值 | 未实现工作流保持灰显，Exit On Completion显示截图勾选且禁用；勾选与语义图标分列，不改写全局偏好或伪装可切换设置 | 待测 |
 | MC-10 | 在无选择空白、有效Mesh选择、鼠标预选Mesh、非Mesh阻挡、Edit各状态分别重开；再从Space Create目录进入 | 各入口遵循已有选择/预选/模式规则，创建只在适用上下文执行；新伴随列表不绕过过滤、不暗中改变目标，Space显式创建保留其既有语义 | 待测 |
-| MC-11 | 单/四视图与1x/2x，分别对比Views、Object、创建的真实按钮内缘及长标签 | 保留24高、Views中心和横向净距；参数格向外占宽，普通列表依真实6px分隔分页；极窄不支持时安全拒绝、不残留handler | 待测 |
-| MC-12 | 在四个视口角落及125/150/200%DPI展开伴随列表与末页子菜单，再回真实按下点 | 菜单/参数/级联夹紧在有效视口内，必要时分页；显示与命中一致，原起点仍能取消；Tool Header/侧栏不被当作可用空间 | 待测 |
-| MC-13 | 创建与Object连续开关各三次；Q/W/E/R持键LMB重复唤出；Space中心目录交替进入 | 伴随列表不会遗留到另一根，分页/悬停状态按当前会话正确重置；旧QWER持键重复规则与鼠标释放所有权不变 | 待测 |
+| MC-11 | 单/四视图与1x/2x，分别对比Views、Object、创建的真实按钮内缘及长标签 | 保留24高、Views中心和横向净距；参数格向外占宽，普通列表保留真实6px分隔并完整展开；必要时同窗分列，整窗仍容纳不下时安全拒绝、不残留handler | 待测 |
+| MC-12 | 在四个视口角落及125/150/200%DPI展开完整伴随列表与末项子菜单，再回真实按下点 | 区域内可容纳时整组底对齐；必要时跨同窗pane并分列，主列表不整体侧翻；显示与命中一致，原起点仍能取消；跨pane不改变源上下文 | 待测 |
+| MC-13 | 创建与Object连续开关各三次；Q/W/E/R持键LMB重复唤出；Space中心目录交替进入 | 伴随列表不会遗留到另一根，级联/悬停状态按当前会话正确重置；旧QWER持键重复规则与鼠标释放所有权不变 | 待测 |
 | MC-14 | 径向主项/参数/下拉/级联中分别Esc、先松Shift、切应用、改选择/模式后释放；随后再开Views和创建 | 取消不提交动作、不污染Undo/Recent，不留粘键；失效的捕获目标不转投别的对象，后续有效输入正常 | 待测 |
 
 ## P0/P1：全热盒菜单内容对齐（本轮 HC 新增20项）
@@ -333,9 +337,63 @@
 | HC-12 | R+LMB，核对下方主项并展开Scale Center | 下方10个主项、3处分隔；Scale Center含Default/Object/Manip，保留Prevent Negative Scale和Scale Options | 待测 |
 | HC-13 | 从Q/W/E/R各进入Select子环，然后进入Soft Select并返回 | Select子环有自己的Automatic Camera-Based Selection下方列表；切换和返回不残留父层或上一工具的菜单内容 | 待测 |
 | HC-14 | 分别进入W/E/R的Selection Constraints、Transform Constraints与中心选项 | 完整7项选择约束与4项变换约束顺序正确，单选圆圈与复选框形态准确；未适配状态均灰显且无虚假选中 | 待测 |
-| HC-15 | 逐个检查QWER的Symmetry、Soft Select、Axis/Custom和Snap子菜单 | 使用Maya实际显示标签、条目和状态形态；不添加Maya不存在的批量齿轮；Blender View方向仍可从Space→Modify→Blender View Orientations访问 | 待测 |
-| HC-16 | Space→Hotbox Controls，检查Show/Hide、Custom Menu Set、Hotbox Style、Window Options | 补齐固定菜单项和分隔；已有Common/Pane/Modeling行开关显示真实checkbox，Style和Transparency单选状态不受影响；未适配选项有原因 | 待测 |
+| HC-15 | 逐个检查QWER的Symmetry、Soft Select、Axis/Custom和Snap子菜单 | 使用Maya实际显示标签、条目和状态形态；不添加批量齿轮；Blender View Orientations通过中心映射的Blender Extensions访问；Snap Relative Mode位于下方列表 | 待测 |
+| HC-16 | Space→Hotbox Controls，检查Show/Hide、Custom Menu Set、Hotbox Style、Window Options | 固定菜单项和分隔对齐；Common/Pane/Modeling开关显示真实checkbox，Style三个选项为普通项，Transparency保留单选圆圈；未适配状态有原因 | 待测 |
 | HC-17 | 创建热盒→Polygon Display All，连续执行Backface Culling on两次，再off两次 | 目录10项、4处分隔，On/Off为两个独立普通命令；重复On保持开、重复Off保持关，不交替反转 | 待测 |
 | HC-18 | Object建模和创建热盒逐项对照Maya截图，并检查Mapping、Booleans和Polygon Display | Object22项与Create16项主目录保留；不单纯删除占位缩短列表；嵌套内容、名称、分隔和Options逐项匹配 | 待测 |
-| HC-19 | 全部新列表滚动到底，查看长标签、子目录箭头、Options方格和左侧图标 | 图标使用统一Blender风格；24逻辑像素行高、6像素分隔，参数背景不覆盖箭头，正文与Options可独立命中 | 待测 |
-| HC-20 | 在单/四视图、窄视口和125/150/200%DPI，重试RMB、建模与QWER嵌套菜单及取消 | 以Views实际内缘间距为标杆；未遮挡外延保持长划，被列表覆盖的方向从主按钮提交，列表与分隔不穿透执行环；子菜单夹紧/滚动及重复唤出、释放正确。200%较小四视图放不下完整环和最少分页行时取消打开且无输入残留；放大窗格后重试 | 待测 |
+| HC-19 | 检查全部新列表的首末条目，查看长标签、子目录箭头、Options方格和左侧图标 | 当前层条目全部同时显示，无滚动分页；图标使用统一Blender风格；24逻辑像素行高、6像素分隔，参数背景不覆盖箭头，正文与Options独立命中 | 待测 |
+| HC-20 | 在单/四视图、窄视口和125/150/200%DPI，重试RMB、建模与QWER嵌套菜单及取消 | 以Views实际内缘间距为标杆；未遮挡外延保持长划，被列表覆盖的方向从主按钮提交，列表与分隔不穿透执行环；完整子菜单、重复唤出和释放正确。小pane不足时跨同窗并分列；整窗也无法容纳时安全拒绝，无输入残留 | 待测 |
+
+## P0：完整菜单展开与同窗布局（本轮新增10项，全部待人工测试）
+
+| 编号 | 前置条件与操作 | 预期 | 人工状态 |
+|---|---|---|---|
+| FM-01 | 完整展开：分别打开Object、Create、Component、Face、QWER与Space长目录，逐项对照清单 | 当前层全部条目一次显示，真实子菜单保留；没有隐藏条目、分页箭头、滚动或人工返回页 | 待测 |
+| FM-02 | 底部对齐：在视口中下方和四角打开可在该视口完整容纳的组合菜单 | 空间不足时整个组合向上平移至安全底边，环、列表、Options、级联与命中一起移动 | 待测 |
+| FM-03 | 不整体侧翻：从中部逐渐靠近视口底边重复打开伴随列表 | 伴随列表仍在环下方，不跳到环侧边；真实子菜单仍可正常横向展开 | 待测 |
+| FM-04 | 在1x/2x和窄视口查看真实Display→Polygons、Show→Viewport等较长子目录，逐列核对顺序和末项 | Display主层保持16个主条目，不把其子目录展开成56项；真实当前层超出空间才分列，正文/带字标题24逻辑像素、细分隔6像素，每项恰好一次，无缩字或滚动 | 待测 |
+| FM-05 | 跨pane源操作：四视图中从一个pane开菜单，在跨到另一pane的条目上执行可观察的视图/选择动作，再取消一次 | 绘制可跨同一窗口，执行仍归捕获的源pane和目标；其他pane不接收误操作，取消不执行 | 待测 |
+| FM-06 | 图标与参数：1x/2x检查每列首末项、禁用项、radio/checkbox和Options；进入Mapping/Booleans等目录 | 全部图标、状态槽、正文、参数格与箭头完整且独立命中；背景不覆盖相邻目录箭头，无裁切 | 待测 |
+| FM-07 | 滚轮消费：持住RMB、Space或QWER，在主环、列表、跨pane列上滚轮及触控板平移/缩放 | 不翻页、不移动条目、不缩放底层视图、不提交动作，原拥有按键和取消规则保持 | 待测 |
+| FM-08 | 取消起点：平移和跨pane布局后分别回真实按下点、当前父子返回区、按Esc和失焦 | 原起点仍取消；真实层级返回正确，隐藏旧坐标不执行，取消无Recent/几何变化或残留输入 | 待测 |
+| FM-09 | QWER重复：持续按住Q/W/E/R，在不同位置连续三次按放LMB，交替进入子环和完整伴随列表 | 每次按当前鼠标位置重开；前次列/子菜单不残留，拥有鼠标释放只提交一次，持键可继续 | 待测 |
+| FM-10 | 窗口生命周期：持菜单时调整窗口大小、拆合pane、切工作区、关闭独立副窗；整窗极小后恢复重试 | 源结构或尺寸变化安全取消，回调和画面清理；整窗无法容纳固定尺寸列时明确拒绝，不裁切或执行不可见项，恢复后可重开 | 待测 |
+
+## P0：全部Maya菜单实际层级（本轮 MT 新增32项，全部待人工测试）
+
+对照范围为本机Maya 2026英文默认菜单与已记录的插件条件。原始2007槽位中的Options附属于正文；动态实例按明确清单归一化，保留1949个节点。此计数不是可执行功能数，也不表示动态场景分支或所有能力已适配。
+
+| 编号 | 前置条件与操作 | 预期 | 人工状态 |
+|---|---|---|---|
+| MT-01 | 在临时场景打开 Common → File，逐层与Maya对照 | New/Open、保存、引用、导入导出等按Maya实际分组；Recent等动态目录保留入口，不伪造本机文件记录 | 待测 |
+| MT-02 | 在临时场景打开 Common → Edit，逐层与Maya对照 | Undo/Redo、重复、复制粘贴、删除及Delete by Type等归属正确；无Blender专有历史操作混入 | 待测 |
+| MT-03 | 在临时场景打开 Common → Create，逐层与Maya对照 | Polygon Primitives、NURBS Primitives、Lights/Cameras等按Maya顺序；基本体为普通子菜单，Shift+RMB创建环独立保留 | 待测 |
+| MT-04 | 在临时场景打开 Common → Select，逐层与Maya对照 | All、All by Type、Deselect All、Hierarchy、Inverse、Grow/Shrink及转换等层级正确；分组标题不变成目录 | 待测 |
+| MT-05 | 在临时场景打开 Common → Modify，逐层与Maya对照 | Transform/Pivot/Naming等是对应标题；Match/Convert等保留真实子目录；没有Tool Settings或Blender专有分组 | 待测 |
+| MT-06 | 在临时场景打开 Common → Display，逐层与Maya对照 | 16个主条目，含Heads Up Display、Hide/Show、Polygons、NURBS、Animation、Rendering；子层未被拉平；Grid和Toggle Show/Hide有独立Options | 待测 |
+| MT-07 | 在临时场景打开 Common → Windows，逐层与Maya对照 | 编辑器、设置与工作区等按Maya真实层级；不显示测试机或用户工作区实例为固定能力 | 待测 |
+| MT-08 | 在临时场景打开 Current Pane → View，逐层与Maya对照 | Camera Tools、Bookmarks、Image Plane等保持层级；相机Bookmark与Isolate Select Bookmark分别处理 | 待测 |
+| MT-09 | 在临时场景打开 Current Pane → Shading，逐层与Maya对照 | Wireframe、Smooth Shade All等真实顺序和状态槽；保留Maya条目，不只显示Blender Wireframe/Solid两项 | 待测 |
+| MT-10 | 在临时场景打开 Current Pane → Lighting，逐层与Maya对照 | Use Default/All/Selected Lights等按真实层级保留；没有适配的灯光状态灰显且不伪造选中 | 待测 |
+| MT-11 | 在临时场景打开 Current Pane → Show，逐层与Maya对照 | Viewport、Playblast Display、Isolate Select等真实父层保留；显示类型不全平铺在主层 | 待测 |
+| MT-12 | 在临时场景打开 Current Pane → Renderer，逐层与Maya对照 | 按已捕获Maya默认Viewport 2.0目录保留；不把Blender渲染器写成Maya已支持状态 | 待测 |
+| MT-13 | 在临时场景打开 Current Pane → Panels，逐层与Maya对照 | Perspective/Orthographic、Panel、Layouts、Saved Layouts等归属正确；固定布局保留，不冻结场景相机实例 | 待测 |
+| MT-14 | 在临时场景打开 Modeling → Mesh，逐层与Maya对照 | Combine/Separate、Booleans、Smooth等按Maya实际顺序、标题与Options显示 | 待测 |
+| MT-15 | 在临时场景打开 Modeling → Edit Mesh，逐层与Maya对照 | 组件操作、变换等标题与具体操作层级正确；没有把分组标题变成多余子菜单 | 待测 |
+| MT-16 | 在临时场景打开 Modeling → Mesh Tools，逐层与Maya对照 | Maya工具条目、雕刻等真实子层及参数格保留；未实现工具存在且有原因 | 待测 |
+| MT-17 | 在临时场景打开 Modeling → Mesh Display，逐层与Maya对照 | 法线、显示和颜色操作按Maya实际结构；相邻Options不重复执行正文 | 待测 |
+| MT-18 | 在临时场景打开 Modeling → Curves，逐层与Maya对照 | 曲线编辑、Modify等实际子层及标题完整；不以注册表分类替代原菜单 | 待测 |
+| MT-19 | 在临时场景打开 Modeling → Surfaces，逐层与Maya对照 | 构面与编辑等实际顺序、标题和参数格完整；算法未适配项保留灰显 | 待测 |
+| MT-20 | 在临时场景打开 Modeling → Deform，逐层与Maya对照 | 变形器与编辑相关真实子层、标题和Options保留；不把所有可用Blender修改器混在根层 | 待测 |
+| MT-21 | 在临时场景打开 Modeling → UV，逐层与Maya对照 | 完整保留Maya UV层级和未适配条目；有目录不代表UV工作流已实现 | 待测 |
+| MT-22 | 在临时场景打开 Modeling → Generate，逐层与Maya对照 | 保留Maya Generate实际固定层级与插件能力边界，不因当前缺实现而删除菜单 | 待测 |
+| MT-23 | 逐个展开Display的Polygons、NURBS、Animation、Rendering及Heads Up Display | 标签、顺序、细分隔、带字标题与独立参数格逐层对照Maya；不再将整个显示能力注册表塞进一层 | 待测 |
+| MT-24 | W+LMB→Snap，检查三个方向和下方列表；进入Object/Face建模→Mapping | Relative Mode为下方checkbox项，无新增S方向；Camera-Based Map、Normal-Based Map标签正确；方向与Views净距保留 | 待测 |
+| MT-25 | Views和Controls分别打开Hotbox Style，再打开Set Transparency | Style三个动作左侧只有统一语义图标，不显示单选圆圈；Transparency保留真实单选状态，悬停不改变选中 | 待测 |
+| MT-26 | 在22主菜单及创建/建模热盒逐个尝试灰显参数方格，再试正文 | 真实Options独立存在且不借用正文；未实现参数保持灰显与原因；正文仅在安全上下文执行一次 | 待测 |
+| MT-27 | 在Object和Edit依次用Select→Deselect All、Object/Component、Grow、Shrink | 已实现选择核心动作仍可达；模式/拓扑按Blender适配，取消与一次撤销正确；未知场景状态不显示虚假圆点 | 待测 |
+| MT-28 | 尝试Select→Use Constraints/Similar、Modify→Prefix Hierarchy Names/Search and Replace Names、Deform→Edit Membership Tool、Curves→Duplicate Surface Curves | 六条原Maya入口保留灰显，说明缺少对应工具、窗口或输入适配；不误执行非流形/顶点法线选择、通用Batch Rename、直接权重赋值或复制曲线控制点 | 待测 |
+| MT-29 | 中心按钮映射Blender Extensions后浏览各原生分组和原有改名/选择/显示操作 | 旧564个注册命令ID保留；按功能分组进入，Modify/Select不出现新造的68/61项平铺列表；原生能力与Maya目录分开 | 待测 |
+| MT-30 | 核对File最近记录、Windows工作区、相机/材质/UV集以及Show→Isolate Select→Bookmarks | 动态目录有准确边界；不把一次捕获的实例当固定菜单。无法构建的Maya原生Bookmark动态分支明确未验证，不补造节点 | 待测 |
+| MT-31 | 在单/四视图中下部打开各层；1x/2x检查带字标题、普通分隔和末项 | 当前层完整显示；带字标题24、细分隔6逻辑像素，标题不可点击且不孤悬列尾；下方不足整体底部对齐 | 待测 |
+| MT-32 | 重复RMB、Shift+RMB、QWER、Views/Controls/Recent，交替进入22主菜单后取消 | 菜单内容不串根；未适配项仍存在；真实原点、Space/拥有鼠标释放、连续唤出、Recent和Undo边界保持，自动验证不替代手感测试 | 待测 |

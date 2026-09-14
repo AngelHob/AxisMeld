@@ -325,9 +325,16 @@ def bridge_suite(win, area, region):
         first = json.loads(wm.axismeld_hotbox_snapshot)
         check(first['settings']['style'] == 'rows', 'initial settings differ')
         common = first['menus'][0]['children']
-        check(all(not node['enabled'] and node['kind'] == 'disabled' for node in common
-                  if node['id'] in {'common.file', 'common.windows'}),
-              'new-window directories became operational')
+        directories=[node for node in common if node['id'] in {'common.file','common.windows'}]
+        check(len(directories)==2 and all(n['kind']=='menu' and n['children'] for n in directories),
+              'real Maya File/Windows hierarchy is missing')
+        pending=[child for menu in directories for child in menu['children']]
+        leaves=[]
+        while pending:
+            child=pending.pop();pending.extend(child['children'])
+            if child['kind'] not in {'menu','separator'}:leaves.append(child)
+        check(leaves and all(not node['enabled'] and not node.get('command') for node in leaves),
+              'unadapted file/window action became operational')
         check(bpy.ops.axismeld.hotbox_setting(setting='style', value='center') == {'FINISHED'},
               'style setting failed')
         bpy.ops.axismeld.hotbox_setting(setting='transparency', value='75')

@@ -7,6 +7,7 @@ the old public input API, so an older installation fails on missing behavior bef
 any newly introduced module or selector could cause an import error.
 """
 import json
+import numpy as np
 import os
 from pathlib import Path
 import sys
@@ -180,6 +181,16 @@ def suite():
 
     from axismeld import hotbox_runtime, runtime
     check(not runtime.diagnostics, 'runtime diagnostics: ' + repr(runtime.diagnostics))
+    sys.path.insert(0, str(Path(__file__).parent))
+    from axismeld_hotbox_image_fixture import (observed_radial_rectangles,
+        observed_menu_rectangles, menu_background_mask)
+    for colors in (bpy.context.preferences.themes[0].user_interface.wcol_menu,
+                   bpy.context.preferences.themes[0].user_interface.wcol_menu_back,
+                   bpy.context.preferences.themes[0].user_interface.wcol_menu_item):
+        colors.inner = colors.inner_sel = (.8, .04, .65, 1)
+    with override():
+        hotbox_runtime.reload_settings(bpy.context, session={'schema_version': 1, 'settings': {
+            'transparency': 0, 'appearance': {'theme_background': True, 'brightness': 0}}})
 
     with override():
         bpy.ops.screen.screen_full_area()
@@ -209,8 +220,26 @@ def suite():
             pending.extend(item['children'])
         return result
 
+    def observed_root(root_id):
+        path = artifacts / 'modeling-input.png'
+        with override():
+            bpy.ops.screen.screenshot(filepath=str(path))
+        image = bpy.data.images.load(str(path), check_existing=False)
+        try:
+            width, height = image.size
+            pixels = np.asarray(image.pixels[:], dtype=np.float32).reshape(height, width, 4)
+            directions = [item['direction'] for item in nodes()[root_id]['children']
+                          if 'direction' in item]
+            return observed_radial_rectangles(pixels, scale, directions)
+        finally:
+            bpy.data.images.remove(image)
+
     def rectangle_targets(root_id, anchor=None):
-        """Input fixture only. Geometry outcomes and screenshot edges are independent."""
+        """Direct roots follow observed pixels; child anchors retain their own ring."""
+        if anchor is None:
+            observed = observed_root(root_id)
+            return {direction: ((rect[0]+rect[2])/2, (rect[1]+rect[3])/2)
+                    for direction, rect in observed['rects'].items()}
         blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
         center_width = blf.dimensions(0, 'AxisMeld')[0] / scale + 60
         origin_x, origin_y = origin if anchor is None else anchor
@@ -221,15 +250,51 @@ def suite():
             if 'direction' not in item:
                 continue
             sx, sy = vectors[item['direction']]
-            width = max(84, blf.dimensions(0, item['label'])[0] / scale +
-                        (60 if item['kind'] == 'menu' else 16))
+            options_width = 24 if item['kind'] != 'menu' and item['children'] else 0
+            width = max(84, blf.dimensions(0, item['label'])[0] / scale + 20 +
+                        (60 if item['kind'] == 'menu' else 16) + options_width)
             x = sx * ((width + center_width) / 2 + 8 - (16 if sy else 0)) if sx else 0
+            # The observed main background excludes the independent 24px Options
+            # box. Its center is 12px left of the complete radial slot center.
+            x -= options_width / 2
             y = sy * (32 if sx else 64)
             result[item['direction']] = (origin_x + x * scale, origin_y + y * scale)
+        # A lower child can translate the complete parent/child composition again.
+        # Match the entire child constellation to observed button centers, never
+        # infer that movement from companion height. Partial/ambiguous matches fail.
+        path = artifacts / 'modeling-child-input.png'
+        with override():
+            bpy.ops.screen.screenshot(filepath=str(path))
+        image = bpy.data.images.load(str(path), check_existing=False)
+        try:
+            width, height = image.size
+            pixels = np.asarray(image.pixels[:], dtype=np.float32).reshape(height, width, 4)
+            boxes = [r for r in observed_menu_rectangles(menu_background_mask(pixels), 60*scale, 13*scale)
+                     if r[3]-r[1] <= 27*scale]
+        finally:
+            bpy.data.images.remove(image)
+        centers = [((r[0]+r[2])/2, (r[1]+r[3])/2) for r in boxes]
+        first = next(iter(result.values()))
+        matches = []
+        for candidate in centers:
+            dx, dy = candidate[0]-first[0], candidate[1]-first[1]
+            matched = {}
+            for direction, point in result.items():
+                found = [center for center in centers
+                         if abs(center[0]-point[0]-dx) <= 3*scale
+                         and abs(center[1]-point[1]-dy) <= 3*scale]
+                if len(found) != 1:
+                    break
+                matched[direction] = found[0]
+            if len(matched) == len(result):
+                matches.append((dx, dy, matched))
+        check(len(matches) == 1, 'child input requires one complete observed constellation: '+repr((root_id,matches,boxes)))
+        dx, dy, result = matches[0]
+        anchor[:] = (anchor[0]+dx, anchor[1]+dy)
         return result
 
     def move_to(root_id, direction, anchor=None, shift=True, ctrl=False, outer=False):
-        point = rectangle_targets(root_id, anchor)[direction]
+        point = list(rectangle_targets(root_id, anchor)[direction])
         event('MOUSEMOVE', 'NOTHING', point, shift=shift, ctrl=ctrl)
         yield from settle()
         if outer:
@@ -716,13 +781,18 @@ def suite():
         print('SCREENSHOT', path, flush=True)
         return path
 
-    def rendered_gaps(path, reference=False):
+    def rendered_gaps(path, reference=False, root_id=None):
         """Find colored button spans from pixels, without calling the layout builder."""
         image = bpy.data.images.load(str(path), check_existing=False)
         try:
             width, height = image.size
             pixels = list(image.pixels)
             cx, cy = origin
+            if not reference:
+                directions = [item['direction'] for item in nodes()[root_id]['children']
+                              if 'direction' in item]
+                rgba = np.asarray(pixels, dtype=np.float32).reshape(height, width, 4)
+                cx, cy = observed_radial_rectangles(rgba, scale, directions)['center']
             results = []
             # Views and component roots may have different vertical row spacing.
             # Search a band around each row; inner x edges remain independently observed.
@@ -740,8 +810,8 @@ def suite():
                 for yy in range(int(cy + offsets[0]*scale), int(cy + offsets[1]*scale)+1):
                     if not 0 <= yy < height:
                         continue
-                    for xx in range(max(region.x + 2, int(cx - 470 * scale)),
-                                    min(region.x + region.width - 2, int(cx + 470 * scale))):
+                    for xx in range(max(2, int(cx - 470 * scale)),
+                                    min(width - 2, int(cx + 470 * scale))):
                         r, g, b = pixels[(yy*width + xx)*4:(yy*width + xx)*4+3]
                         if r > .3 and b > .25 and min(r, b) > 2.2*g:
                             runs[xx] = runs.get(xx, 0)+1 if previous_y.get(xx) == yy-1 else 1
@@ -815,7 +885,7 @@ def suite():
             yield from settle()
             before = state()
             yield from begin()
-            measured = rendered_gaps(screenshot('m2d-' + layout + '-' + domain.lower() + '.png'))
+            measured = rendered_gaps(screenshot('m2d-' + layout + '-' + domain.lower() + '.png'), root_id=ROOTS[domain])
             check(all(abs(a-b) <= 3 for a, b in zip(measured, reference)),
                   f'{layout} {domain} actual inner gaps {measured} do not match Views {reference}')
             yield from release()
@@ -825,8 +895,9 @@ def suite():
             # visual gap above is a valid nearest-direction gesture in Views.
             for side in (-1, 1):
                 yield from begin()
-                event('MOUSEMOVE', 'NOTHING', (origin[0] + side*(reference[1]/2-10)*scale,
-                                             origin[1]), shift=True)
+                display_center = observed_root(ROOTS[domain])['center']
+                event('MOUSEMOVE', 'NOTHING', (display_center[0] + side*(reference[1]/2-10)*scale,
+                                             display_center[1]), shift=True)
                 yield from settle()
                 yield from release()
                 idle('center return edge release')

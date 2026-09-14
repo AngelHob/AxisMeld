@@ -11,6 +11,7 @@ import blf
 import bpy
 sys.path.insert(0,str(Path(__file__).parent))
 from axismeld_hotbox_geometry_fixture import label_prefix_starts
+from axismeld_hotbox_image_fixture import observed_menu_rectangles, menu_background_mask, observed_radial_rectangles
 
 root=Path(os.environ['AXISMELD_TEST_ROOT']).resolve()
 assert Path(bpy.app.tempdir).resolve().is_relative_to(root)
@@ -159,7 +160,50 @@ def suite():
         check(score>.75,'actual full label not independently identified: '+repr((label,score,rect)))
         return (x+x0,y+y0,x+x0+gw,y+y0+gh),score
 
+    def labelled_radial_rectangles(pixels, scale, expected_directions, matches):
+        """Locate a direct Object/Create/component ring after its actual translation.
+
+        Uses the diagnostic magenta theme shared by content GUI observers. It does
+        not infer motion from companion count, height, column count or source press.
+        """
+        boxes=[r for r in observed_menu_rectangles(menu_background_mask(pixels),35*scale,13*scale)
+               if r[3]-r[1]<=27*scale]
+        if not boxes: raise AssertionError('No actual radial button backgrounds')
+        # Native toolbar controls can share the diagnostic theme. Identify a full
+        # directional constellation, rather than treating the highest colored box
+        # in the entire window as its North button.
+        candidates=[]
+        for north in boxes:
+            for south in boxes:
+                ny=(north[1]+north[3])/2;sy=(south[1]+south[3])/2
+                nx=(north[0]+north[2])/2;sx=(south[0]+south[2])/2
+                if not 70*scale<ny-sy<180*scale or abs(nx-sx)>20*scale: continue
+                cx=(nx+sx)/2;cy=(ny+sy)/2;found={};duplicate=False
+                for rect in boxes:
+                    rx=(rect[0]+rect[2])/2;ry=(rect[1]+rect[3])/2
+                    if not sy<=ry<=ny or abs(rx-cx)>400*scale: continue
+                    dx=rx-cx;dy=ry-cy
+                    direction=('N' if dy>16*scale else 'S' if dy < -16*scale else '')
+                    direction+=('E' if dx>20*scale else 'W' if dx < -20*scale else '')
+                    if len(direction)==2 and not south[3]<ry<north[1]:continue
+                    if not direction or direction not in expected_directions or not matches(direction,rect): continue
+                    if direction in found: duplicate=True;break
+                    found[direction]=rect
+                if not duplicate and set(found)==set(expected_directions):
+                    candidates.append({'rects':found,'center':(cx,cy)})
+        if len(candidates)!=1:
+            raise AssertionError(f'Expected one complete observed radial constellation, got {candidates!r}; boxes={boxes!r}')
+        return candidates[0]
+
     def radial_rectangles(pixels, expected=None):
+        if expected is None or 'NE' in expected:
+            labels=(dict(N='Edge',NE='Object Mode',W='Vertex',E='UV',SW='Vertex Face',SE='Multi',S='Face')
+                    if expected is not None else
+                    dict(N='Symmetry',NW='Object',NE='Component',W='World',E='Snap',SW='Axis',SE='Keep Spacing',S='Select'))
+            def matches(d,r):
+                text=labels[d];gh,gw=template(text).shape
+                return r[2]-r[0]-4>=gw and r[3]-r[1]-4>=gh and locate(pixels,r,text,required=False) is not None
+            return labelled_radial_rectangles(pixels,scale,set(labels),matches)['rects']
         rgb=pixels[:,:,:3]
         colored=((rgb[:,:,0]>.3)&(rgb[:,:,2]>.25)&(np.minimum(rgb[:,:,0],rgb[:,:,2])>2.2*rgb[:,:,1]))
         groups={}
@@ -378,36 +422,43 @@ def suite():
     def all_labels(expected):return [name.removesuffix(' +O') for name in expected if name!='|']
 
     def browse(kind,expected,tag,stop=None):
-        labels=all_labels(expected);seen=set();boundaries=set()
+        yield from settle(1)
+        labels=all_labels(expected)
         separator_after={expected[i-1].removesuffix(' +O') for i,x in enumerate(expected) if x=='|' and i>0}
         options={x.removesuffix(' +O') for x in expected if x.endswith(' +O')}
-        last=None;stalls=0
-        for page in range(45):
-            picture=capture(tag+'-'+str(page));rect=companion_rect(picture)
+        picture=capture(tag+'-complete')
+        rectangles=observed_menu_rectangles(menu_background_mask(picture),150*scale,58*scale)
+        check(rectangles,'no independently observed complete menu columns '+tag)
+        sequence=[];total_height=0;last_result=None;stop_result=None
+        for column,rect in enumerate(rectangles):
             rows=rendered_rows(picture,rect,labels)
-            check(rows,'no full labels recognized in '+tag)
-            indices=[labels.index(r[0]) for r in rows]
-            check(indices==sorted(set(indices)),'actual menu order/duplicate mismatch '+tag+repr(rows))
-            seen.update(r[0] for r in rows)
+            check(rows,'no full labels recognized in column '+repr((tag,column,rect)))
+            sequence.extend(row[0] for row in rows)
+            total_height+=rect[3]-rect[1]
             for a,b in zip(rows,rows[1:]):
-                if labels.index(b[0])==labels.index(a[0])+1:
-                    wanted=30 if a[0] in separator_after else 24
-                    check(abs((a[2]-b[2])/scale-wanted)<=2,'actual24/6 menu pitch changed '+repr((tag,a,b)))
-                    boundaries.add(a[0])
+                check(labels.index(b[0])==labels.index(a[0])+1,
+                      'actual column skipped or reordered label '+repr((tag,a,b)))
+                wanted=30 if a[0] in separator_after else 24
+                check(abs((a[2]-b[2])/scale-wanted)<=2,
+                      'actual24/6 menu pitch changed '+repr((tag,a,b)))
             for row in rows:
                 if row[0] in options:
                     cy=row[2];mask=picture[int(cy-9*scale):int(cy+9*scale),int(rect[2]-24*scale):int(rect[2]-2*scale),1]>.18
                     yy,xx=np.nonzero(mask)
                     check(len(xx)>8*scale*scale and xx.max()-xx.min()>=8*scale,'missing Options glyph '+row[0])
-                if row[0]==stop:return picture,rect,row
-            print('CONTENT_ROWS',tag,page,[(r[0],round(r[2],1)) for r in rows],flush=True)
-            if stop is None and seen==set(labels) and separator_after<=boundaries:return picture,rect,rows
-            signature=tuple((r[0],round(r[2])) for r in rows)
-            stalls=stalls+1 if signature==last else 0;last=signature
-            check(stalls<3,'real paging stalled '+tag)
-            event('MOUSEMOVE','NOTHING',((rect[0]+rect[2])/2,(rect[1]+rect[3])/2),shift=(kind in MODEL or kind=='create'))
-            event('WHEELDOWNMOUSE',shift=(kind in MODEL or kind=='create'));yield from settle(4)
-        raise AssertionError('bounded content paging did not expose complete '+tag)
+                if row[0]==stop: stop_result=(picture,rect,row)
+            print('CONTENT_ROWS',tag,'column',column,[(r[0],round(r[2],1)) for r in rows],flush=True)
+            last_result=(picture,rect,rows)
+        check(sequence==labels,'actual complete menu order/multiplicity mismatch '+repr((tag,sequence,labels)))
+        # Separator rows at column breaks have no adjacent baseline pair. Total
+        # observed backdrop height retains that 6px coverage instead of skipping it.
+        expected_height=24*len(labels)+6*expected.count('|')
+        check(abs(total_height/scale-expected_height)<=2*len(rectangles),
+              'actual complete24/6 total height changed '+repr((tag,total_height/scale,expected_height)))
+        if stop is not None:
+            check(stop_result is not None,'requested row not displayed '+stop)
+            return stop_result
+        return last_result
 
     def check_edges(actual,reference,tag):
         comparisons=[]
@@ -437,7 +488,10 @@ def suite():
     def child_labels(parent,labels,tag):
         picture=capture(tag)
         rect=companion_rect(picture,exclude=parent,minimum_height=30,min_width=55)
-        texts=[locate(picture,rect,label)[0] for label in labels]
+        rows=rendered_rows(picture,rect,labels)
+        check(len(rows)==len(labels),'actual child row count differs '+repr((tag,rows)))
+        texts=[locate(picture,(rect[0],row[2]-12*scale,rect[2],row[2]+12*scale),label)[0]
+               for label,row in zip(labels,rows)]
         check([t[1] for t in texts]==sorted([t[1] for t in texts],reverse=True),
               'actual child labels are not in specified order '+tag)
         return picture,rect,texts
@@ -460,7 +514,7 @@ def suite():
         nonlocal scale,region
         controls=('Show Modeling','Show Rigging','Show Animation','Show FX','Show All','Hide All','Show Rendering',
                   'Show Common Menus','Show Pane Specific Menus','Show Custom Menu Set Menus','Set Transparency',
-                  'Hotbox Style','|','Window Options','|','AxisMeld Center Mouse Buttons')
+                  'Hotbox Style','|','Window Options')
         for requested_scale in (1.0,2.0):
             bpy.context.preferences.view.ui_scale=requested_scale;yield from settle(8)
             scale=bpy.context.preferences.system.ui_scale;region=next(r for r in area.regions if r.type=='WINDOW')
@@ -502,12 +556,14 @@ def suite():
             yield from escape('SPACE')
             for parent,labels in (('Show Modeling',('Modeling Only','Show/Hide Modeling')),
                                   ('Hotbox Style',('Zones and Menu Rows','Zones Only','Center Zone Only','Center Zone RMB Popups')),
+                                  ('Set Transparency',('0%','25%','50%','75%','100%')),
                                   ('Window Options',('Show Main Menubar','Show Pane Menubars'))):
                 yield from begin('SPACE')
                 rect=yield from hover_row('SPACE',controls,parent,'state-control-'+str(scale)+'-'+parent)
                 picture,child,texts=child_labels(rect,labels,'state-control-'+str(scale)+'-'+parent+'-child')
                 for label,text in zip(labels,texts):
-                    if label!='Modeling Only':checkbox_pixels(picture,text,label)
+                    if label not in ('Modeling Only','Zones and Menu Rows','Zones Only','Center Zone Only'):
+                        checkbox_pixels(picture,text,label)
                 yield from escape('SPACE')
             configure();check(state()==before,'Controls content mutated scene')
         bpy.context.preferences.view.ui_scale=1.0;yield from settle(8)
@@ -590,7 +646,31 @@ def suite():
             setup(kind if kind in MODEL else 'vertex');yield from settle(5)
             before=state();yield from begin(kind)
             picture=capture('content-'+str(requested_scale)+'-'+kind+'-root')
-            actual=radial_rectangles(picture, {'N','NE','E','SE','S','SW','W'} if kind=='component' else None)
+            labels_by_domain={
+                'vertex':dict(N='Merge Vertices',NE='Average Vertices',E='Chamfer Vertex',S='Extrude Vertex',SW='Delete Vertex',SE='Vertex Normals',W='Multi-Cut',NW='Paint Select Vertices'),
+                'edge':dict(N='Merge/Collapse Edges',NE='Flip/Spin Edge',E='Bevel Edge',S='Extrude Edge',SW='Delete Edge',SE='Soften/Harden Edges',W='Multi-Cut',NW='Paint Select Edges'),
+                'face':dict(N='Merge Faces To Center',NE='Poke Face',E='Bevel Face',S='Extrude Face',SW='Wedge Face',SE='Face Normals',W='Multi-Cut',NW='Paint Select Faces')}
+            labels_by_domain.update({
+                'Q':dict(N='Symmetry',NW='Marquee',NE='Drag',W='Paint Select',E='Camera-Based Selection',SW='Lasso',SE='Clear Selection',S='Select'),
+                'W':dict(N='Symmetry',NW='Object',NE='Component',W='World',E='Snap',SW='Axis',SE='Keep Spacing',S='Select'),
+                'E':dict(N='Symmetry',NW='Object',NE='Component',W='World',E='Gimbal',SW='Custom',SE='Discrete Rotate',S='Select'),
+                'R':dict(N='Symmetry',NW='Object',NE='Component',W='World',E='Snap Scale',SW='Axis',SE='Relative',S='Select'),
+                'component':dict(N='Edge',NE='Object Mode',W='Vertex',E='UV',SW='Vertex Face',SE='Multi',S='Face')})
+            def matches(direction,r):
+                text=labels_by_domain[kind][direction];gh,gw=template(text).shape
+                return r[2]-r[0]-4>=gw and r[3]-r[1]-4>=gh and locate(picture,r,text,required=False) is not None
+            actual=labelled_radial_rectangles(picture,scale,
+                {'N','NE','E','SE','S','SW','W'} if kind=='component' else
+                {'N','NE','E','SE','S','SW','W','NW'},matches)['rects']
+            # Include the separately drawn Options cell in each actual button
+            # group before comparing its inner edge against Views.
+            cells=observed_menu_rectangles(menu_background_mask(picture),10*scale,13*scale)
+            for direction,r in tuple(actual.items()):
+                adjacent=[c for c in cells if 18*scale<=c[2]-c[0]<=27*scale
+                          and 0<=c[0]-r[2]<=3*scale
+                          and abs(c[1]-r[1])<=2*scale and abs(c[3]-r[3])<=2*scale]
+                check(len(adjacent)<=1,'ambiguous observed Options neighbor '+repr(adjacent))
+                if adjacent:actual[direction]=(r[0],r[1],adjacent[0][2],r[3])
             check_edges(actual,base,kind)
             if kind=='Q':
                 label,_=locate(picture,(region.x,region.y,region.x+region.width,region.y+region.height),'Automatic Camera-Based Selection')
@@ -599,7 +679,7 @@ def suite():
                 yield from browse(kind,MODEL.get(kind,COMPONENT if kind=='component' else TOOLS.get(kind)),
                                   'content-'+str(requested_scale)+'-'+kind)
             yield from finish(kind)
-            check(state()==before,'opening/paging/cancel changed scene or Recent '+kind)
+            check(state()==before,'opening/complete-column/cancel changed scene or Recent '+kind)
         print('PASS full content and actual Views geometry',requested_scale,flush=True)
     print('AXISMELD_MAYA_CONTENT_UI_EVENTS_PASS',flush=True)
 

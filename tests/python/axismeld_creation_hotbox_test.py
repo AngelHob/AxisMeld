@@ -47,12 +47,12 @@ class CreationHotboxTest(unittest.TestCase):
             self.assertNotIn(command, bindings)
             self.assertEqual(hotbox_catalog.command_policy(command), (True, True))
 
-    def test_space_create_contains_the_same_radial_primitives(self):
+    def test_internal_create_preserves_radial_primitives_outside_real_maya_create(self):
         nodes = {node['id']: node for node in walk(hotbox_catalog.default_catalog())}
         self.assertEqual(nodes['common.create']['kind'], 'menu')
-        self.assertEqual(nodes['common.create']['children'][0]['id'], 'context.create')
+        self.assertNotIn('context.create', {n['id'] for n in walk((nodes['common.create'],))})
         self.assertEqual(sum(child['id'] == 'context.create'
-                             for child in nodes['common.create']['children']), 1)
+                             for child in nodes['internal.marking']['children']), 1)
         menu = nodes['context.create']
         self.assertEqual((menu['label'], menu['presentation']), ('Polygon Primitives', 'radial'))
         children = {child['direction']: child for child in menu['children']}

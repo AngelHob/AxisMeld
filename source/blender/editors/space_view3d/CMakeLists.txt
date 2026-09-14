@@ -144,6 +144,11 @@ if(WITH_GTESTS)
   endif()
   blender_add_test_suite_lib(editor_hotbox
     "tests/hotbox_model_test.cc"
-    "../../axismeld" "" "bf::blenlib;bf::axismeld"
+    "../../axismeld;${CMAKE_BINARY_DIR}/source/blender/axismeld" "" "bf::blenlib;bf::axismeld"
     "view3d_axismeld_hotbox_model.cc")
+  if(WITH_TESTS_SINGLE_BINARY)
+    add_dependencies(editor_hotbox_tests axismeld_menu_fixture)
+  else()
+    add_dependencies(editor_hotbox_hotbox_model_test axismeld_menu_fixture)
+  endif()
 endif()

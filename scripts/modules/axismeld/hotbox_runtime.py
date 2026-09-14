@@ -18,18 +18,21 @@ from .object_modeling_hotbox import (OBJECT_ROOT, OBJECT_MENU, OBJECT_TOOLS, OBJ
                                      OBJECT_MENU_COMMANDS, OBJECT_OPTION_COMMANDS, object_modeling_targets)
 from .modeling_registry import SPECS as MODELING_SPECS
 from .hotbox_catalog import default_catalog, command_policy, CONTROL_UNAVAILABLE_INDICATORS
+from .maya_menu_catalog import MAYA_ROW_IDS, MAYA_ROW_INDICATORS, MAYA_ADAPTATION_REASONS
+from .maya_menu_reference import UNAVAILABLE_INDICATORS as MAYA_UNAVAILABLE_INDICATORS
 from .hotbox_profiles import (CANONICAL_ROWS, DEFAULT_APPEARANCE, DEFAULT_SETTINGS, MENU_IDS, MOUSE_BUTTONS,
                               load_hotbox_profiles, resolve_hotbox, save_hotbox_user,
                               validate_settings)
 
 
-MAX_NODES = 2048
+MAX_NODES = 4096
 MAX_DEPTH = 8
-MAX_JSON_BYTES = 512 * 1024
+MAX_JSON_BYTES = 1024 * 1024
 MAX_TEXT = 128
 NODE_KINDS = frozenset({'menu', 'command', 'separator', 'disabled', 'setting'})
 NODE_FIELDS = frozenset({'id', 'kind', 'label', 'command', 'enabled', 'reason', 'children'})
 UNAVAILABLE_INDICATORS = {
+    **MAYA_UNAVAILABLE_INDICATORS,
     **TOOL_UNAVAILABLE_INDICATORS,
     **COMPONENT_UNAVAILABLE_INDICATORS,
     **CONTROL_UNAVAILABLE_INDICATORS,
@@ -325,7 +328,8 @@ def validate_snapshot(value):
     complete = [*canonical, OBJECT_MENU, CREATE_MENU, COMPONENT_MENU,
                 *MODEL_COMPANION_ROOTS, *TOOL_COMPANION_ROOTS.values()]
     if [node.get('id') for node in menus] not in (canonical, [*canonical, OBJECT_MENU],
-                                                [*canonical, OBJECT_MENU, CREATE_MENU], complete):
+                                                [*canonical, OBJECT_MENU, CREATE_MENU], complete,
+                                                [*complete, 'internal']):
         raise ValueError('root menus must match a canonical catalog or the complete companion catalog')
     if not all(node.get('kind') == 'menu' for node in menus):
         raise ValueError('root menu groups must have menu kind')
@@ -462,7 +466,7 @@ def serialize_snapshot(value):
     except (TypeError, ValueError, RecursionError) as error:
         raise ValueError(f'snapshot is not JSON serializable: {error}') from error
     if len(payload.encode('utf-8')) > MAX_JSON_BYTES:
-        raise ValueError('snapshot exceeds 512 KiB')
+        raise ValueError('snapshot exceeds 1 MiB')
     return payload
 
 
@@ -570,6 +574,30 @@ def _apply_runtime_capabilities(context, menus):
             active_tool = context.workspace.tools.from_space_view3d_mode(context.mode, create=False)
             node['indicator'] = 'checkbox'
             node['checked'] = active_tool is not None and active_tool.idname == 'builtin.select_box'
+        if identifier in MAYA_ROW_IDS:
+            # The reference supplies the affordance, never Maya's captured state.
+            # Blender-only state embellishments do not belong on plain Maya rows.
+            indicator = MAYA_ROW_INDICATORS.get(identifier)
+            if not indicator:
+                node.pop('indicator', None)
+                node.pop('checked', None)
+            else:
+                state = None
+                if node['command'] in MODELING_SPECS:
+                    state = adapter.modeling_adapter.command_state(context, node['command'])
+                elif node['command'] in {'view.wireframe', 'view.shaded'}:
+                    space = getattr(context, 'space_data', None)
+                    shading = getattr(space, 'shading', None)
+                    if shading is not None:
+                        expected = 'WIREFRAME' if node['command'] == 'view.wireframe' else 'SOLID'
+                        state = (indicator, shading.type == expected)
+                node['indicator'] = indicator
+                node['checked'] = bool(state[1]) if state is not None else False
+                if state is None:
+                    node['enabled'] = False
+                    node['reason'] = 'Maya state adapter not implemented; current state is unavailable'
+            if node['enabled']:
+                node['reason'] = MAYA_ADAPTATION_REASONS.get(identifier, '')
     return menus
 
 

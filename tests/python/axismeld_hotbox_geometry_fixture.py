@@ -115,70 +115,102 @@ def view_page(anchor, labels, measure, bounds, scale):
     raise AssertionError(f'view fixture cannot fit in {bounds!r}')
 
 
+_native_surface = None
+_native_parents = {}
+
+
+def native_fixture_surface(bounds):
+    """Set independently observed whole-window pixel bounds for input prediction.
+
+    Views geometry remains region-local. No native layout/debug data is queried.
+    """
+    global _native_surface
+    bounds = tuple(bounds) if bounds is not None else None
+    if bounds is None or bounds != _native_surface:
+        _native_parents.clear()
+    _native_surface = bounds
+
+
 def native_page(anchor, labels, measure, bounds, scale=1, marking_origin=None, first=0,
                 submenu_indices=()):
+    """Complete native columns. Legacy ``first`` is accepted but cannot hide rows."""
     if not labels:
         raise AssertionError('Native list requires at least one label')
-    ax, ay, aw, ah = (v / scale for v in anchor)
-    bx, by, bw, bh = (v / scale for v in bounds)
-    submenu_indices = frozenset(submenu_indices)
-    w = max(measure(label) + (60 if i in submenu_indices else 40)
-            for i, label in enumerate(labels))
-
-    def position(h):
-        x = ax+aw
-        y = max(by+12, min(ay+ah-h, by+bh-12-h))
-        if x+w <= bx+bw-12:
-            return x, y
-        x = ax-w
-        if x >= bx+12:
-            return x, y
-        for cy in (ay+ah, ay-h):
-            for cx in (max(bx+12, min(ax, bx+bw-12-w)), bx+12, bx+bw-12-w):
-                if cy < by+12 or cy+h > by+bh-12:
-                    continue
-                if marking_origin:
-                    ox, oy = (v/scale for v in marking_origin)
-                    dx, dy = ox-max(cx, min(ox, cx+w)), oy-max(cy, min(oy, cy+h))
-                    if dx*dx+dy*dy <= 12*12:
-                        continue
-                return cx, cy
-        return None
-
-    heights=[6 if label=='' else 24 for label in labels]
-    for room in range(int(bh-24),5,-6):
-        paged=sum(heights)>room
-        if paged:
-            available=room-48
-            maximum=len(labels)
-            used=0
-            while maximum>0 and used+heights[maximum-1]<=available:
-                maximum-=1;used+=heights[maximum]
-            if maximum==len(labels):continue
-            offset=min(max(first,0),maximum)
-            end=offset;used=0
-            while end<len(labels) and used+heights[end]<=available:
-                used+=heights[end];end+=1
-            h=used+48
-        else:
-            offset=0;end=len(labels);h=sum(heights)
-        if end==offset:continue
-        origin=position(h)
-        if origin is None:continue
-        x,y=origin
-        items=[None]*len(labels)
-        top=y+h
-        previous=next_row=None
-        if paged:
-            top-=24;previous=(x*scale,top*scale,w*scale,24*scale)
-        for index in range(offset,end):
-            top-=heights[index]
-            items[index]=(x*scale,top*scale,w*scale,heights[index]*scale)
-        if paged:
-            top-=24;next_row=(x*scale,top*scale,w*scale,24*scale)
-        return {'items':items,'previous':previous,'next':next_row,'back':None,
-                'capacity':end-offset,'first':offset}
-    raise AssertionError(f'Native list cannot fit without covering its entry in {bounds!r}')
+    anchor = tuple(anchor)
+    parent = _native_parents.get(anchor)
+    # A child of an expanded parent remains on that same drawing surface.
+    initial = parent['bounds'] if parent else tuple(bounds)
+    surfaces = [initial]
+    if _native_surface is not None and _native_surface != initial:
+        surfaces.append(_native_surface)
+    ax, ay, aw, ah = (v/scale for v in anchor)
+    indices = frozenset(submenu_indices)
+    row_width = max(measure(label)+(60 if i in indices else 40)
+                    for i,label in enumerate(labels))
+    heights = [6 if not label else 24 for label in labels]
+    parent_rects = parent['columns'] if parent else [anchor]
+    pl = min(r[0] for r in parent_rects)/scale
+    pr = max(r[0]+r[2] for r in parent_rects)/scale
+    pb = min(r[1] for r in parent_rects)/scale
+    pt = max(r[1]+r[3] for r in parent_rects)/scale
+    def origin_clear(x,y,w,h):
+        if marking_origin is None: return True
+        ox,oy = (v/scale for v in marking_origin)
+        dx,dy = ox-max(x,min(ox,x+w)), oy-max(y,min(oy,y+h))
+        return dx*dx+dy*dy > 144
+    for surface_index,surface in enumerate(surfaces):
+        bx,by,bw,bh=(v/scale for v in surface)
+        for room in range(int(bh-24),23,-6):
+            ranges=[]
+            for prefer_separator in (True,False):
+                ranges=[];start=0
+                while start<len(labels):
+                    end=start;used=0;split=None
+                    while end<len(labels) and used+heights[end]<=room:
+                        used+=heights[end];end+=1
+                        if not labels[end-1] and used>=room/2: split=(end,used)
+                    if end==start: break
+                    if prefer_separator and end<len(labels) and split: end,used=split
+                    ranges.append((start,end,used));start=end
+                width=len(ranges)*(row_width+4)-4
+                if start==len(labels) and width<=bw-24: break
+            if not ranges or start!=len(labels) or width>bw-24: continue
+            # Editor retries the entire composition on its larger surface before
+            # keeping a region-local multi-column result.
+            if len(ranges)>1 and surface_index+1<len(surfaces): break
+            height=max(r[2] for r in ranges)
+            y=max(by+12,min(ay+ah-height,by+bh-12-height))
+            candidates=[(pr,y),(pl-width,y)]
+            for cy in (pt,pb-height):
+                candidates.extend((cx,cy) for cx in
+                                  (max(bx+12,min(ax,bx+bw-12-width)),bx+12,bx+bw-12-width))
+            placed=None
+            for x,y in candidates:
+                if x<bx+12 or y<by+12 or x+width>bx+bw-12 or y+height>by+bh-12: continue
+                if any(x<r[0]/scale+r[2]/scale and x+width>r[0]/scale and
+                       y<r[1]/scale+r[3]/scale and y+height>r[1]/scale for r in parent_rects): continue
+                if not origin_clear(x,y,width,height): continue
+                placed=(x,y);break
+            if placed is None:
+                for y in (by+12,by+bh-12-height):
+                    for x in (bx+12,bx+bw-12-width):
+                        covers=x<ax+aw and x+width>ax and y<ay+ah and y+height>ay
+                        if (not covers or parent is None) and origin_clear(x,y,width,height):
+                            placed=(x,y);break
+                    if placed is not None: break
+            if placed is None: continue
+            x,y=placed;items=[None]*len(labels);columns=[]
+            for column,(start,end,used) in enumerate(ranges):
+                left=x+column*(row_width+4);top=y+height
+                columns.append((left*scale,(top-used)*scale,row_width*scale,used*scale))
+                for index in range(start,end):
+                    top-=heights[index]
+                    items[index]=(left*scale,top*scale,row_width*scale,heights[index]*scale)
+            result={'items':items,'previous':None,'next':None,'back':None,
+                    'capacity':len(labels),'first':0,'columns':columns,'bounds':surface}
+            for item in items: _native_parents[tuple(item)]=result
+            return result
+    raise AssertionError(f'Complete native list cannot fit {labels!r} in {surfaces!r}')
 
 
 def native_list(anchor, labels, measure, bounds, scale=1, marking_origin=None):
@@ -193,54 +225,8 @@ def style_list(anchor, measure, bounds, scale=1, marking_origin=None):
 def ellipse_page(anchor, labels, measure, bounds, scale=1, first=0, views=False):
     if views:
         return view_page(anchor, labels, measure, bounds, scale)
-    ax, ay, aw, ah = (v / scale for v in anchor)
-    bx, by, bw, bh = (v / scale for v in bounds)
-    native_entries = {'Menu Rows', 'Hotbox Style', 'Transparency', 'Center Mouse Buttons', 'Tool Settings'}
-    widths = [measure(label) + (60 if label in native_entries else 16) for label in labels]
-    center_width = aw
-    choices = []
-    for capacity in range(min(len(labels), 8), 0, -1):
-        paged = capacity < len(labels)
-        offset = min(first, len(labels)-capacity) if paged else 0
-        indices = ([-1] if paged else []) + list(range(offset, offset+capacity)) + ([-2] if paged else [])
-        phase = math.pi/4 if len(indices) == 2 else math.pi/2
-        slots = [(math.cos(phase-2*math.pi*i/len(indices)),
-                  math.sin(phase-2*math.pi*i/len(indices))) for i in range(len(indices))]
-        choices.append((indices, slots, paged, offset, capacity))
-    for indices, slots, paged, offset, capacity in choices:
-        for ry in range(24, int(bh)):
-            rectangles = [(-center_width/2, -12, center_width, 24)]
-            clear = True
-            for index, (nx, ny) in zip(indices, slots):
-                w = 38 if index < 0 else max(widths)
-                candidate = (nx*1.7*ry-w/2, ny*ry-12, w, 24)
-                x, y, w, h = candidate
-                clear &= all(x+w+3.999 <= ox or ox+ow+3.999 <= x or
-                             y+h+3.999 <= oy or oy+oh+3.999 <= y
-                             for ox, oy, ow, oh in rectangles)
-                rectangles.append(candidate)
-            left = min(r[0] for r in rectangles)
-            right = max(r[0]+r[2] for r in rectangles)
-            bottom = min(r[1] for r in rectangles)
-            top = max(r[1]+r[3] for r in rectangles)
-            if right-left > bw-24 or top-bottom > bh-24:
-                break
-            if not clear:
-                continue
-            cx = max(bx+12-left, min(ax+aw/2, bx+bw-12-right))
-            cy = max(by+12-bottom, min(ay+ah/2, by+bh-12-top))
-            def translated(rectangle, natural=None):
-                x, y, w, h = rectangle
-                if natural is not None:
-                    x, w = x+(w-natural)/2, natural
-                return ((x+cx)*scale, (y+cy)*scale, w*scale, h*scale)
-            result = {'items': [None]*len(labels), 'back': translated(rectangles[0]),
-                      'previous': None, 'next': None, 'capacity': capacity, 'first': offset}
-            for index, rectangle in zip(indices, rectangles[1:]):
-                value = translated(rectangle, 38 if index < 0 else max(widths))
-                if index < 0:
-                    result['previous' if index == -1 else 'next'] = value
-                else:
-                    result['items'][index] = value
-            return result
-    raise AssertionError(f'ellipse fixture cannot fit {labels!r} in {bounds!r}')
+    # Non-marking directories are ordinary native lists; only Views is radial.
+    submenu_names = {'Views', 'Menu Rows', 'Hotbox Style', 'Transparency',
+                     'Center Mouse Buttons', 'Tool Settings', 'Nested Entries'}
+    return native_page(anchor, labels, measure, bounds, scale, first=first,
+                       submenu_indices=[i for i,label in enumerate(labels) if label in submenu_names])

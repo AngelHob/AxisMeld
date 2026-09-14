@@ -261,9 +261,11 @@ def _catalog():
         )
     ))
     from .modeling_catalog import extend_catalog
-    return extend_catalog((common, pane, center, modeling, object_modeling_companion(_node),
-                           creation_companion(_node), component_companion(_node),
-                           *modeling_companions(_node), *tool_companions(_node)), _node)
+    from .maya_menu_catalog import rebuild_maya_menus
+    legacy = extend_catalog((common, pane, center, modeling, object_modeling_companion(_node),
+                             creation_companion(_node), component_companion(_node),
+                             *modeling_companions(_node), *tool_companions(_node)), _node)
+    return rebuild_maya_menus(legacy, _node)
 
 
 _DEFAULT_CATALOG = _catalog()

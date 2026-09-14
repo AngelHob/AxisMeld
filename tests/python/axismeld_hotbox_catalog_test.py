@@ -79,7 +79,7 @@ class HotboxCatalogTest(unittest.TestCase):
             'context.component_menu', 'context.modeling_vertex_menu', 'context.modeling_edge_menu',
             'context.modeling_face_menu', 'tools.select_menu', 'tools.move_menu', 'tools.rotate_menu',
             'tools.scale_menu', 'tools.select.select_menu', 'tools.move.select_menu',
-            'tools.rotate.select_menu', 'tools.scale.select_menu'])
+            'tools.rotate.select_menu', 'tools.scale.select_menu', 'tools.move.snap_menu', 'internal'])
         expected = {
             'common': ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows'],
             'pane': ['View', 'Shading', 'Lighting', 'Show', 'Renderer', 'Panels'],
@@ -91,26 +91,34 @@ class HotboxCatalogTest(unittest.TestCase):
         self.assertEqual({row['id']: [child['label'] for child in row['children']]
                           for row in catalog if row['id'] in expected}, expected)
 
-    def test_catalog_declares_actual_leaf_commands_without_inventing_uv_commands(self):
+    def test_catalog_preserves_core_commands_in_real_maya_paths_without_inventing_uv_commands(self):
         catalog = default_catalog()
-        self.assertEqual([node['command'] for node in node_by_id(catalog, 'common.select')['children']
-                          if node['kind'] == 'command'], [
-            'selection.toggle_component', 'selection.vertex_mode',
-            'selection.edge_mode', 'selection.face_mode',
-            'selection.select_all', 'selection.grow', 'selection.shrink'])
-        self.assertEqual([node['id'] for node in node_by_id(catalog, 'common.select')['children'][:8]], [
-            'context.components', 'common.select.object_component',
-            'common.select.vertex', 'common.select.edge', 'common.select.face',
-            'common.select.all', 'common.select.grow', 'common.select.shrink'])
-        self.assertEqual([node['command'] for node in node_by_id(catalog, 'common.modify')['children']
-                          if node['kind'] == 'command'], [
-            'transform.move', 'transform.rotate', 'transform.scale'])
-        self.assertEqual([node['command'] for node in node_by_id(catalog, 'pane.view')['children']], [
-            'view.focus_selected', 'view.frame_all'])
-        self.assertEqual([node['command'] for node in node_by_id(catalog, 'pane.shading')['children']], [
-            'view.wireframe', 'view.shaded'])
-        self.assertFalse(node_by_id(catalog, 'modeling.uv')['enabled'])
-        self.assertEqual(node_by_id(catalog, 'modeling.uv')['children'], [])
+        for identifier, command in (
+                ('maya.common.select.object_component', 'selection.toggle_component'),
+                ('maya.common.select.grow', 'selection.grow'),
+                ('maya.common.select.shrink', 'selection.shrink'),
+                ('maya.common.select.all', 'selection.select_all'),
+                ('maya.common.select.deselect_all', 'selection.clear'),
+                ('context.components.vertex', 'selection.vertex_mode'),
+                ('context.components.edge', 'selection.edge_mode'),
+                ('context.components.face', 'selection.face_mode')):
+            self.assertEqual(node_by_id(catalog, identifier)['command'], command)
+        self.assertNotIn('context.components',
+                         {n['id'] for n in nodes((node_by_id(catalog, 'common.select'),))})
+        self.assertIn('context.components',
+                      {n['id'] for n in node_by_id(catalog, 'internal.marking')['children']})
+        for tool in ('move', 'rotate', 'scale'):
+            self.assertEqual(node_by_id(catalog, 'maya.common.modify.transformation_tools.' +
+                                        tool + '_tool')['command'], 'transform.' + tool)
+        self.assertEqual([node['command'] for node in node_by_id(catalog, 'pane.view')['children']
+                          if node['kind'] == 'command'], ['view.frame_all', 'view.focus_selected'])
+        self.assertEqual([node['command'] for node in node_by_id(catalog, 'pane.shading')['children']
+                          if node['kind'] == 'command'], ['view.wireframe', 'view.shaded'])
+        uv = node_by_id(catalog, 'modeling.uv')
+        self.assertEqual(uv['kind'], 'menu')
+        self.assertTrue(uv['enabled'])
+        self.assertTrue(uv['children'])
+        self.assertEqual({n['command'] for n in nodes((uv,))}, {''})
         for identifier in ('views.left', 'views.back', 'views.bottom',
                            'pane.panels.left', 'pane.panels.back', 'pane.panels.bottom'):
             self.assertTrue(node_by_id(catalog, identifier)['enabled'])
@@ -326,9 +334,9 @@ class HotboxCatalogTest(unittest.TestCase):
                 kind='command', command='view.frame_all', children=[])),
             changed(lambda value: value['menus'][0].__setitem__('id', '公共')),
             changed(lambda value: value['menus'][0].__setitem__('label', 'x' * 129)),
-            changed(lambda value: node_by_id(value['menus'], 'pane.view.frame_all').__setitem__(
+            changed(lambda value: node_by_id(value['menus'], 'maya.pane.view.frame_all').__setitem__(
                 'command', 'unknown.command')),
-            changed(lambda value: node_by_id(value['menus'], 'pane.view.frame_all').__setitem__(
+            changed(lambda value: node_by_id(value['menus'], 'maya.pane.view.frame_all').__setitem__(
                 'value', 'not-empty')),
             changed(lambda value: node_by_id(value['menus'], 'views.style.rows').__setitem__(
                 'value', 'invalid-style')),
@@ -353,6 +361,18 @@ class HotboxCatalogTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'unresolved menu ID'):
             hotbox_runtime.validate_snapshot(value)
 
+    def test_snapshot_accepts_exact_4096_nodes_and_rejects_one_more(self):
+        value = hotbox_runtime.make_snapshot(generation=1)
+        current = len(list(nodes(value['menus'])))
+        self.assertLess(current, 4096)
+        value['menus'][0]['children'].extend(menu_node(f'limit.{i}')
+                                             for i in range(4096 - current))
+        self.assertEqual(len(list(nodes(value['menus']))), 4096)
+        hotbox_runtime.validate_snapshot(value)
+        value['menus'][0]['children'].append(menu_node('limit.extra'))
+        with self.assertRaisesRegex(ValueError, '4096'):
+            hotbox_runtime.validate_snapshot(value)
+
     def test_snapshot_rejects_cycles_excess_depth_node_count_and_size(self):
         cycle = hotbox_runtime.make_snapshot(generation=1)
         cycle['menus'][0]['children'] = [cycle['menus'][0]]
@@ -368,13 +388,13 @@ class HotboxCatalogTest(unittest.TestCase):
             hotbox_runtime.validate_snapshot(too_deep)
 
         too_many = hotbox_runtime.make_snapshot(generation=1)
-        too_many['menus'][0]['children'] = [menu_node(f'many.{index}') for index in range(2049)]
-        with self.assertRaisesRegex(ValueError, '2048'):
+        too_many['menus'][0]['children'] = [menu_node(f'many.{index}') for index in range(4097)]
+        with self.assertRaisesRegex(ValueError, '4096'):
             hotbox_runtime.validate_snapshot(too_many)
 
         too_large = hotbox_runtime.make_snapshot(generation=1)
-        node_by_id(too_large['menus'], 'common.file')['reason'] = 'x' * (512 * 1024)
-        with self.assertRaisesRegex(ValueError, '512 KiB'):
+        node_by_id(too_large['menus'], 'common.file')['reason'] = 'x' * (1024 * 1024)
+        with self.assertRaisesRegex(ValueError, '1 MiB'):
             hotbox_runtime.serialize_snapshot(too_large)
 
 

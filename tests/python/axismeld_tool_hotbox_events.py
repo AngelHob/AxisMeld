@@ -8,6 +8,9 @@ import traceback
 import math
 import blf
 import bpy
+import numpy as np
+sys.path.insert(0,str(Path(__file__).parent))
+from axismeld_hotbox_image_fixture import observed_radial_rectangles
 
 root = Path(os.environ['AXISMELD_TEST_ROOT']).resolve()
 assert Path(bpy.app.tempdir).resolve().is_relative_to(root)
@@ -35,8 +38,20 @@ def suite():
     bpy.utils.keyconfig_set(str(preset))
     cx, cy = region.x + region.width // 2, region.y + region.height // 2
     pos = [cx, cy]
+    showing=False
+    display_generation=0
+    observed_roots={}
+    theme=bpy.context.preferences.themes[0].user_interface
+    for colors in (theme.wcol_menu,theme.wcol_menu_back,theme.wcol_menu_item):
+        colors.inner=(.8,.04,.65,1)
+        colors.inner_sel=(.8,.04,.65,1)
 
     def event(kind, value='PRESS', point=None, **kwargs):
+        nonlocal showing,display_generation
+        if kind=='LEFTMOUSE':
+            showing=value=='PRESS'
+            if showing:display_generation+=1
+        elif kind=='ESC':showing=False
         if point is not None:
             pos[:] = map(int, point)
         win.event_simulate(type=kind, value=value, x=pos[0], y=pos[1], **kwargs)
@@ -57,6 +72,21 @@ def suite():
         print('SCREENSHOT', path, flush=True)
 
     def ring(tool_name, origin=None):
+        if showing and tool_name in {'select','move','rotate','scale'}:
+            key=(display_generation,tool_name)
+            if key in observed_roots:
+                return observed_roots[key]
+            path=root/'actual-tool-input-targets.png'
+            with override():bpy.ops.screen.screenshot(filepath=str(path))
+            picture=bpy.data.images.load(str(path),check_existing=False)
+            try:
+                width,height=picture.size
+                pixels=np.asarray(picture.pixels[:],dtype=np.float32).reshape(height,width,4).copy()
+            finally:bpy.data.images.remove(picture)
+            observed=observed_radial_rectangles(pixels,bpy.context.preferences.system.ui_scale,
+                {'N','NW','NE','W','E','SW','SE','S'})
+            observed_roots[key]={d:(r[0],r[1],r[2]-r[0],r[3]-r[1]) for d,r in observed['rects'].items()}
+            return observed_roots[key]
         # Coordinates only; independent native tests assert direction, spacing and hit ownership.
         from axismeld.hotbox_catalog import default_catalog
         def walk(nodes):
@@ -585,40 +615,38 @@ def suite():
           'edge-clamped child center did not return to root')
     check(not modals(), 'edge-clamped return left ownership')
 
-    # Reach the same child through the actual Space -> Modify -> Tool Settings path.
+    # Internal menus retain non-Maya tool settings without inserting fake rows
+    # in Maya Modify. Use a real off-center LMB press so origin-return remains
+    # distinct from the Space opening position.
     sys.path.insert(0, str(Path(__file__).parent))
-    from axismeld_hotbox_geometry_fixture import ellipse_page, native_page
+    from axismeld_hotbox_geometry_fixture import native_page, native_fixture_surface
+    native_fixture_surface((0,0,win.width,win.height))
 
-    def open_space_modify():
-        measure = lambda label: blf.dimensions(0, label)[0] / scale + 20
-        labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
-        widths = [measure(label) + 40 for label in labels]
-        left = cx - (sum(widths) + 60)*scale/2
-        modify = (left + (sum(widths[:4]) + 40)*scale, cy + 77*scale,
-                  widths[4]*scale, 38*scale)
-        bounds = (region.x, region.y, region.width, region.height)
-        event('MOUSEMOVE', 'NOTHING', (cx, cy))
-        event('SPACE')
-        yield from settle()
-        event('MOUSEMOVE', 'NOTHING', middle(modify))
-        event('LEFTMOUSE')
-        yield from settle()
+    def open_space_modify(identifier='internal.blender'):
         from axismeld.hotbox_catalog import default_catalog
-        entries = next(n for n in default_catalog()[0]['children'] if n['id'] == 'common.modify')['children']
-        page = native_page(modify, [n['label'] for n in entries], measure, bounds, scale,
-                           submenu_indices=[i for i, n in enumerate(entries) if n['kind'] == 'menu'])
-        return modify, entries, page, measure, bounds
+        pending=list(default_catalog());nodes={}
+        while pending:
+            item=pending.pop();nodes[item['id']]=item;pending.extend(item['children'])
+        entries=nodes[identifier]['children']
+        measure=lambda label: blf.dimensions(0,label)[0]/scale+20
+        center_width=(measure('AxisMeld')+40)*scale
+        anchor=(cx-center_width/2,cy-19*scale,center_width,38*scale)
+        bounds=(region.x,region.y,region.width,region.height)
+        with override():
+            hotbox_runtime.reload_settings(bpy.context,session={'schema_version':1,'settings':{
+                'center_buttons':{'LEFTMOUSE':identifier}}})
+        event('MOUSEMOVE','NOTHING',(cx,cy));event('SPACE');yield from settle()
+        event('MOUSEMOVE','NOTHING',(cx+24*scale,cy));event('LEFTMOUSE');yield from settle()
+        page=native_page(anchor,[n['label'] for n in entries],measure,bounds,scale,
+            submenu_indices=[i for i,n in enumerate(entries) if n['kind']=='menu'])
+        return anchor,entries,page,measure,bounds
 
     def open_space_move():
-        modify, entries, page, measure, bounds = yield from open_space_modify()
-        tools_entry = page['items'][next(i for i,n in enumerate(entries) if n['id']=='common.modify.tools')]
-        event('MOUSEMOVE', 'NOTHING', middle(tools_entry))
-        yield from settle()
-        move_entry = native_page(tools_entry, ['Select Tool', 'Move Tool', 'Rotate Tool', 'Scale Tool'],
-                                 measure, bounds, scale, submenu_indices=range(4))['items'][1]
-        event('MOUSEMOVE', 'NOTHING', middle(move_entry))
-        yield from settle()
-        return ring('move', middle(move_entry)), middle(modify)
+        anchor,entries,page,measure,bounds=yield from open_space_modify('internal.marking')
+        move_index=next(i for i,n in enumerate(entries) if n['id']=='tools.move')
+        move_entry=page['items'][move_index]
+        event('MOUSEMOVE','NOTHING',middle(move_entry));yield from settle()
+        return ring('move',middle(move_entry)),(cx+24*scale,cy)
 
     # Relocated Blender View actions remain reachable through real Space input.
     # Every tool is checked both for successful dispatch and original-press cancel.
@@ -640,7 +668,7 @@ def suite():
             event('MOUSEMOVE', 'NOTHING', middle(child_page['items'][child_index]))
             yield from settle()
             if cancel:
-                event('MOUSEMOVE', 'NOTHING', middle(modify))
+                event('MOUSEMOVE', 'NOTHING', (cx+24*scale,cy))
                 yield from settle()
             event('LEFTMOUSE', 'RELEASE')
             event('SPACE', 'RELEASE')
@@ -684,7 +712,7 @@ def suite():
         event('MOUSEMOVE', 'NOTHING', (rect[0] + rect[2] + 64 * scale, target[1]))
         yield from settle()
         if return_to_press:
-            # The real LMB-down was on Modify, not the Space origin or tool-ring center.
+            # The real LMB-down was off-center within the mapped Internal button.
             check(math.dist(mouse_origin, (cx, cy)) > 12 * scale,
                   'Space origin-cancel fixture must use a distinct LMB press position')
             event('MOUSEMOVE', 'NOTHING', mouse_origin)

@@ -313,7 +313,8 @@ def suite():
     print('PASS 5x5 Face Step grow/shrink literals and geometry/UV invariants', flush=True)
 
     sys.path.insert(0, str(Path(__file__).parent))
-    from axismeld_hotbox_geometry_fixture import native_page
+    from axismeld_hotbox_geometry_fixture import native_page, native_fixture_surface
+    native_fixture_surface((0,0,win.width,win.height))
     scale = bpy.context.preferences.system.ui_scale
     cx, cy = region.x + region.width // 2, region.y + region.height // 2
     position = [cx, cy]
@@ -331,7 +332,7 @@ def suite():
     def label_width(label):
         blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
         icons = {'AxisMeld', 'Vertex', 'Edge', 'Face'}
-        return blf.dimensions(0, label)[0] / scale + (20 if label in icons else 0)
+        return blf.dimensions(0, label)[0] / scale + 20
 
     from axismeld.hotbox_catalog import default_catalog
     entries = next(n for n in default_catalog()[0]['children'] if n['id'] == 'common.select')['children']
@@ -340,7 +341,7 @@ def suite():
     center = (cx-center_width/2, cy-19*scale, center_width, 38*scale)
 
     def positions(anchor):
-        return native_page(anchor, labels, label_width,
+        return native_page(anchor, labels, lambda label: label_width(label) + (20 if any(n.get('indicator') for n in entries) else 0) + (24 if any(n['label']==label and any(c['id'].endswith('.options') for c in n['children']) for n in entries) else 0),
                            (region.x, region.y, region.width, region.height), scale,
                            submenu_indices=[i for i, n in enumerate(entries) if n['kind'] == 'menu'])['items']
 
@@ -390,7 +391,7 @@ def suite():
     screenshot = artifacts / 'selection-select-menu.png'
     with override():
         bpy.ops.screen.screenshot(filepath=str(screenshot))
-    event('LEFTMOUSE', point=midpoint(menu_items[5])); event('LEFTMOUSE', 'RELEASE')
+    event('LEFTMOUSE', point=midpoint(menu_items[next(i for i,n in enumerate(entries) if n['command']=='selection.select_all')])); event('LEFTMOUSE', 'RELEASE')
     yield from settle()
     check(selected_faces() == set(range(25)), 'clicked Select All leaf did not select all faces')
     check(not modal_open() and hotbox_runtime.recent.items()[0] == 'selection.select_all',
@@ -407,8 +408,8 @@ def suite():
     hotbox_runtime.reload_settings(bpy.context, session={
         'schema_version': 1, 'settings': {'center_buttons': {'RIGHTMOUSE': 'common.select'}}})
     for command, index, before, expected in (
-            ('selection.grow', 6, {12}, expected_grown_faces),
-            ('selection.shrink', 7, expected_grown_faces, expected_shrunk_faces)):
+            ('selection.grow', next(i for i,n in enumerate(entries) if n['command']=='selection.grow'), {12}, expected_grown_faces),
+            ('selection.shrink', next(i for i,n in enumerate(entries) if n['command']=='selection.shrink'), expected_grown_faces, expected_shrunk_faces)):
         yield from anchor_undo(before, {0} if before != {0} else {24})
         yield from open_box()
         event('RIGHTMOUSE')
@@ -433,7 +434,7 @@ def suite():
     yield from open_box()
     event('RIGHTMOUSE')
     yield from settle()
-    event('MOUSEMOVE', 'NOTHING', midpoint(positions(center)[6]))
+    event('MOUSEMOVE', 'NOTHING', midpoint(positions(center)[next(i for i,n in enumerate(entries) if n['command']=='selection.grow')]))
     event('ESC'); event('ESC', 'RELEASE')
     yield from settle()
     event('RIGHTMOUSE', 'RELEASE')

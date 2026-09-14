@@ -32,10 +32,14 @@ struct HotboxVisual {
   float pointer_position[2] = {0, 0};
   float scale = 1;
   MenuBounds safe_bounds;
+  // Optional larger drawing surface, expressed in the same source-region coordinates.
+  // Input and command context always remain owned by that source region.
+  MenuBounds overflow_bounds = {0, 0, 0, 0};
 };
 void hotbox_measure(HotboxVisual &data);
 void hotbox_layout(HotboxVisual &data);
-void hotbox_draw(const bContext *C, const HotboxVisual &data);
+void hotbox_draw(const bContext *C, const HotboxVisual &data,
+                 const int *draw_offset = nullptr);
 }  // namespace blender::axismeld
 
 namespace blender {

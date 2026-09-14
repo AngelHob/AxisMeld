@@ -1,9 +1,13 @@
 /* SPDX-FileCopyrightText: 2026 AxisMeld Authors
  * SPDX-License-Identifier: GPL-2.0-or-later */
 #include "AXM_hotbox_menu.hh"
+#include "AXM_context_modeling.hh"
 #include "testing/testing.h"
 
 namespace blender::axismeld {
+#define AXISMELD_JSON_FIXTURE_ONLY
+#include "hotbox_menu_fixture.hh"
+#undef AXISMELD_JSON_FIXTURE_ONLY
 bool parse_menu_snapshot(std::string_view json, MenuSnapshot &out, std::string &error);
 
 static std::string menu(const std::string &id, const std::string &children = "")
@@ -27,6 +31,47 @@ static std::string replace(std::string input, const std::string &from, const std
   EXPECT_NE(index, std::string::npos);
   input.replace(index, from.size(), to);
   return input;
+}
+
+TEST(hotbox_model, SnapCompanionIsCompleteAndReadonlyWithExactIdentity)
+{
+  const std::string state = R"({"id":"tools.move.snap_menu.relative","kind":"disabled","label":"Relative Mode","command":"","enabled":false,"reason":"Not implemented","indicator":"checkbox","checked":false,"children":[]})";
+  std::string prefix = snapshot();
+  for (const std::string id : {"context.modeling_object_menu", "context.create_menu",
+                               "context.component_menu", "context.modeling_vertex_menu",
+                               "context.modeling_edge_menu", "context.modeling_face_menu",
+                               "tools.select_menu", "tools.move_menu", "tools.rotate_menu",
+                               "tools.scale_menu", "tools.select.select_menu",
+                               "tools.move.select_menu", "tools.rotate.select_menu",
+                               "tools.scale.select_menu"}) {
+    const std::string list = replace(menu(id), "\"children\":", "\"presentation\":\"list\",\"children\":");
+    prefix.insert(prefix.size() - 2, "," + list);
+  }
+  const auto complete = [&](const std::string &leaf) {
+    std::string result = prefix;
+    const std::string list = replace(menu("tools.move.snap_menu", leaf),
+                                     "\"children\":", "\"presentation\":\"list\",\"children\":");
+    result.insert(result.size() - 2, "," + list);
+    return result;
+  };
+  MenuSnapshot out{};
+  std::string error;
+  ASSERT_TRUE(parse_menu_snapshot(complete(state), out, error)) << error;
+  EXPECT_EQ(out.menus.size(), 19);
+  EXPECT_EQ(active_companion_root({"tools.move", "tools.move.snap"}), "tools.move.snap_menu");
+  EXPECT_EQ(active_companion_root({"tools.move"}), "tools.move_menu");
+  EXPECT_EQ(companion_owner("tools.move.snap_menu.relative"), "tools.move.snap_menu");
+  for (const std::string &bad : {
+           replace(state, "tools.move.snap_menu.relative", "tools.move.snap.relative"),
+           replace(state, "tools.move.snap_menu.relative", "tools.move.snap_menu.unknown"),
+           replace(state, "checkbox", "radio"),
+           replace(state, "\"checked\":false", "\"checked\":true"),
+           replace(state, "\"enabled\":false", "\"enabled\":true"),
+           replace(state, "\"command\":\"\"", "\"command\":\"selection.clear\"")}) {
+    out.generation = 99;
+    EXPECT_FALSE(parse_menu_snapshot(complete(bad), out, error));
+    EXPECT_EQ(out.generation, 99);
+  }
 }
 
 TEST(hotbox_model, IndependentOptionLeafHasOneExactParentAndNoGrandchildren)
@@ -88,7 +133,7 @@ TEST(hotbox_model, ExpandedToolTreeRetainsBoundedAtomicParsing)
     children += (i ? "," : "") + menu("entry" + std::to_string(i));
   }
   ASSERT_TRUE(parse_menu_snapshot(snapshot(children), out, error));
-  for (int i = 800; i < 2049; i++) {
+  for (int i = 800; i < 4092; i++) {
     children += "," + menu("entry" + std::to_string(i));
   }
   EXPECT_FALSE(parse_menu_snapshot(snapshot(children), out, error));
@@ -347,14 +392,22 @@ TEST(hotbox_model, CenterButtonSettingAcceptsRegisteredMenuOrDisabledOnly)
 TEST(hotbox_model, NodeCountAndDepthAreBounded)
 {
   std::string children;
-  for (int i = 0; i < 2044; i++) {
+  // Four roots plus the nested Views node leave exactly 4091 child slots.
+  for (int i = 0; i < 4091; i++) {
     if (i)
       children += ",";
     children += menu("child" + std::to_string(i));
   }
   MenuSnapshot out{};
   std::string error;
-  EXPECT_FALSE(parse_menu_snapshot(snapshot(children), out, error));
+  ASSERT_TRUE(parse_menu_snapshot(snapshot(children), out, error)) << error;
+  ASSERT_EQ(out.menus.front().children.size(), 4091);
+  out.generation = 99;
+  out.style = "sentinel";
+  EXPECT_FALSE(parse_menu_snapshot(snapshot(children + "," + menu("one_too_many")), out, error));
+  EXPECT_EQ(out.generation, 99);
+  EXPECT_EQ(out.style, "sentinel");
+  EXPECT_EQ(out.menus.front().children.size(), 4091);
   children.clear();
   for (int i = 0; i < 8; i++)
     children = menu("depth" + std::to_string(i), children);
@@ -366,7 +419,7 @@ TEST(hotbox_model, InvalidInputIsAtomic)
 {
   for (const std::string input : {std::string("{"),
                                   std::string("null"),
-                                  std::string(512 * 1024 + 1, ' '),
+                                  std::string(1024 * 1024 + 1, ' '),
                                   std::string(R"({"schema_version":true})")})
   {
     MenuSnapshot out{};
@@ -418,7 +471,7 @@ TEST(hotbox_model, DisabledMetadataStateHasAnExactReadonlyContract)
 TEST(hotbox_model, ExtendedSnapshotByteLimitStillRejectsOversizeAtomically)
 {
   auto json = snapshot();
-  json.append(512 * 1024 - json.size(), ' ');
+  json.append(1024 * 1024 - json.size(), ' ');
   MenuSnapshot out{};
   std::string error;
   EXPECT_TRUE(parse_menu_snapshot(json, out, error));
@@ -426,6 +479,116 @@ TEST(hotbox_model, ExtendedSnapshotByteLimitStillRejectsOversizeAtomically)
   json += ' ';
   EXPECT_FALSE(parse_menu_snapshot(json, out, error));
   EXPECT_EQ(out.generation, 91);
+}
+
+TEST(hotbox_model, CompleteProductionCatalogActuallyParsesWithMayaHierarchyAndInternalRoots)
+{
+  const std::string json = default_snapshot_json();
+  EXPECT_GT(json.size(), 512 * 1024);
+  EXPECT_LT(json.size(), 1024 * 1024);
+  MenuSnapshot out{};
+  std::string error;
+  ASSERT_TRUE(parse_menu_snapshot(json, out, error)) << error;
+  EXPECT_EQ(out.generation, 73);
+  ASSERT_EQ(out.menus.size(), 20);
+  EXPECT_EQ(out.menus.back().id, "internal");
+  const MenuNode *display = nullptr;
+  for (const auto &node : out.menus.front().children) {
+    if (node.id == "common.display") {
+      display = &node;
+    }
+  }
+  ASSERT_NE(display, nullptr);
+  bool found_object_display = false;
+  for (const auto &node : display->children) {
+    if (node.id == "maya.common.display.object_display") {
+      found_object_display = true;
+      EXPECT_EQ(node.kind, MenuKind::Menu);
+      EXPECT_FALSE(node.children.empty());
+    }
+  }
+  EXPECT_TRUE(found_object_display);
+}
+
+TEST(hotbox_model, FullCompanionTreeRequiresAnExactTerminalInternalRoot)
+{
+  const auto list = [](const std::string &id) {
+    return replace(menu(id), "\"children\":", "\"presentation\":\"list\",\"children\":");
+  };
+  // Literal expected contract, independent of the production companion mapping.
+  const std::vector<std::string> ids = {
+      "context.modeling_object_menu", "context.create_menu", "context.component_menu",
+      "context.modeling_vertex_menu", "context.modeling_edge_menu", "context.modeling_face_menu",
+      "tools.select_menu", "tools.move_menu", "tools.rotate_menu", "tools.scale_menu",
+      "tools.select.select_menu", "tools.move.select_menu", "tools.rotate.select_menu",
+      "tools.scale.select_menu", "tools.move.snap_menu", "internal"};
+  const auto complete = [&](const std::vector<std::string> &roots) {
+    std::string json = snapshot();
+    for (const auto &id : roots) {
+      json.insert(json.size() - 2, "," + list(id));
+    }
+    return json;
+  };
+  MenuSnapshot out{};
+  std::string error;
+  ASSERT_TRUE(parse_menu_snapshot(complete(ids), out, error)) << error;
+  ASSERT_EQ(out.menus.size(), 20);
+  EXPECT_EQ(out.menus.back().id, "internal");
+  for (size_t count = 3; count < ids.size() - 1; count++) {
+    const std::vector<std::string> partial(ids.begin(), ids.begin() + count);
+    out.generation = 99;
+    EXPECT_FALSE(parse_menu_snapshot(complete(partial), out, error)) << count + 4;
+    EXPECT_EQ(out.generation, 99);
+  }
+  auto reordered = ids;
+  std::swap(reordered[0], reordered[1]);
+  auto incomplete = ids;
+  incomplete.erase(incomplete.end() - 2);
+  auto extra = ids;
+  extra.push_back("unknown.extra");
+  auto early_internal = ids;
+  std::swap(early_internal[14], early_internal[15]);
+  for (const auto &bad : {complete(reordered), complete(incomplete), complete(extra),
+                          complete(early_internal), complete({"internal"}),
+                          replace(complete(ids), list("internal"), menu("internal"))}) {
+    out.generation = 99;
+    out.style = "sentinel";
+    EXPECT_FALSE(parse_menu_snapshot(bad, out, error));
+    EXPECT_EQ(out.generation, 99);
+    EXPECT_EQ(out.style, "sentinel");
+    EXPECT_EQ(out.menus.size(), 20);
+  }
+}
+
+TEST(hotbox_model, AllMayaReferenceIndicatorsRequireExactIdentityStyleAndFalseState)
+{
+  ASSERT_EQ(maya_menu_unavailable_indicators.size(), 197);
+  MenuSnapshot out{};
+  std::string error;
+  for (const auto &[id_view, indicator_view] : maya_menu_unavailable_indicators) {
+    const std::string id(id_view), indicator(indicator_view);
+    const std::string state = "{\"id\":\"" + id +
+        "\",\"kind\":\"disabled\",\"label\":\"Reference State\",\"command\":\"\","
+        "\"enabled\":false,\"reason\":\"Unavailable\",\"indicator\":\"" + indicator +
+        "\",\"checked\":false,\"children\":[]}";
+    ASSERT_TRUE(parse_menu_snapshot(snapshot(state), out, error)) << id << ": " << error;
+    ASSERT_EQ(out.menus.front().children.front().indicator, indicator);
+    for (const auto &bad : {
+             replace(state, id, id + ".unknown"),
+             replace(state, "\"indicator\":\"" + indicator + "\"",
+                     "\"indicator\":\"" + std::string(indicator == "radio" ? "checkbox" : "radio") + "\""),
+             replace(state, "\"checked\":false", "\"checked\":true"),
+             replace(state, "\"checked\":false", "\"checked\":0"),
+             replace(state, "\"enabled\":false", "\"enabled\":true"),
+             replace(state, "\"command\":\"\"", "\"command\":\"selection.clear\"")}) {
+      out.generation = 99;
+      out.style = "sentinel";
+      EXPECT_FALSE(parse_menu_snapshot(snapshot(bad), out, error)) << id;
+      EXPECT_EQ(out.generation, 99);
+      EXPECT_EQ(out.style, "sentinel");
+      EXPECT_EQ(out.menus.front().children.front().id, id);
+    }
+  }
 }
 
 TEST(hotbox_model, TrailingContentIsRejectedAtomically)

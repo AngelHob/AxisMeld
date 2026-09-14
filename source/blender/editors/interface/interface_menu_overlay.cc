@@ -30,6 +30,9 @@ void menu_overlay_draw(const bContext *C,
   Vector<Button *> centered_buttons;
   for (const MenuOverlayItem &item : items) {
     const auto apply_state = [&](Button *button) {
+      // Native labels/rules never handle input. Keep the normal menu-label theme
+      // instead of dimming section headings as unavailable command buttons.
+      if (item.separator) { return; }
       if (item.hovered) {
         button->flag |= UI_HOVER;
       }
@@ -83,7 +86,9 @@ void menu_overlay_draw(const bContext *C,
                                               item.rect.ymax - item.rect.ymin,
                                               std::nullopt) :
                          uiDefIconTextBut(block,
-                                          item.separator ? ButtonType::SeprLine : ButtonType::But,
+                                          item.separator ? (item.label.is_empty() ? ButtonType::SeprLine :
+                                                                                    ButtonType::Label) :
+                                                           ButtonType::But,
                                           item.icon,
                                           item.label,
                                           label_x,

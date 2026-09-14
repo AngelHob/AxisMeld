@@ -1,0 +1,1885 @@
+{
+  "schema": 1,
+  "source": "docs/reference/maya2026-menu-tree.json",
+  "source_sha256": "2f9cca1f27dd1cd2b0fdc7dfc1f621f28b78204db74b0a9b3c858656a6f2e260",
+  "policy": "docs/development/2026-09-14-maya-dynamic-menu-boundaries.md",
+  "root_count": 22,
+  "node_count_including_options": 1949,
+  "indicator_count": 197,
+  "action_counts": {
+    "dynamic_provider": 23,
+    "remove": 58,
+    "template": 2,
+    "dynamic_binding": 27
+  },
+  "identity_policy": "Display-label ancestry; anonymous separators use neighboring label hashes. Identical sibling semantic signatures use a local occurrence suffix. Maya numbered UI paths never form identities.",
+  "changes": [
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "File",
+        "Recent Files"
+      ],
+      "source_ui_path": "mainFileMenu|FileMenuRecentFileItems",
+      "source_label": "Recent Files",
+      "reason": "Recent files require current user history",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "File",
+        "Recent Files",
+        ""
+      ],
+      "source_ui_path": "mainFileMenu|FileMenuRecentFileItems|menuItem603",
+      "source_label": "",
+      "reason": "Recent files require current user history",
+      "source_evidence": {
+        "command": "openRecentFile(\"\", \"\")",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "File",
+        "Recent Increments"
+      ],
+      "source_ui_path": "mainFileMenu|FileMenuRecentBackupItems",
+      "source_label": "Recent Increments",
+      "reason": "Recent increments require current file history",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "File",
+        "Recent Projects"
+      ],
+      "source_ui_path": "mainFileMenu|FileMenuRecentProjectItems",
+      "source_label": "Recent Projects",
+      "reason": "Recent projects require current user history",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "template",
+      "path": [
+        "Edit",
+        "Undo \"setupRendererSceneOpenedC...\""
+      ],
+      "source_ui_path": "mainEditMenu|undoItem",
+      "source_label": "Undo \"setupRendererSceneOpenedC...\"",
+      "reason": "Edit action label appends current session history; Maya startup/buildEditMenu.mel:79-124",
+      "source_evidence": {
+        "command": "Undo",
+        "runtimeCommand": "Undo",
+        "dividerLabel": "",
+        "optionBox": false
+      },
+      "replacement": "Undo"
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Edit",
+        "Recent Commands List"
+      ],
+      "source_ui_path": "mainEditMenu|menuItem604",
+      "source_label": "Recent Commands List",
+      "reason": "Command history belongs to the current session",
+      "source_evidence": {
+        "command": "RecentCommandsWindow",
+        "runtimeCommand": "RecentCommandsWindow",
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Edit",
+        "Delete by Type",
+        "Sounds"
+      ],
+      "source_ui_path": "mainEditMenu|clearActiveItem|deleteSoundSubMenuItem",
+      "source_label": "Sounds",
+      "reason": "Sound members require current scene audio nodes",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Edit",
+        "Delete by Type",
+        "Sounds",
+        "No sounds available"
+      ],
+      "source_ui_path": "mainEditMenu|clearActiveItem|deleteSoundSubMenuItem|menuItem632",
+      "source_label": "No sounds available",
+      "reason": "Sound members require current scene audio nodes",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Create",
+        "Lights"
+      ],
+      "source_ui_path": "mainCreateMenu|LightsItem",
+      "source_label": "Lights",
+      "reason": "Additional light types depend on plugin registration",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Create",
+        "Cameras"
+      ],
+      "source_ui_path": "mainCreateMenu|menuItem698",
+      "source_label": "Cameras",
+      "reason": "Additional camera types depend on plugin registration",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Create",
+        "Scene Assembly"
+      ],
+      "source_ui_path": "mainCreateMenu|menuCreateSceneAssembly",
+      "source_label": "Scene Assembly",
+      "reason": "Assembly types require registered capabilities",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Select",
+        "Quick Select Sets"
+      ],
+      "source_ui_path": "mainSelectMenu|selectCharItem",
+      "source_label": "Quick Select Sets",
+      "reason": "Quick select sets require current scene sets",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Select",
+        "Quick Select Sets",
+        "No Quick Select Sets Defined"
+      ],
+      "source_ui_path": "mainSelectMenu|selectCharItem|menuItem822",
+      "source_label": "No Quick Select Sets Defined",
+      "reason": "Quick select sets require current scene sets",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Modify",
+        "Asset",
+        "Advanced Assets",
+        "Set Current Asset"
+      ],
+      "source_ui_path": "mainModifyMenu|menuItem871|menuItem892|setCurrentContainerItem",
+      "source_label": "Set Current Asset",
+      "reason": "Asset members require current scene containers; None remains a fixed action",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Windows",
+        "Workspaces"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530",
+      "source_label": "Workspaces",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "General*"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|WorkspaceMenuID_0",
+      "source_label": "General*",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"General\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "General*",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|menuItem907",
+      "source_label": "menuItem907",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"General\",\"WorkspaceMenuID_0\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Modeling - Standard"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|WorkspaceMenuID_1",
+      "source_label": "Modeling - Standard",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Modeling - Standard\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Modeling - Standard",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|menuItem909",
+      "source_label": "menuItem909",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Modeling - Standard\",\"WorkspaceMenuID_1\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Modeling - Expert"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|WorkspaceMenuID_2",
+      "source_label": "Modeling - Expert",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Modeling - Expert\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Modeling - Expert",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|menuItem910",
+      "source_label": "menuItem910",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Modeling - Expert\",\"WorkspaceMenuID_2\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Sculpting"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|WorkspaceMenuID_3",
+      "source_label": "Sculpting",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Sculpting\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Sculpting",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|menuItem911",
+      "source_label": "menuItem911",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Sculpting\",\"WorkspaceMenuID_3\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Pose Sculpting"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|WorkspaceMenuID_4",
+      "source_label": "Pose Sculpting",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Pose Sculpting\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Pose Sculpting",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|menuItem912",
+      "source_label": "menuItem912",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Pose Sculpting\",\"WorkspaceMenuID_4\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "UV Editing"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|WorkspaceMenuID_5",
+      "source_label": "UV Editing",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"UV Editing\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "UV Editing",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|menuItem913",
+      "source_label": "menuItem913",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"UV Editing\",\"WorkspaceMenuID_5\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "XGen"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|WorkspaceMenuID_6",
+      "source_label": "XGen",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"XGen\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "XGen",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|menuItem914",
+      "source_label": "menuItem914",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"XGen\",\"WorkspaceMenuID_6\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "XGen - Interactive Groom"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|WorkspaceMenuID_7",
+      "source_label": "XGen - Interactive Groom",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"XGen - Interactive Groom\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "XGen - Interactive Groom",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|menuItem915",
+      "source_label": "menuItem915",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"XGen - Interactive Groom\",\"WorkspaceMenuID_7\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Rigging"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|WorkspaceMenuID_8",
+      "source_label": "Rigging",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Rigging\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Rigging",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|menuItem917",
+      "source_label": "menuItem917",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Rigging\",\"WorkspaceMenuID_8\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Animation"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|WorkspaceMenuID_9",
+      "source_label": "Animation",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Animation\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Animation",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|menuItem918",
+      "source_label": "menuItem918",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Animation\",\"WorkspaceMenuID_9\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Rendering - Standard"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|WorkspaceMenuID_10",
+      "source_label": "Rendering - Standard",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Rendering - Standard\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Rendering - Standard",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|menuItem920",
+      "source_label": "menuItem920",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Rendering - Standard\",\"WorkspaceMenuID_10\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Rendering - Expert"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|WorkspaceMenuID_11",
+      "source_label": "Rendering - Expert",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Rendering - Expert\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Rendering - Expert",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|menuItem921",
+      "source_label": "menuItem921",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Rendering - Expert\",\"WorkspaceMenuID_11\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "MASH"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|WorkspaceMenuID_12",
+      "source_label": "MASH",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"MASH\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "MASH",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|menuItem923",
+      "source_label": "menuItem923",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"MASH\",\"WorkspaceMenuID_12\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Motion Graphics"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|WorkspaceMenuID_13",
+      "source_label": "Motion Graphics",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Motion Graphics\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Motion Graphics",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|menuItem924",
+      "source_label": "menuItem924",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Motion Graphics\",\"WorkspaceMenuID_13\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Bifrost Fluids"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|WorkspaceMenuID_14",
+      "source_label": "Bifrost Fluids",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Bifrost Fluids\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Bifrost Fluids",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|menuItem926",
+      "source_label": "menuItem926",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Bifrost Fluids\",\"WorkspaceMenuID_14\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "template",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Reset \"General\" to Factory Default"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem530|workspaceResetMenu",
+      "source_label": "Reset \"General\" to Factory Default",
+      "reason": "Current workspace name is contextual",
+      "source_evidence": {
+        "command": "ResetCurrentWorkspace",
+        "runtimeCommand": "ResetCurrentWorkspace",
+        "dividerLabel": "",
+        "optionBox": false
+      },
+      "replacement": "Reset Current Workspace to Factory Default"
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "View",
+        "Bookmarks"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|View|BookmarksMenuItem",
+      "source_label": "Bookmarks",
+      "reason": "Named bookmarks require the source camera",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "View",
+        "Image Plane"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|View|modelPanel4imagePlaneSubMenu",
+      "source_label": "Image Plane",
+      "reason": "Image plane actions require the live source camera",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "View",
+        "Image Plane",
+        "Image Plane Attributes"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|View|modelPanel4imagePlaneSubMenu|imagePlaneEditSubMenu",
+      "source_label": "Image Plane Attributes",
+      "reason": "Image plane members require the live source camera",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Show",
+        "Isolate Select",
+        "Bookmarks"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|menu26|menuItem1443|bookMarkHierItem",
+      "source_label": "Bookmarks",
+      "reason": "Dynamic Maya bookmark enumeration failed in the audited capture; fixed actions retained",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Renderer",
+        "Viewport 2.0"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|menu27|OGSRenderer",
+      "source_label": "Viewport 2.0",
+      "reason": "Renderer entries require the current renderer registry",
+      "source_evidence": {
+        "command": "ActivateViewport20",
+        "runtimeCommand": "ActivateViewport20",
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Renderer"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|menu27",
+      "source_label": "Renderer",
+      "reason": "Renderer entries require the current renderer registry",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": null,
+        "optionBox": null
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Panels",
+        "Perspective"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1474",
+      "source_label": "Perspective",
+      "reason": "Perspective camera members require the current scene",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Perspective",
+        "persp"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1474|menuItem1500",
+      "source_label": "persp",
+      "reason": "Perspective camera members require the current scene",
+      "source_evidence": {
+        "command": "lookThroughModelPanel \"persp\" modelPanel4",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Panels",
+        "Stereo"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1475",
+      "source_label": "Stereo",
+      "reason": "Stereo rigs and camera sets require scene and plugin providers",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Panels",
+        "Orthographic"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1476",
+      "source_label": "Orthographic",
+      "reason": "Orthographic camera members require the current scene",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Orthographic",
+        "front"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1476|menuItem1507",
+      "source_label": "front",
+      "reason": "Orthographic camera members require the current scene",
+      "source_evidence": {
+        "command": "lookThroughModelPanel \"front\" modelPanel4",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Orthographic",
+        "side"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1476|menuItem1508",
+      "source_label": "side",
+      "reason": "Orthographic camera members require the current scene",
+      "source_evidence": {
+        "command": "lookThroughModelPanel \"side\" modelPanel4",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Orthographic",
+        "top"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1476|menuItem1509",
+      "source_label": "top",
+      "reason": "Orthographic camera members require the current scene",
+      "source_evidence": {
+        "command": "lookThroughModelPanel \"top\" modelPanel4",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Panels",
+        "Panel"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480",
+      "source_label": "Panel",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Camera Sequencer"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1518",
+      "source_label": "Camera Sequencer",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "scriptedPanel -e -rp modelPanel4 sequenceEditorPanel1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Content Browser"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1519",
+      "source_label": "Content Browser",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "scriptedPanel -e -rp modelPanel4 contentBrowserPanel1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Create Node"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1520",
+      "source_label": "Create Node",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "scriptedPanel -e -rp modelPanel4 createNodePanel1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        ""
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1521",
+      "source_label": "",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Dope Sheet"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1522",
+      "source_label": "Dope Sheet",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "scriptedPanel -e -rp modelPanel4 dopeSheetPanel1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Dynamic Relationships Editor"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1523",
+      "source_label": "Dynamic Relationships Editor",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "scriptedPanel -e -rp modelPanel4 dynRelEdPanel1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Graph Editor"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1524",
+      "source_label": "Graph Editor",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "scriptedPanel -e -rp modelPanel4 graphEditor1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        ""
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1525",
+      "source_label": "",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Hypershade"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1526",
+      "source_label": "Hypershade",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "scriptedPanel -e -rp modelPanel4 hyperShadePanel1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Node Editor"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1527",
+      "source_label": "Node Editor",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "scriptedPanel -e -rp modelPanel4 nodeEditorPanel1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Outliner"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1528",
+      "source_label": "Outliner",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "replaceCurrentPanelWithOutliner modelPanel4",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        ""
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1529",
+      "source_label": "",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Paint Effects"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1530",
+      "source_label": "Paint Effects",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "scriptedPanel -e -rp modelPanel4 dynPaintScriptedPanel",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Pose Editor"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1531",
+      "source_label": "Pose Editor",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "posePanel -e -rp modelPanel4 posePanel1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Profiler"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1532",
+      "source_label": "Profiler",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "scriptedPanel -e -rp modelPanel4 profilerPanel1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        ""
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1533",
+      "source_label": "",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Reference Editor"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1534",
+      "source_label": "Reference Editor",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "scriptedPanel -e -rp modelPanel4 referenceEditorPanel1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Relationship Editor"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1535",
+      "source_label": "Relationship Editor",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "scriptedPanel -e -rp modelPanel4 relationshipPanel1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Render View"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1536",
+      "source_label": "Render View",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "scriptedPanel -e -rp modelPanel4 renderView",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        ""
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1537",
+      "source_label": "",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Script Editor"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1538",
+      "source_label": "Script Editor",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "scriptedPanel -e -rp modelPanel4 scriptEditorPanel1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Shape Editor"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1539",
+      "source_label": "Shape Editor",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "shapePanel -e -rp modelPanel4 shapePanel1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Time Editor"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1540",
+      "source_label": "Time Editor",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "scriptedPanel -e -rp modelPanel4 timeEditorPanel1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        ""
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1541",
+      "source_label": "",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "Trax Editor"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1542",
+      "source_label": "Trax Editor",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "scriptedPanel -e -rp modelPanel4 clipEditorPanel1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_binding",
+      "path": [
+        "Panels",
+        "Panel",
+        "UV Editor"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1480|menuItem1543",
+      "source_label": "UV Editor",
+      "reason": "Panel types and instances require the current panel registry",
+      "source_evidence": {
+        "command": "scriptedPanel -e -rp modelPanel4 polyTexturePlacementPanel1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Panels",
+        "Hypergraph Panel"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1481",
+      "source_label": "Hypergraph Panel",
+      "reason": "Existing Hypergraph panels require the current panel registry",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Hypergraph Panel",
+        "Hypergraph Hierarchy"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1481|menuItem1544",
+      "source_label": "Hypergraph Hierarchy",
+      "reason": "Existing Hypergraph panels require the current panel registry",
+      "source_evidence": {
+        "command": "hyperGraphReplacePanel \"modelPanel4\" \"hyperGraphPanel1\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Panels",
+        "Saved Layouts"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494",
+      "source_label": "Saved Layouts",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Single Perspective View"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1548",
+      "source_label": "Single Perspective View",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Single Perspective View\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Four View"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1549",
+      "source_label": "Four View",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Four View\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Front/Persp"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1550",
+      "source_label": "Front/Persp",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Front/Persp\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Persp/Hypergraph"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1551",
+      "source_label": "Persp/Hypergraph",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Persp/Hypergraph\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Persp/Graph/Hypergraph"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1552",
+      "source_label": "Persp/Graph/Hypergraph",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Persp/Graph/Hypergraph\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Hypershade/Render/Persp"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1553",
+      "source_label": "Hypershade/Render/Persp",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Hypershade/Render/Persp\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Hypershade/Outliner/Persp"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1554",
+      "source_label": "Hypershade/Outliner/Persp",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Hypershade/Outliner/Persp\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Hypershade/Persp"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1555",
+      "source_label": "Hypershade/Persp",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Hypershade/Persp\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Persp/Graph/Outliner"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1556",
+      "source_label": "Persp/Graph/Outliner",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Persp/Graph/Outliner\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Persp/Trax"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1557",
+      "source_label": "Persp/Trax",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Persp/Trax\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Persp/Camera Sequencer"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1558",
+      "source_label": "Persp/Camera Sequencer",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Persp/Camera Sequencer\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Persp/Trax/Outliner"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1559",
+      "source_label": "Persp/Trax/Outliner",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Persp/Trax/Outliner\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Persp/Graph"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1560",
+      "source_label": "Persp/Graph",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Persp/Graph\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Persp/Relationship Editor"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1561",
+      "source_label": "Persp/Relationship Editor",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Persp/Relationship Editor\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Persp/UV Editor"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1562",
+      "source_label": "Persp/UV Editor",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Persp/UV Editor\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Script Editor/Persp"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1563",
+      "source_label": "Script Editor/Persp",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Script Editor/Persp\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Hypershade/Render/Persp Vertical"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1564",
+      "source_label": "Hypershade/Render/Persp Vertical",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Hypershade/Render/Persp Vertical\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Stereo Persp"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1565",
+      "source_label": "Stereo Persp",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Stereo Persp\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Panels",
+        "Saved Layouts",
+        "Stereo Persp/Outliner"
+      ],
+      "source_ui_path": "MainPane|viewPanes|modelPanel4|modelPanel4|Panels|menuItem1494|menuItem1566",
+      "source_label": "Stereo Persp/Outliner",
+      "reason": "Saved layouts are registered configuration instances",
+      "source_evidence": {
+        "command": "setNamedPanelLayout \"Stereo Persp/Outliner\"",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Mesh Display",
+        "Assign Existing Set"
+      ],
+      "source_ui_path": "mainMeshDisplayMenu|assignExistingVertexBakeSetItem",
+      "source_label": "Assign Existing Set",
+      "reason": "Bake set members require current scene sets",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Mesh Display",
+        "Assign Existing Set",
+        "No bakesets defined"
+      ],
+      "source_ui_path": "mainMeshDisplayMenu|assignExistingVertexBakeSetItem|polyNewNoBakesetsDefined",
+      "source_label": "No bakesets defined",
+      "reason": "Bake set members require current scene sets",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    }
+  ]
+}

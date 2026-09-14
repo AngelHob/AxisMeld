@@ -42,7 +42,7 @@ int menu_radio_icon(const MenuSnapshot &snapshot, const MenuNode &node)
 
 bool reserve_child_state_column(const MenuSnapshot &snapshot, const MenuNode &owner)
 {
-  // Reserve the column for the entire directory, including rows on other pages.
+  // Reserve the column for the entire directory.
   // Directional rings retain individual icon slots and their established inner edges.
   return owner.kind == MenuKind::Menu && owner.presentation != "radial" && owner.id != "views" &&
          std::any_of(owner.children.begin(), owner.children.end(), [&](const MenuNode &node) {
@@ -112,10 +112,31 @@ void hotbox_layout(HotboxVisual &data)
                                             data.marking ? &origin : nullptr,
                                             data.tool_root,
                                             data.companion_path);
+  // Keep normal popups at the viewport bottom. A small pane must not force hidden
+  // rows or miniature targets: use the same window's larger surface when necessary.
+  const bool needs_space = !data.menu_layout.supported ||
+                          std::any_of(data.menu_layout.rects.begin(),
+                                      data.menu_layout.rects.end(),
+                                      [](const MenuRect &rect) { return rect.column > 0; });
+  if (needs_space && data.overflow_bounds.xmax > data.overflow_bounds.xmin &&
+      data.overflow_bounds.ymax > data.overflow_bounds.ymin) {
+    MenuLayout expanded = layout_menu_in_bounds(data.snapshot,
+                                                data.overflow_bounds,
+                                                data.center[0], data.center[1],
+                                                data.open_path, data.scroll_offsets,
+                                                data.label_widths,
+                                                data.marking ? &origin : nullptr,
+                                                data.tool_root, data.companion_path);
+    if (expanded.supported) {
+      data.menu_layout = std::move(expanded);
+    }
+  }
 }
 
-void hotbox_draw(const bContext *C, const HotboxVisual &data)
+void hotbox_draw(const bContext *C, const HotboxVisual &data, const int *draw_offset)
 {
+  const float offset_x = draw_offset ? float(draw_offset[0]) : 0.0f;
+  const float offset_y = draw_offset ? float(draw_offset[1]) : 0.0f;
   struct Entry {
     MenuRect rect;
     std::string text;
@@ -140,7 +161,9 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
   collect_columns(collect_columns, data.snapshot.menus);
   std::vector<Entry> entries;
   {
-    for (const MenuRect &rect : data.menu_layout.rects) {
+    for (MenuRect rect : data.menu_layout.rects) {
+      rect.x += offset_x / data.scale;
+      rect.y += offset_y / data.scale;
       const bool back = rect.id.starts_with("@back:");
       const MenuNode *node = hotbox_find_node(data.snapshot.menus,
                                               back ? rect.id.substr(6) : rect.id);
@@ -183,8 +206,10 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
     immUniform1f("lineWidth", 1.25f * scale);
     immUniformColor4ubv(theme.wcol_menu.text);
     immBegin(GPU_PRIM_LINES, 2);
-    immVertex2f(pos, data.press_position[0] * scale, data.press_position[1] * scale);
-    immVertex2f(pos, data.pointer_position[0] * scale, data.pointer_position[1] * scale);
+    immVertex2f(pos, data.press_position[0] * scale + offset_x,
+                   data.press_position[1] * scale + offset_y);
+    immVertex2f(pos, data.pointer_position[0] * scale + offset_x,
+                   data.pointer_position[1] * scale + offset_y);
     immEnd();
     immUnbindProgram();
   }
@@ -297,6 +322,8 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
   // Native submenu and leaf rows stay in one block so their backgrounds remain continuous.
   struct NativeBlock {
     bool standalone;
+    std::string owner;
+    int column;
     std::vector<ui::MenuOverlayItem> items;
   };
   std::map<int, std::vector<NativeBlock>> menu_levels;
@@ -314,8 +341,9 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
                                 ICON_NONE;
       auto &blocks = menu_levels[r.depth];
       const bool standalone = r.option_box || r.native_menu_standalone || !r.native_menu;
-      if (standalone || blocks.empty() || blocks.back().standalone) {
-        blocks.push_back({standalone, {}});
+      if (standalone || blocks.empty() || blocks.back().standalone ||
+          blocks.back().owner != r.owner || blocks.back().column != r.column) {
+        blocks.push_back({standalone, r.owner, r.column, {}});
       }
       blocks.back().items.push_back({entry.text,
                                      {int(r.x * scale),

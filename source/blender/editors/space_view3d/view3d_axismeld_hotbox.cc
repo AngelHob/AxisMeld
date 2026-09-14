@@ -26,6 +26,10 @@
 #include "RNA_access.hh"
 #include "RNA_define.hh"
 #include "UI_interface.hh"
+#include "GPU_framebuffer.hh"
+#include "GPU_texture.hh"
+#include "GPU_state.hh"
+#include "UI_resources.hh"
 #include "WM_api.hh"
 #include "WM_types.hh"
 #include "view3d_axismeld.hh"
@@ -44,10 +48,15 @@ struct HotboxData : HotboxVisual {
   ScrArea *area;
   ARegion *region;
   View3D *space;
-  ARegionType *region_type;
   rcti region_rect;
   wmTimer *timer = nullptr;
   void *draw_handle = nullptr;
+  bContext *draw_context = nullptr;
+  gpu::Texture *draw_surface = nullptr;
+  gpu::Texture *draw_srgb_view = nullptr;
+  gpu::FrameBuffer *draw_linear_fb = nullptr;
+  gpu::FrameBuffer *draw_encoded_fb = nullptr;
+  bool draw_failed = false;
   int trigger;
   eContextObjectMode mode;
   unsigned int scene_uid;
@@ -59,8 +68,6 @@ struct HotboxData : HotboxVisual {
   bool creation_session = false;
   bool modeling_session = false;
   bool object_modeling_session = false;
-  std::string companion_scroll_hover;
-  double companion_scroll_next = 0;
   unsigned int object_target_uid = 0;
   unsigned int object_target_data_uid = 0;
   unsigned int object_active_uid = 0;
@@ -126,6 +133,18 @@ static MenuBounds hotbox_safe_bounds(const ScrArea &area, ARegion &region, const
            bounds.xmax / scale, bounds.ymax / scale};
 }
 
+static MenuBounds hotbox_window_bounds(const wmWindow &window,
+                                      const ARegion &source,
+                                      const float scale)
+{
+  rcti bounds;
+  WM_window_rect_calc(&window, &bounds);
+  return {(bounds.xmin - source.winrct.xmin) / scale,
+          (bounds.ymin - source.winrct.ymin) / scale,
+          (bounds.xmax - source.winrct.xmin) / scale,
+          (bounds.ymax - source.winrct.ymin) / scale};
+}
+
 /* Validate each containing live list before inspecting the next captured pointer. */
 static bool source_containers_live(const bContext *C, const HotboxData &data)
 {
@@ -152,15 +171,70 @@ static bool source_live(const bContext *C, const HotboxData &data)
          data.scale == UI_SCALE_FAC && rect.xmin == data.region_rect.xmin &&
          rect.xmax == data.region_rect.xmax && rect.ymin == data.region_rect.ymin &&
          rect.ymax == data.region_rect.ymax &&
-         hotbox_safe_bounds(*data.area, *data.region, data.scale) == data.safe_bounds;
+         hotbox_safe_bounds(*data.area, *data.region, data.scale) == data.safe_bounds &&
+         hotbox_window_bounds(*data.window, *data.region, data.scale) == data.overflow_bounds;
+}
+
+static void remove_draw_callback(bContext *C, HotboxData &data)
+{
+  if (data.draw_handle) {
+    // Window close unlinks the window before cancelling its modal operators. In
+    // that path the current window is still alive and owns this callback.
+    wmWindowManager *wm = CTX_wm_manager(C);
+    if (CTX_wm_window(C) == data.window ||
+        (wm && BLI_findindex(&wm->windows, data.window) >= 0)) {
+      WM_draw_cb_exit(data.window, data.draw_handle);
+    }
+    data.draw_handle = nullptr;
+  }
+}
+
+static void free_draw_surface(HotboxData &data)
+{
+  GPU_FRAMEBUFFER_FREE_SAFE(data.draw_linear_fb);
+  GPU_FRAMEBUFFER_FREE_SAFE(data.draw_encoded_fb);
+  GPU_TEXTURE_FREE_SAFE(data.draw_srgb_view);
+  GPU_TEXTURE_FREE_SAFE(data.draw_surface);
+}
+
+static bool ensure_draw_surface(HotboxData &data, const int2 size)
+{
+  if (data.draw_surface) {
+    return GPU_texture_width(data.draw_surface) == size.x &&
+           GPU_texture_height(data.draw_surface) == size.y;
+  }
+  data.draw_surface = GPU_texture_create_2d(
+      "AxisMeld window overlay", size.x, size.y, 1, gpu::TextureFormat::UNORM_8_8_8_8,
+      GPU_TEXTURE_USAGE_ATTACHMENT | GPU_TEXTURE_USAGE_FORMAT_VIEW, nullptr);
+  if (!data.draw_surface) {
+    return false;
+  }
+  // The view aliases the same bytes. Capture/restore use their encoded values,
+  // while native drawing uses the sRGB attachment's linear-light alpha blending.
+  data.draw_srgb_view = GPU_texture_create_view(
+      "AxisMeld linear overlay", data.draw_surface, gpu::TextureFormat::SRGBA_8_8_8_8,
+      0, 1, 0, 1, false, false);
+  if (!data.draw_srgb_view) {
+    free_draw_surface(data);
+    return false;
+  }
+  GPU_framebuffer_ensure_config(&data.draw_linear_fb,
+      {GPU_ATTACHMENT_NONE, GPU_ATTACHMENT_TEXTURE(data.draw_srgb_view)});
+  GPU_framebuffer_ensure_config(&data.draw_encoded_fb,
+      {GPU_ATTACHMENT_NONE, GPU_ATTACHMENT_TEXTURE(data.draw_surface)});
+  if (!GPU_framebuffer_check_valid(data.draw_linear_fb, nullptr) ||
+      !GPU_framebuffer_check_valid(data.draw_encoded_fb, nullptr)) {
+    free_draw_surface(data);
+    return false;
+  }
+  return true;
 }
 
 static void cleanup(bContext *C, wmOperator *op)
 {
   if (auto *data = static_cast<HotboxData *>(op->customdata)) {
-    if (data->draw_handle) {
-      ED_region_draw_cb_exit(data->region_type, data->draw_handle);
-    }
+    remove_draw_callback(C, *data);
+    free_draw_surface(*data);
     if (data->timer) {
       WM_event_timer_remove(CTX_wm_manager(C), nullptr, data->timer);
     }
@@ -168,17 +242,61 @@ static void cleanup(bContext *C, wmOperator *op)
     if (source_containers_live(C, *data)) {
       ED_region_tag_redraw(data->region);
     }
+    if (data->draw_context) {
+      CTX_free(data->draw_context);
+    }
     delete data;
     op->customdata = nullptr;
   }
 }
 
-static void draw(const bContext *C, ARegion *region, void *customdata)
+static void draw(const wmWindow *window, void *customdata)
 {
-  const auto &data = *static_cast<HotboxData *>(customdata);
-  if (source_live(C, data) && region == data.region && CTX_wm_window(C) == data.window) {
-    hotbox_draw(C, data);
+  auto &data = *static_cast<HotboxData *>(customdata);
+  if (window != data.window || !source_live(data.draw_context, data) ||
+      WM_window_get_active_scene(window)->id.session_uid != data.scene_uid) {
+    return;
   }
+  // Native drawing blocks use region projection and visibility tests internally.
+  // Give them a drawing-only surface, never replace a live pane or its command context.
+  const int2 size = WM_window_native_pixel_size(window);
+  gpu::FrameBuffer *window_fb = GPU_framebuffer_active_get();
+  if (!ensure_draw_surface(data, size)) {
+    GPU_framebuffer_bind(window_fb);
+    data.draw_failed = true;
+    return;
+  }
+  // Drawing directly into the window's UNORM back-buffer darkens native
+  // anti-aliased icons. Match the VIEW_3D sRGB overlay without touching colors.
+  GPU_framebuffer_bind(data.draw_encoded_fb);
+  GPU_framebuffer_blit(window_fb, 0, data.draw_encoded_fb, 0, GPU_COLOR_BIT);
+  GPU_framebuffer_bind(data.draw_linear_fb);
+  bke::ARegionRuntime runtime{};
+  runtime.visible = true;
+  ARegion surface{};
+  surface.regiontype = RGN_TYPE_TEMPORARY;
+  surface.winx = size.x;
+  surface.winy = size.y;
+  surface.winrct = {0, size.x - 1, 0, size.y - 1};
+  surface.runtime = &runtime;
+  bContext *draw_context = CTX_copy(data.draw_context);
+  CTX_wm_window_set(draw_context, data.window);
+  CTX_wm_area_set(draw_context, data.area);
+  CTX_wm_region_popup_set(draw_context, nullptr);
+  CTX_wm_region_set(draw_context, &surface);
+  const int offset[2] = {data.region_rect.xmin, data.region_rect.ymin};
+  // Window callbacks run after Blender resets the active theme context. Native
+  // icon colors must retain the source viewport's contrast, including empty radios.
+  ui::theme::bThemeState previous_theme;
+  ui::theme::theme_store(&previous_theme);
+  ui::theme::theme_set(SPACE_VIEW3D, RGN_TYPE_WINDOW);
+  hotbox_draw(draw_context, data, offset);
+  // Restore encoded pixels without another transfer-function conversion.
+  GPU_framebuffer_bind(data.draw_encoded_fb);
+  GPU_framebuffer_blit(data.draw_encoded_fb, 0, window_fb, 0, GPU_COLOR_BIT);
+  GPU_framebuffer_bind(window_fb);
+  ui::theme::theme_restore(&previous_theme);
+  CTX_free(draw_context);
 }
 
 /* Only the main modeling menu expands modes; QWER and component mouse sessions retain
@@ -379,10 +497,7 @@ static bool refresh(bContext *C, HotboxData &data)
 /* A held tool key owns multiple mouse strokes, just as Space owns multiple view strokes. */
 static void rearm_tool(bContext *C, HotboxData &data)
 {
-  if (data.draw_handle) {
-    ED_region_draw_cb_exit(data.region_type, data.draw_handle);
-    data.draw_handle = nullptr;
-  }
+  remove_draw_callback(C, data);
   data.tool_shown = false;
   data.active_mouse = 0;
   data.open_path.clear();
@@ -740,99 +855,21 @@ static void open_menu(HotboxData &data, const MenuRect &rect)
   hotbox_layout(data);
 }
 
-static void scroll_owner(HotboxData &data, const std::string &owner, const int delta)
-{
-  if (const auto root = companion_owner(owner); !root.empty()) {
-    if (data.companion_path.empty() || data.companion_path.front() != root) {
-      data.companion_path = {std::string(root)};
-    }
-    const auto found = std::find(data.companion_path.begin(), data.companion_path.end(), owner);
-    if (found != data.companion_path.end()) { data.companion_path.erase(found + 1, data.companion_path.end()); }
-    if (const MenuNode *node = hotbox_find_node(data.snapshot.menus, owner)) {
-      data.scroll_offsets[owner] = menu_scroll_offset_transition(
-          data.menu_layout, owner, data.scroll_offsets[owner], delta, int(node->children.size()));
-      hotbox_layout(data);
-    }
-    return;
-  }
-  const auto begin = data.open_path.begin() +
-                     (!data.open_path.empty() && data.open_path.front() == "center" ? 1 : 0);
-  const auto item = std::find(begin, data.open_path.end(), owner);
-  if (item != data.open_path.end()) {
-    data.open_path.erase(item + 1, data.open_path.end());
-  }
-  else {
-    data.open_path.clear();
-  }
-  const MenuNode *node = hotbox_find_node(data.snapshot.menus, owner);
-  if (node || owner == "@main") {
-    const int item_count = int(node ? node->children.size() : data.snapshot.menus.size());
-    data.scroll_offsets[owner] = menu_scroll_offset_transition(
-        data.menu_layout, owner, data.scroll_offsets[owner], delta, item_count);
-    hotbox_layout(data);
-  }
-}
-
-static void back_to_parent(HotboxData &data, const std::string &owner)
-{
-  const auto begin = data.open_path.begin() +
-                     (!data.open_path.empty() && data.open_path.front() == "center" ? 1 : 0);
-  const auto item = std::find(begin, data.open_path.end(), owner);
-  if (item != data.open_path.end()) {
-    data.open_path.erase(item, data.open_path.end());
-  }
-  if (data.open_path.size() == 1 && data.open_path.front() == "center") {
-    data.open_path.clear();
-  }
-  data.marking = false;
-  hotbox_layout(data);
-}
-
-static void scroll_control(HotboxData &data, const std::string &id)
-{
-  const size_t end = id.rfind(':');
-  scroll_owner(data, id.substr(8, end - 8), id.substr(end + 1) == "next" ? 1 : -1);
-}
-
-/* The companion shares the original held mouse; paging never creates another owner. */
+/* The companion shares the original held mouse and keeps genuine submenu navigation. */
 static bool companion_navigation(HotboxData &data, const wmEvent *event)
 {
   if ((data.modeling_session || data.creation_session || data.component_session) && event->modifier != data.required_modifiers) { return false; }
   const bool motion = ISMOUSE_MOTION(event->type);
-  const bool wheel = ELEM(event->type, WHEELUPMOUSE, WHEELDOWNMOUSE);
-  if (motion || wheel) {
+  if (motion) {
     data.pointer_position[0] = (event->xy[0] - data.region->winrct.xmin) / data.scale;
     data.pointer_position[1] = (event->xy[1] - data.region->winrct.ymin) / data.scale;
   }
   const auto *hit = hit_menu_rect(data.menu_layout, data.pointer_position[0], data.pointer_position[1]);
   if (!hit || !hit->companion || hit->owner.empty()) {
-    if (motion) { data.companion_scroll_hover.clear(); }
     return false;
   }
   const MenuRect rect = *hit;
-  if (wheel) {
-    data.tap_eligible = false;
-    scroll_owner(data, rect.owner, event->type == WHEELUPMOUSE ? -1 : 1);
-    data.companion_scroll_hover.clear();
-    data.hover_id.clear();
-    ED_region_tag_redraw(data.region);
-    return true;
-  }
-  if ((motion || ISTIMER(event->type)) && rect.id.starts_with("@scroll:")) {
-    data.tap_eligible = false;
-    const double now = BLI_time_now_seconds();
-    if (rect.interactive && (data.companion_scroll_hover != rect.id || now >= data.companion_scroll_next)) {
-      scroll_control(data, rect.id);
-      data.companion_scroll_next = now + 0.35;
-    }
-    data.companion_scroll_hover = rect.id;
-    data.hover_id = rect.id;
-    data.hover_depth = rect.depth;
-    ED_region_tag_redraw(data.region);
-    return true;
-  }
   if (motion) {
-    data.companion_scroll_hover.clear();
     const auto *node = hotbox_find_node(data.snapshot.menus, rect.id);
     const auto owner = std::find(data.companion_path.begin(), data.companion_path.end(), rect.owner);
     if (node && node->kind != MenuKind::Menu && owner != data.companion_path.end() &&
@@ -1079,13 +1116,17 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   data->area = CTX_wm_area(C);
   data->region = CTX_wm_region(C);
   data->space = CTX_wm_view3d(C);
-  data->region_type = data->region->runtime->type;
   data->region_rect = data->region->winrct;
+  // Do not retain the invocation's store, Python override or scene pointers.
+  data->draw_context = CTX_create();
+  CTX_data_main_set(data->draw_context, CTX_data_main(C));
+  CTX_wm_manager_set(data->draw_context, CTX_wm_manager(C));
   data->trigger = event->type;
   data->mode = CTX_data_mode_enum(C);
   data->scene_uid = CTX_data_scene(C)->id.session_uid;
   data->scale = UI_SCALE_FAC;
   data->safe_bounds = hotbox_safe_bounds(*data->area, *data->region, data->scale);
+  data->overflow_bounds = hotbox_window_bounds(*window, *data->region, data->scale);
   data->center[0] = (event->xy[0] - data->region->winrct.xmin) / data->scale;
   data->center[1] = (event->xy[1] - data->region->winrct.ymin) / data->scale;
   hotbox_measure(*data);
@@ -1100,8 +1141,7 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   data->state.begin(BLI_time_now_seconds(), RNA_float_get(op->ptr, "tap_seconds"));
   op->customdata = data;
   if (tool_root.empty() && data->menu_layout.supported) {
-    data->draw_handle = ED_region_draw_cb_activate(
-        data->region_type, draw, data, REGION_DRAW_POST_PIXEL);
+    data->draw_handle = WM_draw_cb_activate(data->window, draw, data);
   }
   if (direct) {
     data->tool_shown = true;
@@ -1114,8 +1154,7 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
       cleanup(C, op);
       return OPERATOR_PASS_THROUGH;
     }
-    data->draw_handle = ED_region_draw_cb_activate(
-        data->region_type, draw, data, REGION_DRAW_POST_PIXEL);
+    data->draw_handle = WM_draw_cb_activate(data->window, draw, data);
   }
   data->timer = WM_event_timer_add(CTX_wm_manager(C), window, TIMER, .02);
   WM_event_add_modal_handler(C, op);
@@ -1224,8 +1263,7 @@ static wmOperatorStatus tool_modal(bContext *C, wmOperator *op, const wmEvent *e
     if (!refresh(C, data)) {
       return close_guard(C, op, true);
     }
-    data.draw_handle = ED_region_draw_cb_activate(
-        data.region_type, draw, &data, REGION_DRAW_POST_PIXEL);
+    data.draw_handle = WM_draw_cb_activate(data.window, draw, &data);
     ED_region_tag_redraw(data.region);
     return OPERATOR_RUNNING_MODAL;
   }
@@ -1275,7 +1313,7 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
     cleanup(C, op);
     return OPERATOR_CANCELLED | OPERATOR_PASS_THROUGH;
   }
-  if (event->type == WINDEACTIVATE || event->type == EVT_ESCKEY || !source_context(C, data) ||
+  if (data.draw_failed || event->type == WINDEACTIVATE || event->type == EVT_ESCKEY || !source_context(C, data) ||
       (data.creation_session && !empty_creation_context(C))) {
     if (event->type == data.active_mouse && event->val == KM_RELEASE) {
       data.active_mouse = 0;
@@ -1283,6 +1321,13 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
     return close_guard(C, op, !(event->type == data.trigger && event->val == KM_RELEASE));
   }
   data.state.advance(BLI_time_now_seconds());
+  if (ELEM(event->type, WHEELUPMOUSE, WHEELDOWNMOUSE, WHEELINMOUSE, WHEELOUTMOUSE,
+           MOUSEPAN, MOUSEZOOM)) {
+    // Fully visible menus have no scrolling. Retain ownership so wheels/trackpads
+    // cannot zoom the source view or close a QWER session through another pane.
+    data.tap_eligible = false;
+    return OPERATOR_RUNNING_MODAL;
+  }
   if (companion_navigation(data, event)) { return OPERATOR_RUNNING_MODAL; }
   if (event->type == data.trigger && !data.component_session && !data.creation_session &&
       !data.modeling_session) {
@@ -1358,18 +1403,6 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
       }
       hotbox_layout(data);
     }
-    else if (item.starts_with("@scroll:")) {
-      data.navigation_consumed = true;
-      scroll_control(data, item);
-    }
-    else if (!rect.interactive && rect.native_menu && rect.id.starts_with("@scroll:")) {
-      /* Disabled native navigation still owns its press/release without changing the page. */
-      data.navigation_consumed = true;
-    }
-    else if (item.starts_with("@back:")) {
-      data.navigation_consumed = true;
-      back_to_parent(data, item.substr(6));
-    }
     else if (node && node->kind == MenuKind::Menu) {
       data.menu_entered_on_press = true;
       open_menu(data, rect);
@@ -1406,33 +1439,6 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
       node->kind == MenuKind::Menu)
   {
     open_menu(data, rect);
-  }
-  if (!data.marking && ELEM(event->type, WHEELUPMOUSE, WHEELDOWNMOUSE)) {
-    data.tap_eligible = false;
-    if (hover) {
-      std::string owner;
-      if (item.starts_with("@scroll:")) {
-        owner = item.substr(8, item.rfind(':') - 8);
-      }
-      else if (rect.depth > 0) {
-        const size_t index = rect.depth - 1 +
-                             (!data.open_path.empty() && data.open_path.front() == "center" ? 1 :
-                                                                                              0);
-        if (index < data.open_path.size()) {
-          owner = data.open_path[index];
-        }
-      }
-      else {
-        for (const MenuNode &root : data.snapshot.menus) {
-          for (const MenuNode &child : root.children) {
-            if (child.id == rect.id) {
-              owner = root.id;
-            }
-          }
-        }
-      }
-      scroll_owner(data, owner, event->type == WHEELUPMOUSE ? -1 : 1);
-    }
   }
   if (data.active_mouse && (ISMOUSE_MOTION(event->type) ||
                             (event->type == data.active_mouse && event->val == KM_RELEASE)))

@@ -75,7 +75,7 @@ class ModelingContentTest(unittest.TestCase):
         face=menus[2]
         mapping=next(n for n in face['children'] if n['label']=='Mapping')
         self.assertEqual(signature(mapping),('Planar Map X','Planar Map Y','Planar Map Z','Planar Map +O','|',
-             'Cylindrical Map +O','Spherical Map +O','|','Automatic Map +O','Camera Based Map +O','Normal Based Map +O'))
+             'Cylindrical Map +O','Spherical Map +O','|','Automatic Map +O','Camera-Based Map +O','Normal-Based Map +O'))
         items=list(walk(menus));ids=[n['id'] for n in items]
         self.assertEqual(len(ids),len(set(ids)))
         self.assertTrue(all(n['id'].startswith(face['id']+'.') for n in walk((mapping,))))

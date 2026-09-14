@@ -14,7 +14,7 @@ import bpy
 root = Path(os.environ['AXISMELD_TEST_ROOT']).resolve()
 assert Path(bpy.app.tempdir).resolve().is_relative_to(root)
 sys.path.insert(0, str(Path(__file__).parent))
-from axismeld_hotbox_geometry_fixture import native_page
+from axismeld_hotbox_geometry_fixture import native_page, native_fixture_surface
 from axismeld import adapter, hotbox_runtime
 from axismeld.modeling_registry import CATEGORIES, SPECS
 
@@ -115,14 +115,17 @@ def suite():
     print('PASS twelve actual Space native menu entries and cancellation', flush=True)
 
     # A real native list click changes a mutually exclusive setting; hover is not state.
-    pivot_menu = 'common.modify.m3_pivot'
+    pivot_menu = next(n['id'] for n in snapshot_nodes().values()
+                      if n['kind']=='menu' and any(c.get('command')=='pivot.active' for c in n['children']))
+    check(pivot_menu.startswith('internal.blender.'),'Blender pivot setting leaked into Maya menus')
     yield from open_menu(pivot_menu)
     entries = snapshot_nodes()[pivot_menu]['children']
+    native_fixture_surface((0, 0, win.width, win.height))
     blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
     center_width = (blf.dimensions(0, 'AxisMeld')[0]/scale + 20 + 40)*scale
     center = (cx-center_width/2, cy-19*scale, center_width, 38*scale)
     def measure(label):
-        return blf.dimensions(0, label)[0]/scale + 20
+        return blf.dimensions(0, label)[0]/scale + 20 + (20 if any(n.get('indicator') for n in entries) else 0)
     page = native_page(center, [n['label'] for n in entries], measure,
                        (region.x, region.y, region.width, region.height), scale)
     index = next(i for i, n in enumerate(entries) if n['command'] == 'pivot.active')
@@ -137,7 +140,7 @@ def suite():
     check(bpy.context.scene.tool_settings.transform_pivot_point == 'ACTIVE_ELEMENT',
           'actual menu radio click did not change the native pivot')
     states = snapshot_nodes()[pivot_menu]['children']
-    check([n['command'] for n in states if n.get('checked')] == ['pivot.active'], 'radio state is not exclusive')
+    check([n['command'] for n in states if n.get('checked') and n.get('command', '').startswith('pivot.')] == ['pivot.active'], 'radio state is not exclusive')
     yield from open_menu(pivot_menu)
     image('m3-pivot-radio.png')
     yield from close_menu()

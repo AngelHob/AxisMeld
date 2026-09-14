@@ -3,10 +3,16 @@
 """Independent literal cases for visible WINDOW bounds used by GUI fixtures."""
 import unittest
 
-from axismeld_hotbox_geometry_fixture import ellipse_page, native_page, visible_bounds
+from axismeld_hotbox_geometry_fixture import ellipse_page, native_page, native_fixture_surface, visible_bounds
 
 
 class VisibleBoundsTest(unittest.TestCase):
+    def setUp(self):
+        native_fixture_surface(None)
+
+    def tearDown(self):
+        native_fixture_surface(None)
+
     def test_label_prefix_candidates_preserve_full_text_after_two_icon_slots(self):
         from axismeld_hotbox_geometry_fixture import label_prefix_starts
         # Foreground columns of two 16px icons and a complete text run.
@@ -76,44 +82,39 @@ class VisibleBoundsTest(unittest.TestCase):
                 ('right', (70, 20, 40, 80)),
             ))
 
-    def test_offset_safe_bounds_place_literal_paged_rows_below_internal_bar(self):
-        page = native_page(
-            (350, 280, 80, 24),
-            tuple(f'Choice {index}' for index in range(13)),
-            lambda _label: 120,
-            (159, 73, 264, 229),
-        )
-        self.assertEqual((page['capacity'], page['first']), (6, 0))
-        self.assertEqual(page['previous'], (190, 266, 160, 24))
-        self.assertEqual(page['items'][:7], [
-            (190, 242, 160, 24),
-            (190, 218, 160, 24),
-            (190, 194, 160, 24),
-            (190, 170, 160, 24),
-            (190, 146, 160, 24),
-            (190, 122, 160, 24),
-            None,
-        ])
-        self.assertEqual(page['next'], (190, 98, 160, 24))
+    def test_complete_rows_use_window_fallback_without_hiding_choices(self):
+        args = ((350, 280, 80, 24), tuple(f'Choice {i}' for i in range(13)),
+                lambda _label: 120, (159, 73, 264, 229))
+        # This narrow region cannot fit two full columns; it must not silently page.
+        with self.assertRaisesRegex(AssertionError, 'Complete native list cannot fit'):
+            native_page(*args)
+        native_fixture_surface((0, 0, 1024, 768))
+        page = native_page(*args, first=999)
+        self.assertEqual((page['capacity'], page['first']), (13, 0))
+        self.assertEqual(page['bounds'], (0, 0, 1024, 768))
+        self.assertEqual(page['items'][0], (430, 300, 160, 24))
+        self.assertEqual(page['items'][-1], (430, 12, 160, 24))
+        self.assertTrue(all(page['items']))
+        self.assertIsNone(page['previous']); self.assertIsNone(page['next'])
 
-    def test_edge_origin_moves_return_navigation_and_present_items_together(self):
-        page = ellipse_page(
-            (390, 278, 48, 24),
-            tuple(f'Entry {index}' for index in range(8)),
-            lambda _label: 72,
-            (159, 73, 264, 229),
-        )
-        rectangles = [page['back'], page['previous'], page['next']]
-        rectangles.extend(rect for rect in page['items'] if rect is not None)
-        self.assertTrue(any(rect is None for rect in page['items']))
-        self.assertIsNotNone(page['previous'])
-        self.assertIsNotNone(page['next'])
-        for rect in (rect for rect in rectangles if rect is not None):
-            x, y, w, h = rect
-            self.assertGreaterEqual(x, 159)
-            self.assertGreaterEqual(y, 73)
-            self.assertLessEqual(x+w, 423)
-            self.assertLessEqual(y+h, 302)
+    def test_edge_complete_native_items_keep_offset_bounds_and_no_fake_back(self):
+        page = ellipse_page((390, 278, 48, 24), tuple(f'Entry {i}' for i in range(8)),
+                            lambda _label: 72, (159, 73, 264, 229))
+        self.assertEqual(page['items'][0], (278, 266, 112, 24))
+        self.assertEqual(page['items'][-1], (278, 98, 112, 24))
+        self.assertTrue(all(page['items']))
+        for key in ('back', 'previous', 'next'): self.assertIsNone(page[key])
+        for x,y,w,h in page['items']:
+            self.assertGreaterEqual(x, 159); self.assertGreaterEqual(y, 73)
+            self.assertLessEqual(x+w, 423); self.assertLessEqual(y+h, 302)
+        # A complete oversized directory requires columns, never smaller targets.
+        columns = native_page((460, 250, 100, 38), tuple(f'Item {i}' for i in range(56)),
+                              lambda _label: 80, (0, 0, 960, 540))
+        self.assertEqual(len(columns['columns']), 3)
+        self.assertEqual(len(set(columns['items'])), 56)
+        self.assertTrue(all(r[2:]==(120,24) for r in columns['items']))
+        self.assertEqual(columns['items'][20][1], 12)
+        self.assertEqual(columns['items'][21][0]-columns['items'][0][0], 124)
 
 
 if __name__ == '__main__':
