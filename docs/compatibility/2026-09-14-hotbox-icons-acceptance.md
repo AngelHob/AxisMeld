@@ -25,6 +25,8 @@ Space主热盒、Views、QWER及子环、组件、创建、建模环、普通菜
 
 新候选 `D:/source/AxisMeld-build/hotbox-icons-test-install/blender.exe`，程序SHA-256 `C2B75B7D1999F81EF5B11A8614342725D887C0441E6FF1F030C654FC521B88D8`。三个旧安装保持不变；构建和自动测试使用独立实例，未向原窗口发出保存或关闭指令。新候选从前批Object-menu安装复制portable/config。
 
-28个安装Python资源与源码一致，新候选4个配置文件与来源一致；三个旧安装的96个基线文件逐一保持原哈希。`D:/source/AxisMeld-build/hotbox-icons-install-verification.json`记录程序、native源码、资源、截图、通过日志和源提交。程序从验证后的工作树构建并与文档一起本地提交，内嵌build-info可能显示父提交；本批没有推送。
+28个安装Python资源与源码一致，新候选4个配置文件与来源一致；三个旧安装的96个基线文件逐一保持原哈希。`D:/source/AxisMeld-build/hotbox-icons-install-verification.json`记录程序、native源码、资源、截图、通过日志和源提交。程序从验证后的工作树构建并与文档一起本地提交，内嵌build-info可能显示父提交。
+
+2026-09-14，按用户要求将开发进度推送至 `https://github.com/AngelHob/AxisMeld` 的 `axismeld/phase-2a` 分支。已验证的代码提交为 `54cc28a06bb3e2590c98e8663b9c394d2a3807d3`，包含此前可见边界、Edit上下文、Object工具事务及组合菜单的提交。本次发布附带清单总述修正；未改代码或程序，测试结果沿用上述构建验收。
 
 统一人工清单追加IC-01～IC-14，共177项：用户已测试47项、待测130项。47项保持用户原始“已测试”状态，不推定逐项通过；自动验证不替代人工结果。人工测试继续暂缓。
