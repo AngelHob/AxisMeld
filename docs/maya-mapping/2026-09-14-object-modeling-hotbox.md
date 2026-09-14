@@ -1,5 +1,7 @@
 # M2d Object 建模与预选工具入口
 
+后续组合菜单修正见 [Object Shift+RMB 组合菜单](2026-09-14-object-modeling-composition.md)。本文保留三个原生工具入口片的历史范围；下方列表和独立 Options 以新记录为准。
+
 继续 M2d-P02 的 Object/预选事务和 M2d-P04 持久工具入口。本片接入已有 Blender 工具，不新增三套几何算法；M2d 不整体关闭。
 
 ## 本机来源与方向

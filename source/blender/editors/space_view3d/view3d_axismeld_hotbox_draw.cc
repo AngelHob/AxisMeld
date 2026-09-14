@@ -121,7 +121,8 @@ void hotbox_layout(HotboxVisual &data)
                                             data.scroll_offsets,
                                             data.label_widths,
                                             data.marking ? &origin : nullptr,
-                                            data.tool_root);
+                                            data.tool_root,
+                                            data.companion_path);
 }
 
 void hotbox_draw(const bContext *C, const HotboxVisual &data)
@@ -295,7 +296,8 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
       const MenuNode *node = hotbox_find_node(data.snapshot.menus, r.id);
       const bool submenu = (r.native_menu || r.direction_label) && node &&
                            node->kind == MenuKind::Menu && !r.id.starts_with("@back:");
-      const int icon_only = r.id.starts_with("@scroll:") && r.id.ends_with(":previous") ?
+      const int icon_only = r.option_box ? ICON_PREFERENCES :
+                           r.id.starts_with("@scroll:") && r.id.ends_with(":previous") ?
                                 ICON_TRIA_UP :
                             r.id.starts_with("@scroll:") && r.id.ends_with(":next") ?
                                 ICON_TRIA_DOWN :

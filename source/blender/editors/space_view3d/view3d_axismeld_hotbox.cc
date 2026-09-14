@@ -59,6 +59,8 @@ struct HotboxData : HotboxVisual {
   bool creation_session = false;
   bool modeling_session = false;
   bool object_modeling_session = false;
+  std::string companion_scroll_hover;
+  double companion_scroll_next = 0;
   unsigned int object_target_uid = 0;
   unsigned int object_target_data_uid = 0;
   unsigned int object_active_uid = 0;
@@ -243,6 +245,54 @@ static bool modeling_tree_allowed(const MenuNode &node, const std::string_view r
   });
 }
 
+static bool object_companion_tree_allowed(const MenuNode &node)
+{
+  if (node.kind == MenuKind::Setting ||
+      (node.kind == MenuKind::Command && !object_menu_allows_command(node.id, node.command))) {
+    return false;
+  }
+  if (node.kind == MenuKind::Menu &&
+      (node.presentation != "list" ||
+       (node.id != object_modeling_menu && node.id != "context.modeling_object_menu.mapping" &&
+        node.id != "context.modeling_object_menu.booleans" &&
+        node.id != "context.modeling_object_menu.polygon_display"))) {
+    return false;
+  }
+  return std::all_of(node.children.begin(), node.children.end(), object_companion_tree_allowed);
+}
+
+static void enable_preselected_object_command(MenuNode &node)
+{
+  if (!node.enabled) {
+    if (node.command == "tool.object_mesh_poly_build") {
+      node.reason = "Blender Poly Build adaptation; not Maya Append or Quad Draw algorithms";
+    }
+    else if (node.command == "tool.object_mesh_knife") {
+      node.reason = "Blender Knife adaptation; Maya Multi-Cut behavior differs";
+    }
+    else if (node.command == "tool.object_mesh_loopcut") {
+      node.reason = "Blender persistent Loop Cut tool";
+    }
+    else if (node.command == "tool.object_mesh_offset_loop") {
+      node.reason = "Blender persistent Offset Edge Loop Cut tool";
+    }
+    else if (node.command.starts_with("object.modeling_smooth")) {
+      node.reason = "Subdivision Surface modifier on the captured Mesh; original mesh data remains";
+    }
+    else if (node.command.starts_with("object.modeling_mirror")) {
+      node.reason = "Mirror modifier on the captured Mesh; default X bisect and merge";
+    }
+    else if (node.command.starts_with("object.modeling_reduce")) {
+      node.reason = "Decimate modifier on the captured Mesh; default ratio 50 percent";
+    }
+    else if (node.command.starts_with("object.modeling_remesh")) {
+      node.reason = "Voxel Remesh modifier on the captured Mesh; original mesh data remains";
+    }
+    if (node.command.ends_with("_options")) { node.reason += "; confirmation applies parameters"; }
+  }
+  node.enabled = true;
+}
+
 static bool object_modeling_context(bContext *C, const HotboxData &data);
 
 static bool source_context(bContext *C, const HotboxData &data)
@@ -405,18 +455,24 @@ static wmOperatorStatus dispatch_object_modeling(bContext *C,
                                                 const std::string &command,
                                                 const unsigned int target_uid)
 {
-  if (!WM_operatortype_find("AXISMELD_OT_object_modeling_tool", true)) {
+  const bool action = command.starts_with("object.modeling_");
+  const char *operator_id = action ? "AXISMELD_OT_object_modeling_action" :
+                                    "AXISMELD_OT_object_modeling_tool";
+  if (!WM_operatortype_find(operator_id, true)) {
     return OPERATOR_CANCELLED;
   }
-  PointerRNA props = WM_operator_properties_create("AXISMELD_OT_object_modeling_tool");
+  PointerRNA props = WM_operator_properties_create(operator_id);
   const std::string target_text = target_uid ? std::to_string(target_uid) : "";
   RNA_string_set(&props, "command", command.c_str());
   RNA_string_set(&props, "target_uid", target_text.c_str());
   /* Direct outer UNDO operator keeps captured preselection inside the undo boundary. */
   const wmOperatorStatus result = WM_operator_name_call(
-      C, "AXISMELD_OT_object_modeling_tool", wm::OpCallContext::ExecDefault, &props, nullptr);
+      C, operator_id, action && command.ends_with("_options") ? wm::OpCallContext::InvokeDefault :
+                                                               wm::OpCallContext::ExecDefault,
+      &props, nullptr);
   WM_operator_properties_free(&props);
-  return result;
+  // The child dialog owns its own handler after the hotbox has been cleaned up.
+  return (result & OPERATOR_RUNNING_MODAL) ? OPERATOR_FINISHED : result;
 }
 
 static bool component_command(const std::string &command)
@@ -481,7 +537,8 @@ static wmOperatorStatus submit(bContext *C, wmOperator *op, const MenuNode &leaf
   const std::string command = leaf.command, value = leaf.value;
   const bool setting = leaf.kind == MenuKind::Setting;
   if (data.modeling_session) {
-    if (setting || !modeling_root_allows_command(data.tool_root, command) ||
+    const bool companion = data.object_modeling_session && object_menu_allows_command(leaf.id, command);
+    if (setting || (!companion && !modeling_root_allows_command(data.tool_root, command)) ||
         !source_context(C, data))
     {
       cleanup(C, op);
@@ -491,6 +548,15 @@ static wmOperatorStatus submit(bContext *C, wmOperator *op, const MenuNode &leaf
     // tool starts, leaving its next stroke and its own undo transaction unguarded.
     if (data.object_modeling_session) {
       const unsigned int target_uid = data.object_target_uid;
+      if (companion && !object_menu_target_aware(command)) {
+        if (target_uid) {
+          cleanup(C, op);
+          return OPERATOR_CANCELLED;
+        }
+        cleanup(C, op);
+        const auto result = axismeld_hotbox_dispatch(C, command.c_str());
+        return (result & OPERATOR_RUNNING_MODAL) ? OPERATOR_FINISHED : result;
+      }
       cleanup(C, op);
       return dispatch_object_modeling(C, command, target_uid);
     }
@@ -552,6 +618,17 @@ static wmOperatorStatus submit(bContext *C, wmOperator *op, const MenuNode &leaf
 
 static void open_menu(HotboxData &data, const MenuRect &rect)
 {
+  if (rect.companion) {
+    if (data.companion_path.empty()) { data.companion_path = {std::string(object_modeling_menu)}; }
+    const auto owner = std::find(data.companion_path.begin(), data.companion_path.end(), rect.owner);
+    if (owner == data.companion_path.end()) { return; }
+    const size_t index = size_t(owner - data.companion_path.begin()) + 1;
+    if (index < data.companion_path.size() && data.companion_path[index] == rect.id) { return; }
+    data.companion_path.resize(index);
+    data.companion_path.push_back(rect.id);
+    hotbox_layout(data);
+    return;
+  }
   const size_t prefix = !data.open_path.empty() && data.open_path.front() == "center" ? 1 : 0;
   if (rect.depth == 0) {
     if (rect.id == "views") {
@@ -575,6 +652,17 @@ static void open_menu(HotboxData &data, const MenuRect &rect)
 
 static void scroll_owner(HotboxData &data, const std::string &owner, const int delta)
 {
+  if (owner == object_modeling_menu || owner.starts_with("context.modeling_object_menu.")) {
+    if (data.companion_path.empty()) { data.companion_path = {std::string(object_modeling_menu)}; }
+    const auto found = std::find(data.companion_path.begin(), data.companion_path.end(), owner);
+    if (found != data.companion_path.end()) { data.companion_path.erase(found + 1, data.companion_path.end()); }
+    if (const MenuNode *node = hotbox_find_node(data.snapshot.menus, owner)) {
+      data.scroll_offsets[owner] = menu_scroll_offset_transition(
+          data.menu_layout, owner, data.scroll_offsets[owner], delta, int(node->children.size()));
+      hotbox_layout(data);
+    }
+    return;
+  }
   const auto begin = data.open_path.begin() +
                      (!data.open_path.empty() && data.open_path.front() == "center" ? 1 : 0);
   const auto item = std::find(begin, data.open_path.end(), owner);
@@ -612,6 +700,56 @@ static void scroll_control(HotboxData &data, const std::string &id)
 {
   const size_t end = id.rfind(':');
   scroll_owner(data, id.substr(8, end - 8), id.substr(end + 1) == "next" ? 1 : -1);
+}
+
+/* The companion shares the original held mouse; paging never creates another owner. */
+static bool companion_navigation(HotboxData &data, const wmEvent *event)
+{
+  if (data.object_modeling_session && event->modifier != data.required_modifiers) { return false; }
+  const bool motion = ISMOUSE_MOTION(event->type);
+  const bool wheel = ELEM(event->type, WHEELUPMOUSE, WHEELDOWNMOUSE);
+  if (motion || wheel) {
+    data.pointer_position[0] = (event->xy[0] - data.region->winrct.xmin) / data.scale;
+    data.pointer_position[1] = (event->xy[1] - data.region->winrct.ymin) / data.scale;
+  }
+  const auto *hit = hit_menu_rect(data.menu_layout, data.pointer_position[0], data.pointer_position[1]);
+  if (!hit || !hit->companion || hit->owner.empty()) {
+    if (motion) { data.companion_scroll_hover.clear(); }
+    return false;
+  }
+  const MenuRect rect = *hit;
+  if (wheel) {
+    data.tap_eligible = false;
+    scroll_owner(data, rect.owner, event->type == WHEELUPMOUSE ? -1 : 1);
+    data.companion_scroll_hover.clear();
+    data.hover_id.clear();
+    ED_region_tag_redraw(data.region);
+    return true;
+  }
+  if ((motion || ISTIMER(event->type)) && rect.id.starts_with("@scroll:")) {
+    data.tap_eligible = false;
+    const double now = BLI_time_now_seconds();
+    if (rect.interactive && (data.companion_scroll_hover != rect.id || now >= data.companion_scroll_next)) {
+      scroll_control(data, rect.id);
+      data.companion_scroll_next = now + 0.35;
+    }
+    data.companion_scroll_hover = rect.id;
+    data.hover_id = rect.id;
+    data.hover_depth = rect.depth;
+    ED_region_tag_redraw(data.region);
+    return true;
+  }
+  if (motion) {
+    data.companion_scroll_hover.clear();
+    const auto *node = hotbox_find_node(data.snapshot.menus, rect.id);
+    const auto owner = std::find(data.companion_path.begin(), data.companion_path.end(), rect.owner);
+    if (node && node->kind != MenuKind::Menu && owner != data.companion_path.end() &&
+        owner + 1 != data.companion_path.end()) {
+      data.companion_path.erase(owner + 1, data.companion_path.end());
+      hotbox_layout(data);
+    }
+  }
+  return false;
 }
 
 static std::string direction_id(const HotboxAction action)
@@ -692,6 +830,9 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   unsigned int object_target_uid = 0, object_target_data_uid = 0, object_active_uid = 0;
   std::vector<std::pair<unsigned int, unsigned int>> object_selection;
   if (object_modeling) {
+    if (const auto *companion = hotbox_find_node(snapshot.menus, object_modeling_menu)) {
+      if (!object_companion_tree_allowed(*companion)) { return OPERATOR_CANCELLED; }
+    }
     if (!object_selection_signature(C, object_selection, object_active_uid)) {
       return OPERATOR_PASS_THROUGH;
     }
@@ -716,8 +857,7 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
             if (child.kind == MenuKind::Command &&
                 modeling_root_allows_command(object_modeling_root, child.command))
             {
-              child.enabled = true;
-              child.reason.clear();
+              if (object_target_uid) { enable_preselected_object_command(child); }
             }
           }
           return;
@@ -726,6 +866,22 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
       }
     };
     enable(enable, snapshot.menus);
+    const auto enable_companion = [&](auto &&self, std::vector<MenuNode> &nodes) -> void {
+      for (auto &node : nodes) {
+        if (object_target_uid && node.kind == MenuKind::Command &&
+            object_menu_allows_command(node.id, node.command)) {
+          if (object_menu_target_aware(node.command)) {
+            enable_preselected_object_command(node);
+          }
+          else {
+            node.enabled = false;
+            node.reason = "Requires an existing Mesh selection; pointer preselection is not supported for this action";
+          }
+        }
+        self(self, node.children);
+      }
+    };
+    enable_companion(enable_companion, snapshot.menus);
   }
   if (creation) {
     if (!empty_creation_context(C)) {
@@ -766,6 +922,7 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   data->creation_session = creation;
   data->modeling_session = modeling;
   data->object_modeling_session = object_modeling;
+  if (object_modeling) { data->companion_path = {std::string(object_modeling_menu)}; }
   data->object_target_uid = object_target_uid;
   data->object_target_data_uid = object_target_data_uid;
   data->object_active_uid = object_active_uid;
@@ -982,6 +1139,7 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
     return close_guard(C, op, !(event->type == data.trigger && event->val == KM_RELEASE));
   }
   data.state.advance(BLI_time_now_seconds());
+  if (companion_navigation(data, event)) { return OPERATOR_RUNNING_MODAL; }
   if (event->type == data.trigger && !data.component_session && !data.creation_session &&
       !data.modeling_session) {
     if (event->val == KM_RELEASE) {

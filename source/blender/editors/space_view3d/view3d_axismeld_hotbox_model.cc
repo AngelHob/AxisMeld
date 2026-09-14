@@ -219,12 +219,14 @@ struct Parser {
         return false;
     }
     else {
-      if (!children->elements().is_empty())
+      if (!children->elements().is_empty() &&
+          ((kind != "command" && kind != "disabled") || children->elements().size() != 1))
         return false;
       if (kind == "command") {
         out.kind = MenuKind::Command;
         if ((!commands.contains(out.command) &&
-             !modeling_root_allows_command(object_modeling_root, out.command)) ||
+             !modeling_root_allows_command(object_modeling_root, out.command) &&
+             !object_menu_command_registered(out.command)) ||
             !out.value.empty())
           return false;
       }
@@ -251,6 +253,11 @@ struct Parser {
       MenuNode next{};
       if (!node(*child, next, depth + 1, out.presentation) ||
           (!next.direction.empty() && !directions.insert(next.direction).second))
+        return false;
+      if (out.kind != MenuKind::Menu &&
+          (next.id != out.id + ".options" ||
+           (next.kind != MenuKind::Command && next.kind != MenuKind::Disabled) ||
+           !next.children.empty() || !next.direction.empty() || !next.presentation.empty()))
         return false;
       out.children.push_back(std::move(next));
     }
@@ -338,7 +345,11 @@ bool parse_menu_snapshot(const std::string_view json, MenuSnapshot &out, std::st
     next.menus.push_back(std::move(node));
   }
   const char *groups[] = {"common", "pane", "center", "modeling"};
-  if (next.menus.size() != 4)
+  if (next.menus.size() != 4 && next.menus.size() != 5)
+    return false;
+  if (next.menus.size() == 5 &&
+      (next.menus[4].id != object_modeling_menu || next.menus[4].kind != MenuKind::Menu ||
+       next.menus[4].presentation != "list"))
     return false;
   for (int i = 0; i < 4; i++) {
     if (next.menus[i].id != groups[i] || next.menus[i].kind != MenuKind::Menu)

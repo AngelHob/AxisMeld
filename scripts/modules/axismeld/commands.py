@@ -6,7 +6,7 @@ from types import MappingProxyType
 from .tool_hotbox import ORIENTATIONS
 from .creation_hotbox import CREATE_HOTBOX, PRIMITIVES
 from .context_modeling_hotbox import MODEL_HOTBOX
-from .object_modeling_hotbox import OBJECT_TOOLS
+from .object_modeling_hotbox import OBJECT_TOOLS, OBJECT_ACTION_COMMANDS
 from .modeling_registry import SPECS as MODELING_SPECS
 
 PRESET_NAME = 'AxisMeld_Maya_2026'
@@ -28,6 +28,9 @@ class Command:
 
 
 COMMANDS = MappingProxyType({command.id: command for command in (
+    *(Command(identifier, identifier.replace('object.modeling_', '').replace('_', ' ').title(),
+              difference='Active Mesh modifier adaptation; options open without scene changes, confirmation owns one undo step.')
+      for identifier in sorted(OBJECT_ACTION_COMMANDS)),
     *(Command(identifier, tool.replace('builtin.', '').replace('_', ' ').title(),
               difference='Enter native Mesh Edit Mode and activate a persistent tool; its next stroke owns geometry undo.')
       for identifier, tool in OBJECT_TOOLS.items()),

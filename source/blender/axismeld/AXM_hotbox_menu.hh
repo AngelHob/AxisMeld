@@ -51,6 +51,9 @@ struct MenuRect {
   bool native_menu = false;             // Contiguous option rows use native menu rendering.
   bool native_menu_standalone = false;  // Native entry placed on a hotbox, not inside a list.
   bool retained_only = false;  // Visible background, not a disabled command or hit target.
+  bool option_box = false;
+  bool companion = false;  // Independent Object list, not a radial child layer.
+  std::string owner;       // List owner for paging and independent cascade navigation.
 };
 struct MenuScrollBounds {
   /* Displayed native list page, independent of a stale caller-owned offset. */
@@ -66,6 +69,7 @@ struct MenuLayout {
   std::vector<MenuRect> return_regions;
   // Absent/compact-hidden directions occlude outward marking without affecting layout fitting.
   std::vector<MenuRect> marking_gaps;
+  std::vector<MenuRect> occlusion_regions;  // Native-list gaps/corridors never dispatch.
 };
 
 /* Half-open layout bounds in the original WINDOW's logical coordinates. */
@@ -92,7 +96,8 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
                        const std::unordered_map<std::string, int> &scroll_offsets,
                        const std::unordered_map<std::string, float> &label_widths,
                        const std::array<float, 2> *popup_origin = nullptr,
-                       std::string_view tool_root = {});
+                       std::string_view tool_root = {},
+                       const std::vector<std::string> &companion_path = {});
 /* Fit inside the unobscured bounds, then return every geometry vector in WINDOW coordinates.
  * Only layout anchors are clamped; the caller's real gesture/press origins remain unchanged. */
 MenuLayout layout_menu_in_bounds(
@@ -104,7 +109,8 @@ MenuLayout layout_menu_in_bounds(
     const std::unordered_map<std::string, int> &scroll_offsets,
     const std::unordered_map<std::string, float> &label_widths,
     const std::array<float, 2> *popup_origin = nullptr,
-    std::string_view tool_root = {});
+    std::string_view tool_root = {},
+    const std::vector<std::string> &companion_path = {});
 /* Native list pages normalize from their displayed first row; other menus retain legacy math.
  */
 int menu_scroll_offset_transition(const MenuLayout &layout,

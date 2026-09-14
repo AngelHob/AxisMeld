@@ -12,7 +12,7 @@ from axismeld import hotbox_catalog
 from axismeld import hotbox_runtime
 from axismeld.commands import baseline_bindings
 from axismeld.keymap import generate_keymaps
-from axismeld.object_modeling_hotbox import OBJECT_TOOLS
+from axismeld.object_modeling_hotbox import OBJECT_TOOLS, OBJECT_BOUND_COMMANDS
 from axismeld.profiles import resolve_profiles
 
 
@@ -24,7 +24,7 @@ def walk(nodes):
 
 class ObjectModelingTest(unittest.TestCase):
     def test_object_tool_bindings_are_unbound_by_default_and_object_scoped_when_remapped(self):
-        for command in OBJECT_TOOLS:
+        for command in OBJECT_BOUND_COMMANDS:
             self.assertNotIn(command, baseline_bindings())
             for key in ('F13', 'F14'):
                 resolved = resolve_profiles([('user', {'schema_version': 1, 'bindings': {command: {'type': key}}})])
@@ -45,7 +45,7 @@ class ObjectModelingTest(unittest.TestCase):
                 self.assertEqual(generate_keymaps(generated, resolved.bindings), generated)
 
     def test_object_tool_old_generated_bindings_migrate_by_id_for_remap_and_disable(self):
-        for command in OBJECT_TOOLS:
+        for command in OBJECT_BOUND_COMMANDS:
             for event in ({'type': 'F14'}, None):
                 resolved = resolve_profiles([('user', {'schema_version': 1, 'bindings': {command: event}})])
                 self.assertFalse(resolved.diagnostics)
@@ -205,10 +205,12 @@ class ObjectToolTransactionTest(unittest.TestCase):
         spec = importlib.util.spec_from_file_location('axismeld._object_transaction_test',
             Path(__file__).resolve().parents[2] / 'scripts/modules/axismeld/object_modeling_ops.py')
         module = importlib.util.module_from_spec(spec)
-        with patch.dict(sys.modules, {'bpy': fake_bpy, 'bpy.props': NS(StringProperty=lambda **kw: None),
+        with patch.dict(sys.modules, {'bpy': fake_bpy, 'bpy.props': NS(**{name: lambda **kw: None for name in
+                                      ('StringProperty', 'IntProperty', 'FloatProperty', 'BoolProperty', 'EnumProperty')}),
                                      'bpy.types': NS(Operator=Operator)}):
             spec.loader.exec_module(module)
         self.op = module.AXISMELD_OT_object_modeling_tool()
+        self.module = module
         self.op.command = 'tool.object_mesh_knife'
         self.op.target_uid = ''
         self.op.reports = []

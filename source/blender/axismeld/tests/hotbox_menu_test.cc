@@ -76,6 +76,92 @@ static bool separated_by(const MenuRect &a, const MenuRect &b, const float dista
          a.y >= b.y + b.height + distance || b.y >= a.y + a.height + distance;
 }
 
+TEST(axismeld_hotbox_menu, ObjectCompanionIsVisibleWithoutStealingRadialAndOptionsAreSeparate)
+{
+  auto snapshot = default_snapshot();
+  MenuNode option{"composition.action.options", "Options", "mesh.quad_remesh", "", "", MenuKind::Command, true};
+  MenuNode action{"composition.action", "Action", "", "Unavailable", "", MenuKind::Disabled, false, {option}};
+  MenuNode list{"context.modeling_object_menu", "Object menu", "", "", "", MenuKind::Menu, true, {action}};
+  list.presentation = "list";
+  // Independent fixture, not the production catalog's composition metadata.
+  std::function<void(std::vector<MenuNode> &)> remove = [&](auto &nodes) {
+    std::erase_if(nodes, [](const MenuNode &node) { return node.id == "context.modeling_object_menu"; });
+    for (auto &node : nodes) { remove(node.children); }
+  };
+  remove(snapshot.menus);
+  snapshot.menus[0].children.push_back(list);
+  const auto widths = measured(snapshot);
+  auto layout = layout_menu(snapshot, 1200, 900, 600, 550,
+                            {"context.modeling_object"}, {}, widths, nullptr, "context.modeling_object");
+  ASSERT_TRUE(layout.supported);
+  const MenuRect *main = rect(layout, action.id), *cell = rect(layout, option.id);
+  ASSERT_NE(main, nullptr);
+  ASSERT_NE(cell, nullptr);
+  EXPECT_EQ(cell->width, 24);
+  EXPECT_FALSE(main->interactive);
+  EXPECT_TRUE(cell->interactive);
+  EXPECT_EQ(main->x + main->width, cell->x);
+  EXPECT_EQ(hit_menu(layout, cell->x + 12, cell->y + 12), option.id);
+  EXPECT_NE(hit_marking_menu_rect(layout, "context.modeling_object", 1100, 550), nullptr);
+  EXPECT_EQ(hit_marking_menu_rect(layout, "context.modeling_object", cell->x + 12, cell->y + 12), nullptr);
+}
+
+TEST(axismeld_hotbox_menu, ObjectCompanionCatalogUsesExactMainAndOptionPairs)
+{
+  const auto snapshot = default_snapshot();
+  const MenuNode *companion = nullptr;
+  visit(snapshot.menus, [&](const MenuNode &node) { if (node.id == object_modeling_menu) { companion = &node; } });
+  ASSERT_NE(companion, nullptr);
+  EXPECT_EQ(companion->presentation, "list");
+  std::set<std::string> actual;
+  visit(companion->children, [&](const MenuNode &node) {
+    EXPECT_NE(node.kind, MenuKind::Setting);
+    if (node.kind == MenuKind::Command) {
+      EXPECT_TRUE(object_menu_allows_command(node.id, node.command)) << node.id << ": " << node.command;
+      actual.insert(node.id);
+    }
+  });
+  for (const auto &entry : object_menu_commands) {
+    EXPECT_TRUE(actual.contains(std::string(entry.row))) << entry.row;
+    if (!entry.options.empty()) { EXPECT_TRUE(actual.contains(std::string(entry.row) + ".options")); }
+  }
+  EXPECT_FALSE(object_menu_allows_command("context.modeling_object_menu.smooth.options", "object.modeling_reduce_options"));
+  EXPECT_FALSE(object_menu_allows_command("context.modeling_object_menu.smooth", "object.modeling_smooth_options"));
+  EXPECT_FALSE(modeling_root_allows_command(object_modeling_root, "tool.object_mesh_offset_loop"));
+  EXPECT_FALSE(object_menu_command_registered("object.modeling_smooth_options.extra"));
+}
+
+TEST(axismeld_hotbox_menu, ObjectCompanionPagesAndCascadeKeepRadialGeometryAndSpatialOcclusion)
+{
+  const auto snapshot = default_snapshot();
+  const auto widths = measured(snapshot);
+  const std::string root(object_modeling_root), list(object_modeling_menu);
+  const auto initial = layout_menu(snapshot, 1200, 700, 600, 450, {root}, {}, widths, nullptr, root);
+  ASSERT_TRUE(initial.supported);
+  ASSERT_TRUE(initial.native_scroll_bounds.contains(list));
+  EXPECT_GT(initial.native_scroll_bounds.at(list).maximum_first, 0);
+  const auto paged = layout_menu(snapshot, 1200, 700, 600, 450, {root}, {{list, 999}}, widths, nullptr, root);
+  ASSERT_TRUE(paged.supported);
+  EXPECT_EQ(paged.native_scroll_bounds.at(list).effective_first, paged.native_scroll_bounds.at(list).maximum_first);
+  const auto cascade = layout_menu(snapshot, 1200, 700, 600, 450, {root}, {}, widths, nullptr, root,
+                                  {list, list + ".booleans"});
+  ASSERT_TRUE(cascade.supported);
+  const auto *child = rect(cascade, list + ".booleans.union");
+  ASSERT_NE(child, nullptr);
+  EXPECT_EQ(hit_marking_menu_rect(cascade, root, child->x + 5, child->y + 12), nullptr);
+  EXPECT_NE(hit_marking_menu_rect(cascade, root, 1190, 450), nullptr);
+  for (const auto &item : initial.rects) {
+    if (!item.direction_label) { continue; }
+    const auto *same = rect(cascade, item.id);
+    ASSERT_NE(same, nullptr);
+    EXPECT_EQ(same->x, item.x); EXPECT_EQ(same->y, item.y); EXPECT_EQ(same->width, item.width);
+  }
+  for (const auto &item : cascade.rects) {
+    EXPECT_GE(item.x, 0); EXPECT_GE(item.y, 0);
+    EXPECT_LE(item.x + item.width, 1200); EXPECT_LE(item.y + item.height, 700);
+  }
+}
+
 TEST(axismeld_hotbox_menu, ModelingDirectRootsAndLeavesMatchTheRealCatalog)
 {
   const auto snapshot = default_snapshot();
@@ -1865,27 +1951,43 @@ TEST(axismeld_hotbox_menu, RealDefaultTreeHasClickablePathsAtCornersAndCenter)
       std::function<void(const std::vector<MenuNode> &,
                          const std::string &,
                          std::vector<std::string>,
-                         std::unordered_map<std::string, int>)>
+                         std::unordered_map<std::string, int>, bool)>
           browse;
       browse = [&](const std::vector<MenuNode> &nodes,
                    const std::string &owner,
                    std::vector<std::string> path,
-                   std::unordered_map<std::string, int> offsets) {
+                   std::unordered_map<std::string, int> offsets, const bool companion) {
         for (int scroll = 0; scroll < int(nodes.size()); scroll++) {
           offsets[owner] = scroll;
-          const auto layout = layout_menu(
-              snapshot, size[0], size[1], point[0], point[1], path, offsets, widths);
+          const auto layout = companion ?
+              layout_menu(snapshot, size[0], size[1], point[0], point[1],
+                          {std::string(object_modeling_root)}, offsets, widths, nullptr,
+                          object_modeling_root, path) :
+              layout_menu(snapshot, size[0], size[1], point[0], point[1], path, offsets, widths);
           ASSERT_TRUE(layout.supported);
           for (const auto &item : layout.rects) {
             EXPECT_GE(item.x, 0);
             EXPECT_GE(item.y, 0);
             EXPECT_LE(item.x + item.width, size[0]);
-            EXPECT_LE(item.y + item.height, size[1]);
+            EXPECT_LE(item.y + item.height, size[1]) << item.id;
           }
           for (const MenuNode &node : nodes) {
             const MenuRect *item = rect(layout, node.id);
             if (!item) {
               continue;
+            }
+            // An options cell is a separately reachable action even when its main row is disabled.
+            if (node.kind != MenuKind::Menu && !node.children.empty()) {
+              ASSERT_EQ(node.children.size(), 1);
+              const auto &option = node.children[0];
+              const auto *cell = rect(layout, option.id);
+              ASSERT_NE(cell, nullptr) << option.id;
+              EXPECT_TRUE(cell->option_box);
+              EXPECT_EQ(cell->width, 24);
+              EXPECT_EQ(cell->x, item->x + item->width);
+              const auto option_hit = hit_menu(layout, cell->x + 12, cell->y + cell->height / 2);
+              EXPECT_EQ(option_hit, option.enabled ? option.id : "") << option.id;
+              reached.insert(option.id);
             }
             const std::string hit = hit_menu(
                 layout, item->x + item->width / 2, item->y + item->height / 2);
@@ -1903,7 +2005,7 @@ TEST(axismeld_hotbox_menu, RealDefaultTreeHasClickablePathsAtCornersAndCenter)
             if (node.kind == MenuKind::Menu) {
               auto child_path = path;
               child_path.push_back(node.id);
-              browse(node.children, node.id, child_path, offsets);
+              browse(node.children, node.id, child_path, offsets, companion);
             }
           }
           // Every non-terminal page has a visible, hittable forward control.
@@ -1922,7 +2024,13 @@ TEST(axismeld_hotbox_menu, RealDefaultTreeHasClickablePathsAtCornersAndCenter)
         }
       };
       for (const MenuNode &row : snapshot.menus) {
-        browse(row.children, row.id, {}, {});
+        if (row.id == object_modeling_menu) {
+          // This catalog root has no duplicate Space title; its real entry is the Object ring.
+          browse(row.children, row.id, {row.id}, {}, true);
+        }
+        else {
+          browse(row.children, row.id, {}, {}, false);
+        }
       }
       for (const MenuNode &row : snapshot.menus) {
         visit(row.children, [&](const MenuNode &node) {
@@ -2059,7 +2167,10 @@ TEST(axismeld_hotbox_menu, StandardMainCompositionKeepsOuterTaperAndIsolatedCent
   EXPECT_LT(row_widths[2], row_widths[1]);
   EXPECT_LT(row_widths[2], row_widths[3]);
   EXPECT_GT(row_widths[3], row_widths[4]);
-  const auto &modeling = snapshot.menus.back().children;
+  const auto modeling_root = std::find_if(snapshot.menus.begin(), snapshot.menus.end(),
+      [](const MenuNode &node) { return node.id == "modeling"; });
+  ASSERT_NE(modeling_root, snapshot.menus.end());
+  const auto &modeling = modeling_root->children;
   const MenuRect *previous = nullptr;
   for (const auto &node : modeling) {
     const auto *item = rect(layout, node.id);
@@ -2071,6 +2182,11 @@ TEST(axismeld_hotbox_menu, StandardMainCompositionKeepsOuterTaperAndIsolatedCent
     }
     previous = item;
   }
+  const auto companion = std::find_if(snapshot.menus.begin(), snapshot.menus.end(),
+      [](const MenuNode &node) { return node.id == object_modeling_menu; });
+  ASSERT_NE(companion, snapshot.menus.end());
+  EXPECT_EQ(rect(layout, companion->id), nullptr);
+  visit(companion->children, [&](const MenuNode &node) { EXPECT_EQ(rect(layout, node.id), nullptr); });
 }
 
 TEST(axismeld_hotbox_menu, InwardRowsKeepCanonicalOrderAtTrueCorners)

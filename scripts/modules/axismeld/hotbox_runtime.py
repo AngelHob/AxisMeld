@@ -10,7 +10,8 @@ from .commands import COMMANDS, PRESET_NAME
 from .tool_hotbox import DIRECTIONS, MENU_COMMANDS
 from .creation_hotbox import CREATE_COMMANDS
 from .context_modeling_hotbox import modeling_root
-from .object_modeling_hotbox import OBJECT_TOOLS
+from .object_modeling_hotbox import (OBJECT_ROOT, OBJECT_MENU, OBJECT_TOOLS, OBJECT_ACTION_COMMANDS,
+                                     OBJECT_MENU_COMMANDS, OBJECT_OPTION_COMMANDS, object_modeling_targets)
 from .modeling_registry import SPECS as MODELING_SPECS
 from .hotbox_catalog import default_catalog, command_policy
 from .hotbox_profiles import (CANONICAL_ROWS, DEFAULT_APPEARANCE, DEFAULT_SETTINGS, MENU_IDS, MOUSE_BUTTONS,
@@ -44,6 +45,7 @@ _session_document = {'schema_version': 1, 'settings': {}}
 # navigation actions must not become callable through this batch's menu bridge.
 SUPPORTED_COMMANDS = frozenset({
     *OBJECT_TOOLS,
+    *OBJECT_ACTION_COMMANDS,
     *MODELING_SPECS,
     *CREATE_COMMANDS,
     *MENU_COMMANDS, 'mode.object',
@@ -90,7 +92,7 @@ def dispatch(context, command):
         logging.getLogger(__name__).error(
             'Hotbox command %s failed: %s: %s', command, type(error).__name__, error)
         return {'CANCELLED'}
-    if result == {'FINISHED'} and command not in OBJECT_TOOLS:
+    if result == {'FINISHED'} and command not in OBJECT_TOOLS and command not in OBJECT_ACTION_COMMANDS:
         recent.record(command)
     return result
 
@@ -309,9 +311,9 @@ def validate_snapshot(value):
         raise ValueError('menus must be an array')
     if not all(isinstance(node, dict) for node in menus):
         raise ValueError('root menu groups must be objects')
-    if [node.get('id') for node in menus] != [
-            'common', 'pane', 'center', 'modeling']:
-        raise ValueError('root menus must be common, pane, center and modeling in order')
+    canonical = ['common', 'pane', 'center', 'modeling']
+    if [node.get('id') for node in menus] not in (canonical, [*canonical, OBJECT_MENU]):
+        raise ValueError('root menus must be common, pane, center and modeling, optionally followed by the Object companion')
     if not all(node.get('kind') == 'menu' for node in menus):
         raise ValueError('root menu groups must have menu kind')
 
@@ -372,12 +374,16 @@ def validate_snapshot(value):
         if not isinstance(item_value, str):
             raise ValueError('node value must be a string')
 
+        if children and kind != 'menu':
+            if (kind not in {'command', 'disabled'} or len(children) != 1 or
+                    not isinstance(children[0], dict) or children[0].get('id') != identifier + '.options' or
+                    children[0].get('kind') not in {'command', 'disabled'} or children[0].get('children') or
+                    'direction' in children[0] or 'presentation' in children[0]):
+                raise ValueError('only menu nodes or a single strict options cell can have children')
         if kind == 'menu':
             if node['command'] or item_value:
                 raise ValueError('menu nodes cannot carry command or value')
             menu_ids.add(identifier)
-        elif children:
-            raise ValueError('only menu nodes can have children')
         elif kind == 'command':
             if node['command'] not in COMMANDS:
                 raise ValueError(f'unknown command ID: {node["command"]}')
@@ -460,6 +466,35 @@ def _catalog_with_recent():
     return menus
 
 
+# Exact, equivalent context diagnostics keep the full catalog within the fixed JSON budget.
+# Unique disabled-gap explanations and unknown errors are never shortened or truncated.
+_CAPABILITY_REASONS = {
+    'Requires a supported modeling mode in a 3D View window': 'Requires modeling view',
+    'Unavailable in the current object or component mode': 'Unavailable mode',
+    'Requires an editable scene': 'Scene is not editable',
+    'Select eligible editable targets or components for this operation': 'Select editable items',
+    'Select the required editable source and target objects': 'Select source + target',
+    'Native operation requires a valid target or selection': 'Select valid targets',
+    'Native operation is unavailable': 'Operation unavailable',
+    'Requires a 3D View window in Object or mesh Edit Mode': 'Requires modeling view',
+    'Requires a single Edit Mesh domain with visible editable component selection': 'Select one Mesh domain',
+    'Component modeling hotbox is unavailable in this context': 'Unavailable mode',
+    'Primitive creation requires an editable scene': 'Scene is not editable',
+    'Creation hotbox requires Object Mode with no selected objects': 'Empty Object Mode only',
+    'Creation hotbox is unavailable in this context': 'Unavailable mode',
+    'Primitive creation requires Object Mode': 'Requires Object Mode',
+    'Native primitive creation is unavailable in this context': 'Creation unavailable',
+    'Select a visible, editable mesh first': 'Select editable Mesh',
+    'Blender selection operator is unavailable in this context': 'Selection unavailable',
+    'Blender view operator is unavailable in this context': 'View unavailable',
+    'AxisMeld view operator is unavailable in this context': 'View unavailable',
+    'AxisMeld hotbox is unavailable in this context': 'Hotbox unavailable',
+    'Requires selected editable Mesh Objects': 'Select editable Meshes',
+    'Requires an active selected editable Mesh with faces': 'Select Mesh with faces',
+    'Select eligible Mesh Objects first; this action does not commit pointer preselection': 'Select Mesh Objects',
+}
+
+
 def _apply_runtime_capabilities(context, menus):
     # Importing adapter imports bpy, so keep it out of module initialization and pure tests.
     from . import adapter
@@ -478,8 +513,12 @@ def _apply_runtime_capabilities(context, menus):
                 context, node['command'], cache=capability_cache)
         else:
             enabled, reason = adapter.available(context, node['command'])
+        identifier = node.get('id', '')
+        if identifier.startswith(OBJECT_MENU + '.') and node['command'] not in OBJECT_ACTION_COMMANDS and node['command'] not in OBJECT_TOOLS:
+            if not object_modeling_targets(context):
+                enabled, reason = False, 'Select eligible Mesh Objects first; this action does not commit pointer preselection'
         node['enabled'] = bool(enabled)
-        node['reason'] = '' if enabled else str(reason)
+        node['reason'] = (node['reason'] if identifier.startswith((OBJECT_MENU + '.', OBJECT_ROOT + '.')) else '') if enabled else _CAPABILITY_REASONS.get(str(reason), str(reason))
         if node['command'] in MODELING_SPECS:
             state = adapter.modeling_adapter.command_state(context, node['command'])
             if state is not None:

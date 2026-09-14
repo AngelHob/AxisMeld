@@ -74,7 +74,7 @@ class HotboxCatalogTest(unittest.TestCase):
 
     def test_catalog_has_canonical_rows_and_top_level_order(self):
         catalog = default_catalog()
-        self.assertEqual([row['id'] for row in catalog], ['common', 'pane', 'center', 'modeling'])
+        self.assertEqual([row['id'] for row in catalog], ['common', 'pane', 'center', 'modeling', 'context.modeling_object_menu'])
         expected = {
             'common': ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows'],
             'pane': ['View', 'Shading', 'Lighting', 'Show', 'Renderer', 'Panels'],
@@ -84,7 +84,7 @@ class HotboxCatalogTest(unittest.TestCase):
                 'Deform', 'UV', 'Generate'],
         }
         self.assertEqual({row['id']: [child['label'] for child in row['children']]
-                          for row in catalog}, expected)
+                          for row in catalog if row['id'] in expected}, expected)
 
     def test_catalog_declares_actual_leaf_commands_without_inventing_uv_commands(self):
         catalog = default_catalog()
@@ -289,7 +289,7 @@ class HotboxCatalogTest(unittest.TestCase):
         self.assertEqual(parsed['generation'], 7)
         self.assertEqual(parsed['settings']['transparency'], 25)
         self.assertEqual([row['id'] for row in parsed['menus']],
-                         ['common', 'pane', 'center', 'modeling'])
+                         ['common', 'pane', 'center', 'modeling', 'context.modeling_object_menu'])
         parsed['settings']['center_buttons']['RIGHTMOUSE'] = None
         parsed['menus'][0]['children'][0]['label'] = 'Changed'
         second = hotbox_runtime.make_snapshot(generation=8)

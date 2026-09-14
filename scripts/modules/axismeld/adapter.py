@@ -6,7 +6,7 @@ import bpy
 from .context_hotbox import COMPONENT_HOTBOX, COMPONENT_ROOT
 from .creation_hotbox import CREATE_HOTBOX, CREATE_OPERATORS, CREATE_ROOT
 from .context_modeling_hotbox import MODEL_HOTBOX, modeling_root
-from .object_modeling_hotbox import OBJECT_ROOT, OBJECT_TOOLS, object_modeling_targets
+from .object_modeling_hotbox import OBJECT_ROOT, OBJECT_TOOLS, OBJECT_ACTION_COMMANDS, object_modeling_targets
 from .commands import COMMANDS
 from .tool_hotbox import TOOL_ROOTS, ORIENTATIONS, SELECTION_TOOLS
 from . import modeling_adapter
@@ -56,6 +56,10 @@ def available(context, command):
         return False, 'Requires a 3D View window in Object or mesh Edit Mode'
     if command in OBJECT_TOOLS:
         return (True, '') if object_modeling_targets(context) else (False, 'Requires selected editable Mesh Objects')
+    if command in OBJECT_ACTION_COMMANDS:
+        targets = object_modeling_targets(context)
+        return (True, '') if targets and context.active_object.data.polygons else (
+            False, 'Requires an active selected editable Mesh with faces')
     if command == MODEL_HOTBOX:
         if not (object_modeling_targets(context) if context.mode == 'OBJECT' else modeling_root(context)):
             return False, 'Requires a single Edit Mesh domain with visible editable component selection'
@@ -109,6 +113,9 @@ def run(context, command, *, invoke=True, keyboard_tool_session=False):
     if command in OBJECT_TOOLS:
         # Explicit outer undo: bpy calls otherwise suppress this transaction's undo push.
         return bpy.ops.axismeld.object_modeling_tool('EXEC_DEFAULT', True, command=command)
+    if command in OBJECT_ACTION_COMMANDS:
+        return bpy.ops.axismeld.object_modeling_action(
+            'INVOKE_DEFAULT' if command.endswith('_options') else 'EXEC_DEFAULT', True, command=command)
     if command in CREATE_OPERATORS:
         operator_name, properties = CREATE_OPERATORS[command]
         # The native child owns its geometry and single undo entry; wrappers remain non-undoable.

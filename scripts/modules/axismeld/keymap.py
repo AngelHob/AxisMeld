@@ -6,7 +6,7 @@ from copy import deepcopy
 from .context_hotbox import COMPONENT_HOTBOX
 from .creation_hotbox import CREATE_HOTBOX
 from .context_modeling_hotbox import MODEL_HOTBOX
-from .object_modeling_hotbox import OBJECT_TOOLS
+from .object_modeling_hotbox import OBJECT_BOUND_COMMANDS
 from .commands import baseline_bindings, binding_events, RESERVED_KEYS
 from .profiles import MODIFIERS
 from .modeling_registry import SPECS as MODELING_SPECS, keymap_targets
@@ -65,9 +65,9 @@ def generate_keymaps(base, bindings):
     result = deepcopy(base)
     # Context sessions must retain the native fallback for rejected contexts and rebinds.
     owned = [*(value for key, value in baseline_bindings().items()
-               if key not in CONTEXT_HOTBOXES and key not in MODELING_SPECS and key not in OBJECT_TOOLS),
+               if key not in CONTEXT_HOTBOXES and key not in MODELING_SPECS and key not in OBJECT_BOUND_COMMANDS),
              *(value for key, value in bindings.items()
-               if value and key not in CONTEXT_HOTBOXES and key not in MODELING_SPECS and key not in OBJECT_TOOLS),
+               if value and key not in CONTEXT_HOTBOXES and key not in MODELING_SPECS and key not in OBJECT_BOUND_COMMANDS),
              *({'type': key} for key in RESERVED_KEYS)]
     for name, args, content in result:
         # Native operators poll the Maya preset, modeling context and highlighted/armed
@@ -88,17 +88,17 @@ def generate_keymaps(base, bindings):
                            name in keymap_targets(identifier))
         if name == 'Object Mode':
             local_owned.extend(event for identifier, event in binding_events(bindings)
-                               if event and identifier in OBJECT_TOOLS)
+                               if event and identifier in OBJECT_BOUND_COMMANDS)
         content['items'] = [item for item in content['items']
                              if not (item[0] == 'axismeld.command' and item[2] and
                                      any(('command', command) in item[2].get('properties', ())
-                                         for command in (*CONTEXT_HOTBOXES, *OBJECT_TOOLS)))
+                                         for command in (*CONTEXT_HOTBOXES, *OBJECT_BOUND_COMMANDS)))
                             and not any(overlaps(item[1], event) for event in local_owned)]
         for command, event in binding_events(bindings):
             if command == 'hotbox.open':
                 continue
             target = (keymap_targets(command) if command in MODELING_SPECS else
-                      ('Object Mode',) if command in OBJECT_TOOLS else
+                      ('Object Mode',) if command in OBJECT_BOUND_COMMANDS else
                       CONTEXT_TARGETS[command] if command in CONTEXT_TARGETS else
                       ('3D View',) if command.startswith('view.') else ('Object Mode', 'Mesh'))
             if name in target and event is not None:

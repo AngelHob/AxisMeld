@@ -27,7 +27,8 @@ class ToolHotboxTest(unittest.TestCase):
                           'SE': 'Keep Spacing', 'N': 'Symmetry', 'S': 'Select',
                           'E': 'Snap', 'SW': 'Axis'})
         self.assertLessEqual(len(nodes), hotbox_runtime.MAX_NODES)
-        self.assertEqual(len(menus), 4)
+        self.assertEqual(len(menus), 5)
+        self.assertEqual(menus[-1]['id'], 'context.modeling_object_menu')
 
     def test_other_tool_slots_are_classic_maya_and_placeholders_never_dispatch(self):
         nodes = {n['id']: n for n in walk(hotbox_catalog.default_catalog())}

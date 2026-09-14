@@ -16,6 +16,7 @@ struct HotboxVisual {
   MenuSnapshot snapshot;
   std::string tool_root;
   std::vector<std::string> open_path;
+  std::vector<std::string> companion_path;
   std::unordered_map<std::string, int> scroll_offsets;
   std::unordered_map<std::string, float> label_widths;
   MenuLayout menu_layout;

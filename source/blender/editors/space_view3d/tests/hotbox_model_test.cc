@@ -29,6 +29,57 @@ static std::string replace(std::string input, const std::string &from, const std
   return input;
 }
 
+TEST(hotbox_model, IndependentOptionLeafHasOneExactParentAndNoGrandchildren)
+{
+  const std::string option = R"({"id":"action.options","kind":"command","label":"Options","command":"mesh.quad_remesh","enabled":true,"reason":"","children":[]})";
+  const std::string row = R"({"id":"action","kind":"disabled","label":"Action","command":"","enabled":false,"reason":"Unavailable","children":[)" + option + "]}";
+  MenuSnapshot out{};
+  std::string error;
+  ASSERT_TRUE(parse_menu_snapshot(snapshot(row), out, error)) << error;
+  EXPECT_TRUE(out.menus[0].children[0].children[0].enabled);
+  for (const std::string &bad : {replace(row, "action.options", "other.options"),
+                                 replace(row, option, option + "," + option),
+                                 replace(row, "\"label\":\"Options\"", "\"label\":\"Options\",\"direction\":\"E\""),
+                                 replace(row, option, menu("action.options")),
+                                 replace(row, "\"kind\":\"disabled\"", "\"kind\":\"separator\""),
+                                 replace(row, "\"children\":[]", "\"children\":[" + replace(option, "action.options", "action.options.options") + "]")}) {
+    out.generation = 99;
+    EXPECT_FALSE(parse_menu_snapshot(snapshot(bad), out, error));
+    EXPECT_EQ(out.generation, 99);
+  }
+}
+
+TEST(hotbox_model, ObjectCompanionIsTheOnlyOptionalFifthRootAndActionAdmissionIsExact)
+{
+  const std::string companion = replace(menu("context.modeling_object_menu"),
+                                        "\"kind\":\"menu\"", "\"kind\":\"menu\",\"presentation\":\"list\"");
+  const auto fifth = [&](const std::string &root) {
+    auto json = snapshot();
+    json.insert(json.size() - 2, "," + root);
+    return json;
+  };
+  MenuSnapshot out{};
+  std::string error;
+  ASSERT_TRUE(parse_menu_snapshot(fifth(companion), out, error)) << error;
+  EXPECT_EQ(out.menus.size(), 5);
+  EXPECT_FALSE(parse_menu_snapshot(fifth(replace(companion, "context.modeling_object_menu", "context.any_menu")), out, error));
+  EXPECT_FALSE(parse_menu_snapshot(fifth(replace(companion, "\"list\"", "\"radial\"")), out, error));
+  const auto action = [](const std::string &command) {
+    return R"({"id":"action","kind":"command","label":"Action","command":")" + command +
+           R"(","enabled":true,"reason":"","children":[]})";
+  };
+  for (const auto command : {"object.modeling_smooth", "object.modeling_smooth_options",
+                             "object.modeling_mirror", "object.modeling_mirror_options",
+                             "object.modeling_reduce", "object.modeling_reduce_options",
+                             "object.modeling_remesh", "object.modeling_remesh_options",
+                             "tool.object_mesh_offset_loop"}) {
+    EXPECT_TRUE(parse_menu_snapshot(snapshot(action(command)), out, error)) << command << error;
+  }
+  for (const auto command : {"object.modeling_eval", "object.modeling_smooth.extra", "object.modeling_smooth_options_extra"}) {
+    EXPECT_FALSE(parse_menu_snapshot(snapshot(action(command)), out, error)) << command;
+  }
+}
+
 TEST(hotbox_model, ExpandedToolTreeRetainsBoundedAtomicParsing)
 {
   MenuSnapshot out{};

@@ -4,7 +4,7 @@
 from copy import deepcopy
 from .context_hotbox import component_menu
 from .context_modeling_hotbox import modeling_menus
-from .object_modeling_hotbox import object_modeling_menu
+from .object_modeling_hotbox import object_modeling_menu, object_modeling_companion
 from .creation_hotbox import CREATE_COMMANDS, creation_menu
 from .tool_hotbox import MENU_COMMANDS, tool_menus
 
@@ -219,7 +219,7 @@ def _catalog():
         )
     ))
     from .modeling_catalog import extend_catalog
-    return extend_catalog((common, pane, center, modeling), _node)
+    return extend_catalog((common, pane, center, modeling, object_modeling_companion(_node)), _node)
 
 
 _DEFAULT_CATALOG = _catalog()

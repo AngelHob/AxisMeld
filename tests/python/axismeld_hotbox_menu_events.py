@@ -1217,22 +1217,35 @@ def suite():
         yield from settle(20)
         screenshot(f'menus-scale-{requested_scale}-center-main.png')
         yield from close_box()
+        # A receipt-only F14 diagnostic identifies the native visual region. Product
+        # acceptance below still uses untouched actual Space preset bindings.
+        bpy.utils.register_class(AXISMELD_OT_menu_region_probe)
+        km = bpy.context.window_manager.keyconfigs.active.keymaps['3D View Generic']
+        probe = km.keymap_items.new('axismeld.menu_region_probe', 'F14', 'PRESS')
+        yield from settle()
         if requested_scale == 2.0:
-            # A receipt-only F14 diagnostic identifies the native visual region. Product
-            # acceptance below still uses untouched actual Space preset bindings.
-            bpy.utils.register_class(AXISMELD_OT_menu_region_probe)
-            km = bpy.context.window_manager.keyconfigs.active.keymaps['3D View Generic']
-            probe = km.keymap_items.new('axismeld.menu_region_probe', 'F14', 'PRESS')
+            # Earlier scales hide overlaps for their content-corner checks. Restore the
+            # toolbar explicitly for this independent rejection regression.
+            area.spaces.active.show_region_toolbar = True
+            yield from settle(8)
+            tool_regions = [candidate for candidate in area.regions
+                            if candidate.type == 'TOOLS' and candidate.width > 2
+                            and candidate.height > 2]
+            check(len(tool_regions) == 1, '2x overlap fixture needs one expanded TOOLS region')
+            toolbar = tool_regions[0]
+            toolbar_point = (toolbar.x + toolbar.width // 2,
+                             toolbar.y + toolbar.height // 2)
+            event('MOUSEMOVE', 'NOTHING', *toolbar_point)
             yield from settle()
-            event('MOUSEMOVE', 'NOTHING', region.x, region.y)
-            yield from settle()
+            received = len(region_receipts)
             event('F14')
             yield
             event('F14', 'RELEASE')
             yield from settle()
-            print('OVERLAP_RECEIPT', region_receipts, flush=True)
-            check(region_receipts and region_receipts[-1][1] == 'TOOLS',
-                  '2x corner diagnostic expected actual overlapping toolbar receipt')
+            print('OVERLAP_RECEIPT', toolbar_point, region_receipts[received:], flush=True)
+            check(len(region_receipts) > received and region_receipts[-1][1] == 'TOOLS',
+                  f'2x toolbar interior {toolbar_point} expected TOOLS receipt; '
+                  f'observed={region_receipts[received:]}')
             count = len(observed)
             event('SPACE')
             yield
@@ -1242,34 +1255,34 @@ def suite():
             if win.screen.is_animation_playing:
                 with bpy.context.temp_override(window=win):
                     bpy.ops.screen.animation_cancel(restore_frame=False)
-            area.spaces.active.show_region_toolbar = False
-            area.spaces.active.show_region_ui = False
-            area.spaces.active.show_region_header = False
-            area.spaces.active.show_region_tool_header = False
-            yield from settle(8)
-            for corner, x, y, sx, sy in (
-                    ('sw', region.x, region.y, 1, 1),
-                    ('se', region.x+region.width-1, region.y, -1, 1),
-                    ('nw', region.x, region.y+region.height-1, 1, -1),
-                    ('ne', region.x+region.width-1, region.y+region.height-1, -1, -1)):
-                for ax, ay in ((0, 0), (1, 0), (0, 1), (1, 1)):
-                    px, py = x+ax*sx, y+ay*sy
-                    event('MOUSEMOVE', 'NOTHING', px, py)
-                    yield from settle()
-                    received = len(region_receipts)
-                    event('F14')
-                    yield
-                    event('F14', 'RELEASE')
-                    yield from settle()
-                    receipt = region_receipts[-1] if len(region_receipts) > received else None
-                    print('CONTENT_BOUNDARY_RECEIPT', corner, px, py, receipt, flush=True)
-                    if receipt and receipt[1] == 'WINDOW':
-                        content_corners[corner] = (px, py)
-                        break
-                check(corner in content_corners, 'No WINDOW content within adjacent native boundary pixel')
-            km.keymap_items.remove(probe)
-            bpy.utils.unregister_class(AXISMELD_OT_menu_region_probe)
-            print('2x GUI matrix uses measured first WINDOW content pixels; pure layout retains literal0/0', flush=True)
+        area.spaces.active.show_region_toolbar = False
+        area.spaces.active.show_region_ui = False
+        area.spaces.active.show_region_header = False
+        area.spaces.active.show_region_tool_header = False
+        yield from settle(8)
+        for corner, x, y, sx, sy in (
+                ('sw', region.x, region.y, 1, 1),
+                ('se', region.x+region.width-1, region.y, -1, 1),
+                ('nw', region.x, region.y+region.height-1, 1, -1),
+                ('ne', region.x+region.width-1, region.y+region.height-1, -1, -1)):
+            for ax, ay in ((0, 0), (1, 0), (0, 1), (1, 1)):
+                px, py = x+ax*sx, y+ay*sy
+                event('MOUSEMOVE', 'NOTHING', px, py)
+                yield from settle()
+                received = len(region_receipts)
+                event('F14')
+                yield
+                event('F14', 'RELEASE')
+                yield from settle()
+                receipt = region_receipts[-1] if len(region_receipts) > received else None
+                print('CONTENT_BOUNDARY_RECEIPT', corner, px, py, receipt, flush=True)
+                if receipt and receipt[1] == 'WINDOW':
+                    content_corners[corner] = (px, py)
+                    break
+            check(corner in content_corners, 'No WINDOW content within adjacent native boundary pixel')
+        km.keymap_items.remove(probe)
+        bpy.utils.unregister_class(AXISMELD_OT_menu_region_probe)
+        print('GUI matrix uses measured first WINDOW content pixels; pure layout retains literal0/0', requested_scale, flush=True)
         # Use actual viewport boundary coordinates, never a safe inset center substitute.
         # Probe top-corner origin sectors close to the real press, outside its dead zone:
         # the old +/-90 endpoint now intersects a different visible inward-clamped button,
@@ -1299,14 +1312,15 @@ def suite():
             event('RIGHTMOUSE', 'RELEASE')
             yield from settle()
             check(len(observed) == count+1 and observed[-1][0] == command,
-                  f'scale={scale} true {corner} corner changed captured gesture origin')
+                  f'scale={scale} true {corner} corner expected exactly one {command}; '
+                  f'origin={(x, y)}, observed={observed[count:]}')
             yield from close_box()
             check(not win.screen.is_animation_playing, 'actual content gesture leaked Space playback')
     bpy.context.preferences.view.ui_scale = 1.0
     yield from settle(8)
     scale = bpy.context.preferences.system.ui_scale
     blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
-    print('PASS B9 all four corners: scales1/1.25/1.5 literal; scale2 measured content boundary', flush=True)
+    print('PASS B9 all four corners: scales1/1.25/1.5/2 measured content boundary', flush=True)
 
     # Native malformed snapshot must cancel without leaving a handler that steals the next Space.
     real_snapshot = hotbox_runtime.snapshot
