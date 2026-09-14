@@ -3,6 +3,7 @@
 #pragma once
 
 #include <string_view>
+#include <utility>
 
 namespace blender::axismeld {
 
@@ -13,6 +14,43 @@ inline constexpr std::string_view object_modeling_root = "context.modeling_objec
 inline constexpr std::string_view object_modeling_commands[] = {
     "tool.object_mesh_poly_build", "tool.object_mesh_loopcut", "tool.object_mesh_knife"};
 inline constexpr std::string_view object_modeling_menu = "context.modeling_object_menu";
+
+inline constexpr std::string_view creation_root = "context.create";
+inline constexpr std::string_view creation_menu = "context.create_menu";
+
+inline std::string_view companion_root(const std::string_view root)
+{
+  return root == object_modeling_root ? object_modeling_menu :
+         root == creation_root ? creation_menu : std::string_view{};
+}
+
+inline bool creation_workflow_indicator(const std::string_view id)
+{
+  return id == "context.create_menu.interactive_creation" ||
+         id == "context.create_menu.exit_on_completion";
+}
+
+inline bool creation_allows_command(const std::string_view id, const std::string_view command)
+{
+  constexpr std::pair<std::string_view, std::string_view> entries[] = {
+      {"context.create.disc", "mesh.create_disc"},
+      {"context.create.sphere", "mesh.create_sphere"},
+      {"context.create.torus", "mesh.create_torus"},
+      {"context.create.cube", "mesh.create_cube"},
+      {"context.create.cone", "mesh.create_cone"},
+      {"context.create.cylinder", "mesh.create_cylinder"},
+      {"context.create.plane", "mesh.create_plane"},
+      {"context.create_menu.platonic", "mesh.create_icosphere"},
+      {"context.create_menu.pyramid", "mesh.create_pyramid"},
+      {"context.create_menu.prism", "mesh.create_prism"},
+      {"context.create_menu.type", "object.create_text"},
+      {"context.create_menu.polygon_display_all.backface_culling", "display.backface_culling"},
+  };
+  for (const auto &[row, allowed] : entries) {
+    if (id == row && command == allowed) { return true; }
+  }
+  return false;
+}
 
 struct ObjectMenuCommand {
   std::string_view row, command, options;

@@ -74,7 +74,7 @@ class HotboxCatalogTest(unittest.TestCase):
 
     def test_catalog_has_canonical_rows_and_top_level_order(self):
         catalog = default_catalog()
-        self.assertEqual([row['id'] for row in catalog], ['common', 'pane', 'center', 'modeling', 'context.modeling_object_menu'])
+        self.assertEqual([row['id'] for row in catalog], ['common', 'pane', 'center', 'modeling', 'context.modeling_object_menu', 'context.create_menu'])
         expected = {
             'common': ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows'],
             'pane': ['View', 'Shading', 'Lighting', 'Show', 'Renderer', 'Panels'],
@@ -289,7 +289,7 @@ class HotboxCatalogTest(unittest.TestCase):
         self.assertEqual(parsed['generation'], 7)
         self.assertEqual(parsed['settings']['transparency'], 25)
         self.assertEqual([row['id'] for row in parsed['menus']],
-                         ['common', 'pane', 'center', 'modeling', 'context.modeling_object_menu'])
+                         ['common', 'pane', 'center', 'modeling', 'context.modeling_object_menu', 'context.create_menu'])
         parsed['settings']['center_buttons']['RIGHTMOUSE'] = None
         parsed['menus'][0]['children'][0]['label'] = 'Changed'
         second = hotbox_runtime.make_snapshot(generation=8)
@@ -363,8 +363,8 @@ class HotboxCatalogTest(unittest.TestCase):
             hotbox_runtime.validate_snapshot(too_many)
 
         too_large = hotbox_runtime.make_snapshot(generation=1)
-        node_by_id(too_large['menus'], 'common.file')['reason'] = 'x' * (256 * 1024)
-        with self.assertRaisesRegex(ValueError, '256 KiB'):
+        node_by_id(too_large['menus'], 'common.file')['reason'] = 'x' * (512 * 1024)
+        with self.assertRaisesRegex(ValueError, '512 KiB'):
             hotbox_runtime.serialize_snapshot(too_large)
 
 

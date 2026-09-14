@@ -90,6 +90,11 @@ def suite():
     outer = {'N': (0, 260), 'NE': (280, 32), 'E': (280, 0), 'SE': (280, -32),
              'S': (0, -260), 'SW': (-280, -32), 'W': (-280, 0), 'NW': (-280, 32)}
 
+    # Actual create-s-extended-before-release.png proves the old S=-260
+    # target is now Soccer Ball. The ring-to-list gap is also an intentional
+    # no-marking corridor. Release S on Cube; retain long outside strokes
+    # for every other direction and verify companion cancellation separately.
+
     def begin(trigger='RIGHTMOUSE', required_shift=True, required_ctrl=False):
         event('MOUSEMOVE', 'NOTHING', (0, 0))
         yield from settle()
@@ -115,7 +120,7 @@ def suite():
         yield from begin(trigger, required_shift, required_ctrl)
         event('MOUSEMOVE', 'NOTHING', targets[direction], shift=required_shift, ctrl=required_ctrl)
         yield from settle()
-        if extend:
+        if extend and direction != 'S':
             start, end = targets[direction], outer[direction]
             for t in (.25, .5, .75, 1):
                 event('MOUSEMOVE', 'NOTHING', tuple(a + (b-a)*t for a, b in zip(start, end)),
@@ -173,7 +178,7 @@ def suite():
             check(bpy.ops.ed.undo() == {'FINISHED'}, kind + ' undo was not available')
         yield from settle()
         check(scene_state() == before, kind + ' one undo must restore the pre-action scene')
-    print('PASS seven directions, outward strokes, actual primitive geometry, cursor and one undo', flush=True)
+    print('PASS seven directions; six unobstructed outward strokes and S main-row release; actual primitive geometry, cursor and one undo', flush=True)
 
     # Torus is the documented native exception: its Python operator has no
     # enter_editmode RNA property. Preserve the user's preference and one undo.
@@ -336,9 +341,9 @@ def suite():
     event('MOUSEMOVE', 'NOTHING')
     yield from settle()
     screenshot('create-space-existing-selection.png')
-    # The tool ring is anchored at this entry; straight down remains Cube even
-    # after clamping/outer extension, and release must create once before Space up.
-    pos[1] -= int(160*scale)
+    # Release on the actual Cube row, 64px below this ring entry. The old
+    # 160px extension now enters the simultaneous companion list.
+    pos[1] -= int(64*scale)
     event('MOUSEMOVE', 'NOTHING')
     yield from settle()
     event('LEFTMOUSE', 'RELEASE')

@@ -76,6 +76,59 @@ static bool separated_by(const MenuRect &a, const MenuRect &b, const float dista
          a.y >= b.y + b.height + distance || b.y >= a.y + a.height + distance;
 }
 
+TEST(axismeld_hotbox_menu, NativeSeparatorsUseSixPixelGeometryAndKeepAllRowsReachable)
+{
+  auto snapshot = default_snapshot();
+  MenuNode list{"fixture.thin", "Thin list", "", "", "", MenuKind::Menu, true};
+  list.presentation = "list";
+  for (int i = 0; i < 20; i++) {
+    list.children.push_back({"fixture.row" + std::to_string(i), "Action", "view.front", "", "", MenuKind::Command, true});
+    list.children.push_back({"fixture.sep" + std::to_string(i), "", "", "", "", MenuKind::Separator, false});
+  }
+  snapshot.menus[0].children.push_back(list);
+  snapshot.center_buttons[0] = list.id;
+  const auto widths = measured(snapshot);
+  std::set<std::string> reached;
+  for (int offset = 0; offset < 40; offset++) {
+    const auto layout = layout_menu(snapshot, 600, 320, 300, 160,
+                                    {"center", list.id}, {{list.id, offset}}, widths);
+    ASSERT_TRUE(layout.supported);
+    for (const auto &item : layout.rects) {
+      if (!item.id.starts_with("fixture.")) { continue; }
+      const bool separator = item.id.starts_with("fixture.sep");
+      EXPECT_EQ(item.height, separator ? 6 : 24) << item.id;
+      EXPECT_GE(item.y, 12); EXPECT_LE(item.y + item.height, 308);
+      EXPECT_EQ(hit_menu(layout, item.x + item.width / 2, item.y + item.height / 2),
+                separator ? "" : item.id);
+      reached.insert(item.id);
+    }
+  }
+  for (const auto &child : list.children) { EXPECT_TRUE(reached.contains(child.id)) << child.id; }
+}
+
+TEST(axismeld_hotbox_menu, CreationCompanionUsesThinSeparatorsAndIndependentPath)
+{
+  auto snapshot = default_snapshot();
+  MenuNode list{"context.create_menu", "Create menu", "", "", "", MenuKind::Menu, true};
+  list.presentation = "list";
+  list.children = {{"fixture.create.a", "Create A", "mesh.create_cube", "", "", MenuKind::Command, true},
+                   {"fixture.create.sep", "", "", "", "", MenuKind::Separator, false},
+                   {"fixture.create.b", "Create B", "mesh.create_plane", "", "", MenuKind::Command, true}};
+  std::erase_if(snapshot.menus, [&](const MenuNode &node) { return node.id == list.id; });
+  snapshot.menus.push_back(list);
+  const auto layout = layout_menu(snapshot, 1200, 900, 600, 550, {"context.create"}, {},
+                                  measured(snapshot), nullptr, "context.create");
+  ASSERT_TRUE(layout.supported);
+  const auto *a = rect(layout, "fixture.create.a"), *separator = rect(layout, "fixture.create.sep"),
+             *b = rect(layout, "fixture.create.b");
+  ASSERT_NE(a, nullptr); ASSERT_NE(separator, nullptr); ASSERT_NE(b, nullptr);
+  EXPECT_TRUE(a->companion); EXPECT_EQ(separator->height, 6);
+  EXPECT_EQ(a->y, separator->y + separator->height);
+  EXPECT_EQ(separator->y, b->y + b->height);
+  EXPECT_EQ(hit_marking_menu_rect(layout, "context.create", separator->x + 5, separator->y + 3), nullptr);
+  EXPECT_NE(hit_marking_menu_rect(layout, "context.create", 1190, 550), nullptr);
+}
+
 TEST(axismeld_hotbox_menu, ObjectCompanionIsVisibleWithoutStealingRadialAndOptionsAreSeparate)
 {
   auto snapshot = default_snapshot();
@@ -104,6 +157,79 @@ TEST(axismeld_hotbox_menu, ObjectCompanionIsVisibleWithoutStealingRadialAndOptio
   EXPECT_EQ(hit_menu(layout, cell->x + 12, cell->y + 12), option.id);
   EXPECT_NE(hit_marking_menu_rect(layout, "context.modeling_object", 1100, 550), nullptr);
   EXPECT_EQ(hit_marking_menu_rect(layout, "context.modeling_object", cell->x + 12, cell->y + 12), nullptr);
+}
+
+TEST(axismeld_hotbox_menu, CreationCompanionAndRadialCommandAdmissionStayExact)
+{
+  EXPECT_TRUE(creation_allows_command("context.create_menu.type", "object.create_text"));
+  EXPECT_TRUE(creation_allows_command("context.create_menu.pyramid", "mesh.create_pyramid"));
+  EXPECT_TRUE(creation_allows_command("context.create_menu.polygon_display_all.backface_culling", "display.backface_culling"));
+  EXPECT_FALSE(creation_allows_command("context.create_menu.pyramid.options", "mesh.create_pyramid"));
+  EXPECT_FALSE(creation_allows_command("context.create_menu.pyramid", "mesh.create_cube"));
+  EXPECT_FALSE(creation_allows_command("context.create.fake", "mesh.create_fake"));
+  EXPECT_FALSE(creation_allows_command("context.create_menu.type", "wm.open_mainfile"));
+  const auto snapshot = default_snapshot();
+  visit(snapshot.menus, [&](const MenuNode &node) {
+    if ((node.id.starts_with("context.create.") || node.id.starts_with("context.create_menu.")) &&
+        node.kind == MenuKind::Command) {
+      EXPECT_TRUE(creation_allows_command(node.id, node.command)) << node.id;
+    }
+  });
+}
+
+TEST(axismeld_hotbox_menu, RadialOptionsPreserveCombinedInnerEdgesAndCannotRunTheirMainAction)
+{
+  auto snapshot = default_snapshot();
+  const auto find_mutable = [&](auto &&self, std::vector<MenuNode> &nodes, const std::string &id) -> MenuNode * {
+    for (auto &node : nodes) {
+      if (node.id == id) { return &node; }
+      if (auto *found = self(self, node.children, id)) { return found; }
+    }
+    return nullptr;
+  };
+  for (const auto root : {creation_root, object_modeling_root}) {
+    auto *node = find_mutable(find_mutable, snapshot.menus, std::string(root));
+    ASSERT_NE(node, nullptr);
+    for (const std::string direction : {"N", "E", "S", "W"}) {
+      SCOPED_TRACE(std::string(root) + " " + direction);
+      auto found = std::find_if(node->children.begin(), node->children.end(), [&](const MenuNode &item) {
+        return item.direction == direction;
+      });
+      ASSERT_NE(found, node->children.end());
+      auto &leaf = *found;
+      leaf.children.clear();
+      const auto before = layout_menu(snapshot, 1800, 1600, 900, 950, {std::string(root)}, {}, measured(snapshot), nullptr, root);
+      leaf.children = {{leaf.id + ".options", "Options", "", "Unavailable", "", MenuKind::Disabled, false}};
+      const auto after = layout_menu(snapshot, 1800, 1600, 900, 950, {std::string(root)}, {}, measured(snapshot), nullptr, root);
+      ASSERT_TRUE(before.supported); ASSERT_TRUE(after.supported);
+      const auto *old = rect(before, leaf.id), *main = rect(after, leaf.id), *option = rect(after, leaf.id + ".options");
+      ASSERT_NE(old, nullptr); ASSERT_NE(main, nullptr); ASSERT_NE(option, nullptr);
+      EXPECT_EQ(option->width, 24); EXPECT_EQ(option->height, 24);
+      EXPECT_EQ(main->width, old->width);
+      EXPECT_EQ(main->x + main->width, option->x);
+      EXPECT_EQ(main->y, option->y);
+      if (direction == "W") {
+        EXPECT_EQ(old->x + old->width, option->x + option->width);
+      }
+      else if (direction == "E") {
+        EXPECT_EQ(old->x, main->x);
+      }
+      else {
+        EXPECT_EQ(old->x + old->width / 2, (main->x + option->x + option->width) / 2);
+      }
+      // Check interior pixels across the entire independent cell, not only its center.
+      for (const float x : {0.5f, 12.0f, 23.5f}) {
+        const auto *hit = hit_menu_rect(after, option->x + x, option->y + 12);
+        ASSERT_NE(hit, nullptr);
+        EXPECT_EQ(hit->id, option->id);
+        EXPECT_TRUE(hit->option_box);
+        EXPECT_EQ(hit_menu(after, option->x + x, option->y + 12), "");
+      }
+      const auto *main_hit = hit_menu_rect(after, main->x + main->width / 2, main->y + 12);
+      ASSERT_NE(main_hit, nullptr);
+      EXPECT_EQ(main_hit->id, leaf.id);
+    }
+  }
 }
 
 TEST(axismeld_hotbox_menu, ObjectCompanionCatalogUsesExactMainAndOptionPairs)
@@ -216,6 +342,21 @@ TEST(axismeld_hotbox_menu, ObjectDirectRootHasOnlyFixedToolsAndDisabledMayaDirec
     if (child.kind == MenuKind::Command) {
       EXPECT_TRUE(modeling_root_allows_command(root->id, child.command));
       actual.insert(child.command);
+    }
+    else if (child.direction == "SE") {
+      EXPECT_EQ(child.kind, MenuKind::Menu);
+      EXPECT_EQ(child.presentation, "list");
+      ASSERT_EQ(child.children.size(), 4);
+      const std::array<std::string, 4> suffixes = {"display", "harden", "angle", "soften"};
+      for (size_t i = 0; i < suffixes.size(); i++) {
+        EXPECT_EQ(child.children[i].id, child.id + "." + suffixes[i]);
+        EXPECT_EQ(child.children[i].kind, MenuKind::Disabled);
+        EXPECT_FALSE(child.children[i].enabled);
+        EXPECT_TRUE(child.children[i].command.empty());
+      }
+      ASSERT_EQ(child.children[2].children.size(), 1);
+      EXPECT_EQ(child.children[2].children[0].id, child.id + ".angle.options");
+      EXPECT_FALSE(child.children[2].children[0].enabled);
     }
     else {
       EXPECT_EQ(child.kind, MenuKind::Disabled);
@@ -486,12 +627,25 @@ TEST(axismeld_hotbox_menu, EveryRadialMatchesViewsHorizontalClearanceAndCenterCa
           for (const MenuNode &node : owner->children) {
             const auto *item = rect(layout, node.id);
             ASSERT_NE(item, nullptr);
-            compare_inner_edge(*item, node.direction);
+            MenuRect combined = *item;
+            if (node.kind != MenuKind::Menu && !node.children.empty()) {
+              const auto *option = rect(layout, node.id + ".options");
+              ASSERT_NE(option, nullptr);
+              EXPECT_TRUE(option->option_box);
+              EXPECT_EQ(option->width, 24); EXPECT_EQ(option->height, 24);
+              EXPECT_EQ(option->x, item->x + item->width);
+              EXPECT_EQ(option->y, item->y);
+              EXPECT_EQ(hit_menu(layout, option->x + 12, option->y + 12), "");
+              combined.width += option->width;
+            }
+            // Maya centers the complete label+parameter-box group, not the label cell.
+            // This checks the actual closest painted/hittable edge without relaxing it.
+            compare_inner_edge(combined, node.direction);
             EXPECT_FLOAT_EQ(item->width, std::max(84.0f, widths.at(node.id) +
                                            (node.kind == MenuKind::Menu ? 60 : 16)));
             EXPECT_FLOAT_EQ(item->height, 24);
             EXPECT_GE(item->x, 12);
-            EXPECT_LE(item->x + item->width, size[0] - 12);
+            EXPECT_LE(combined.x + combined.width, size[0] - 12);
             EXPECT_GE(item->y, 12);
             EXPECT_LE(item->y + item->height, size[1] - 12);
             const auto *hit = hit_marking_menu_rect(layout, owner->id,
@@ -535,11 +689,24 @@ TEST(axismeld_hotbox_menu, NarrowRadialsRejectAtomicallyInsteadOfReducingViewsCl
                                    {owner}, {}, widths, nullptr, owner);
     ASSERT_TRUE(roomy.supported) << owner;
   }
-  for (const std::string owner : {"context.components", "context.create", "tools.move.axis"}) {
+  for (const std::string owner : {"context.components", "tools.move.axis"}) {
     const auto narrow = layout_menu(snapshot, 392, 210, 196, 105,
                                     {owner}, {}, widths, nullptr, owner);
     EXPECT_TRUE(narrow.supported) << owner;
   }
+  // Eight creation parameter cells increase the complete ring width beyond 392px.
+  // Preserve the same Views clearances and reject the whole composition atomically.
+  const auto creation = layout_menu(snapshot, 392, 210, 196, 105,
+                                    {"context.create"}, {}, widths, nullptr, "context.create");
+  EXPECT_FALSE(creation.supported);
+  EXPECT_TRUE(creation.rects.empty());
+  EXPECT_TRUE(creation.return_regions.empty());
+  EXPECT_TRUE(creation.marking_gaps.empty());
+  EXPECT_TRUE(creation.occlusion_regions.empty());
+  const auto roomy = layout_menu(snapshot, 480, 320, 240, 160,
+                                 {"context.create"}, {}, widths, nullptr, "context.create");
+  EXPECT_TRUE(roomy.supported);
+  EXPECT_NE(rect(roomy, "context.create_menu.platonic"), nullptr);
 }
 
 TEST(axismeld_hotbox_menu, WideRadialChildCenterAndOutwardHitsIgnoreHiddenAncestors)
@@ -1959,10 +2126,11 @@ TEST(axismeld_hotbox_menu, RealDefaultTreeHasClickablePathsAtCornersAndCenter)
                    std::unordered_map<std::string, int> offsets, const bool companion) {
         for (int scroll = 0; scroll < int(nodes.size()); scroll++) {
           offsets[owner] = scroll;
+          const auto radial_root = !path.empty() && path.front() == creation_menu ? creation_root : object_modeling_root;
           const auto layout = companion ?
               layout_menu(snapshot, size[0], size[1], point[0], point[1],
-                          {std::string(object_modeling_root)}, offsets, widths, nullptr,
-                          object_modeling_root, path) :
+                          {std::string(radial_root)}, offsets, widths, nullptr,
+                          radial_root, path) :
               layout_menu(snapshot, size[0], size[1], point[0], point[1], path, offsets, widths);
           ASSERT_TRUE(layout.supported);
           for (const auto &item : layout.rects) {
@@ -2024,8 +2192,8 @@ TEST(axismeld_hotbox_menu, RealDefaultTreeHasClickablePathsAtCornersAndCenter)
         }
       };
       for (const MenuNode &row : snapshot.menus) {
-        if (row.id == object_modeling_menu) {
-          // This catalog root has no duplicate Space title; its real entry is the Object ring.
+        if (row.id == object_modeling_menu || row.id == creation_menu) {
+          // Companion roots enter only through their associated radial tool roots.
           browse(row.children, row.id, {row.id}, {}, true);
         }
         else {

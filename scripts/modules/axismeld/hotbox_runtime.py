@@ -8,7 +8,7 @@ from threading import Lock
 
 from .commands import COMMANDS, PRESET_NAME
 from .tool_hotbox import DIRECTIONS, MENU_COMMANDS
-from .creation_hotbox import CREATE_COMMANDS
+from .creation_hotbox import CREATE_COMMANDS, CREATE_ROOT, CREATE_MENU, CREATE_WORKFLOW_INDICATORS
 from .context_modeling_hotbox import modeling_root
 from .object_modeling_hotbox import (OBJECT_ROOT, OBJECT_MENU, OBJECT_TOOLS, OBJECT_ACTION_COMMANDS,
                                      OBJECT_MENU_COMMANDS, OBJECT_OPTION_COMMANDS, object_modeling_targets)
@@ -21,7 +21,7 @@ from .hotbox_profiles import (CANONICAL_ROWS, DEFAULT_APPEARANCE, DEFAULT_SETTIN
 
 MAX_NODES = 2048
 MAX_DEPTH = 8
-MAX_JSON_BYTES = 256 * 1024
+MAX_JSON_BYTES = 512 * 1024
 MAX_TEXT = 128
 NODE_KINDS = frozenset({'menu', 'command', 'separator', 'disabled', 'setting'})
 NODE_FIELDS = frozenset({'id', 'kind', 'label', 'command', 'enabled', 'reason', 'children'})
@@ -312,8 +312,9 @@ def validate_snapshot(value):
     if not all(isinstance(node, dict) for node in menus):
         raise ValueError('root menu groups must be objects')
     canonical = ['common', 'pane', 'center', 'modeling']
-    if [node.get('id') for node in menus] not in (canonical, [*canonical, OBJECT_MENU]):
-        raise ValueError('root menus must be common, pane, center and modeling, optionally followed by the Object companion')
+    if [node.get('id') for node in menus] not in (canonical, [*canonical, OBJECT_MENU],
+                                                [*canonical, OBJECT_MENU, CREATE_MENU]):
+        raise ValueError('root menus must be canonical, optionally followed by Object and creation companions')
     if not all(node.get('kind') == 'menu' for node in menus):
         raise ValueError('root menu groups must have menu kind')
 
@@ -350,7 +351,10 @@ def validate_snapshot(value):
 
         kind = node['kind']
         if 'indicator' in node or 'checked' in node:
-            if (kind != 'command' or node.get('indicator') not in {'radio', 'checkbox'} or
+            disabled_workflow = (kind == 'disabled' and identifier in CREATE_WORKFLOW_INDICATORS and
+                                 node.get('indicator') == 'checkbox' and node.get('enabled') is False and
+                                 node.get('command') == '')
+            if ((kind != 'command' and not disabled_workflow) or node.get('indicator') not in {'radio', 'checkbox'} or
                     type(node.get('checked')) is not bool):
                 raise ValueError('Invalid read-only command indicator')
         if not isinstance(kind, str) or kind not in NODE_KINDS:
@@ -444,7 +448,7 @@ def serialize_snapshot(value):
     except (TypeError, ValueError, RecursionError) as error:
         raise ValueError(f'snapshot is not JSON serializable: {error}') from error
     if len(payload.encode('utf-8')) > MAX_JSON_BYTES:
-        raise ValueError('snapshot exceeds 256 KiB')
+        raise ValueError('snapshot exceeds 512 KiB')
     return payload
 
 
@@ -518,7 +522,8 @@ def _apply_runtime_capabilities(context, menus):
             if not object_modeling_targets(context):
                 enabled, reason = False, 'Select eligible Mesh Objects first; this action does not commit pointer preselection'
         node['enabled'] = bool(enabled)
-        node['reason'] = (node['reason'] if identifier.startswith((OBJECT_MENU + '.', OBJECT_ROOT + '.')) else '') if enabled else _CAPABILITY_REASONS.get(str(reason), str(reason))
+        node['reason'] = (node['reason'] if identifier.startswith((OBJECT_MENU + '.', OBJECT_ROOT + '.',
+                                                                  CREATE_MENU + '.', CREATE_ROOT + '.')) else '') if enabled else _CAPABILITY_REASONS.get(str(reason), str(reason))
         if node['command'] in MODELING_SPECS:
             state = adapter.modeling_adapter.command_state(context, node['command'])
             if state is not None:

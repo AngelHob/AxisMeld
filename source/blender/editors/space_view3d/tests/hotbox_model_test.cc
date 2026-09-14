@@ -366,7 +366,7 @@ TEST(hotbox_model, InvalidInputIsAtomic)
 {
   for (const std::string input : {std::string("{"),
                                   std::string("null"),
-                                  std::string(256 * 1024 + 1, ' '),
+                                  std::string(512 * 1024 + 1, ' '),
                                   std::string(R"({"schema_version":true})")})
   {
     MenuSnapshot out{};
@@ -378,6 +378,39 @@ TEST(hotbox_model, InvalidInputIsAtomic)
     EXPECT_EQ(out.style, "sentinel");
     EXPECT_FALSE(error.empty());
   }
+}
+
+TEST(hotbox_model, CreationCompanionIsOnlyTheFixedSixthRootAndWorkflowStateIsReadOnly)
+{
+  const std::string state = R"({"id":"context.create_menu.exit_on_completion","kind":"disabled","label":"Exit On Completion","command":"","enabled":false,"reason":"Not implemented","indicator":"checkbox","checked":true,"children":[]})";
+  const auto list = [&](const std::string &id, const std::string &children) {
+    return replace(menu(id, children), "\"children\":", "\"presentation\":\"list\",\"children\":");
+  };
+  std::string valid = snapshot();
+  valid.insert(valid.size() - 2, "," + list("context.modeling_object_menu", "") + "," + list("context.create_menu", state));
+  MenuSnapshot out{};
+  std::string error;
+  EXPECT_TRUE(parse_menu_snapshot(valid, out, error)) << error;
+  for (const auto &invalid : {
+      replace(valid, "context.create_menu\",", "context.create_menu_extra\","),
+      replace(valid, "\"indicator\":\"checkbox\"", "\"indicator\":\"radio\""),
+      replace(valid, "context.create_menu.exit_on_completion", "unrelated.disabled"),
+      replace(valid, "\"enabled\":false", "\"enabled\":true")}) {
+    EXPECT_FALSE(parse_menu_snapshot(invalid, out, error));
+  }
+}
+
+TEST(hotbox_model, ExtendedSnapshotByteLimitStillRejectsOversizeAtomically)
+{
+  auto json = snapshot();
+  json.append(512 * 1024 - json.size(), ' ');
+  MenuSnapshot out{};
+  std::string error;
+  EXPECT_TRUE(parse_menu_snapshot(json, out, error));
+  out.generation = 91;
+  json += ' ';
+  EXPECT_FALSE(parse_menu_snapshot(json, out, error));
+  EXPECT_EQ(out.generation, 91);
 }
 
 TEST(hotbox_model, TrailingContentIsRejectedAtomically)

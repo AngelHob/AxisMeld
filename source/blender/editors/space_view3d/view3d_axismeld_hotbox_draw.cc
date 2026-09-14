@@ -19,7 +19,8 @@ namespace blender::axismeld {
 namespace {
 int menu_radio_icon(const MenuSnapshot &snapshot, const MenuNode &node)
 {
-  if (node.kind == MenuKind::Command && node.indicator == "checkbox") {
+  if ((node.kind == MenuKind::Command || node.kind == MenuKind::Disabled) &&
+      node.indicator == "checkbox") {
     return node.checked ? ICON_CHECKBOX_HLT : ICON_CHECKBOX_DEHLT;
   }
   switch (menu_radio_state(snapshot, node)) {
@@ -278,8 +279,9 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
     const ui::FontStyleDrawParams params{ui::UI_STYLE_TEXT_CENTER, 0, false};
     ui::fontstyle_draw(&style, &text_rect, entry.text.c_str(), entry.text.size(), color, &params);
   }
-  // Standalone hotbox entries are separate native blocks. Native submenu and leaf rows
-  // stay in one block so their backgrounds remain continuous.
+  // Standalone hotbox entries and Options cells are separate native blocks. An Options
+  // column's union backdrop would cover submenu arrows on intervening rows without Options.
+  // Native submenu and leaf rows stay in one block so their backgrounds remain continuous.
   struct NativeBlock {
     bool standalone;
     std::vector<ui::MenuOverlayItem> items;
@@ -298,7 +300,7 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
                                 ICON_TRIA_DOWN :
                                 ICON_NONE;
       auto &blocks = menu_levels[r.depth];
-      const bool standalone = r.native_menu_standalone || !r.native_menu;
+      const bool standalone = r.option_box || r.native_menu_standalone || !r.native_menu;
       if (standalone || blocks.empty() || blocks.back().standalone) {
         blocks.push_back({standalone, {}});
       }

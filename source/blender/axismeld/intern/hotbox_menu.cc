@@ -201,34 +201,80 @@ class LayoutBuilder {
     return w;
   }
 
-  void companion_rows(const MenuNode &owner, const float x, const float top, const float w,
-                      const int capacity, const int depth, const std::string &next)
+  static float native_row_height(const MenuNode &node)
   {
+    return node.kind == MenuKind::Separator ? 6.0f : secondary_height;
+  }
+
+  struct NativePage {
+    int first = 0, end = 0, maximum_first = 0;
+    float height = 0;
+    bool paged = false;
+  };
+
+  NativePage native_page(const MenuNode &owner, const float room, const std::string &next) const
+  {
+    NativePage page;
     const int count = int(owner.children.size());
-    const bool paged = capacity < count;
-    int first = paged ? std::min(offset(owner.id, count), count - capacity) : 0;
+    float total = 0;
+    for (const auto &node : owner.children) { total += native_row_height(node); }
+    if (total <= room) { page.end = count; page.height = total; return page; }
+    page.paged = true;
+    const float content_room = room - 2 * secondary_height;
+    if (content_room <= 0) { return page; }
+    float suffix_height = 0;
+    page.maximum_first = count;
+    while (page.maximum_first > 0 &&
+           suffix_height + native_row_height(owner.children[page.maximum_first - 1]) <= content_room) {
+      suffix_height += native_row_height(owner.children[--page.maximum_first]);
+    }
+    if (page.maximum_first == count) { return page; }
+    page.first = std::min(offset(owner.id, count), page.maximum_first);
+    const auto end_of_page = [&](const int first) {
+      int end = first;
+      float used = 0;
+      while (end < count && used + native_row_height(owner.children[end]) <= content_room) {
+        used += native_row_height(owner.children[end++]);
+      }
+      return end;
+    };
     for (int i = 0; i < count; i++) {
       if (owner.children[i].id == next) {
-        first = std::clamp(first, std::max(0, i - capacity + 1), i);
+        page.first = std::min(page.first, i);
+        while (end_of_page(page.first) <= i && page.first < page.maximum_first) { page.first++; }
+        break;
       }
     }
-    result.native_scroll_bounds[owner.id] = {first, count - capacity};
-    int row = 0;
-    const auto add_row = [&](const std::string &id, const bool enabled) {
-      MenuRect item{id, x, top - (++row) * secondary_height, w, secondary_height, depth, enabled};
-      item.native_menu = item.companion = true;
+    page.end = end_of_page(page.first);
+    page.height = 2 * secondary_height;
+    for (int i = page.first; i < page.end; i++) { page.height += native_row_height(owner.children[i]); }
+    return page;
+  }
+
+  void native_rows(const MenuNode &owner, const float x, const float top, const float w,
+                   const NativePage &page, const int depth, const bool companion)
+  {
+    result.native_scroll_bounds[owner.id] = {page.first, page.maximum_first};
+    float y = top;
+    const auto add_row = [&](const std::string &id, const bool enabled, const float h) {
+      y -= h;
+      MenuRect item{id, x, y, w, h, depth, enabled};
+      item.native_menu = true;
+      item.companion = companion;
       item.owner = owner.id;
       result.rects.push_back(std::move(item));
     };
-    if (paged) { add_row("@scroll:" + owner.id + ":previous", first > 0); }
-    for (int i = first; i < first + capacity; i++) {
-      add_row(owner.children[i].id, interactive(owner.children[i]));
+    if (page.paged) { add_row("@scroll:" + owner.id + ":previous", page.first > 0, secondary_height); }
+    for (int i = page.first; i < page.end; i++) {
+      add_row(owner.children[i].id, interactive(owner.children[i]), native_row_height(owner.children[i]));
     }
-    if (paged) { add_row("@scroll:" + owner.id + ":next", first + capacity < count); }
-    MenuRect block{"", x, top - row * secondary_height, w, row * secondary_height, depth, false};
-    block.companion = true;
-    block.owner = owner.id;
-    result.occlusion_regions.push_back(std::move(block));
+    if (page.paged) { add_row("@scroll:" + owner.id + ":next", page.first < page.maximum_first, secondary_height); }
+    if (companion) {
+      MenuRect block{"", x, y, w, top - y, depth, false};
+      block.companion = true;
+      block.owner = owner.id;
+      result.occlusion_regions.push_back(std::move(block));
+    }
   }
 
   /* Append after all radial layout: ellipse rebuilding must never erase the companion. */
@@ -246,41 +292,34 @@ class LayoutBuilder {
     const float w = native_width(owner);
     if (w > width - 2 * margin || left > right) { result.supported = false; return; }
     const int count = int(owner.children.size());
-    const auto capacity_for = [&](const float room, const int total) {
-      const int rows = std::max(0, int(room / secondary_height));
-      return rows >= total ? total : std::max(0, rows - 2);
-    };
-    float x = std::clamp((left + right - w) / 2, margin, width - margin - w);
-    float list_top = bottom - margin;
-    int capacity = capacity_for(list_top - margin, count);
-    if (capacity < std::min(count, 3)) {
-      const float side_x = right + margin + w <= width - margin ? right + margin : left - margin - w;
-      if (side_x >= margin && side_x + w <= width - margin) {
-        x = side_x;
-        capacity = capacity_for(height - 2 * margin, count);
-        const int rows = capacity + (capacity < count ? 2 : 0);
-        list_top = std::clamp(top, margin + rows * secondary_height, height - margin);
-      }
-      else if (capacity == 0) {
-        // Shift the complete ring upward to make room; its internal geometry never changes.
-        const int rows = 1 + (count > 1 ? 2 : 0);
-        const float dy = margin + rows * secondary_height + margin - bottom;
-        if (top + dy > height - margin) { result.supported = false; return; }
-        for (auto *rects : {&result.rects, &result.return_regions, &result.marking_gaps}) {
-          for (auto &item : *rects) {
-            if (item.depth > 0) { item.y += dy; }
-          }
-        }
-        bottom += dy;
-        list_top = bottom - margin;
-        capacity = capacity_for(list_top - margin, count);
-      }
-    }
-    if (capacity < 1) { result.supported = false; return; }
     const auto next_id = [&](const size_t index) -> std::string {
       return index < companion_path.size() ? companion_path[index] : "";
     };
-    companion_rows(owner, x, list_top, w, capacity, base_depth, next_id(1));
+    float x = std::clamp((left + right - w) / 2, margin, width - margin - w);
+    float list_top = bottom - margin;
+    auto page = native_page(owner, list_top - margin, next_id(1));
+    if (page.end - page.first < std::min(count, 3)) {
+      const float side_x = right + margin + w <= width - margin ? right + margin : left - margin - w;
+      if (side_x >= margin && side_x + w <= width - margin) {
+        x = side_x;
+        page = native_page(owner, height - 2 * margin, next_id(1));
+        list_top = std::clamp(top, margin + page.height, height - margin);
+      }
+      else if (page.end == page.first) {
+        // Keep ring geometry intact while making room for one content row and paging.
+        const float room = secondary_height * (count > 1 ? 3 : 1);
+        const float dy = margin + room + margin - bottom;
+        if (top + dy > height - margin) { result.supported = false; return; }
+        for (auto *rects : {&result.rects, &result.return_regions, &result.marking_gaps}) {
+          for (auto &item : *rects) { if (item.depth > 0) { item.y += dy; } }
+        }
+        bottom += dy;
+        list_top = bottom - margin;
+        page = native_page(owner, list_top - margin, next_id(1));
+      }
+    }
+    if (page.end == page.first) { result.supported = false; return; }
+    native_rows(owner, x, list_top, w, page, base_depth, true);
     // The short gap from the ring to the main list is an intentional no-marking corridor.
     if (list_top < bottom && x < right && x + w > left) {
       result.occlusion_regions.push_back({"", x, list_top, w, bottom - list_top, base_depth, false});
@@ -294,13 +333,13 @@ class LayoutBuilder {
       const float child_w = native_width(*child);
       const int child_count = int(child->children.size());
       if (child_count == 0 || child_w > width - 2 * margin) { break; }
-      const int child_capacity = capacity_for(height - 2 * margin, child_count);
-      if (child_capacity < 1) { break; }
-      const float h = (child_capacity + (child_capacity < child_count ? 2 : 0)) * secondary_height;
+      const auto child_page = native_page(*child, height - 2 * margin, next_id(index + 1));
+      if (child_page.end == child_page.first) { break; }
+      const float h = child_page.height;
       float child_x, child_y;
       if (!native_popup_position(anchor, child_w, h, true, child_x, child_y)) { break; }
-      companion_rows(*child, child_x, child_y + h, child_w, child_capacity,
-                     base_depth + int(index), next_id(index + 1));
+      native_rows(*child, child_x, child_y + h, child_w, child_page,
+                  base_depth + int(index), true);
       // Keep native cascade transit spatially owned, including its disabled/empty areas.
       const float corridor_left = child_x >= anchor.x ? anchor.x + anchor.width : child_x + child_w;
       const float corridor_right = child_x >= anchor.x ? child_x : anchor.x;
@@ -814,44 +853,16 @@ class LayoutBuilder {
         return;
       }
 
-      const int count = int(owner.children.size());
-      const int minimum_capacity = 1;
-      for (int capacity = count; capacity >= minimum_capacity; capacity--) {
-        const bool paged = capacity < count;
-        const float h = (capacity + (paged ? 2 : 0)) * secondary_height;
-        if (h > height - 2 * margin) {
-          continue;
-        }
+      // Try actual pixel heights, not a count of uniform rows. This keeps separator
+      // geometry, page bounds, hit testing and cascade anchors in agreement.
+      for (float room = height - 2 * margin; room >= 6; room -= 6) {
+        const auto page = native_page(owner, room, next);
+        if (page.end == page.first) { continue; }
         float x, y;
-        if (!native_popup_position(anchor, w, h, owner.id == "views.style", x, y)) {
+        if (!native_popup_position(anchor, w, page.height, owner.id == "views.style", x, y)) {
           continue;
         }
-
-        int first = paged ? std::min(offset(owner.id, count), count - capacity) : 0;
-        for (int i = 0; i < count; i++) {
-          if (owner.children[i].id == next) {
-            first = std::clamp(first, std::max(0, i - capacity + 1), i);
-          }
-        }
-        result.native_scroll_bounds[owner.id] = {first, count - capacity};
-        int row = 0;
-        auto add_native_row = [&](const std::string &id, const bool enabled) {
-          result.rects.push_back(
-              {id, x, y + h - (row + 1) * secondary_height, w, secondary_height, depth, enabled});
-          result.rects.back().native_menu = true;
-          row++;
-        };
-        if (paged) {
-          add_native_row("@scroll:" + owner.id + ":previous", first > 0);
-        }
-        for (int i = first; i < first + capacity; i++) {
-          add(owner.children[i], x, y + h - (row + 1) * secondary_height, w, depth);
-          result.rects.back().native_menu = true;
-          row++;
-        }
-        if (paged) {
-          add_native_row("@scroll:" + owner.id + ":next", first + capacity < count);
-        }
+        native_rows(owner, x, y + page.height, w, page, depth, false);
         return;
       }
 
@@ -1033,8 +1044,8 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
                            std::find(open_path.begin(), open_path.end(), item.id) ==
                                open_path.end();
     }
-    if (tool_root == object_modeling_root) {
-      if (const MenuNode *companion = find_node(snapshot.menus, std::string(object_modeling_menu))) {
+    if (const auto companion_id = companion_root(tool_root); !companion_id.empty()) {
+      if (const MenuNode *companion = find_node(snapshot.menus, std::string(companion_id))) {
         build.companion(*companion, companion_path);
       }
     }
@@ -1196,9 +1207,12 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
                                open_path.end();
     }
   }
-  if (std::find(open_path.begin(), open_path.end(), object_modeling_root) != open_path.end()) {
-    if (const MenuNode *companion = find_node(snapshot.menus, std::string(object_modeling_menu))) {
-      build.companion(*companion, companion_path);
+  for (const auto &root : open_path) {
+    if (const auto companion_id = companion_root(root); !companion_id.empty()) {
+      if (const MenuNode *companion = find_node(snapshot.menus, std::string(companion_id))) {
+        build.companion(*companion, companion_path);
+      }
+      break;
     }
   }
   build.split_options(snapshot);

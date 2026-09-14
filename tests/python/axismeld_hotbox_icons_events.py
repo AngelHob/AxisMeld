@@ -179,6 +179,16 @@ def suite():
         summed=np.pad(ink.astype(np.int32),((1,0),(1,0))).cumsum(0).cumsum(1)
         counts=summed[gh:,gw:]-summed[:-gh,gw:]-summed[gh:,:-gw]+summed[:-gh,:-gw]
         scores=2*hits/(counts+np.count_nonzero(glyph))
+        # Border Edges is also a suffix of Texture Border Edges. Exclude the
+        # independently matched longer label's actual glyph band, so the
+        # full-label observer cannot report that suffix as a sibling row.
+        if label == 'Border Edges':
+            longer = locate(pixels, rect, 'Texture Border Edges', required=False)
+            if longer:
+                band = longer[0]
+                low = max(0, band[1]-y0-gh+1)
+                high = min(scores.shape[0], band[3]-y0)
+                scores[low:high, :] = -1
         y,x=np.unravel_index(np.argmax(scores),scores.shape)
         score=float(scores[y,x])
         if not required and score<=.75:

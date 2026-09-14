@@ -261,6 +261,20 @@ static bool object_companion_tree_allowed(const MenuNode &node)
   return std::all_of(node.children.begin(), node.children.end(), object_companion_tree_allowed);
 }
 
+static bool creation_tree_allowed(const MenuNode &node)
+{
+  if (node.kind == MenuKind::Setting ||
+      (node.kind == MenuKind::Command && !creation_allows_command(node.id, node.command))) {
+    return false;
+  }
+  if (node.kind == MenuKind::Menu && node.id != creation_root &&
+      (node.presentation != "list" ||
+       (node.id != creation_menu && node.id != "context.create_menu.polygon_display_all"))) {
+    return false;
+  }
+  return std::all_of(node.children.begin(), node.children.end(), creation_tree_allowed);
+}
+
 static void enable_preselected_object_command(MenuNode &node)
 {
   if (!node.enabled) {
@@ -565,14 +579,14 @@ static wmOperatorStatus submit(bContext *C, wmOperator *op, const MenuNode &leaf
     return OPERATOR_FINISHED;
   }
   if (data.creation_session) {
-    if (setting || !command.starts_with("mesh.create_") || !empty_creation_context(C)) {
+    if (setting || !creation_allows_command(leaf.id, command) || !empty_creation_context(C)) {
       cleanup(C, op);
       return OPERATOR_CANCELLED;
     }
     // The owned trigger release already arrived. No release guard remains to create.
     cleanup(C, op);
-    axismeld_hotbox_dispatch(C, command.c_str());
-    return OPERATOR_FINISHED;
+    const auto result = axismeld_hotbox_dispatch(C, command.c_str());
+    return (result & OPERATOR_RUNNING_MODAL) ? OPERATOR_FINISHED : result;
   }
   if (data.component_session) {
     if (!component_command(command) || !commit_component_target(C, data)) {
@@ -619,7 +633,7 @@ static wmOperatorStatus submit(bContext *C, wmOperator *op, const MenuNode &leaf
 static void open_menu(HotboxData &data, const MenuRect &rect)
 {
   if (rect.companion) {
-    if (data.companion_path.empty()) { data.companion_path = {std::string(object_modeling_menu)}; }
+    if (data.companion_path.empty()) { data.companion_path = {rect.owner}; }
     const auto owner = std::find(data.companion_path.begin(), data.companion_path.end(), rect.owner);
     if (owner == data.companion_path.end()) { return; }
     const size_t index = size_t(owner - data.companion_path.begin()) + 1;
@@ -628,6 +642,10 @@ static void open_menu(HotboxData &data, const MenuRect &rect)
     data.companion_path.push_back(rect.id);
     hotbox_layout(data);
     return;
+  }
+  if (const auto companion = companion_root(rect.id); !companion.empty() &&
+      (data.companion_path.empty() || data.companion_path.front() != companion)) {
+    data.companion_path = {std::string(companion)};
   }
   const size_t prefix = !data.open_path.empty() && data.open_path.front() == "center" ? 1 : 0;
   if (rect.depth == 0) {
@@ -652,8 +670,11 @@ static void open_menu(HotboxData &data, const MenuRect &rect)
 
 static void scroll_owner(HotboxData &data, const std::string &owner, const int delta)
 {
-  if (owner == object_modeling_menu || owner.starts_with("context.modeling_object_menu.")) {
-    if (data.companion_path.empty()) { data.companion_path = {std::string(object_modeling_menu)}; }
+  if (owner == object_modeling_menu || owner.starts_with("context.modeling_object_menu.") ||
+      owner == creation_menu || owner.starts_with("context.create_menu.")) {
+    if (data.companion_path.empty()) {
+      data.companion_path = {std::string(owner.starts_with("context.create_menu") ? creation_menu : object_modeling_menu)};
+    }
     const auto found = std::find(data.companion_path.begin(), data.companion_path.end(), owner);
     if (found != data.companion_path.end()) { data.companion_path.erase(found + 1, data.companion_path.end()); }
     if (const MenuNode *node = hotbox_find_node(data.snapshot.menus, owner)) {
@@ -705,7 +726,7 @@ static void scroll_control(HotboxData &data, const std::string &id)
 /* The companion shares the original held mouse; paging never creates another owner. */
 static bool companion_navigation(HotboxData &data, const wmEvent *event)
 {
-  if (data.object_modeling_session && event->modifier != data.required_modifiers) { return false; }
+  if ((data.object_modeling_session || data.creation_session) && event->modifier != data.required_modifiers) { return false; }
   const bool motion = ISMOUSE_MOTION(event->type);
   const bool wheel = ELEM(event->type, WHEELUPMOUSE, WHEELDOWNMOUSE);
   if (motion || wheel) {
@@ -819,6 +840,11 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
     {
       return OPERATOR_CANCELLED;
     }
+    if (creation && (!creation_tree_allowed(*root) ||
+        (hotbox_find_node(snapshot.menus, creation_menu) &&
+         !creation_tree_allowed(*hotbox_find_node(snapshot.menus, creation_menu))))) {
+      return OPERATOR_CANCELLED;
+    }
     if (modeling && !modeling_tree_allowed(*root, tool_root)) {
       return OPERATOR_CANCELLED;
     }
@@ -922,7 +948,9 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   data->creation_session = creation;
   data->modeling_session = modeling;
   data->object_modeling_session = object_modeling;
-  if (object_modeling) { data->companion_path = {std::string(object_modeling_menu)}; }
+  if (const auto companion = companion_root(tool_root); !companion.empty()) {
+    data->companion_path = {std::string(companion)};
+  }
   data->object_target_uid = object_target_uid;
   data->object_target_data_uid = object_target_data_uid;
   data->object_active_uid = object_active_uid;

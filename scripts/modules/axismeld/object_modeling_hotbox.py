@@ -74,10 +74,32 @@ def object_modeling_menu(node):
         ('knife', 'W', 'Multi-Cut', 'tool.object_mesh_knife', 'Blender persistent Knife tool; Maya Multi-Cut behavior differs'),
         ('sculpt', 'NW', 'Sculpt Tool', '', 'M2d-P04.ObjectSculpt: Sculpt context transaction deferred'),
     )
-    return node(OBJECT_ROOT, 'menu', 'Object Modeling', presentation='radial', children=tuple(
-        node(OBJECT_ROOT + '.' + suffix, 'command' if command else 'disabled', label,
-             command=command, direction=direction, enabled=bool(command), reason=reason)
-        for suffix, direction, label, command, reason in entries))
+    children = []
+    for suffix, direction, label, command, reason in entries:
+        identifier = OBJECT_ROOT + '.' + suffix
+        if suffix == 'normals':
+            # Maya2026 scripts/others/contextPolyToolsObjectMM.mel:139-176:
+            # display, harden, angle+Options, soften. Keep every original action.
+            normals = []
+            for action, caption in (('display', 'Toggle Soft Edge Display'),
+                                    ('harden', 'Harden Edge'),
+                                    ('angle', 'Soften/Harden Edges'), ('soften', 'Soften Edge')):
+                option = (node(identifier + '.angle.options', 'disabled', 'Options', enabled=False,
+                               reason='M2d-P05.angle.Options: Object sharpness parameters not implemented'),) if action == 'angle' else ()
+                normals.append(node(identifier + '.' + action, 'disabled', caption, enabled=False,
+                                    children=option,
+                                    reason='M2d-P05.' + action + ': Object edge-display/sharpness transaction not implemented'))
+            children.append(node(identifier, 'menu', label, direction=direction,
+                                 presentation='list', children=normals))
+            continue
+        options = ()
+        if suffix in {'weld', 'sculpt', 'knife', 'append', 'loopcut'}:
+            options = (node(identifier + '.options', 'disabled', 'Options', enabled=False,
+                            reason='M2d-P04.' + suffix + ': Dedicated tool parameters not implemented'),)
+        children.append(node(identifier, 'command' if command else 'disabled', label,
+                             command=command, direction=direction, enabled=bool(command),
+                             reason=reason, children=options))
+    return node(OBJECT_ROOT, 'menu', 'Object Modeling', presentation='radial', children=children)
 
 
 def object_modeling_companion(node):

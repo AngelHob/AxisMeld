@@ -87,7 +87,10 @@ class ObjectModelingTest(unittest.TestCase):
         self.assertEqual({n['direction']: n['command'] for n in root['children'] if n['kind'] == 'command'}, {
             'E': 'tool.object_mesh_poly_build', 'SW': 'tool.object_mesh_loopcut', 'W': 'tool.object_mesh_knife'})
         gaps = [n for n in root['children'] if n['kind'] == 'disabled']
-        self.assertEqual({n['direction'] for n in gaps}, {'N', 'NE', 'SE', 'S', 'NW'})
+        self.assertEqual({n['direction'] for n in gaps}, {'N', 'NE', 'S', 'NW'})
+        normals = next(n for n in root['children'] if n['direction'] == 'SE')
+        self.assertEqual((normals['kind'], normals['presentation']), ('menu', 'list'))
+        self.assertTrue(all(n['kind'] == 'disabled' for n in normals['children']))
         self.assertTrue(all(not n.get('command') and not n['enabled'] and 'M2d-' in n['reason'] for n in gaps))
 
     def test_generated_context_targets(self):

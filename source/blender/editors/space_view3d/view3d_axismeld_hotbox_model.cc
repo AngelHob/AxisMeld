@@ -195,8 +195,12 @@ struct Parser {
     out.enabled = *enabled;
     if (dict->lookup("indicator") || dict->lookup("checked")) {
       const auto checked = dict->lookup_bool("checked");
-      if (kind != "command" || !text(*dict, "indicator", out.indicator) || !checked ||
-          (out.indicator != "radio" && out.indicator != "checkbox"))
+      const bool readonly_workflow = kind == "disabled" && !out.enabled && out.command.empty() &&
+                                     creation_workflow_indicator(out.id);
+      if ((kind != "command" && !readonly_workflow) ||
+          !text(*dict, "indicator", out.indicator) || !checked ||
+          (out.indicator != "radio" && out.indicator != "checkbox") ||
+          (readonly_workflow && out.indicator != "checkbox"))
         return false;
       out.checked = *checked;
     }
@@ -269,7 +273,7 @@ struct Parser {
 bool parse_menu_snapshot(const std::string_view json, MenuSnapshot &out, std::string &error)
 {
   error = "Invalid hotbox snapshot";
-  if (json.size() > 256 * 1024)
+  if (json.size() > 512 * 1024)
     return false;
   // Bound nesting before the generic JSON decoder allocates a recursively nested value tree.
   int nesting = 0;
@@ -345,11 +349,15 @@ bool parse_menu_snapshot(const std::string_view json, MenuSnapshot &out, std::st
     next.menus.push_back(std::move(node));
   }
   const char *groups[] = {"common", "pane", "center", "modeling"};
-  if (next.menus.size() != 4 && next.menus.size() != 5)
+  if (next.menus.size() < 4 || next.menus.size() > 6)
     return false;
-  if (next.menus.size() == 5 &&
+  if (next.menus.size() >= 5 &&
       (next.menus[4].id != object_modeling_menu || next.menus[4].kind != MenuKind::Menu ||
        next.menus[4].presentation != "list"))
+    return false;
+  if (next.menus.size() == 6 &&
+      (next.menus[5].id != creation_menu || next.menus[5].kind != MenuKind::Menu ||
+       next.menus[5].presentation != "list"))
     return false;
   for (int i = 0; i < 4; i++) {
     if (next.menus[i].id != groups[i] || next.menus[i].kind != MenuKind::Menu)
