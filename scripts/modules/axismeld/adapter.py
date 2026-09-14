@@ -5,6 +5,7 @@ import bpy
 
 from .context_hotbox import COMPONENT_HOTBOX, COMPONENT_ROOT
 from .creation_hotbox import CREATE_HOTBOX, CREATE_OPERATORS, CREATE_ROOT
+from .context_modeling_hotbox import MODEL_HOTBOX, modeling_root
 from .commands import COMMANDS
 from .tool_hotbox import TOOL_ROOTS, ORIENTATIONS, SELECTION_TOOLS
 from . import modeling_adapter
@@ -52,6 +53,11 @@ def available(context, command):
             False, 'Requires a supported modeling 3D View window')
     if not modeling_context(context):
         return False, 'Requires a 3D View window in Object or mesh Edit Mode'
+    if command == MODEL_HOTBOX:
+        if modeling_root(context) is None:
+            return False, 'Requires a single Edit Mesh domain with visible editable component selection'
+        if not bpy.ops.view3d.axismeld_hotbox.poll():
+            return False, 'Component modeling hotbox is unavailable in this context'
     if command == CREATE_HOTBOX or command in CREATE_OPERATORS:
         # AddTorus has no native poll; enforce the scene check used by C++ primitives.
         if not context.scene or not context.scene.is_editable:
@@ -103,6 +109,12 @@ def run(context, command, *, invoke=True, keyboard_tool_session=False):
         return getattr(bpy.ops.mesh, operator_name)(
             'EXEC_DEFAULT', True, align='WORLD', location=tuple(context.scene.cursor.location),
             rotation=(0.0, 0.0, 0.0), **properties)
+    if command == MODEL_HOTBOX:
+        if not invoke:
+            raise ValueError('Component modeling hotbox requires an invoke event')
+        from . import hotbox_runtime
+        return bpy.ops.view3d.axismeld_hotbox(
+            'INVOKE_DEFAULT', menu_json=hotbox_runtime.snapshot(context), tool_menu=modeling_root(context))
     if command == CREATE_HOTBOX:
         if not invoke:
             raise ValueError('Creation hotbox requires an invoke event')

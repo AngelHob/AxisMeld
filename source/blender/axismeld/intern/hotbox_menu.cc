@@ -755,6 +755,55 @@ class LayoutBuilder {
 };
 }  // namespace
 
+MenuLayout layout_menu_in_bounds(
+    const MenuSnapshot &snapshot,
+    const MenuBounds &bounds,
+    const float center_x,
+    const float center_y,
+    const std::vector<std::string> &open_path,
+    const std::unordered_map<std::string, int> &scroll_offsets,
+    const std::unordered_map<std::string, float> &label_widths,
+    const std::array<float, 2> *popup_origin,
+    const std::string_view tool_root)
+{
+  if (!std::isfinite(bounds.xmin) || !std::isfinite(bounds.ymin) ||
+      !std::isfinite(bounds.xmax) || !std::isfinite(bounds.ymax) ||
+      bounds.xmax <= bounds.xmin || bounds.ymax <= bounds.ymin ||
+      !std::isfinite(center_x) || !std::isfinite(center_y) ||
+      (popup_origin && (!std::isfinite((*popup_origin)[0]) ||
+                        !std::isfinite((*popup_origin)[1]))))
+  {
+    return {{}, false};
+  }
+  const float width = bounds.xmax - bounds.xmin;
+  const float height = bounds.ymax - bounds.ymin;
+  std::array<float, 2> local_origin;
+  if (popup_origin) {
+    local_origin = {std::clamp((*popup_origin)[0] - bounds.xmin, 0.0f, width),
+                    std::clamp((*popup_origin)[1] - bounds.ymin, 0.0f, height)};
+  }
+  auto layout = layout_menu(snapshot,
+                            width,
+                            height,
+                            std::clamp(center_x - bounds.xmin, 0.0f, width),
+                            std::clamp(center_y - bounds.ymin, 0.0f, height),
+                            open_path,
+                            scroll_offsets,
+                            label_widths,
+                            popup_origin ? &local_origin : nullptr,
+                            tool_root);
+  if (!layout.supported) {
+    return {{}, false};
+  }
+  for (auto *rects : {&layout.rects, &layout.return_regions, &layout.marking_gaps}) {
+    for (MenuRect &rect : *rects) {
+      rect.x += bounds.xmin;
+      rect.y += bounds.ymin;
+    }
+  }
+  return layout;
+}
+
 MenuLayout layout_menu(const MenuSnapshot &snapshot,
                        const float width,
                        const float height,

@@ -11,6 +11,7 @@ set(SRC
   intern/identity.cc
   intern/hotbox_menu.cc
   AXM_hotbox_menu.hh
+  AXM_context_modeling.hh
   AXM_hotbox_state.hh
   AXM_identity.hh
   AXM_transform_axis.hh
@@ -31,6 +32,7 @@ if(WITH_GTESTS)
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/hotbox_catalog.py
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/tool_hotbox.py
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/creation_hotbox.py
+      ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/context_modeling_hotbox.py
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/modeling_schema.py
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/modeling_registry.py
       ${CMAKE_SOURCE_DIR}/scripts/modules/axismeld/modeling_catalog.py

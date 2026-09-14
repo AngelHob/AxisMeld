@@ -7,6 +7,7 @@ from bpy.props import StringProperty, BoolProperty, EnumProperty, FloatProperty,
 from axismeld import adapter, runtime, hotbox_runtime
 from axismeld.context_hotbox import COMPONENT_HOTBOX
 from axismeld.creation_hotbox import CREATE_HOTBOX
+from axismeld.context_modeling_hotbox import MODEL_HOTBOX
 from axismeld.commands import PRESET_NAME
 from axismeld.hotbox_catalog import registered_menu_choices
 from axismeld.hotbox_profiles import DEFAULT_APPEARANCE
@@ -46,7 +47,7 @@ class AXISMELD_OT_command(Operator):
         return self._run(context, False)
 
     def invoke(self, context, event):
-        if self.command == CREATE_HOTBOX and (
+        if self.command in {CREATE_HOTBOX, MODEL_HOTBOX} and (
                 event.value != 'PRESS' or event.is_repeat or event.alt or event.oskey or
                 not adapter.available(context, self.command)[0]):
             return {'PASS_THROUGH'}

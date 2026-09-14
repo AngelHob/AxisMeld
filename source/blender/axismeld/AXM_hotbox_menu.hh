@@ -68,6 +68,12 @@ struct MenuLayout {
   std::vector<MenuRect> marking_gaps;
 };
 
+/* Half-open layout bounds in the original WINDOW's logical coordinates. */
+struct MenuBounds {
+  float xmin, ymin, xmax, ymax;
+  bool operator==(const MenuBounds &other) const = default;
+};
+
 /* Logical pixel coordinates, bottom-left origin. All nodes require measured label widths.
  * open_path contains menu IDs, starting with a visible title (not a root row group).
  * {"center", mapped_menu_id, ...} explicitly anchors a configured menu at the central button;
@@ -87,6 +93,18 @@ MenuLayout layout_menu(const MenuSnapshot &snapshot,
                        const std::unordered_map<std::string, float> &label_widths,
                        const std::array<float, 2> *popup_origin = nullptr,
                        std::string_view tool_root = {});
+/* Fit inside the unobscured bounds, then return every geometry vector in WINDOW coordinates.
+ * Only layout anchors are clamped; the caller's real gesture/press origins remain unchanged. */
+MenuLayout layout_menu_in_bounds(
+    const MenuSnapshot &snapshot,
+    const MenuBounds &bounds,
+    float center_x,
+    float center_y,
+    const std::vector<std::string> &open_path,
+    const std::unordered_map<std::string, int> &scroll_offsets,
+    const std::unordered_map<std::string, float> &label_widths,
+    const std::array<float, 2> *popup_origin = nullptr,
+    std::string_view tool_root = {});
 /* Native list pages normalize from their displayed first row; other menus retain legacy math.
  */
 int menu_scroll_offset_transition(const MenuLayout &layout,

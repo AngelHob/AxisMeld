@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .context_hotbox import COMPONENT_HOTBOX
 from .creation_hotbox import CREATE_HOTBOX
+from .context_modeling_hotbox import MODEL_HOTBOX
 from .commands import COMMANDS, baseline_bindings, binding_events
 
 MODIFIERS = ('ctrl', 'shift', 'alt', 'oskey')
@@ -58,17 +59,20 @@ def _apply(bindings, document):
         if command == COMPONENT_HOTBOX and candidate[command] and any(
                 candidate[command][key] for key in MODIFIERS):
             raise ValueError('Component hotbox requires an unmodified PRESS event')
-        if command == CREATE_HOTBOX and candidate[command] and any(
+        if command in {CREATE_HOTBOX, MODEL_HOTBOX} and candidate[command] and any(
                 candidate[command][key] for key in ('alt', 'oskey')):
-            raise ValueError('Creation hotbox cannot capture Alt or OSKey navigation')
+            raise ValueError('Context hotbox cannot capture Alt or OSKey navigation')
     seen = {}
     for command, event in binding_events(candidate):
         if event is None:
             continue
         signature = event_signature(event)
-        if signature in seen:
-            raise ValueError(f'input conflict: {seen[signature]} and {command}')
-        seen[signature] = command
+        # Only this exact pair has disjoint generated Object Mode / Mesh targets.
+        # Compare every previous owner; a third binding must never inherit the exemption.
+        for owner in seen.get(signature, ()):
+            if frozenset({owner, command}) != frozenset({CREATE_HOTBOX, MODEL_HOTBOX}):
+                raise ValueError(f'input conflict: {owner} and {command}')
+        seen.setdefault(signature, []).append(command)
     return candidate
 
 

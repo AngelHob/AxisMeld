@@ -3,6 +3,7 @@
 """Declarative AxisMeld hotbox menu catalog without Blender dependencies."""
 from copy import deepcopy
 from .context_hotbox import component_menu
+from .context_modeling_hotbox import modeling_menus
 from .creation_hotbox import CREATE_COMMANDS, creation_menu
 from .tool_hotbox import MENU_COMMANDS, tool_menus
 
@@ -143,6 +144,7 @@ def _catalog():
             _command('common.select.all', 'Select All', 'selection.select_all'),
             _command('common.select.grow', 'Grow Selection', 'selection.grow'),
             _command('common.select.shrink', 'Shrink Selection', 'selection.shrink'),
+            *modeling_menus(_node),
         )),
         _menu('common.modify', 'Modify', (
             _command('common.modify.move', 'Move Tool', 'transform.move'),

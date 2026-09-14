@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 AxisMeld Authors
  * SPDX-License-Identifier: GPL-2.0-or-later */
 #include "BKE_context.hh"
+#include "BKE_editmesh.hh"
 #include "BKE_layer.hh"
 #include "BKE_lib_id.hh"
 #include "BKE_library.hh"
@@ -30,6 +31,7 @@
 #include "view3d_axismeld.hh"
 #include "view3d_axismeld_hotbox_internal.hh"
 #include "wm_event_system.hh"
+#include "AXM_context_modeling.hh"
 #include <algorithm>
 
 namespace blender {
@@ -55,6 +57,7 @@ struct HotboxData : HotboxVisual {
   bool tool_shown = false;
   bool component_session = false;
   bool creation_session = false;
+  bool modeling_session = false;
   wmEventModifierFlag required_modifiers = wmEventModifierFlag(0);
   unsigned int component_target_uid = 0;
   ViewLayer *component_view_layer = nullptr;
@@ -62,8 +65,58 @@ struct HotboxData : HotboxVisual {
   bool center_return_armed = false;
 };
 
+/* Only live regions are read here; no sibling pointers survive this calculation. */
+static MenuBounds hotbox_safe_bounds(const ScrArea &area, ARegion &region, const float scale)
+{
+  const rcti &visible = *ED_region_visible_rect(&region);
+  const rcti &window = region.winrct;
+  // Blender's pixel rectangles include xmax/ymax. Layout bounds are half-open.
+  MenuBounds bounds{float(std::max(0, visible.xmin)),
+                    float(std::max(0, visible.ymin)),
+                    float(std::min(int(region.winx), visible.xmax + 1)),
+                    float(std::min(int(region.winy), visible.ymax + 1))};
+  for (const ARegion &sibling : area.regionbase) {
+    if (&sibling == &region || !sibling.overlap || !sibling.runtime) {
+      continue;
+    }
+    // Hidden/poll-failed/collapsed regions cease obstructing only after animation ends.
+    if (!sibling.runtime->regiontimer &&
+        (!sibling.runtime->visible ||
+         (sibling.flag & (RGN_FLAG_HIDDEN | RGN_FLAG_TOO_SMALL | RGN_FLAG_POLL_FAILED))))
+    {
+      continue;
+    }
+    // Ordinary input routing still uses the full winrct during slide/fade animation.
+    // Intersect the original WINDOW, not an already clipped bound: order must not matter.
+    const rcti &obstacle = sibling.winrct;
+    if (obstacle.xmax < window.xmin || obstacle.xmin > window.xmax ||
+        obstacle.ymax < window.ymin || obstacle.ymin > window.ymax)
+    {
+      continue;
+    }
+    switch (RGN_ALIGN_ENUM_FROM_MASK(sibling.alignment)) {
+      case RGN_ALIGN_TOP:
+        bounds.ymax = std::min(bounds.ymax, float(obstacle.ymin - window.ymin));
+        break;
+      case RGN_ALIGN_BOTTOM:
+        bounds.ymin = std::max(bounds.ymin, float(obstacle.ymax - window.ymin + 1));
+        break;
+      case RGN_ALIGN_LEFT:
+        bounds.xmin = std::max(bounds.xmin, float(obstacle.xmax - window.xmin + 1));
+        break;
+      case RGN_ALIGN_RIGHT:
+        bounds.xmax = std::min(bounds.xmax, float(obstacle.xmin - window.xmin));
+        break;
+      default:
+        break;
+    }
+  }
+  return {bounds.xmin / scale, bounds.ymin / scale,
+           bounds.xmax / scale, bounds.ymax / scale};
+}
+
 /* Validate each containing live list before inspecting the next captured pointer. */
-static bool source_live(const bContext *C, const HotboxData &data)
+static bool source_containers_live(const bContext *C, const HotboxData &data)
 {
   wmWindowManager *wm = CTX_wm_manager(C);
   if (!wm || BLI_findindex(&wm->windows, data.window) < 0 ||
@@ -75,11 +128,20 @@ static bool source_live(const bContext *C, const HotboxData &data)
   {
     return false;
   }
+  return true;
+}
+
+static bool source_live(const bContext *C, const HotboxData &data)
+{
+  if (!source_containers_live(C, data)) {
+    return false;
+  }
   const rcti &rect = data.region->winrct;
   return data.region->regiontype == RGN_TYPE_WINDOW && data.region->regiondata &&
          data.scale == UI_SCALE_FAC && rect.xmin == data.region_rect.xmin &&
          rect.xmax == data.region_rect.xmax && rect.ymin == data.region_rect.ymin &&
-         rect.ymax == data.region_rect.ymax;
+         rect.ymax == data.region_rect.ymax &&
+         hotbox_safe_bounds(*data.area, *data.region, data.scale) == data.safe_bounds;
 }
 
 static void cleanup(bContext *C, wmOperator *op)
@@ -91,7 +153,8 @@ static void cleanup(bContext *C, wmOperator *op)
     if (data->timer) {
       WM_event_timer_remove(CTX_wm_manager(C), nullptr, data->timer);
     }
-    if (source_live(C, *data)) {
+    // Geometry changes invalidate the session, but its surviving region still needs repainting.
+    if (source_containers_live(C, *data)) {
       ED_region_tag_redraw(data->region);
     }
     delete data;
@@ -118,6 +181,63 @@ static bool modeling_menu_poll(bContext *C)
               CTX_MODE_EDIT_CURVE, CTX_MODE_EDIT_SURFACE, CTX_MODE_EDIT_LATTICE);
 }
 
+static bool selected_modeling_context(bContext *C, const std::string_view root)
+{
+  const int domain = modeling_root_domain(root);
+  Scene *scene = CTX_data_scene(C);
+  if (domain < 0 || CTX_data_mode_enum(C) != CTX_MODE_EDIT_MESH || !scene ||
+      !ID_IS_EDITABLE(scene))
+  {
+    return false;
+  }
+  constexpr int select_modes[] = {SCE_SELECT_VERTEX, SCE_SELECT_EDGE, SCE_SELECT_FACE};
+  if (scene->toolsettings->selectmode != select_modes[domain]) {
+    return false;  // Mixed modes and selection flush never determine the root.
+  }
+  ViewLayer *view_layer = CTX_data_view_layer(C);
+  BKE_view_layer_synced_ensure(*CTX_data_main(C), scene, view_layer);
+  const auto eligible = [&](const Base *base) {
+    return base && base->object->type == OB_MESH && (base->object->mode & OB_MODE_EDIT) &&
+           BASE_VISIBLE(CTX_wm_view3d(C), base) && ID_IS_EDITABLE(base->object) &&
+           base->object->data && ID_IS_EDITABLE(base->object->data);
+  };
+  if (!eligible(CTX_data_active_base(C))) {
+    return false;
+  }
+  constexpr BMIterType domains[] = {BM_VERTS_OF_MESH, BM_EDGES_OF_MESH, BM_FACES_OF_MESH};
+  // This is an existence query over the editing set, not a sum across Mesh data.
+  // Repeated shared Mesh data has the same answer; do not mutate ID tags to deduplicate it.
+  for (const Base &base : *BKE_view_layer_object_bases_get(view_layer)) {
+    if (!eligible(&base)) {
+      continue;
+    }
+    BMEditMesh *em = BKE_editmesh_from_object(base.object);
+    if (!em || !em->bm) {
+      continue;
+    }
+    BMIter iter;
+    BMElem *element;
+    BM_ITER_MESH (element, &iter, em->bm, domains[domain]) {
+      if (BM_elem_flag_test(element, BM_ELEM_SELECT) && !BM_elem_flag_test(element, BM_ELEM_HIDDEN)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+static bool modeling_tree_allowed(const MenuNode &node, const std::string_view root)
+{
+  if (node.kind == MenuKind::Setting ||
+      (node.kind == MenuKind::Command && !modeling_root_allows_command(root, node.command)))
+  {
+    return false;
+  }
+  return std::all_of(node.children.begin(), node.children.end(), [&](const MenuNode &child) {
+    return modeling_tree_allowed(child, root);
+  });
+}
+
 static bool source_context(bContext *C, const HotboxData &data)
 {
   if (!source_live(C, data)) {
@@ -126,15 +246,19 @@ static bool source_context(bContext *C, const HotboxData &data)
   return CTX_wm_window(C) == data.window && CTX_wm_area(C) == data.area &&
          CTX_wm_region(C) == data.region && CTX_data_mode_enum(C) == data.mode &&
          CTX_data_scene(C) && CTX_data_scene(C)->id.session_uid == data.scene_uid &&
-         modeling_menu_poll(C);
+         modeling_menu_poll(C) &&
+         (!data.modeling_session ||
+          (CTX_data_view_layer(C) == data.component_view_layer &&
+           selected_modeling_context(C, data.tool_root)));
 }
 
 static wmOperatorStatus close_guard(bContext *C, wmOperator *op, const bool trigger_down)
 {
   const auto &data = *static_cast<HotboxData *>(op->customdata);
   const int trigger = data.trigger;
-  const int mouse = data.component_session || data.creation_session ? 0 : data.active_mouse;
-  const bool tool_session = !data.tool_root.empty() && !data.creation_session;
+  const bool direct = data.component_session || data.creation_session || data.modeling_session;
+  const int mouse = direct ? 0 : data.active_mouse;
+  const bool tool_session = !data.tool_root.empty() && !direct;
   cleanup(C, op);
   if (trigger_down || mouse) {
     axismeld_hotbox_guard_begin(C, trigger, mouse, trigger_down, mouse != 0, tool_session);
@@ -279,6 +403,19 @@ static wmOperatorStatus submit(bContext *C, wmOperator *op, const MenuNode &leaf
   // Strings must outlive cleanup and Python rebuilding its catalog/context.
   const std::string command = leaf.command, value = leaf.value;
   const bool setting = leaf.kind == MenuKind::Setting;
+  if (data.modeling_session) {
+    if (setting || !modeling_root_allows_command(data.tool_root, command) ||
+        !source_context(C, data))
+    {
+      cleanup(C, op);
+      return OPERATOR_CANCELLED;
+    }
+    // Only the owned trigger release submits. Close before a native modal or persistent
+    // tool starts, leaving its next stroke and its own undo transaction unguarded.
+    cleanup(C, op);
+    axismeld_hotbox_dispatch(C, command.c_str());
+    return OPERATOR_FINISHED;
+  }
   if (data.creation_session) {
     if (setting || !command.starts_with("mesh.create_") || !empty_creation_context(C)) {
       cleanup(C, op);
@@ -425,11 +562,13 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   }
   const bool component = tool_root == "context.components";
   const bool creation = tool_root == "context.create";
-  const bool direct = component || creation;
+  const bool modeling = modeling_root_domain(tool_root) >= 0;
+  const bool direct = component || creation || modeling;
   if ((!ISKEYBOARD(event->type) &&
        !(direct && ELEM(event->type, LEFTMOUSE, MIDDLEMOUSE, RIGHTMOUSE))) ||
       event->val != KM_PRESS || (event->flag & WM_EVENT_IS_REPEAT) ||
-      (component && event->modifier) || (creation && (event->modifier & ~(KM_SHIFT | KM_CTRL)))) {
+      (component && event->modifier) ||
+      ((creation || modeling) && (event->modifier & ~(KM_SHIFT | KM_CTRL)))) {
     return OPERATOR_PASS_THROUGH;
   }
   wmWindow *window = CTX_wm_window(C);
@@ -459,6 +598,12 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
     {
       return OPERATOR_CANCELLED;
     }
+    if (modeling && !modeling_tree_allowed(*root, tool_root)) {
+      return OPERATOR_CANCELLED;
+    }
+  }
+  if (modeling && !selected_modeling_context(C, tool_root)) {
+    return OPERATOR_PASS_THROUGH;
   }
   unsigned int target_uid = 0;
   if (creation) {
@@ -498,7 +643,8 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   data->tool_root = tool_root;
   data->component_session = component;
   data->creation_session = creation;
-  data->required_modifiers = creation ? event->modifier : wmEventModifierFlag(0);
+  data->modeling_session = modeling;
+  data->required_modifiers = creation || modeling ? event->modifier : wmEventModifierFlag(0);
   data->tap_eligible = tool_root.empty();
   data->snapshot = std::move(snapshot);
   data->window = window;
@@ -512,8 +658,7 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   data->mode = CTX_data_mode_enum(C);
   data->scene_uid = CTX_data_scene(C)->id.session_uid;
   data->scale = UI_SCALE_FAC;
-  data->width = data->region->winx / data->scale;
-  data->height = data->region->winy / data->scale;
+  data->safe_bounds = hotbox_safe_bounds(*data->area, *data->region, data->scale);
   data->center[0] = (event->xy[0] - data->region->winrct.xmin) / data->scale;
   data->center[1] = (event->xy[1] - data->region->winrct.ymin) / data->scale;
   hotbox_measure(*data);
@@ -626,7 +771,7 @@ static wmOperatorStatus tool_modal(bContext *C, wmOperator *op, const wmEvent *e
   auto &data = *static_cast<HotboxData *>(op->customdata);
   const float x = (event->xy[0] - data.region->winrct.xmin) / data.scale;
   const float y = (event->xy[1] - data.region->winrct.ymin) / data.scale;
-  const bool direct = data.component_session || data.creation_session;
+  const bool direct = data.component_session || data.creation_session || data.modeling_session;
   const int owned = direct ? data.trigger : LEFTMOUSE;
   if (event->modifier != data.required_modifiers ||
       (!ISTIMER(event->type) && !ISMOUSE_MOTION(event->type) && event->type != owned))
@@ -711,7 +856,8 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
     return close_guard(C, op, !(event->type == data.trigger && event->val == KM_RELEASE));
   }
   data.state.advance(BLI_time_now_seconds());
-  if (event->type == data.trigger && !data.component_session && !data.creation_session) {
+  if (event->type == data.trigger && !data.component_session && !data.creation_session &&
+      !data.modeling_session) {
     if (event->val == KM_RELEASE) {
       const bool tap = data.tap_eligible && data.state.release_trigger(BLI_time_now_seconds()) ==
                                                 HotboxAction::ToggleQuad;
@@ -764,8 +910,9 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
     data.pending_leaf.clear();
     // Real menu rectangles (including disabled/separators) occlude the center-only fallback.
     const bool blank_center = data.menu_layout.supported && data.open_path.empty() &&
-                              data.snapshot.style == "center" && !hover && x >= 0 &&
-                              x < data.width && y >= 0 && y < data.height;
+                              data.snapshot.style == "center" && !hover &&
+                              x >= data.safe_bounds.xmin && x < data.safe_bounds.xmax &&
+                              y >= data.safe_bounds.ymin && y < data.safe_bounds.ymax;
     if ((item == "views" && rect.depth == 0) || blank_center) {
       const int button = event->type == LEFTMOUSE ? 0 : event->type == MIDDLEMOUSE ? 1 : 2;
       const std::string &mapping = data.snapshot.center_buttons[button];

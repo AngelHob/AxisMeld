@@ -30,7 +30,7 @@ struct HotboxVisual {
   float press_position[2] = {0, 0};
   float pointer_position[2] = {0, 0};
   float scale = 1;
-  float width, height;
+  MenuBounds safe_bounds;
 };
 void hotbox_measure(HotboxVisual &data);
 void hotbox_layout(HotboxVisual &data);

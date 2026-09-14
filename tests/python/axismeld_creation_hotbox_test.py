@@ -105,7 +105,7 @@ class CreationHotboxTest(unittest.TestCase):
         self.assertIn(CREATE_HOTBOX, bindings)
         active = generate_keymaps(base, bindings)
         self.assertEqual(generate_keymaps(active, bindings), active)
-        for name, _args, content in active[:2]:
+        for name, _args, content in active[:1]:
             own = next(index for index, item in enumerate(content['items'])
                        if item[0] == 'axismeld.command' and
                        ('command', CREATE_HOTBOX) in item[2]['properties'])
@@ -115,13 +115,13 @@ class CreationHotboxTest(unittest.TestCase):
         self.assertEqual(active[3], base[3])
         for event in (None, {'type': 'F13', 'value': 'PRESS', 'ctrl': True}):
             changed = generate_keymaps(active, {**bindings, CREATE_HOTBOX: event})
-            for _name, _args, content in changed[:2]:
+            for name, _args, content in changed[:2]:
                 self.assertIn(cursor, content['items'])
                 self.assertIn(native, content['items'])
                 own = [item for item in content['items'] if item[0] == 'axismeld.command' and
                        ('command', CREATE_HOTBOX) in item[2]['properties']]
-                self.assertEqual(len(own), int(event is not None))
-                if event:
+                self.assertEqual(len(own), int(event is not None and name == 'Object Mode'))
+                if own:
                     self.assertEqual(own[0][1], event)
 
     def test_global_modified_shortcuts_are_not_exempted(self):

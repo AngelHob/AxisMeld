@@ -14,7 +14,7 @@ root = Path(os.environ['AXISMELD_TEST_ROOT']).resolve()
 if not Path(bpy.app.tempdir).resolve().is_relative_to(root):
     raise RuntimeError('Only the isolated GUI runner may run this test')
 sys.path.insert(0, str(Path(__file__).parent))
-from axismeld_hotbox_geometry_fixture import ellipse_page, native_list, native_page
+from axismeld_hotbox_geometry_fixture import ellipse_page, native_list, native_page, visible_bounds
 from axismeld import hotbox_runtime, runtime
 
 bpy.context.preferences.use_preferences_save = False
@@ -32,6 +32,7 @@ MAPPING_VALUES = (None, 'views', 'center.recent', 'center.controls', 'common',
                   'common.select', 'common.modify', 'pane', 'pane.view', 'pane.shading',
                   'pane.panels', 'pane.panels.views', 'modeling')
 MOUSE_BUTTONS = ('LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE')
+VISIBLE_REGION_SIDES = {'TOOLS': 'left', 'UI': 'right', 'TOOL_HEADER': 'top'}
 
 
 def check(value, message):
@@ -42,6 +43,24 @@ def check(value, message):
 def settle(count=4):
     for _ in range(count):
         yield
+
+
+def observed_visible_bounds(area, window_region):
+    """Return fixture bounds from real, currently visible overlap-region edges."""
+    window = (window_region.x, window_region.y, window_region.width, window_region.height)
+    wx, wy, ww, wh = window
+    obstacles = []
+    for candidate in area.regions:
+        side = VISIBLE_REGION_SIDES.get(candidate.type)
+        if side is None or candidate.width <= 1 or candidate.height <= 1:
+            continue
+        rect = (candidate.x, candidate.y, candidate.width, candidate.height)
+        x, y, w, h = rect
+        if x >= wx+ww or x+w <= wx or y >= wy+wh or y+h <= wy:
+            continue
+        obstacles.append((side, rect, candidate.type))
+    safe = visible_bounds(window, tuple((side, rect) for side, rect, _kind in obstacles))
+    return window, safe, obstacles
 
 
 def check_radio_image(path, choices, selected_index, scale):
@@ -137,14 +156,27 @@ def mapping_suite():
     elif layout_probe == 'quad':
         bpy.context.preferences.view.ui_scale = 2.0
         yield from settle(8)
-        area.spaces.active.show_region_toolbar = False
-        area.spaces.active.show_region_ui = False
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            check(bpy.ops.screen.screen_full_area() == {'FINISHED'},
+                  '2x quad mapping probe could not maximize its disposable VIEW_3D')
+        yield from settle(8)
+        area = next(a for a in win.screen.areas if a.type == 'VIEW_3D')
+        region = next(r for r in area.regions if r.type == 'WINDOW')
+        area.spaces.active.show_region_toolbar = True
+        area.spaces.active.show_region_ui = True
         area.spaces.active.show_region_header = False
-        area.spaces.active.show_region_tool_header = False
+        area.spaces.active.show_region_tool_header = True
         with bpy.context.temp_override(window=win, area=area, region=region):
             bpy.ops.view3d.axismeld_view(action='TOGGLE_QUAD')
         yield from settle(8)
-        region = min((r for r in area.regions if r.type == 'WINDOW'), key=lambda r: (r.y, r.x))
+        quad_windows = [r for r in area.regions if r.type == 'WINDOW' and
+                        r.width > 1 and r.height > 1]
+        check(len(quad_windows) == 4,
+              f'2x quad probe expected four independent WINDOW regions, got '
+              f'{[(r.x, r.y, r.width, r.height) for r in quad_windows]!r}')
+        region = min(quad_windows, key=lambda r: (r.y, r.x))
+        print('MAPPING_QUAD_WINDOWS',
+              [(r.x, r.y, r.width, r.height) for r in quad_windows], flush=True)
     elif layout_probe != 'standard':
         raise AssertionError(f'Unknown mapping list layout probe {layout_probe!r}')
     else:
@@ -158,13 +190,28 @@ def mapping_suite():
         check(360 <= logical_width < 430 and 240 <= logical_height < 320,
               f'narrow mapping probe outside bounded dimensions: {logical_width}x{logical_height}')
     elif layout_probe == 'quad':
-        check(360 <= logical_width < 430 and 200 <= logical_height < 260,
+        check(430 <= logical_width < 500 and 200 <= logical_height < 260,
               f'2x quad mapping probe outside bounded dimensions: {logical_width}x{logical_height}')
     print('MAPPING_LIST_LAYOUT', layout_probe, 'scale', scale, 'logical', logical_width,
           logical_height, 'physical', region.width, region.height, 'origin', region.x, region.y,
           flush=True)
     cx, cy = region.x+region.width/2, region.y+region.height/2
-    bounds = (region.x, region.y, region.width, region.height)
+    window_bounds, bounds, visible_obstacles = observed_visible_bounds(area, region)
+    print('MAPPING_VISIBLE_BOUNDS', layout_probe, 'window', window_bounds, 'safe', bounds,
+          'obstacles', visible_obstacles, flush=True)
+    if layout_probe == 'narrow':
+        check(any(kind == 'TOOL_HEADER' for _side, _rect, kind in visible_obstacles),
+              'narrow mapping probe requires its real visible Tool Header obstacle')
+        check(bounds[3] < window_bounds[3],
+              'narrow mapping safe bounds did not exclude the real Tool Header')
+    elif layout_probe == 'quad':
+        obstacle_kinds = {kind for _side, _rect, kind in visible_obstacles}
+        check(obstacle_kinds == {'TOOLS'} and bounds[0] > window_bounds[0],
+              f'2x lower-left WINDOW did not isolate its intersecting toolbar: '
+              f'{visible_obstacles!r}')
+        check('TOOL_HEADER' not in obstacle_kinds and 'UI' not in obstacle_kinds,
+              f'2x lower-left WINDOW was clipped by a non-intersecting sibling: '
+              f'{visible_obstacles!r}')
     blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
     icon_labels = {'AxisMeld', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls'}
     icon_labels.update(MAPPING_LABELS)
@@ -296,9 +343,33 @@ def mapping_suite():
             bpy.data.images.remove(image)
 
     def check_native_page(path, page, receipt):
+        rows = ([page['previous']] if page['previous'] else [])
+        rows += [rect for rect in page['items'] if rect is not None]
+        rows += ([page['next']] if page['next'] else [])
+        bx, by, bw, bh = bounds
+        for rect in rows:
+            x, y, w, h = rect
+            check(x >= bx and y >= by and x+w <= bx+bw and y+h <= by+bh,
+                  f'{receipt} row {rect!r} escaped visible bounds {bounds!r}')
+            for _side, obstacle, kind in visible_obstacles:
+                ox, oy, ow, oh = obstacle
+                check(x+w <= ox or ox+ow <= x or y+h <= oy or oy+oh <= y,
+                      f'{receipt} row {rect!r} overlaps visible {kind} {obstacle!r}')
         check(native_page_red_ratio(path, page) > .6,
               f'{receipt} did not render the expected continuous native page')
         check_labels(path, page, MAPPING_LABELS, receipt)
+        image, pixels, width = image_pixels(path)
+        try:
+            for _side, (x, y, w, h), kind in visible_obstacles:
+                samples = [pixels[(yy*width+xx)*4:(yy*width+xx)*4+3]
+                           for yy in range(int(y+2), int(y+h-2))
+                           for xx in range(int(x+2), int(x+w-2))]
+                menu_red = sum(r > .7 and g < .2 and b < .1 for r, g, b in samples)
+                check(samples and menu_red < max(8, len(samples)//50),
+                      f'{receipt} rendered {menu_red} menu-background pixels across visible '
+                      f'{kind} {(x, y, w, h)!r}')
+        finally:
+            bpy.data.images.remove(image)
 
     def prove_enabled_step(button_index, buttons, page, direction, receipt):
         delta = 1 if direction == 'next' else -1
@@ -361,6 +432,9 @@ def mapping_suite():
         check(any(candidate[0] == 'WINDOW' for candidate in hit_regions),
               f'{layout_probe} disabled {boundary} is outside VIEW_3D WINDOW: '
               f'{disabled_point!r} in {hit_regions!r}')
+        check(not any(candidate[0] in VISIBLE_REGION_SIDES for candidate in hit_regions),
+              f'{layout_probe} disabled {boundary} remains under a visible overlap region: '
+              f'{disabled_point!r} in {hit_regions!r}')
         print('MAPPING_HELD_DISABLED_READY', layout_probe, boundary, cancel_kind,
               'point', disabled_point, 'area', area.type, 'hit-regions', hit_regions,
               flush=True)
@@ -391,9 +465,6 @@ def mapping_suite():
               f'{layout_probe} held {boundary} {cancel_kind} left modal guards {modal_ids!r}')
         print('MAPPING_HELD_DISABLED_POST_RELEASE', layout_probe, boundary, cancel_kind,
               'modal=[]', flush=True)
-        # Establish an unambiguous VIEW_3D WINDOW context only after proving no guard remains.
-        event('MOUSEMOVE', 'NOTHING', (cx, cy))
-        yield from settle()
         for key, expected_tool in (
                 ('W', 'builtin.move'), ('E', 'builtin.rotate'), ('R', 'builtin.scale')):
             yield from press_tool(key, expected_tool)
@@ -414,6 +485,232 @@ def mapping_suite():
         print('MAPPING_HELD_DISABLED_CANCEL', layout_probe, boundary, cancel_kind,
               'trailing-owner-release no-dispatch no-setting WER reopened-literal', expected,
               flush=True)
+
+    def visible_region_change_cancel(property_name, region_type):
+        check(layout_probe == 'standard', 'visible-region change probe requires standard layout')
+        space = area.spaces.active
+        initial_visibility = getattr(space, property_name)
+        bpy.context.preferences.view.use_reduce_motion = False
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            setattr(space, property_name, False)
+        area.tag_redraw()
+        yield from settle(16)
+
+        def region_rects():
+            return [
+                (candidate.x, candidate.y, candidate.width, candidate.height)
+                for candidate in area.regions if candidate.type == region_type
+            ]
+
+        def start_session():
+            reset_settings()
+            before = settings()['center_buttons']
+            counts = len(observed), len(settings_observed)
+            event('MOUSEMOVE', 'NOTHING', (cx, cy))
+            event('SPACE')
+            yield from settle(8)
+            modal_ids = [op.bl_idname for op in win.modal_operators]
+            check('VIEW3D_OT_axismeld_hotbox' in modal_ids,
+                  f'{region_type} change probe did not start a hotbox session: {modal_ids!r}')
+            return before, counts, tuple(position)
+
+        def finish_cancel(before, counts, unchanged_point, direction):
+            check(tuple(position) == unchanged_point,
+                  f'{region_type} {direction} cancellation probe moved the pointer')
+            modal_ids = [op.bl_idname for op in win.modal_operators]
+            check('VIEW3D_OT_axismeld_hotbox' not in modal_ids,
+                  f'{region_type} {direction} change left the hotbox session active '
+                  f'{modal_ids!r}')
+            event('SPACE', 'RELEASE')
+            yield from settle()
+            modal_ids = [op.bl_idname for op in win.modal_operators]
+            check(not modal_ids,
+                  f'{region_type} {direction} Space release left modal guards {modal_ids!r}')
+            count, setting_count = counts
+            check(len(observed) == count and len(settings_observed) == setting_count and
+                  settings()['center_buttons'] == before,
+                  f'{region_type} {direction} change committed a hotbox outcome')
+            for key, expected_tool in (
+                    ('W', 'builtin.move'), ('E', 'builtin.rotate'), ('R', 'builtin.scale')):
+                yield from press_tool(key, expected_tool)
+
+        # Hidden -> visible changes the full safe rectangle as soon as the native
+        # overlap animation starts, so the old session must cancel at the same point.
+        before, counts, unchanged_point = yield from start_session()
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            setattr(space, property_name, True)
+        area.tag_redraw()
+        yield
+        first_visible = tuple(region_rects())
+        check(any(w > 1 and h > 1 for _x, _y, w, h in first_visible),
+              f'{property_name} did not expose a real {region_type} region')
+        event('MOUSEMOVE', 'NOTHING', unchanged_point)
+        yield from settle()
+        yield from finish_cancel(before, counts, unchanged_point, 'hidden-to-visible')
+
+        # Visible -> hidden keeps the full original winrct while Blender's native
+        # overlap fade is active.  It must remain a live session during that fade,
+        # then cancel once the region has actually disappeared.
+        yield from settle(16)
+        before, counts, unchanged_point = yield from start_session()
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            setattr(space, property_name, False)
+        area.tag_redraw()
+        yield
+        in_flight = tuple(region_rects())
+        check(any(w > 1 and h > 1 for _x, _y, w, h in in_flight),
+              f'{region_type} did not retain its full rect during native hide animation: '
+              f'{in_flight!r}')
+        event('MOUSEMOVE', 'NOTHING', unchanged_point)
+        yield from settle()
+        modal_ids = [op.bl_idname for op in win.modal_operators]
+        check('VIEW3D_OT_axismeld_hotbox' in modal_ids,
+              f'{region_type} hide animation discarded its full bounds early: {modal_ids!r}')
+        hidden = tuple(region_rects())
+        for _attempt in range(40):
+            if all(w <= 1 or h <= 1 for _x, _y, w, h in hidden):
+                break
+            yield
+            hidden = tuple(region_rects())
+        check(all(w <= 1 or h <= 1 for _x, _y, w, h in hidden),
+              f'{region_type} native hide animation did not finish: {hidden!r}')
+        event('MOUSEMOVE', 'NOTHING', unchanged_point)
+        yield from settle()
+        yield from finish_cancel(before, counts, unchanged_point, 'visible-to-hidden')
+
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            setattr(space, property_name, initial_visibility)
+        area.tag_redraw()
+        yield from settle(16)
+        print('MAPPING_VISIBLE_REGION_CHANGE_CANCEL', property_name, region_type,
+              'point', unchanged_point, 'first-visible', first_visible,
+              'hide-in-flight', in_flight, 'hidden-final', hidden,
+              'both-directions release-modal=[] WER', flush=True)
+
+    def quad_upper_overlap_probe():
+        check(layout_probe == 'quad', 'upper overlap probe requires four-view layout')
+        upper = min(quad_windows, key=lambda candidate: (-candidate.y, candidate.x))
+        upper_window, upper_bounds, upper_obstacles = observed_visible_bounds(area, upper)
+        kinds = {kind for _side, _rect, kind in upper_obstacles}
+        check(kinds == {'TOOLS', 'TOOL_HEADER'} and upper_bounds[0] > upper_window[0] and
+              upper_bounds[3] < upper_window[3],
+              f'2x upper-left WINDOW did not include its intersecting toolbar/header: '
+              f'{upper_obstacles!r}')
+        check('UI' not in kinds,
+              f'2x upper-left WINDOW was clipped by non-intersecting UI: '
+              f'{upper_obstacles!r}')
+        reset_settings('LEFTMOUSE')
+        count, setting_count = len(observed), len(settings_observed)
+        point = (upper.x+upper.width//2, upper.y+upper.height//2)
+        event('MOUSEMOVE', 'NOTHING', point)
+        yield from settle()
+        baseline_path = artifacts / 'mapping-quad-upper-before.png'
+        with bpy.context.temp_override(window=win, area=area, region=upper):
+            bpy.ops.screen.screenshot(filepath=str(baseline_path))
+        print('SCREENSHOT', baseline_path, flush=True)
+        event('SPACE')
+        yield from settle(8)
+        modal_ids = [op.bl_idname for op in win.modal_operators]
+        check('VIEW3D_OT_axismeld_hotbox' in modal_ids,
+              f'2x upper-left safe area rejected its hotbox: {modal_ids!r}')
+        path = artifacts / 'mapping-quad-upper-intersecting-overlaps.png'
+        with bpy.context.temp_override(window=win, area=area, region=upper):
+            bpy.ops.screen.screenshot(filepath=str(path))
+        print('SCREENSHOT', path, flush=True)
+        baseline, baseline_pixels, baseline_width = image_pixels(baseline_path)
+        image, pixels, width = image_pixels(path)
+        try:
+            check(width == baseline_width, '2x upper-left screenshot dimensions changed')
+            bx, by, bw, bh = upper_bounds
+            safe_changed = sum(
+                sum(abs(a-b) for a, b in zip(
+                    pixels[(yy*width+xx)*4:(yy*width+xx)*4+3],
+                    baseline_pixels[(yy*width+xx)*4:(yy*width+xx)*4+3])) > .12
+                for yy in range(int(by), int(by+bh))
+                for xx in range(int(bx), int(bx+bw)))
+            check(safe_changed > 200,
+                  f'2x upper-left hotbox did not render in safe bounds: '
+                  f'{safe_changed} changed pixels')
+            for _side, (x, y, w, h), kind in upper_obstacles:
+                obstacle_changed = sum(
+                    sum(abs(a-b) for a, b in zip(
+                        pixels[(yy*width+xx)*4:(yy*width+xx)*4+3],
+                        baseline_pixels[(yy*width+xx)*4:(yy*width+xx)*4+3])) > .12
+                    for yy in range(int(y+2), int(y+h-2))
+                    for xx in range(int(x+2), int(x+w-2)))
+                check(obstacle_changed < max(20, int(w*h)//50),
+                      f'2x upper-left hotbox changed {obstacle_changed} pixels over {kind}')
+        finally:
+            bpy.data.images.remove(baseline)
+            bpy.data.images.remove(image)
+        event('LEFTMOUSE')
+        yield
+        event('LEFTMOUSE', 'RELEASE')
+        yield from settle()
+        check('VIEW3D_OT_axismeld_hotbox' in
+              [op.bl_idname for op in win.modal_operators],
+              '2x upper-left center mapping was not reachable by real input')
+        event('SPACE', 'RELEASE')
+        yield from settle()
+        check(not win.modal_operators and len(observed) == count and
+              len(settings_observed) == setting_count,
+              '2x upper-left overlap probe leaked modal or dispatch state')
+        print('MAPPING_QUAD_UPPER_OVERLAP', 'window', upper_window, 'safe', upper_bounds,
+              'obstacles', upper_obstacles, 'real-center-input modal=[]', flush=True)
+
+    def visible_dpi_change_cancel():
+        check(layout_probe == 'standard', 'DPI change probe requires standard layout')
+        space = area.spaces.active
+        initial_visibility = space.show_region_ui
+        initial_scale = bpy.context.preferences.view.ui_scale
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            space.show_region_ui = True
+        area.tag_redraw()
+        yield from settle(16)
+        ui_region = next(candidate for candidate in area.regions
+                         if candidate.type == 'UI' and candidate.width > 1)
+        before_rect = (ui_region.x, ui_region.y, ui_region.width, ui_region.height)
+        reset_settings()
+        before = settings()['center_buttons']
+        count, setting_count = len(observed), len(settings_observed)
+        event('MOUSEMOVE', 'NOTHING', (cx, cy))
+        event('SPACE')
+        yield from settle(8)
+        check('VIEW3D_OT_axismeld_hotbox' in
+              [op.bl_idname for op in win.modal_operators],
+              'DPI change probe did not start a hotbox session')
+        unchanged_point = tuple(position)
+        bpy.context.preferences.view.ui_scale = 1.2
+        area.tag_redraw()
+        yield from settle(16)
+        ui_region = next(candidate for candidate in area.regions
+                         if candidate.type == 'UI' and candidate.width > 1)
+        after_rect = (ui_region.x, ui_region.y, ui_region.width, ui_region.height)
+        check(after_rect != before_rect and after_rect[2] != before_rect[2],
+              f'UI scale input did not resize the visible sidebar: '
+              f'{before_rect!r} -> {after_rect!r}')
+        event('MOUSEMOVE', 'NOTHING', unchanged_point)
+        yield from settle()
+        check(tuple(position) == unchanged_point and
+              'VIEW3D_OT_axismeld_hotbox' not in
+              [op.bl_idname for op in win.modal_operators],
+              'DPI change did not cancel at the original pointer')
+        event('SPACE', 'RELEASE')
+        yield from settle()
+        check(not win.modal_operators and len(observed) == count and
+              len(settings_observed) == setting_count and
+              settings()['center_buttons'] == before,
+              'DPI change leaked modal or outcome state')
+        for key, expected_tool in (
+                ('W', 'builtin.move'), ('E', 'builtin.rotate'), ('R', 'builtin.scale')):
+            yield from press_tool(key, expected_tool)
+        bpy.context.preferences.view.ui_scale = initial_scale
+        with bpy.context.temp_override(window=win, area=area, region=region):
+            space.show_region_ui = initial_visibility
+        area.tag_redraw()
+        yield from settle(16)
+        print('MAPPING_DPI_CHANGE_CANCEL', 'point', unchanged_point,
+              'before', before_rect, 'after', after_rect, 'release-modal=[] WER', flush=True)
 
     feedback_probe = os.environ.get('AXISMELD_TEST_CASCADE_FEEDBACK')
     if feedback_probe:
@@ -718,12 +1015,18 @@ def mapping_suite():
               settings()['center_buttons']['RIGHTMOUSE'] == 'views',
               'Esc committed a held mapping')
         yield from press_tool('R', 'builtin.scale')
+        yield from visible_region_change_cancel('show_region_toolbar', 'TOOLS')
+        yield from visible_region_change_cancel('show_region_ui', 'UI')
+        yield from visible_dpi_change_cancel()
         check(not observed, 'mapping-only suite reached the command dispatcher')
         print('PASS standard mappings: native blocks, all labels, hover, no drift, releases and W/E/R',
               flush=True)
     else:
-        yield from held_disabled_cancel('previous', 'space-first', 2)
-        yield from held_disabled_cancel('next', 'esc', 3)
+        if layout_probe == 'quad':
+            yield from quad_upper_overlap_probe()
+        held_reopen_indices = (1, 1) if layout_probe == 'quad' else (2, 3)
+        yield from held_disabled_cancel('previous', 'space-first', held_reopen_indices[0])
+        yield from held_disabled_cancel('next', 'esc', held_reopen_indices[1])
 
         selected_indices = (11, 12, 9)
         for button_index, selected_index in enumerate(selected_indices):
@@ -1016,13 +1319,21 @@ def suite():
             area = min((a for a in win.screen.areas if a.type == 'VIEW_3D' and a.width < 500),
                        key=lambda a: a.height)
             region = next(r for r in area.regions if r.type == 'WINDOW')
+            area.spaces.active.show_region_toolbar = False
+            yield from settle(8)
         elif layout_probe == 'quad':
             bpy.context.preferences.view.ui_scale = 2.0
             yield from settle(8)
-            area.spaces.active.show_region_toolbar = False
-            area.spaces.active.show_region_ui = False
+            region = next(r for r in area.regions if r.type == 'WINDOW')
+            with bpy.context.temp_override(window=win, area=area, region=region):
+                check(bpy.ops.screen.screen_full_area() == {'FINISHED'},
+                      '2x quad native-list probe could not maximize its disposable VIEW_3D')
+            yield from settle(8)
+            area = next(a for a in win.screen.areas if a.type == 'VIEW_3D')
+            area.spaces.active.show_region_toolbar = True
+            area.spaces.active.show_region_ui = True
             area.spaces.active.show_region_header = False
-            area.spaces.active.show_region_tool_header = False
+            area.spaces.active.show_region_tool_header = True
             region = next(r for r in area.regions if r.type == 'WINDOW')
             with bpy.context.temp_override(window=win, area=area, region=region):
                 bpy.ops.view3d.axismeld_view(action='TOGGLE_QUAD')
@@ -1037,7 +1348,7 @@ def suite():
             check(360 <= logical_width < 430 and 320 <= logical_height < 420,
                   f'narrow probe outside bounded dimensions: {logical_width}x{logical_height}')
         else:
-            check(360 <= logical_width < 430 and 200 <= logical_height < 260,
+            check(430 <= logical_width < 500 and 200 <= logical_height < 260,
                   f'2x quad probe outside bounded dimensions: {logical_width}x{logical_height}')
         print('NATIVE_LIST_LAYOUT', layout_probe, 'scale', scale, 'logical', logical_width,
               logical_height, 'physical', region.width, region.height, 'origin', region.x, region.y,
@@ -1046,7 +1357,20 @@ def suite():
               'SPACE press -> center RIGHTMOUSE center.controls -> LEFTMOUSE parent/leaf',
               flush=True)
         cx, cy = region.x+region.width/2, region.y+region.height/2
-        bounds = (region.x, region.y, region.width, region.height)
+        window_bounds, bounds, visible_obstacles = observed_visible_bounds(area, region)
+        print('NATIVE_LIST_VISIBLE_BOUNDS', layout_probe, 'window', window_bounds, 'safe', bounds,
+              'obstacles', visible_obstacles, flush=True)
+        if layout_probe == 'narrow':
+            check(any(kind == 'TOOL_HEADER' for _side, _rect, kind in visible_obstacles),
+                  'narrow native-list probe requires its real visible Tool Header obstacle')
+        else:
+            obstacle_kinds = {kind for _side, _rect, kind in visible_obstacles}
+            check(obstacle_kinds == {'TOOLS'} and bounds[0] > window_bounds[0],
+                  f'2x lower-left native-list WINDOW did not isolate its toolbar: '
+                  f'{visible_obstacles!r}')
+            check('TOOL_HEADER' not in obstacle_kinds and 'UI' not in obstacle_kinds,
+                  f'2x lower-left native-list WINDOW was clipped by a non-intersecting sibling: '
+                  f'{visible_obstacles!r}')
         blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
         def measure(label):
             return blf.dimensions(0, label)[0] / scale + (
@@ -1094,10 +1418,18 @@ def suite():
                 check(before['center_buttons']['RIGHTMOUSE'] == 'center.controls',
                       f'{layout_probe} {name} input mapping was not applied')
                 owner, choices = yield from open_list(controls_index, labels)
+                bx, by, bw, bh = bounds
                 check(len(choices) == len(labels) and all(
-                    x >= region.x and y >= region.y and x+w <= region.x+region.width and
-                    y+h <= region.y+region.height for x, y, w, h in choices),
-                    f'{layout_probe} {name} did not expose every list row inside the real pane')
+                    x >= bx and y >= by and x+w <= bx+bw and y+h <= by+bh
+                    for x, y, w, h in choices),
+                    f'{layout_probe} {name} did not expose every list row inside visible bounds')
+                for choice in choices:
+                    x, y, w, h = choice
+                    for _side, obstacle, kind in visible_obstacles:
+                        ox, oy, ow, oh = obstacle
+                        check(x+w <= ox or ox+ow <= x or y+h <= oy or oy+oh <= y,
+                              f'{layout_probe} {name} row {choice!r} overlaps visible '
+                              f'{kind} {obstacle!r}')
                 ox, oy, ow, oh = owner
                 list_left = min(r[0] for r in choices)
                 list_right = max(r[0]+r[2] for r in choices)
@@ -1146,7 +1478,9 @@ def suite():
         scale = bpy.context.preferences.system.ui_scale
         region = next(r for r in area.regions if r.type == 'WINDOW')
         cx, cy = region.x+region.width/2, region.y+region.height/2
-        bounds = (region.x, region.y, region.width, region.height)
+        window_bounds, bounds, visible_obstacles = observed_visible_bounds(area, region)
+        print('NATIVE_STYLE_VISIBLE_BOUNDS', requested_scale, 'window', window_bounds,
+              'safe', bounds, 'obstacles', visible_obstacles, flush=True)
         blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
         def measure(label):
             return blf.dimensions(0, label)[0] / scale + (
@@ -1188,6 +1522,19 @@ def suite():
                 yield from click(list_anchor)
             choices = native_list(list_anchor, labels, measure, bounds, scale,
                                   marking_origin=(cx, cy) if controls_index is None else None)
+            bx, by, bw, bh = bounds
+            visible_rects = [rect for rect in (*ring['items'], ring['back'], *choices)
+                             if rect is not None]
+            for rect in visible_rects:
+                x, y, w, h = rect
+                check(x >= bx and y >= by and x+w <= bx+bw and y+h <= by+bh,
+                      f'{entry} {requested_scale}x rect {rect!r} escaped visible bounds '
+                      f'{bounds!r}')
+                for _side, obstacle, kind in visible_obstacles:
+                    ox, oy, ow, oh = obstacle
+                    check(x+w <= ox or ox+ow <= x or y+h <= oy or oy+oh <= y,
+                          f'{entry} {requested_scale}x rect {rect!r} overlaps visible '
+                          f'{kind} {obstacle!r}')
             normal_path = screenshot(f'native-style-{entry}-{requested_scale}-normal.png')
             initial_radio = 0 if entry.startswith('style') else 1
             if not entry.startswith('rows'):

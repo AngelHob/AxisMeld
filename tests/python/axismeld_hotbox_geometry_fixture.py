@@ -8,6 +8,42 @@ pose and settings effects; native unit tests verify geometry separately.
 import math
 
 
+def visible_bounds(window, obstacles):
+    """Trim a WINDOW rectangle by independently observed aligned overlap regions.
+
+    ``obstacles`` contains ``(side, rect)`` pairs in window coordinates.  The caller
+    decides visibility from the real UI state; hidden one-pixel Blender regions must
+    not be supplied.
+    """
+    x, y, w, h = window
+    window_left, window_right = x, x+w
+    window_bottom, window_top = y, y+h
+    left, right = window_left, window_right
+    bottom, top = window_bottom, window_top
+    for side, (ox, oy, ow, oh) in obstacles:
+        # Eligibility is always against the original WINDOW.  Testing against the
+        # already-trimmed rectangle would make perpendicular obstacles order-dependent.
+        obstacle_left = max(window_left, ox)
+        obstacle_right = min(window_right, ox+ow)
+        obstacle_bottom = max(window_bottom, oy)
+        obstacle_top = min(window_top, oy+oh)
+        if obstacle_left >= obstacle_right or obstacle_bottom >= obstacle_top:
+            continue
+        if side == 'left':
+            left = max(left, obstacle_right)
+        elif side == 'right':
+            right = min(right, obstacle_left)
+        elif side == 'bottom':
+            bottom = max(bottom, obstacle_top)
+        elif side == 'top':
+            top = min(top, obstacle_bottom)
+        else:
+            raise AssertionError(f'unknown visible-region side {side!r}')
+    if left >= right or bottom >= top:
+        raise AssertionError(f'visible obstacles consume WINDOW {window!r}')
+    return left, bottom, right-left, top-bottom
+
+
 def view_page(anchor, labels, measure, bounds, scale):
     ax, ay, aw, ah = (v / scale for v in anchor)
     bx, by, bw, bh = (v / scale for v in bounds)

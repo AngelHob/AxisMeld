@@ -113,16 +113,15 @@ void hotbox_measure(HotboxVisual &data)
 void hotbox_layout(HotboxVisual &data)
 {
   const std::array<float, 2> origin = {data.origin[0], data.origin[1]};
-  data.menu_layout = layout_menu(data.snapshot,
-                                 data.width,
-                                 data.height,
-                                 data.center[0],
-                                 data.center[1],
-                                 data.open_path,
-                                 data.scroll_offsets,
-                                 data.label_widths,
-                                 data.marking ? &origin : nullptr,
-                                 data.tool_root);
+  data.menu_layout = layout_menu_in_bounds(data.snapshot,
+                                            data.safe_bounds,
+                                            data.center[0],
+                                            data.center[1],
+                                            data.open_path,
+                                            data.scroll_offsets,
+                                            data.label_widths,
+                                            data.marking ? &origin : nullptr,
+                                            data.tool_root);
 }
 
 void hotbox_draw(const bContext *C, const HotboxVisual &data)

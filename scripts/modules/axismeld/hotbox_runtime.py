@@ -9,6 +9,7 @@ from threading import Lock
 from .commands import COMMANDS, PRESET_NAME
 from .tool_hotbox import DIRECTIONS, MENU_COMMANDS
 from .creation_hotbox import CREATE_COMMANDS
+from .context_modeling_hotbox import modeling_root
 from .modeling_registry import SPECS as MODELING_SPECS
 from .hotbox_catalog import default_catalog, command_policy
 from .hotbox_profiles import (CANONICAL_ROWS, DEFAULT_APPEARANCE, DEFAULT_SETTINGS, MENU_IDS, MOUSE_BUTTONS,

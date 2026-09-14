@@ -5,11 +5,14 @@ from copy import deepcopy
 
 from .context_hotbox import COMPONENT_HOTBOX
 from .creation_hotbox import CREATE_HOTBOX
+from .context_modeling_hotbox import MODEL_HOTBOX
 from .commands import baseline_bindings, binding_events, RESERVED_KEYS
 from .profiles import MODIFIERS
 from .modeling_registry import SPECS as MODELING_SPECS, keymap_targets
 
-CONTEXT_HOTBOXES = frozenset({COMPONENT_HOTBOX, CREATE_HOTBOX})
+CONTEXT_TARGETS = {COMPONENT_HOTBOX: ('Object Mode', 'Mesh'),
+                   CREATE_HOTBOX: ('Object Mode',), MODEL_HOTBOX: ('Mesh',)}
+CONTEXT_HOTBOXES = frozenset(CONTEXT_TARGETS)
 
 def overlaps(event, owned):
     if event.get('type') != owned['type']:
@@ -91,6 +94,7 @@ def generate_keymaps(base, bindings):
             if command == 'hotbox.open':
                 continue
             target = (keymap_targets(command) if command in MODELING_SPECS else
+                      CONTEXT_TARGETS[command] if command in CONTEXT_TARGETS else
                       ('3D View',) if command.startswith('view.') else ('Object Mode', 'Mesh'))
             if name in target and event is not None:
                 item = ('axismeld.command', dict(event),

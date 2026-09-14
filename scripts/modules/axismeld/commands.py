@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from .tool_hotbox import ORIENTATIONS
 from .creation_hotbox import CREATE_HOTBOX, PRIMITIVES
+from .context_modeling_hotbox import MODEL_HOTBOX
 from .modeling_registry import SPECS as MODELING_SPECS
 
 PRESET_NAME = 'AxisMeld_Maya_2026'
@@ -37,6 +38,8 @@ COMMANDS = MappingProxyType({command.id: command for command in (
       for name, label, _direction, _operator, _properties in PRIMITIVES),
     Command(CREATE_HOTBOX, 'Empty Context Create Hotbox', 'RIGHTMOUSE', shift=True,
             difference='Object-only empty-selection creation menu; direct mouse entry requires empty pointer space.'),
+    Command(MODEL_HOTBOX, 'Selected Component Modeling Hotbox', 'RIGHTMOUSE', shift=True,
+            difference='Single explicit Edit Mesh domain with visible editable selection; uses existing Blender modeling operations.'),
     *(Command(identifier, label,
               difference='Uses a persistent Blender selection tool; Paint is circle selection, not Maya brush semantics.')
       for identifier, label in (('selection.marquee', 'Marquee Select'),

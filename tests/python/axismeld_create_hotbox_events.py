@@ -279,10 +279,13 @@ def suite():
         obj.select_set(True)
         bpy.context.view_layer.objects.active = obj
         bpy.ops.object.mode_set(mode='EDIT')
-    yield from native_fallback('Mesh Edit')
+        # Selected single-domain Edit now belongs to the independent MODEL hotbox.
+        # Keep proving native Cursor fallback here for an empty Edit selection.
+        bpy.ops.mesh.select_all(action='DESELECT')
+    yield from native_fallback('Mesh Edit empty selection')
     with override():
         bpy.ops.object.mode_set(mode='OBJECT')
-    print('PASS selected, Edit and unselected pointer-target native fallback', flush=True)
+    print('PASS selected Object, empty Edit and unselected pointer-target native fallback', flush=True)
 
     # Real Space -> Create -> native list -> shared radial. Retain an existing
     # selected object to prove this explicit entry has a different scope to RMB.
