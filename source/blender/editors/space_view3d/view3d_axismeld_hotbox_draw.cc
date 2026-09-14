@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstring>
 #include <map>
+#include <unordered_set>
 
 #include "BLF_api.hh"
 #include "DNA_theme_types.h"
@@ -11,6 +12,7 @@
 #include "UI_interface_c.hh"
 #include "UI_menu_overlay.hh"
 #include "UI_resources.hh"
+#include "view3d_axismeld_hotbox_icons.hh"
 #include "view3d_axismeld_hotbox_internal.hh"
 
 namespace blender::axismeld {
@@ -31,42 +33,14 @@ int menu_radio_icon(const MenuSnapshot &snapshot, const MenuNode &node)
   return ICON_NONE;
 }
 
-int menu_icon(const MenuNode &node)
+bool reserve_child_state_column(const MenuSnapshot &snapshot, const MenuNode &owner)
 {
-  if (node.id == "views" || node.value == "views") {
-    return ICON_ORIENTATION_GLOBAL;
-  }
-  if (node.id == "center.recent" || node.value == "center.recent") {
-    return ICON_RECOVER_LAST;
-  }
-  if (node.id == "center.controls" || node.value == "center.controls") {
-    return ICON_PREFERENCES;
-  }
-  if (node.command == "view.wireframe") {
-    return ICON_SHADING_WIRE;
-  }
-  if (node.command == "view.shaded") {
-    return ICON_SHADING_SOLID;
-  }
-  if (node.command == "view.perspective") {
-    return ICON_VIEW_PERSPECTIVE;
-  }
-  if (node.command == "view.side" || node.command == "view.bottom" ||
-      node.command == "view.front" || node.command == "view.back" || node.command == "view.top" ||
-      node.command == "view.left")
-  {
-    return ICON_VIEW_ORTHO;
-  }
-  if (node.command == "selection.vertex_mode") {
-    return ICON_VERTEXSEL;
-  }
-  if (node.command == "selection.edge_mode") {
-    return ICON_EDGESEL;
-  }
-  if (node.command == "selection.face_mode") {
-    return ICON_FACESEL;
-  }
-  return ICON_NONE;
+  // Reserve the column for the entire directory, including rows on other pages.
+  // Directional rings retain individual icon slots and their established inner edges.
+  return owner.kind == MenuKind::Menu && owner.presentation != "radial" && owner.id != "views" &&
+         std::any_of(owner.children.begin(), owner.children.end(), [&](const MenuNode &node) {
+           return menu_radio_icon(snapshot, node) != ICON_NONE;
+         });
 }
 }  // namespace
 
@@ -89,25 +63,26 @@ void hotbox_measure(HotboxVisual &data)
   const uiFontStyle &style = ui::style_get_dpi()->widget;
   ui::fontstyle_set(&style);
   const int font = style.uifont_id;
-  auto measure = [&](auto &&self, const std::vector<MenuNode> &nodes) -> void {
+  auto measure = [&](auto &&self, const std::vector<MenuNode> &nodes, const bool state_column) -> void {
     for (const MenuNode &node : nodes) {
       const bool view_label = node.id.starts_with("views.") && node.kind == MenuKind::Command;
       const std::string_view label = node.label;
+      const float icon_width =
+          node.kind == MenuKind::Separator ?
+              0.0f :
+              (hotbox_semantic_icon(node) != ICON_NONE ? 20.0f : 0.0f) +
+                  (state_column || menu_radio_icon(data.snapshot, node) != ICON_NONE ? 20.0f : 0.0f);
       data.label_widths[node.id] = BLF_width(font, label.data(), label.size()) / data.scale +
-                                   (!view_label && (menu_icon(node) != ICON_NONE ||
-                                                    menu_radio_icon(data.snapshot, node) != ICON_NONE) ?
-                                        20.0f :
-                                        0.0f);
+                                   icon_width;
       if (view_label) {
         const auto compact = hotbox_view_short_label(node.command);
-        data.label_widths["@compact:" + node.id] = BLF_width(
-                                                       font, compact.data(), compact.size()) /
-                                                   data.scale;
+        data.label_widths["@compact:" + node.id] =
+            BLF_width(font, compact.data(), compact.size()) / data.scale + icon_width;
       }
-      self(self, node.children);
+      self(self, node.children, reserve_child_state_column(data.snapshot, node));
     }
   };
-  measure(measure, data.snapshot.menus);
+  measure(measure, data.snapshot.menus, false);
 }
 
 void hotbox_layout(HotboxVisual &data)
@@ -132,7 +107,23 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
     std::string text;
     bool selected, disabled, separator, placeholder;
     int icon = ICON_NONE;
+    int state_icon = ICON_NONE;
+    bool state_column = false;
   };
+  std::unordered_set<std::string> state_columns;
+  const auto collect_columns = [&](auto &&self, const std::vector<MenuNode> &nodes) -> void {
+    for (const MenuNode &node : nodes) {
+      if (reserve_child_state_column(data.snapshot, node)) {
+        for (const MenuNode &child : node.children) {
+          if (child.kind != MenuKind::Separator) {
+            state_columns.insert(child.id);
+          }
+        }
+      }
+      self(self, node.children);
+    }
+  };
+  collect_columns(collect_columns, data.snapshot.menus);
   std::vector<Entry> entries;
   {
     for (const MenuRect &rect : data.menu_layout.rects) {
@@ -154,10 +145,9 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
                          !rect.interactive,
                          node && node->kind == MenuKind::Separator,
                          node && node->kind == MenuKind::Disabled,
-                         back                 ? ICON_BACK :
-                         rect.direction_label ? ICON_NONE :
-                         node                 ? menu_icon(*node) :
-                                                ICON_NONE});
+                         back ? ICON_BACK : node ? hotbox_semantic_icon(*node) : ICON_NONE,
+                         !back && node ? menu_radio_icon(data.snapshot, *node) : ICON_NONE,
+                         !back && state_columns.contains(rect.id)});
     }
   }
   const float scale = data.scale;
@@ -226,13 +216,14 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
       continue;
     }
     const float text_width = BLF_width(font, entry.text.c_str(), entry.text.size());
-    const float icon_width = entry.icon != ICON_NONE ? 20 * scale : 0;
+    const float state_width = entry.state_column || entry.state_icon != ICON_NONE ? 20 * scale : 0;
+    const float icon_width = state_width + (entry.icon != ICON_NONE ? 20 * scale : 0);
     const float left = (r.x + r.width / 2) * scale - (text_width + icon_width) / 2;
     // Occlude the label, not its padded button. Otherwise a few covered padding pixels
     // erase an entirely visible parent label. Covered labels must not bleed through a
     // translucent child and make its view name unreadable.
     const float label_height = std::max(float(BLF_height_max(font)),
-                                        entry.icon != ICON_NONE ? 16 * scale : 0.0f);
+                                        icon_width > 0 ? 16 * scale : 0.0f);
     const float label_bottom = (r.y + r.height / 2) * scale - label_height / 2;
     const bool occluded = std::any_of(entries.begin(), entries.end(), [&](const Entry &other) {
       const MenuRect &s = other.rect;
@@ -249,17 +240,19 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
     if (entry.disabled) {
       color[3] /= 2;
     }
-    if (entry.icon != ICON_NONE) {
-      ui::icon_draw_ex(left,
-                       (r.y + (r.height - 16) / 2) * scale,
-                       entry.icon,
-                       1.0f / scale,
-                       1.0f,
-                       0.0f,
-                       color,
-                       false,
-                       nullptr);
-    }
+    const auto draw_icon = [&](const int icon, const float x) {
+      if (icon != ICON_NONE) {
+        ui::icon_draw_ex(x,
+                         (r.y + (r.height - 16) / 2) * scale,
+                         icon,
+                         1.0f / scale,
+                         1.0f,
+                         0.0f,
+                         color,
+                         false,
+                         nullptr);
+      }
+    };
     if (entry.placeholder) {
       for (int i = 0; i < 3; i++) {
         color[i] = uchar(appearance.placeholder[i]);
@@ -276,6 +269,8 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
         color[i] = uchar(appearance.hover_text[i]);
       }
     }
+    draw_icon(entry.state_icon, left);
+    draw_icon(entry.icon, left + state_width);
     const rcti text_rect = {int(left + icon_width),
                             int(left + icon_width + text_width + 1),
                             int(r.y * scale),
@@ -316,11 +311,11 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data)
                                      !entry.disabled,
                                      submenu,
                                      icon_only,
-                                     r.native_menu ? (node ? menu_radio_icon(data.snapshot, *node) :
-                                                             ICON_NONE) :
-                                                     entry.icon,
+                                     icon_only ? ICON_NONE : entry.icon,
                                      !r.native_menu && !submenu,
-                                     entry.separator});
+                                     entry.separator,
+                                     icon_only ? ICON_NONE : entry.state_icon,
+                                     !icon_only && entry.state_column});
     }
   }
   for (const auto &[depth, blocks] : menu_levels) {

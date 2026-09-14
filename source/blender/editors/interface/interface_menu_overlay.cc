@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include "BKE_context.hh"
+#include "DNA_theme_types.h"
 #include "GPU_matrix.hh"
 #include "UI_interface_c.hh"
 #include "UI_menu_overlay.hh"
@@ -28,6 +29,36 @@ void menu_overlay_draw(const bContext *C,
   block_theme_style_set(block, BLOCK_THEME_STYLE_POPUP);
   Vector<Button *> centered_buttons;
   for (const MenuOverlayItem &item : items) {
+    const auto apply_state = [&](Button *button) {
+      if (item.hovered) {
+        button->flag |= UI_HOVER;
+      }
+      if (!item.enabled) {
+        button_disable(button, "");
+      }
+    };
+    // One native block owns the backdrop. A separate drawing-only button preserves
+    // both the status and semantic icon, including empty status cells between pages.
+    const int state_width = !item.icon_only && !item.separator &&
+                                    (item.state_column || item.state_icon) ?
+                                int(20 * UI_SCALE_FAC) :
+                                0;
+    if (state_width) {
+      Button *state = uiDefIconBut(block,
+                                  ButtonType::But,
+                                  item.state_icon,
+                                  item.rect.xmin,
+                                  item.rect.ymin,
+                                  state_width,
+                                  item.rect.ymax - item.rect.ymin,
+                                  nullptr,
+                                  0,
+                                  0,
+                                  std::nullopt);
+      apply_state(state);
+    }
+    const int label_x = item.rect.xmin + state_width;
+    const int label_width = item.rect.xmax - label_x;
     Button *button = item.icon_only ?
                          uiDefIconBut(block,
                                       ButtonType::But,
@@ -44,32 +75,27 @@ void menu_overlay_draw(const bContext *C,
                          uiDefIconTextMenuBut(block,
                                               nullptr,
                                               nullptr,
-                                              ICON_NONE,
+                                              item.icon,
                                               item.label,
-                                              item.rect.xmin,
+                                              label_x,
                                               item.rect.ymin,
-                                              item.rect.xmax - item.rect.xmin,
+                                              label_width,
                                               item.rect.ymax - item.rect.ymin,
                                               std::nullopt) :
                          uiDefIconTextBut(block,
                                           item.separator ? ButtonType::SeprLine : ButtonType::But,
                                           item.icon,
                                           item.label,
-                                          item.rect.xmin,
+                                          label_x,
                                           item.rect.ymin,
-                                          item.rect.xmax - item.rect.xmin,
+                                          label_width,
                                           item.rect.ymax - item.rect.ymin,
                                           nullptr,
                                           std::nullopt);
     if (item.centered) {
       centered_buttons.append(button);
     }
-    if (item.hovered) {
-      button->flag |= UI_HOVER;
-    }
-    if (!item.enabled) {
-      button_disable(button, "");
-    }
+    apply_state(button);
   }
   block_bounds_set_normal(block, 0);
   block_end(C, block);

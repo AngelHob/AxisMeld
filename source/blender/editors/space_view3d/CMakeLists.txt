@@ -21,6 +21,7 @@ set(SRC
   space_view3d.cc
   view3d_axismeld_hotbox.cc
   view3d_axismeld_hotbox_draw.cc
+  view3d_axismeld_hotbox_icons.cc
   view3d_axismeld_hotbox_model.cc
   view3d_axismeld_hotbox_release.cc
   view3d_axismeld_views.cc
@@ -75,6 +76,7 @@ set(SRC
   view3d_intern.hh
   view3d_axismeld.hh
   view3d_axismeld_hotbox_internal.hh
+  view3d_axismeld_hotbox_icons.hh
   view3d_navigate.hh
 )
 
@@ -130,6 +132,16 @@ blender_add_lib(bf_editor_space_view3d "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
 add_dependencies(bf_editor_space_view3d bf_rna)
 
 if(WITH_GTESTS)
+  blender_add_test_suite_lib(editor_hotbox_icons
+    "tests/hotbox_icons_test.cc"
+    ".;../include;../../axismeld;${CMAKE_BINARY_DIR}/source/blender/axismeld"
+    "" "bf::blenlib"
+    "view3d_axismeld_hotbox_icons.cc")
+  if(WITH_TESTS_SINGLE_BINARY)
+    add_dependencies(editor_hotbox_icons_tests axismeld_menu_fixture)
+  else()
+    add_dependencies(editor_hotbox_icons_hotbox_icons_test axismeld_menu_fixture)
+  endif()
   blender_add_test_suite_lib(editor_hotbox
     "tests/hotbox_model_test.cc"
     "../../axismeld" "" "bf::blenlib;bf::axismeld"

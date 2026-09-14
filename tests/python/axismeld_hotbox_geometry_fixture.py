@@ -8,6 +8,23 @@ pose and settings effects; native unit tests verify geometry separately.
 import math
 
 
+def label_prefix_starts(columns, scale):
+    """Observed whitespace after zero/one/two 20px icon slots, not label cropping.
+
+    The caller keeps each suffix to its original right edge and compares the full
+    independent BLF label template. Later word boundaries are not candidates.
+    """
+    starts = [0]
+    for left, right in zip(columns, columns[1:]):
+        # Four logical blank columns: invariant at 1x/2x, unlike scaling the
+        # endpoint-inclusive difference between adjacent foreground columns.
+        if right-left-1 < 4*scale:
+            continue
+        if any(abs(right-slots*20*scale) <= 8*scale for slots in (1, 2)):
+            starts.append(int(right))
+    return tuple(starts)
+
+
 def visible_bounds(window, obstacles):
     """Trim a WINDOW rectangle by independently observed aligned overlap regions.
 
@@ -45,6 +62,7 @@ def visible_bounds(window, obstacles):
 
 
 def view_page(anchor, labels, measure, bounds, scale):
+    """Views input geometry; measure is text-only, including compact captions."""
     ax, ay, aw, ah = (v / scale for v in anchor)
     bx, by, bw, bh = (v / scale for v in bounds)
     diagonal = math.sqrt(.5)
@@ -54,7 +72,7 @@ def view_page(anchor, labels, measure, bounds, scale):
         names = (['Persp', 'Side', 'Bottom', 'Front', 'Back', 'Top', 'Left'] if compact else
                  ['Perspective View', 'Right View', 'Bottom View', 'Front View',
                   'Back View', 'Top View', 'Left View', 'New Camera'])
-        widths = [measure(label) + 16 for label in names]
+        widths = [measure(label) + 20 + 16 for label in names]
         widths = [max(widths)] * len(widths)
         for ry in (0,):
             rectangles = [(-aw/2, -12 if compact else -19, aw, 24 if compact else 38)]
@@ -68,7 +86,7 @@ def view_page(anchor, labels, measure, bounds, scale):
                              for ox, oy, ow, oh in rectangles)
                 rectangles.append((x, y, w, 24))
             if with_style:
-                w = measure('Hotbox Style') + 60
+                w = measure('Hotbox Style') + 20 + 60
                 rectangles.append((-w/2, min(r[1] for r in rectangles)-28, w, 24))
             left = min(r[0] for r in rectangles)
             right = max(r[0]+r[2] for r in rectangles)

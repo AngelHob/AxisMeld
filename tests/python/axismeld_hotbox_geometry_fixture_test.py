@@ -7,6 +7,29 @@ from axismeld_hotbox_geometry_fixture import ellipse_page, native_page, visible_
 
 
 class VisibleBoundsTest(unittest.TestCase):
+    def test_label_prefix_candidates_preserve_full_text_after_two_icon_slots(self):
+        from axismeld_hotbox_geometry_fixture import label_prefix_starts
+        # Foreground columns of two 16px icons and a complete text run.
+        columns = [*range(16), *range(20, 36), *range(40, 100)]
+        self.assertEqual(label_prefix_starts(columns, 1), (0, 20, 40))
+        self.assertEqual(label_prefix_starts([*range(16), *range(20, 80)], 1), (0, 20))
+        self.assertEqual(label_prefix_starts(list(range(60)), 1), (0,))
+        # A later word boundary cannot be used to discard part of the full label.
+        self.assertEqual(label_prefix_starts([*range(60), *range(70, 100)], 1), (0,))
+        columns_2x = [*range(32), *range(40, 72), *range(80, 200)]
+        self.assertEqual(label_prefix_starts(columns_2x, 2), (0, 40, 80))
+
+    def test_view_leaf_fixture_reserves_semantic_icon_in_full_and_compact_labels(self):
+        from axismeld_hotbox_geometry_fixture import view_page
+        full = view_page((550, 450, 100, 38), [], lambda _label: 80,
+                         (0, 0, 1200, 900), 1)
+        self.assertEqual(full['items'][0][2], 116)
+        # Full text exceeds bounds; compact text must still retain the same 20px slot.
+        compact = view_page((180, 200, 100, 38), [],
+                            lambda label: 1000 if label.endswith('View') or label == 'New Camera' else 30,
+                            (0, 0, 460, 460), 1)
+        self.assertEqual(compact['items'][0][2], 66)
+
     def test_internal_tool_header_trims_top_of_offset_window(self):
         self.assertEqual(
             visible_bounds((2, 95, 392, 281), (

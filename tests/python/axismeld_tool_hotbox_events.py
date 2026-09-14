@@ -66,7 +66,7 @@ def suite():
         nodes = next(n for n in walk(default_catalog()) if n['id'] == 'tools.' + tool_name)['children']
         scale = bpy.context.preferences.system.ui_scale
         blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
-        widths = {n['id']: max(84, blf.dimensions(0, n['label'])[0] / scale +
+        widths = {n['id']: max(84, blf.dimensions(0, n['label'])[0] / scale + 20 +
                   (60 if n['kind'] == 'menu' else 16)) for n in nodes}
         # Views owns the spacing reference: title, icon, then primary-button padding.
         # Native tests compare inner edges against actual Views layouts independently.
@@ -564,7 +564,7 @@ def suite():
     from axismeld_hotbox_geometry_fixture import ellipse_page, native_page
 
     def open_space_move():
-        measure = lambda label: blf.dimensions(0, label)[0] / scale
+        measure = lambda label: blf.dimensions(0, label)[0] / scale + 20
         labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
         widths = [measure(label) + 40 for label in labels]
         left = cx - (sum(widths) + 60)*scale/2

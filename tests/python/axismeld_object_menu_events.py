@@ -12,6 +12,9 @@ from pathlib import Path
 import sys
 import traceback
 
+sys.path.insert(0, str(Path(__file__).parent))
+from axismeld_hotbox_geometry_fixture import label_prefix_starts
+
 import numpy as np
 import imbuf
 
@@ -317,20 +320,15 @@ def suite():
                 continue
             sample = sample[:, xs.min():xs.max()+1]
             samples = [sample]
-            # A native check indicator is an independent small glyph before the
-            # label. Recognize its isolated <=14px column cluster and following
-            # whitespace; do not treat its width as part of the label template.
+            # Independently match the full BLF label after zero/one/two observed
+            # icon slots. Semantic icons are 16px in a 20px slot; checkbox/radio
+            # adds another slot. Neither icon is part of the label template.
             columns = np.flatnonzero(np.any(sample, axis=0))
-            gaps = np.flatnonzero(np.diff(columns) >= 5*scale)
-            if len(gaps):
-                split = int(gaps[0])
-                prefix_width = int(columns[split]-columns[0]+1)
-                text_start = int(columns[split+1])
-                if prefix_width <= 14*scale and text_start <= 26*scale:
-                    suffix = sample[:,text_start:]
-                    sy,sx = np.nonzero(suffix)
-                    if len(sx):
-                        samples.append(suffix[sy.min():sy.max()+1,sx.min():sx.max()+1])
+            for text_start in label_prefix_starts(columns, scale)[1:]:
+                suffix = sample[:,text_start:]
+                sy,sx = np.nonzero(suffix)
+                if len(sx):
+                    samples.append(suffix[sy.min():sy.max()+1,sx.min():sx.max()+1])
             scores = []
             for label in labels:
                 target = glyph_template(label)

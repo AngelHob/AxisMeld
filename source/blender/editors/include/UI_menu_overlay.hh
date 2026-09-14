@@ -19,6 +19,8 @@ struct MenuOverlayItem {
   int icon = 0;       // Optional icon beside the label.
   bool centered = false;
   bool separator = false;
+  int state_icon = 0;  // Independent checkbox/radio icon, before the semantic icon.
+  bool state_column = false;  // Reserve its column even when this row has no state.
 };
 
 /** Draw native menu components without registering blocks or input handlers.

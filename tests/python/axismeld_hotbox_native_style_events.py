@@ -74,13 +74,15 @@ def check_radio_image(path, choices, selected_index, scale):
                 states.append(None)
                 continue
             x, y, w, h = rect
+            # Actual 1x Style capture places the independent radio center at row x+11;
+            # the semantic icon occupies the next column and must not count as state.
             ink = sum(min(pixels[(yy*width+xx)*4:(yy*width+xx)*4+3]) > .55
                       for yy in range(int(y+h/2-6*scale), int(y+h/2+6*scale))
-                      for xx in range(int(x+8*scale), int(x+20*scale)))
+                      for xx in range(int(x+5*scale), int(x+17*scale)))
             check(ink > 8*scale*scale, f'{path.name}: missing circle at {rect}')
             center = [min(pixels[(yy*width+xx)*4:(yy*width+xx)*4+3])
                       for yy in range(int(y+h/2-scale), int(y+h/2+scale))
-                      for xx in range(int(x+13*scale), int(x+15*scale))]
+                      for xx in range(int(x+10*scale), int(x+12*scale))]
             states.append(sum(center)/len(center) > .55)
         check(states == [None if rect is None else i == selected_index
                          for i, rect in enumerate(choices)],
@@ -213,11 +215,12 @@ def mapping_suite():
               f'2x lower-left WINDOW was clipped by a non-intersecting sibling: '
               f'{visible_obstacles!r}')
     blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
-    icon_labels = {'AxisMeld', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls'}
-    icon_labels.update(MAPPING_LABELS)
-
     def measure(label):
-        return blf.dimensions(0, label)[0] / scale + (20 if label in icon_labels else 0)
+        return blf.dimensions(0, label)[0] / scale + 20
+
+    def mapping_measure(label):
+        # Button mappings have a separate radio column; their menu titles do not.
+        return measure(label) + 20
 
     center_width = (measure('AxisMeld')+40)*scale
     center = (cx-center_width/2, cy-19*scale, center_width, 38*scale)
@@ -292,7 +295,7 @@ def mapping_suite():
     def open_mapping(button_index, first=0):
         owner, buttons = yield from open_buttons()
         yield from click(buttons['items'][button_index])
-        page = native_page(buttons['items'][button_index], MAPPING_LABELS, measure, bounds, scale,
+        page = native_page(buttons['items'][button_index], MAPPING_LABELS, mapping_measure, bounds, scale,
                            first=first)
         return owner, buttons, page
 
@@ -374,7 +377,7 @@ def mapping_suite():
     def prove_enabled_step(button_index, buttons, page, direction, receipt):
         delta = 1 if direction == 'next' else -1
         control_rect = page[direction]
-        target = native_page(buttons['items'][button_index], MAPPING_LABELS, measure, bounds,
+        target = native_page(buttons['items'][button_index], MAPPING_LABELS, mapping_measure, bounds,
                              scale, first=page['first']+delta)
         exposed_index = (target['first']+target['capacity']-1 if delta > 0 else target['first'])
         expected = MAPPING_VALUES[exposed_index]
@@ -411,7 +414,7 @@ def mapping_suite():
         if boundary == 'next':
             while page['first']+page['capacity'] < 13:
                 yield from click(page['next'])
-                page = native_page(buttons['items'][0], MAPPING_LABELS, measure, bounds,
+                page = native_page(buttons['items'][0], MAPPING_LABELS, mapping_measure, bounds,
                                    scale, first=page['first']+1)
         else:
             check(boundary == 'previous' and page['first'] == 0,
@@ -733,7 +736,8 @@ def mapping_suite():
             yield from settle(8)
             views = ellipse_page(center, ['Perspective View', 'Right View', 'Bottom View',
                                          'Front View', 'Back View', 'Top View', 'Left View'],
-                                 measure, bounds, scale, views=True)
+                                 lambda label: blf.dimensions(0, label)[0] / scale,
+                                 bounds, scale, views=True)
             secondary_path = screenshot('feedback-secondary-grey.png')
 
             def background_sample(path, rect):
@@ -848,7 +852,7 @@ def mapping_suite():
                     yield
                 start = target
             yield from settle()
-            page = native_page(buttons['items'][0], MAPPING_LABELS, measure, bounds, scale)
+            page = native_page(buttons['items'][0], MAPPING_LABELS, mapping_measure, bounds, scale)
             target = midpoint(page['items'][0])
             for step in range(1, 17):
                 event('MOUSEMOVE', 'NOTHING', tuple(a+(b-a)*step/16 for a, b in zip(start, target)))
@@ -902,7 +906,7 @@ def mapping_suite():
         finally:
             bpy.data.images.remove(image)
         yield from click(buttons['items'][0])
-        page = native_page(buttons['items'][0], MAPPING_LABELS, measure, bounds, scale)
+        page = native_page(buttons['items'][0], MAPPING_LABELS, mapping_measure, bounds, scale)
         check(page['capacity'] == 13 and page['previous'] is None and page['next'] is None,
               'standard mapping list must show all 13 choices without pagination')
         normal_path = screenshot('mapping-standard-left-full.png')
@@ -1082,7 +1086,7 @@ def mapping_suite():
                 check(len(observed) == count and len(settings_observed) == setting_count and
                       settings()['center_buttons'][MOUSE_BUTTONS[button_index]] == before_settings,
                       f'{layout_probe} navigation release selected the newly exposed row')
-                page = native_page(_buttons['items'][button_index], MAPPING_LABELS, measure, bounds,
+                page = native_page(_buttons['items'][button_index], MAPPING_LABELS, mapping_measure, bounds,
                                    scale, first=page['first']+1)
             check(visible == set(range(13)),
                   f'{layout_probe} {BUTTON_LABELS[button_index]} did not expose all 13 choices')
@@ -1124,7 +1128,7 @@ def mapping_suite():
             _owner, _buttons, page = yield from open_mapping(button_index)
             while page['first']+page['capacity'] < 13:
                 yield from click(page['next'])
-                page = native_page(_buttons['items'][button_index], MAPPING_LABELS, measure,
+                page = native_page(_buttons['items'][button_index], MAPPING_LABELS, mapping_measure,
                                    bounds, scale, first=page['first']+1)
 
             if button_index == 0:
@@ -1137,7 +1141,7 @@ def mapping_suite():
                 event('WHEELUPMOUSE')
                 yield from settle()
                 reversed_page = native_page(_buttons['items'][button_index], MAPPING_LABELS,
-                                            measure, bounds, scale, first=last_first-1)
+                                            mapping_measure, bounds, scale, first=last_first-1)
                 check(reversed_page['first'] == last_first-1,
                       f'{layout_probe} fixture did not define a one-item tail reversal')
                 reversed_path = screenshot(f'mapping-{layout_probe}-wheel-last-reversed.png')
@@ -1151,7 +1155,7 @@ def mapping_suite():
                 sibling_index = 2
                 yield from click(_buttons['items'][sibling_index])
                 sibling_page = native_page(_buttons['items'][sibling_index], MAPPING_LABELS,
-                                           measure, bounds, scale)
+                                           mapping_measure, bounds, scale)
                 sibling_path = screenshot(f'mapping-{layout_probe}-wheel-sibling-first.png')
                 check_native_page(sibling_path, sibling_page,
                                   f'{layout_probe} untouched sibling first page')
@@ -1174,7 +1178,7 @@ def mapping_suite():
                 _owner, retained_buttons = yield from enter_buttons()
                 yield from click(retained_buttons['items'][button_index])
                 reversed_page = native_page(retained_buttons['items'][button_index],
-                                            MAPPING_LABELS, measure, bounds, scale,
+                                            MAPPING_LABELS, mapping_measure, bounds, scale,
                                             first=last_first-1)
                 retained_path = screenshot(f'mapping-{layout_probe}-wheel-owner-retained.png')
                 check_native_page(retained_path, reversed_page,
@@ -1238,7 +1242,7 @@ def mapping_suite():
         yield from settle()
         event('WHEELDOWNMOUSE')
         yield from settle()
-        first_reversed = native_page(_buttons['items'][2], MAPPING_LABELS, measure, bounds,
+        first_reversed = native_page(_buttons['items'][2], MAPPING_LABELS, mapping_measure, bounds,
                                      scale, first=1)
         count, setting_count = len(observed), len(settings_observed)
         yield from click(first_reversed['items'][1])
@@ -1373,9 +1377,9 @@ def suite():
                   f'{visible_obstacles!r}')
         blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
         def measure(label):
-            return blf.dimensions(0, label)[0] / scale + (
+            return blf.dimensions(0, label)[0] / scale + 20 + (
                 20 if label in STYLE_LABELS + TRANSPARENCY_LABELS else 0)
-        center_width = (measure('AxisMeld') + 60)*scale
+        center_width = (measure('AxisMeld') + 40)*scale
         center = (cx-center_width/2, cy-19*scale, center_width, 38*scale)
         control_labels = ['Menu Rows', 'Hotbox Style', 'Transparency', 'Center Mouse Buttons']
 
@@ -1483,9 +1487,9 @@ def suite():
               'safe', bounds, 'obstacles', visible_obstacles, flush=True)
         blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
         def measure(label):
-            return blf.dimensions(0, label)[0] / scale + (
+            return blf.dimensions(0, label)[0] / scale + 20 + (
                 20 if label in STYLE_LABELS + TRANSPARENCY_LABELS else 0)
-        center_width = (measure('AxisMeld') + 60)*scale
+        center_width = (measure('AxisMeld') + 40)*scale
         center = (cx-center_width/2, cy-19*scale, center_width, 38*scale)
         cases = (
             ('style-views', None, STYLE_LABELS, 1),
@@ -1507,11 +1511,13 @@ def suite():
             if controls_index is None:
                 event('RIGHTMOUSE')
                 yield from settle()
-                ring = ellipse_page(center, [], measure, bounds, scale, views=True)
+                ring = ellipse_page(center, [],
+                                    lambda label: blf.dimensions(0, label)[0] / scale,
+                                    bounds, scale, views=True)
                 list_anchor = ring['items'][8]
                 yield from move(list_anchor)
             else:
-                control_width = (measure('Hotbox Controls') + 60)*scale
+                control_width = (measure('Hotbox Controls') + 40)*scale
                 control = (center[0]+center[2]+83.6*scale, cy-19*scale,
                            control_width, 38*scale)
                 yield from click(control)

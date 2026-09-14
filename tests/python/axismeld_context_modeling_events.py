@@ -733,7 +733,10 @@ def suite():
                 # Require a continuous vertical background run, then a continuous
                 # horizontal span. Single cursor/axis antialiasing pixels cannot
                 # masquerade as a button edge, while glyph holes do not shift it.
-                offsets = (-10, 10) if row == 0 else sorted((row*26, row*39))
+                # Scan the full 24px background, including strips above/below
+                # 16px icons. The old 13px text band discarded the true NE edge
+                # in the captured FACE ring; keep all pixel/gap thresholds intact.
+                offsets = (-12, 12) if row == 0 else sorted((row*20, row*44))
                 for yy in range(int(cy + offsets[0]*scale), int(cy + offsets[1]*scale)+1):
                     if not 0 <= yy < height:
                         continue

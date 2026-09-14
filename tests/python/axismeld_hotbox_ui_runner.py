@@ -11,9 +11,10 @@ import tempfile
 parser = argparse.ArgumentParser()
 parser.add_argument('--blender', required=True)
 parser.add_argument('--artifacts', help='Optional directory for isolated factory-scene screenshots')
-parser.add_argument('--suite', choices=('object-menu', 'object-modeling', 'context-modeling', 'modeling', 'create', 'components', 'tools', 'hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection', 'appearance'), default='hotbox')
+parser.add_argument('--suite', choices=('icons', 'object-menu', 'object-modeling', 'context-modeling', 'modeling', 'create', 'components', 'tools', 'hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection', 'appearance'), default='hotbox')
 args = parser.parse_args()
 suite_script, pass_marker = {
+    'icons': ('axismeld_hotbox_icons_events.py', b'AXISMELD_HOTBOX_ICONS_EVENTS_PASS'),
     'object-menu': ('axismeld_object_menu_events.py', b'AXISMELD_OBJECT_MENU_EVENTS_PASS'),
     'object-modeling': ('axismeld_object_modeling_events.py', b'AXISMELD_OBJECT_MODELING_EVENTS_PASS'),
     'context-modeling': ('axismeld_context_modeling_events.py', b'AXISMELD_CONTEXT_MODELING_EVENTS_PASS'),

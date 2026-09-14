@@ -304,7 +304,9 @@ def suite():
     sys.path.insert(0, str(Path(__file__).parent))
     from axismeld_hotbox_geometry_fixture import native_page
     blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
-    measure = lambda label: blf.dimensions(0, label)[0] / scale
+    # Every Space title and the native Polygon Primitives entry now has one
+    # semantic icon. The central AxisMeld reference above already counted its icon.
+    measure = lambda label: blf.dimensions(0, label)[0] / scale + 20
     labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
     widths = [measure(label) + 40 for label in labels]
     left = cx - (sum(widths) + 60)*scale/2

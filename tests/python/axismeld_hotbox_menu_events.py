@@ -104,10 +104,12 @@ def suite():
     if primary_text_probe:
         blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
         labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
-        widths = [blf.dimensions(0, label)[0] + 40*scale for label in labels]
+        widths = [blf.dimensions(0, label)[0] + 60*scale for label in labels]
         left = cx - (sum(widths) + 60*scale)/2
         def ink_range(index):
             center = left + sum(widths[:index]) + 10*scale*index + widths[index]/2
+            # The centered icon+label group puts the text center 10px to the right.
+            center += 10*scale
             half_text = blf.dimensions(0, labels[index])[0]/2
             rgb = [b[(yy*width+xx)*4:(yy*width+xx)*4+3]
                    for yy in range(int(cy+90*scale), int(cy+102*scale))
@@ -548,12 +550,12 @@ def suite():
     sys.path.insert(0, str(Path(__file__).parent))
     from axismeld_hotbox_geometry_fixture import ellipse_page, native_list, native_page, style_list
     blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
-    icon_labels = {'AxisMeld', 'AxisMeld Views', 'Recent Commands', 'Hotbox Controls',
-                   'Wireframe', 'Solid', 'Perspective View', 'Right View', 'Bottom View',
-                   'Front View', 'Back View', 'Top View', 'Left View', 'Vertex', 'Edge', 'Face'}
     def label_width(label):
-        native_icon = label in icon_labels or label.startswith(('Entry ', 'Parent ', 'Child '))
-        return blf.dimensions(0, label)[0] / scale + (20 if native_icon else 0)
+        # Every function/directory has one semantic icon; blank slots have none.
+        return blf.dimensions(0, label)[0] / scale + (20 if label else 0)
+
+    def state_label_width(label):
+        return label_width(label) + 20
     common_labels = ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows']
     common_span = sum(label_width(label) + 40 for label in common_labels) + 60
     center_span = common_span / .72
@@ -580,17 +582,19 @@ def suite():
                           'Common', 'Select', 'Modify', 'Current Pane', 'Pane View',
                           'Pane Shading', 'Panels', 'Panel Views', 'Modeling']
         if labels in native_labels:
-            return {'items': native_list(anchor, labels, label_width,
+            measure = state_label_width if labels != native_labels[1] else label_width
+            return {'items': native_list(anchor, labels, measure,
                                         (region.x, region.y, region.width, region.height), scale)}
         if labels == button_labels:
             return native_page(anchor, labels, label_width,
                                (region.x, region.y, region.width, region.height), scale,
                                first=first, submenu_indices=range(3))
         if labels == mapping_labels:
-            return native_page(anchor, labels, label_width,
+            return native_page(anchor, labels, state_label_width,
                                (region.x, region.y, region.width, region.height), scale,
                                first=first)
         views = bool(labels and labels[0] == 'Perspective View')
+        # view_page owns the semantic slot for full/compact leaves and its Style tail.
         measure = (lambda label: blf.dimensions(0, label)[0] / scale) if views else label_width
         return ellipse_page(anchor, labels, measure,
                             (region.x, region.y, region.width, region.height), scale, first,
@@ -849,7 +853,8 @@ def suite():
     select_nodes = json.loads(hotbox_runtime.snapshot(bpy.context))['menus'][0]['children'][3]['children']
     indicators = {node['label'] for node in select_nodes if node.get('indicator')}
     def selection_width(label):
-        return label_width(label) + (20 if label in indicators and label not in icon_labels else 0)
+        # The full directory reserves a state column, including unmarked siblings.
+        return label_width(label) + (20 if indicators else 0)
     select_items = native_page(
         select, [node['label'] for node in select_nodes], selection_width,
         (region.x, region.y, region.width, region.height), scale,
@@ -1015,7 +1020,7 @@ def suite():
     central_list = popup(center, ['Perspective View', 'Right View', 'Bottom View', 'Front View',
                                   'Back View', 'Top View', 'Left View', '', 'Hotbox Style'])
     yield from move(midpoint(central_list[8]))
-    central_styles = style_list(central_list[8], label_width,
+    central_styles = style_list(central_list[8], state_label_width,
                                (region.x, region.y, region.width, region.height), scale)
     if native_style_probe:
         path = screenshot('menus-native-style-background.png')
