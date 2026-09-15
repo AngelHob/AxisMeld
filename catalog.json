@@ -4101,7 +4101,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "MB-41",
@@ -4112,6 +4112,90 @@
       ],
       "expected": [
         "无需登录可查看和下载；便携启动自动启用Maya键位与Modeling工作区；每位访客独立保存状态；反馈带编号、版本、结果及复现说明，GitHub确认提交后才成为公开Issue，本地勾选不冒充已提交"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": false
+    },
+    {
+      "id": "RG-01",
+      "title": "使用Rigify预览构建，分别以隔离工厂配置和普通方式启动；不安装、不手动启用Rigify，直接查看视窗Add→Armature中的metarig与骨架数据的Rigify入口",
+      "group": "P0：Rigify 默认内置（新增6项）",
+      "steps": [
+        "使用Rigify预览构建，分别以隔离工厂配置和普通方式启动；不安装、不手动启用Rigify，直接查看视窗Add→Armature中的metarig与骨架数据的Rigify入口"
+      ],
+      "expected": [
+        "两种启动均默认提供真实Rigify菜单、属性和生成器；无需访问插件安装或启用界面，原生Armature入口仍可用；不自动安装或启用第三方Feature Set"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "RG-02",
+      "title": "在Rigify预览构建的临时场景，经视窗Add→Armature添加Human metarig；选中它，在骨架数据的Rigify面板执行Generate Rig；选择生成rig进入Pose Mode并移动手或脚控制骨",
+      "group": "P0：Rigify 默认内置（新增6项）",
+      "steps": [
+        "在Rigify预览构建的临时场景，经视窗Add→Armature添加Human metarig；选中它，在骨架数据的Rigify面板执行Generate Rig；选择生成rig进入Pose Mode并移动手或脚控制骨"
+      ],
+      "expected": [
+        "新建真实metarig并生成独立目标骨架、控制骨及控件；手脚约束随控制骨联动，原metarig保留，目标关联正确；没有只显示成功提示却未生成结果，也没有重复生成的意外副本"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "RG-03",
+      "title": "将RG-02自建场景另存为临时blend，关闭并用同一Rigify构建重开；检查控制骨、metarig的Rigify属性和目标关联，再修改metarig并执行Re-Generate Rig",
+      "group": "P0：Rigify 默认内置（新增6项）",
+      "steps": [
+        "将RG-02自建场景另存为临时blend，关闭并用同一Rigify构建重开；检查控制骨、metarig的Rigify属性和目标关联，再修改metarig并执行Re-Generate Rig"
+      ],
+      "expected": [
+        "保存的骨架、控件与Rigify数据仍在，重开不要求重新安装或启用；重生成按原目标更新且结果可操控；自建文件的生成脚本和驱动沿用Blender原有信任机制，不擅自降低全局安全设置"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "RG-04",
+      "title": "准备旧Rigify偏好及Feature Set目录的临时副本，包含至少一个仍已安装但禁用的兼容Feature Set；记录其状态，用Rigify预览构建普通启动，保存临时偏好后再次启动",
+      "group": "P0：Rigify 默认内置（新增6项）",
+      "steps": [
+        "准备旧Rigify偏好及Feature Set目录的临时副本，包含至少一个仍已安装但禁用的兼容Feature Set；记录其状态，用Rigify预览构建普通启动，保存临时偏好后再次启动"
+      ],
+      "expected": [
+        "Rigify主体仍默认可用；已有偏好及已安装Feature Set的名称、设置和启用状态保留，原禁用项不被自动启用或删除；其他用户偏好不被重置；缺少可用旧样本时保持待测并注明"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "RG-05",
+      "title": "在Rigify预览构建打开Preferences→Animation→Rigify，检查Feature Sets列表与选中项详情；关闭并重新打开偏好，再与RG-04记录的设置对照",
+      "group": "P0：Rigify 默认内置（新增6项）",
+      "steps": [
+        "在Rigify预览构建打开Preferences→Animation→Rigify，检查Feature Sets列表与选中项详情；关闭并重新打开偏好，再与RG-04记录的设置对照"
+      ],
+      "expected": [
+        "原生Animation设置中只有一份Rigify入口，直接展示真实Feature Set列表、状态和原有设置操作；无需先在Add-ons启用Rigify，原禁用项仍禁用，未安装推荐项不冒充已安装功能"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "RG-06",
+      "title": "在独立临时配置和已保存的临时场景中，通过命令搜索执行Reload Scripts两次，每次检查Add→Armature和Rigify面板并创建、生成一个测试metarig；另用独立临时配置执行Load Factory Settings后重复",
+      "group": "P0：Rigify 默认内置（新增6项）",
+      "steps": [
+        "在独立临时配置和已保存的临时场景中，通过命令搜索执行Reload Scripts两次，每次检查Add→Armature和Rigify面板并创建、生成一个测试metarig；另用独立临时配置执行Load Factory Settings后重复"
+      ],
+      "expected": [
+        "重载及工厂恢复后Rigify仍默认可用；菜单、面板和每次生成结果不重复，RNA属性与操作正常，无重复注册、缺少属性或遗留处理器错误；工厂重置仅作用于测试副本，不用于判断普通启动的旧偏好保留"
       ],
       "superseded": false,
       "maintainerStatus": "pending",
