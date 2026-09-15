@@ -11,6 +11,7 @@
 - 实际 GUI 验证通过：原生菜单创建 Basic Human、生成 Rig、Animation 中设置面板，以及插件列表没有 Rigify 或缺失提示；136 项运行资源与候选源码一致。
 - 待人工测试：RG-01 至 RG-06，包含原生入口、生成操控、保存重开、旧设置、设置面板和脚本重载。清单共 300 项，保留原编号与历史结果；第三方骨架扩展和变形质量仍需人工验收。
 - 本轮仅修改 Python 模块和界面脚本，沿用已验证的原生可执行文件；设计见 [Rigify 默认内置模块](development/2026-09-15-rigify-builtin.md)。
+- 9 月 16 日发布 [Windows x64 内置 Rigify 预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.15-rigify-preview)，对应源码 `3a673dcf1e078`；重新解压启动通过，GitHub 资产 SHA256 与本地 ZIP 一致。公开测试页与仓库首页下载入口同步至此版本。
 
 ## 2026-09-15 · 固定开发交付流程
 
