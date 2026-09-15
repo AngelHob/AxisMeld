@@ -3553,7 +3553,7 @@
       "expected": [
         "公共 File/Edit/Create/Select/Modify/Display/Windows 保留；中部按实际菜单集切换，Cache/Flow/Arnold/Help 位于末尾；不把 Current Pane 六菜单混入顶栏，不切对象模式或工作区"
       ],
-      "superseded": false,
+      "superseded": true,
       "maintainerStatus": "pending",
       "isNew": false
     },
@@ -3567,7 +3567,7 @@
       "expected": [
         "Maya 正文、分组标题、真实子菜单和独立 Options 按实际参考保留；Blender 补充能力进入对应用途目录，原子菜单不展开成平铺列表"
       ],
-      "superseded": false,
+      "superseded": true,
       "maintainerStatus": "pending",
       "isNew": false
     },
@@ -3609,7 +3609,7 @@
       "expected": [
         "实际捕获的插件菜单完整保留；Maya 插件能力灰显，不冒充 Blender 已安装相同插件；Cache 包含 Alembic/Geometry/GPU 分支"
       ],
-      "superseded": false,
+      "superseded": true,
       "maintainerStatus": "pending",
       "isNew": false
     },
@@ -3805,7 +3805,7 @@
       "expected": [
         "原生图标、标签、Options、灰占位、标题和末项可读；当前层完整显示，超高时按原顺序分列，没有人为分页、滚动或删除占位项"
       ],
-      "superseded": false,
+      "superseded": true,
       "maintainerStatus": "pending",
       "isNew": false
     },
@@ -3861,7 +3861,7 @@
       "expected": [
         "新建变形归 Create；已有绑定、Lattice、Shape Key 编辑归 Edit；顶点组归 Weights；Hook 成员分配与变换重置分开，不把全部扩展堆入 legacy"
       ],
-      "superseded": false,
+      "superseded": true,
       "maintainerStatus": "pending",
       "isNew": false
     },
