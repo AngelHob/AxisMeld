@@ -1,6 +1,6 @@
 # AxisMeld 待人工测试清单
 
-更新：2026-09-15。人工测试继续暂缓。S/P/C/V/T/R 共47项保持已测试（用户确认，未逐项报告通过/失败）；此前221项与稳定编号保留。本轮追加 MT-01至MT-32，逐一检查22个Maya主菜单及热盒层级、Options、状态和布局；同时修正待测项的旧目录路径与Display平铺假设。现合计253项：历史已测试47项，待测206项。自动化不覆盖历史人工结果，也不将待测项自动改为通过。
+更新：2026-09-15。人工测试继续暂缓。历史253项和稳定编号保留，S/P/C/V/T/R共47项保持用户确认已测试，未补造通过/失败结果。本轮追加MB-01至MB-20，验证真正的顶部Menu Bar、五菜单集、Maya灰占位与Blender能力归类。现合计273项：历史已测试47项，初始待测226项。自动化不覆盖用户手工结果。
 
 ## 测试准备与反馈
 
@@ -397,3 +397,30 @@ Maya菜单从Space目录进入；Blender专有名称通过键位偏好将一个�
 | MT-30 | 核对File最近记录、Windows工作区、相机/材质/UV集以及Show→Isolate Select→Bookmarks | 动态目录有准确边界；不把一次捕获的实例当固定菜单。无法构建的Maya原生Bookmark动态分支明确未验证，不补造节点 | 待测 |
 | MT-31 | 在单/四视图中下部打开各层；1x/2x检查带字标题、普通分隔和末项 | 当前层完整显示；带字标题24、细分隔6逻辑像素，标题不可点击且不孤悬列尾；下方不足整体底部对齐 | 待测 |
 | MT-32 | 重复RMB、Shift+RMB、QWER、Views/Controls/Recent，交替进入22主菜单后取消 | 菜单内容不串根；未适配项仍存在；真实原点、Space/拥有鼠标释放、连续唤出、Recent和Undo边界保持，自动验证不替代手感测试 | 待测 |
+
+## P0：Maya逻辑的顶部Menu Bar（MB新增20项，全部待人工测试）
+
+本批只整理应用顶部Menu Bar；MT/FM条目仍记录前批热盒范围。顶部允许Blender独有功能按Maya用途加入各菜单，此决定不改写47条历史人工记录。新候选为 `D:/source/AxisMeld-build/maya-menubar-test-install/blender.exe`，与前批热盒候选分开；源码设计见 `../development/2026-09-15-maya-menubar-design.md`。程序与Python资源共同决定版本，不能只比较exe。运行验收结果另见本批验收记录，以下全部仍为人工待测。
+
+| 编号 | 前置条件与操作 | 预期 | 人工状态 |
+|---|---|---|---|
+| MB-01 | 依次切换顶部 Modeling、Rigging、Animation、FX、Rendering 菜单集 | 公共 File/Edit/Create/Select/Modify/Display/Windows 保留；中部按实际菜单集切换，Cache/Flow/Arnold/Help 位于末尾；不把 Current Pane 六菜单混入顶栏，不切对象模式或工作区 | 待测 |
+| MB-02 | 打开 Modeling 的 Mesh、Edit Mesh、Mesh Tools、Mesh Display、Curves、Surfaces、Deform、UV、Generate | Maya 正文、分组标题、真实子菜单和独立 Options 按实际参考保留；Blender 补充能力进入对应用途目录，原子菜单不展开成平铺列表 | 待测 |
+| MB-03 | 检查 Rigging、Animation 的 Skeleton/Skin/Constrain/Control、Key/Playback/Audio/Visualize 及 Deform | 两套专用菜单内容和顺序正确；共有 Deform/Constrain 一致；尚无对应适配的 Maya 能力保持灰色，不执行相似但不同的动作 | 待测 |
+| MB-04 | 检查 FX、Rendering 的粒子/流体/布料/毛发/约束/缓存/场/特效及灯光材质/纹理/渲染/Toon/Stereo | 保留各自实际层级和未适配功能；没有因缺少 Blender 适配而移除原菜单 | 待测 |
+| MB-05 | 展开 Cache、Flow、Arnold、MASH、Bifrost Rigging 和 Generate 的 XGen 区域 | 实际捕获的插件菜单完整保留；Maya 插件能力灰显，不冒充 Blender 已安装相同插件；Cache 包含 Alembic/Geometry/GPU 分支 | 待测 |
+| MB-06 | File 在临时目录新建、Open、Save、Save As、Save Copy、Increment and Save；核对文件和当前文档路径 | 原生保存确认和未保存分支正常；Copy 不改当前文件路径，Increment 使用新编号；不覆盖测试目录之外的文件 | 待测 |
+| MB-07 | File 展开 Recent Files、Import、Export；启用一个已安装格式后重新查看 | Recent 读取当前 Blender 历史，Import/Export 保留附加组件格式；Maya Export Selection 参数尚未适配时灰显，不能静默当 Export All 执行 | 待测 |
+| MB-08 | File 查看模板、恢复、Link/Append、Project、External Data、Data Previews 和 Clean Up | 原有 Blender 文件能力均能按用途找到；Link 与 Append 区分，Recent Projects 不冒充最近 blend 文件 | 待测 |
+| MB-09 | Edit 打开 Undo/Redo、History、Repeat History、Adjust Last Operation、Search；在临时对象编辑后使用一次撤销 | 真实历史、搜索和调整入口可用；一次撤销恢复一次操作，没有菜单外壳新增的空撤销步骤 | 待测 |
+| MB-10 | Modify 检查 Transformation Tools、Snap Align Objects、Naming Tools、Convert 等补充目录 | Blender 移动/吸附/命名/转换能力按用途收纳；Maya Prefix Hierarchy Names 和 Search and Replace Names 等未适配正文仍灰显 | 待测 |
+| MB-11 | Create 从 Polygon/NURBS Primitives、Curve Tools 创建各一个临时对象，再从 Cameras/Lights 创建相机和四类灯光 | 创建到当前 3D Cursor，使用真实 Blender 类型和默认参数；正文只执行一次，独立 Maya Options 不触发正文；一次 Undo 移除本次对象 | 待测 |
+| MB-12 | Create 检查 Armature、Metaball、Empty Volume、Empty Grease Pencil、Speaker、Force Field；在 Object 与 Edit 中分别查看 | Blender 独有类型有明确用途入口；新增对象适配要求 Object 模式，不为通过 poll 自动退出 Edit 或改变选择 | 待测 |
+| MB-13 | Windows 打开 Outliner、UV/Graph/Dope Sheet、Shader/Geometry Node/Compositor、Text/Python Console/NLA 编辑器 | 每次打开独立窗口；原窗口布局、编辑器类型和场景不被替换；失败不误关闭已有窗口 | 待测 |
+| MB-14 | Windows 查看 Settings/Preferences、Startup and Defaults、Workspaces、UI Elements、Window Management | 偏好、模板/默认设置、前后工作区、窗口/状态栏/截图与原生条件项均可发现；切菜单集不会重置工作区或保存个人配置 | 待测 |
+| MB-15 | Rendering→Render 和 Windows→Rendering Editors→Render，检查图像、动画、音频、结果查看及 Lock Interface | 保留 Blender 原生渲染能力和 Sequencer 条件分支；Windows 的 Render 是独立纵向子菜单；Maya 未适配渲染动作不误绑定为另一个作业 | 待测 |
+| MB-16 | Help 检查 Maya 灰占位及 Blender Help、Scripting Reference、Diagnostics | Blender 手册、版本、支持、About 与系统信息可达；Maya 文档名称不会跳到不相关 Blender 文档，开发者条目按原偏好显示 | 待测 |
+| MB-17 | 多 3D 区域、四视图以及完全无 3D 的工作区分别打开菜单，检查建模操作可用性 | 优先明确的 3D 来源，否则同窗最大可见 3D 区域；无来源时建模灰显，File/Preferences/编辑器窗口仍可用；不修改别的窗口或选择 | 待测 |
+| MB-18 | 打开菜单后改变源区域、场景、视图层或工作区，再尝试原菜单动作 | 捕获来源失效后取消，不悄悄改用新区域或新场景；取消不改变几何和撤销历史 | 待测 |
+| MB-19 | 在 1x/2x、较矮窗口及靠近下边缘处逐层打开 File、Generate、Delete All by Type 等菜单 | 原生图标、标签、Options、灰占位、标题和末项可读；当前层完整显示，超高时按原顺序分列，没有人为分页、滚动或删除占位项 | 待测 |
+| MB-20 | 在 AxisMeld 与标准 Blender 键位之间切换，再检查工作区标签和 Back to Previous；复测 RMB/Shift+RMB/QWER/Space | 标准 Blender 恢复原 File/Edit/Render/Window/Help；工作区功能保留；本批顶部变更不改变热盒触发、方向、间隔和释放行为 | 待测 |

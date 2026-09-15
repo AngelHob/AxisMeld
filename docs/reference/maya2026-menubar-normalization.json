@@ -1,0 +1,1337 @@
+{
+  "schema_version": 1,
+  "source": "docs\\reference\\maya2026-menubar-tree.json",
+  "source_sha256": "bced48f3fa88be2f4f1b41253ee30af54091d8b668fab22cf94caba5bc8aa0a2",
+  "reused_normalizer": "tools/axismeld/build_maya_menu_reference.py",
+  "stable_root_identity_reference": "scripts/modules/axismeld/maya_menu_reference.py",
+  "menu_sets": {
+    "MODELING": [
+      "common.file",
+      "common.edit",
+      "common.create",
+      "common.select",
+      "common.modify",
+      "common.display",
+      "common.windows",
+      "modeling.mesh",
+      "modeling.edit_mesh",
+      "modeling.mesh_tools",
+      "modeling.mesh_display",
+      "modeling.curves",
+      "modeling.surfaces",
+      "modeling.deform",
+      "modeling.uv",
+      "modeling.generate",
+      "menubar.cache",
+      "menubar.flow",
+      "menubar.arnold",
+      "menubar.help"
+    ],
+    "RIGGING": [
+      "common.file",
+      "common.edit",
+      "common.create",
+      "common.select",
+      "common.modify",
+      "common.display",
+      "common.windows",
+      "menubar.rigging.skeleton",
+      "menubar.rigging.skin",
+      "modeling.deform",
+      "menubar.rigging.constrain",
+      "menubar.rigging.control",
+      "menubar.rigging.bifrost_rigging",
+      "menubar.cache",
+      "menubar.flow",
+      "menubar.arnold",
+      "menubar.help"
+    ],
+    "ANIMATION": [
+      "common.file",
+      "common.edit",
+      "common.create",
+      "common.select",
+      "common.modify",
+      "common.display",
+      "common.windows",
+      "menubar.animation.key",
+      "menubar.animation.playback",
+      "menubar.animation.audio",
+      "menubar.animation.visualize",
+      "modeling.deform",
+      "menubar.rigging.constrain",
+      "menubar.mash",
+      "menubar.cache",
+      "menubar.flow",
+      "menubar.arnold",
+      "menubar.help"
+    ],
+    "FX": [
+      "common.file",
+      "common.edit",
+      "common.create",
+      "common.select",
+      "common.modify",
+      "common.display",
+      "common.windows",
+      "menubar.fx.nparticles",
+      "menubar.fx.fluids",
+      "menubar.fx.ncloth",
+      "menubar.fx.nhair",
+      "menubar.fx.nconstraint",
+      "menubar.fx.ncache",
+      "menubar.fx.fields_solvers",
+      "menubar.fx.effects",
+      "menubar.mash",
+      "menubar.cache",
+      "menubar.flow",
+      "menubar.arnold",
+      "menubar.help"
+    ],
+    "RENDERING": [
+      "common.file",
+      "common.edit",
+      "common.create",
+      "common.select",
+      "common.modify",
+      "common.display",
+      "common.windows",
+      "menubar.rendering.lighting_shading",
+      "menubar.rendering.texturing",
+      "menubar.rendering.render",
+      "menubar.rendering.toon",
+      "menubar.rendering.stereo",
+      "menubar.cache",
+      "menubar.flow",
+      "menubar.arnold",
+      "menubar.help"
+    ]
+  },
+  "unique_roots": 43,
+  "nodes": 3078,
+  "plugin_dependencies": {
+    "menubar.flow": {
+      "plugin": "flowWedging/bifrostGraph",
+      "source": "C:/Program Files/Autodesk/Bifrost/Maya2026/2.14.1.0/bifrost/plug-ins/flowWedging.py",
+      "scope": "Bundled plugin addition, not core default menubar"
+    },
+    "menubar.rigging.bifrost_rigging": {
+      "plugin": "bifrostGraph",
+      "source": "C:/Program Files/Autodesk/Bifrost/Maya2026/2.14.1.0/bifrost/scripts/bifrostRiggingMenu.py",
+      "scope": "Bundled plugin addition to Rigging"
+    },
+    "menubar.mash": {
+      "plugin": "MASH",
+      "source": "C:/Program Files/Autodesk/Maya2026/plug-ins/MASH/plug-ins/MASH.mll",
+      "scope": "Plugin member of Animation and FX"
+    },
+    "menubar.arnold": {
+      "plugin": "mtoa",
+      "source": "C:/Program Files/Autodesk/Arnold/Maya2026/plug-ins/mtoa.mll",
+      "scope": "Third-party Arnold plugin; independent r7 full tree, not core default"
+    },
+    "maya.modeling.deform.muscle": {
+      "plugin": "MayaMuscle",
+      "source": "C:/Program Files/Autodesk/Maya2026/scripts/muscle/cMuscle.mel",
+      "scope": "Plugin subtree shared by Modeling, Rigging and Animation"
+    },
+    "maya.menubar.cache.alembic_cache": {
+      "plugin": "AbcImport/AbcExport",
+      "source": "r6 capture-notes.qt_added_cache and Qt aboutToShow verification",
+      "scope": "Deferred plugin-contributed Cache submenu"
+    },
+    "maya.menubar.cache.gpu_cache": {
+      "plugin": "gpuCache",
+      "source": "r6 capture-notes.qt_added_cache and Qt aboutToShow verification",
+      "scope": "Deferred plugin-contributed Cache submenu"
+    },
+    "maya.modeling.generate.xgen_editor": {
+      "plugin": "xgenToolkit",
+      "source": "r6 metadata.plugins_after_final_refresh and mainGenerateMenu XGen section",
+      "scope": "Captured XGen plugin capability, not core Paint Effects"
+    },
+    "maya.modeling.generate.xgen_library": {
+      "plugin": "xgenToolkit",
+      "source": "r6 metadata.plugins_after_final_refresh and mainGenerateMenu XGen section",
+      "scope": "Captured XGen plugin capability, not core Paint Effects"
+    },
+    "maya.modeling.generate.create_description": {
+      "plugin": "xgenToolkit",
+      "source": "r6 metadata.plugins_after_final_refresh and mainGenerateMenu XGen section",
+      "scope": "Captured XGen plugin capability, not core Paint Effects"
+    },
+    "maya.modeling.generate.import_collections_or_descriptions": {
+      "plugin": "xgenToolkit",
+      "source": "r6 metadata.plugins_after_final_refresh and mainGenerateMenu XGen section",
+      "scope": "Captured XGen plugin capability, not core Paint Effects"
+    },
+    "maya.modeling.generate.export_collections_or_descriptions": {
+      "plugin": "xgenToolkit",
+      "source": "r6 metadata.plugins_after_final_refresh and mainGenerateMenu XGen section",
+      "scope": "Captured XGen plugin capability, not core Paint Effects"
+    },
+    "maya.modeling.generate.export_selection_as_archive_s": {
+      "plugin": "xgenToolkit",
+      "source": "r6 metadata.plugins_after_final_refresh and mainGenerateMenu XGen section",
+      "scope": "Captured XGen plugin capability, not core Paint Effects"
+    },
+    "maya.modeling.generate.batch_convert_scenes_to_archives": {
+      "plugin": "xgenToolkit",
+      "source": "r6 metadata.plugins_after_final_refresh and mainGenerateMenu XGen section",
+      "scope": "Captured XGen plugin capability, not core Paint Effects"
+    },
+    "maya.modeling.generate.convert_xgen_primitives_to_polygons": {
+      "plugin": "xgenToolkit",
+      "source": "r6 metadata.plugins_after_final_refresh and mainGenerateMenu XGen section",
+      "scope": "Captured XGen plugin capability, not core Paint Effects"
+    },
+    "maya.modeling.generate.convert_to_interactive_groom": {
+      "plugin": "xgenToolkit",
+      "source": "r6 metadata.plugins_after_final_refresh and mainGenerateMenu XGen section",
+      "scope": "Captured XGen plugin capability, not core Paint Effects"
+    },
+    "maya.modeling.generate.import_preset": {
+      "plugin": "xgenToolkit",
+      "source": "r6 metadata.plugins_after_final_refresh and mainGenerateMenu XGen section",
+      "scope": "Captured XGen plugin capability, not core Paint Effects"
+    },
+    "maya.modeling.generate.export_as_preset": {
+      "plugin": "xgenToolkit",
+      "source": "r6 metadata.plugins_after_final_refresh and mainGenerateMenu XGen section",
+      "scope": "Captured XGen plugin capability, not core Paint Effects"
+    },
+    "maya.modeling.generate.create_interactive_groom_splines": {
+      "plugin": "xgenToolkit",
+      "source": "r6 metadata.plugins_after_final_refresh and mainGenerateMenu XGen section",
+      "scope": "Captured XGen plugin capability, not core Paint Effects"
+    },
+    "maya.modeling.generate.interactive_groom_editor": {
+      "plugin": "xgenToolkit",
+      "source": "r6 metadata.plugins_after_final_refresh and mainGenerateMenu XGen section",
+      "scope": "Captured XGen plugin capability, not core Paint Effects"
+    },
+    "maya.modeling.generate.interactive_grooming_tools": {
+      "plugin": "xgenToolkit",
+      "source": "r6 metadata.plugins_after_final_refresh and mainGenerateMenu XGen section",
+      "scope": "Captured XGen plugin capability, not core Paint Effects"
+    },
+    "maya.modeling.generate.cache": {
+      "plugin": "xgenToolkit",
+      "source": "r6 metadata.plugins_after_final_refresh and mainGenerateMenu XGen section",
+      "scope": "Captured XGen plugin capability, not core Paint Effects"
+    },
+    "maya.modeling.generate.convert_interactive_groom_to_polygons": {
+      "plugin": "xgenToolkit",
+      "source": "r6 metadata.plugins_after_final_refresh and mainGenerateMenu XGen section",
+      "scope": "Captured XGen plugin capability, not core Paint Effects"
+    },
+    "maya.modeling.generate.display_hud": {
+      "plugin": "xgenToolkit",
+      "source": "r6 metadata.plugins_after_final_refresh and mainGenerateMenu XGen section",
+      "scope": "Captured XGen plugin capability, not core Paint Effects"
+    }
+  },
+  "actions": [
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "File",
+        "Recent Files"
+      ],
+      "source_ui_path": "mainFileMenu|FileMenuRecentFileItems",
+      "source_label": "Recent Files",
+      "reason": "Recent files require current user history",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "File",
+        "Recent Files",
+        ""
+      ],
+      "source_ui_path": "mainFileMenu|FileMenuRecentFileItems|menuItem944",
+      "source_label": "",
+      "reason": "Recent files require current user history",
+      "source_evidence": {
+        "command": "openRecentFile(\"\", \"\")",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "File",
+        "Recent Increments"
+      ],
+      "source_ui_path": "mainFileMenu|FileMenuRecentBackupItems",
+      "source_label": "Recent Increments",
+      "reason": "Recent increments require current file history",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "File",
+        "Recent Projects"
+      ],
+      "source_ui_path": "mainFileMenu|FileMenuRecentProjectItems",
+      "source_label": "Recent Projects",
+      "reason": "Recent projects require current user history",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "template",
+      "path": [
+        "Edit",
+        "Undo \"selectionMaskResetAll\""
+      ],
+      "source_ui_path": "mainEditMenu|undoItem",
+      "source_label": "Undo \"selectionMaskResetAll\"",
+      "reason": "Edit action label appends current session history; Maya startup/buildEditMenu.mel:79-124",
+      "source_evidence": {
+        "command": "Undo",
+        "runtimeCommand": "Undo",
+        "dividerLabel": "",
+        "optionBox": false
+      },
+      "replacement": "Undo"
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Edit",
+        "Recent Commands List"
+      ],
+      "source_ui_path": "mainEditMenu|menuItem945",
+      "source_label": "Recent Commands List",
+      "reason": "Command history belongs to the current session",
+      "source_evidence": {
+        "command": "RecentCommandsWindow",
+        "runtimeCommand": "RecentCommandsWindow",
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Edit",
+        "Delete by Type",
+        "Sounds"
+      ],
+      "source_ui_path": "mainEditMenu|clearActiveItem|deleteSoundSubMenuItem",
+      "source_label": "Sounds",
+      "reason": "Sound members require current scene audio nodes",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Edit",
+        "Delete by Type",
+        "Sounds",
+        "No sounds available"
+      ],
+      "source_ui_path": "mainEditMenu|clearActiveItem|deleteSoundSubMenuItem|menuItem2694",
+      "source_label": "No sounds available",
+      "reason": "Sound members require current scene audio nodes",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Create",
+        "Lights"
+      ],
+      "source_ui_path": "mainCreateMenu|LightsItem",
+      "source_label": "Lights",
+      "reason": "Additional light types depend on plugin registration",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Create",
+        "Cameras"
+      ],
+      "source_ui_path": "mainCreateMenu|menuItem835",
+      "source_label": "Cameras",
+      "reason": "Additional camera types depend on plugin registration",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Create",
+        "Scene Assembly"
+      ],
+      "source_ui_path": "mainCreateMenu|menuCreateSceneAssembly",
+      "source_label": "Scene Assembly",
+      "reason": "Assembly types require registered capabilities",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Select",
+        "Quick Select Sets"
+      ],
+      "source_ui_path": "mainSelectMenu|selectCharItem",
+      "source_label": "Quick Select Sets",
+      "reason": "Quick select sets require current scene sets",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Select",
+        "Quick Select Sets",
+        "No Quick Select Sets Defined"
+      ],
+      "source_ui_path": "mainSelectMenu|selectCharItem|menuItem2707",
+      "source_label": "No Quick Select Sets Defined",
+      "reason": "Quick select sets require current scene sets",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Modify",
+        "Asset",
+        "Advanced Assets",
+        "Set Current Asset"
+      ],
+      "source_ui_path": "mainModifyMenu|menuItem615|menuItem636|setCurrentContainerItem",
+      "source_label": "Set Current Asset",
+      "reason": "Asset members require current scene containers; None remains a fixed action",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Windows",
+        "Workspaces"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877",
+      "source_label": "Workspaces",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "General*"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|WorkspaceMenuID_0",
+      "source_label": "General*",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"General\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "General*",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|menuItem2711",
+      "source_label": "menuItem2711",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"General\",\"WorkspaceMenuID_0\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Modeling - Standard"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|WorkspaceMenuID_1",
+      "source_label": "Modeling - Standard",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Modeling - Standard\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Modeling - Standard",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|menuItem2713",
+      "source_label": "menuItem2713",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Modeling - Standard\",\"WorkspaceMenuID_1\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Modeling - Expert"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|WorkspaceMenuID_2",
+      "source_label": "Modeling - Expert",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Modeling - Expert\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Modeling - Expert",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|menuItem2714",
+      "source_label": "menuItem2714",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Modeling - Expert\",\"WorkspaceMenuID_2\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Sculpting"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|WorkspaceMenuID_3",
+      "source_label": "Sculpting",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Sculpting\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Sculpting",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|menuItem2715",
+      "source_label": "menuItem2715",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Sculpting\",\"WorkspaceMenuID_3\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Pose Sculpting"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|WorkspaceMenuID_4",
+      "source_label": "Pose Sculpting",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Pose Sculpting\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Pose Sculpting",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|menuItem2716",
+      "source_label": "menuItem2716",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Pose Sculpting\",\"WorkspaceMenuID_4\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "UV Editing"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|WorkspaceMenuID_5",
+      "source_label": "UV Editing",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"UV Editing\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "UV Editing",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|menuItem2717",
+      "source_label": "menuItem2717",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"UV Editing\",\"WorkspaceMenuID_5\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "XGen"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|WorkspaceMenuID_6",
+      "source_label": "XGen",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"XGen\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "XGen",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|menuItem2718",
+      "source_label": "menuItem2718",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"XGen\",\"WorkspaceMenuID_6\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "XGen - Interactive Groom"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|WorkspaceMenuID_7",
+      "source_label": "XGen - Interactive Groom",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"XGen - Interactive Groom\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "XGen - Interactive Groom",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|menuItem2719",
+      "source_label": "menuItem2719",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"XGen - Interactive Groom\",\"WorkspaceMenuID_7\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Rigging"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|WorkspaceMenuID_8",
+      "source_label": "Rigging",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Rigging\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Rigging",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|menuItem2721",
+      "source_label": "menuItem2721",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Rigging\",\"WorkspaceMenuID_8\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Animation"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|WorkspaceMenuID_9",
+      "source_label": "Animation",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Animation\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Animation",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|menuItem2722",
+      "source_label": "menuItem2722",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Animation\",\"WorkspaceMenuID_9\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Rendering - Standard"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|WorkspaceMenuID_10",
+      "source_label": "Rendering - Standard",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Rendering - Standard\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Rendering - Standard",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|menuItem2724",
+      "source_label": "menuItem2724",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Rendering - Standard\",\"WorkspaceMenuID_10\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Rendering - Expert"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|WorkspaceMenuID_11",
+      "source_label": "Rendering - Expert",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Rendering - Expert\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Rendering - Expert",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|menuItem2725",
+      "source_label": "menuItem2725",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Rendering - Expert\",\"WorkspaceMenuID_11\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "MASH"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|WorkspaceMenuID_12",
+      "source_label": "MASH",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"MASH\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "MASH",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|menuItem2727",
+      "source_label": "menuItem2727",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"MASH\",\"WorkspaceMenuID_12\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Motion Graphics"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|WorkspaceMenuID_13",
+      "source_label": "Motion Graphics",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Motion Graphics\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Motion Graphics",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|menuItem2728",
+      "source_label": "menuItem2728",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Motion Graphics\",\"WorkspaceMenuID_13\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Bifrost Fluids"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|WorkspaceMenuID_14",
+      "source_label": "Bifrost Fluids",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "evalDeferred(\"workspaceLayoutManager -setCurrent \\\"Bifrost Fluids\\\"\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Bifrost Fluids",
+        "Options"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|menuItem2730",
+      "source_label": "menuItem2730",
+      "reason": "Factory, user and module workspace registrations require a workspace provider",
+      "source_evidence": {
+        "command": "if(!`exists workspaceLayoutOptions`) {\n\teval(\"source workspaceHelperProcs.mel\");\n}\nworkspaceLayoutOptions(\"Bifrost Fluids\",\"WorkspaceMenuID_14\");",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "template",
+      "path": [
+        "Windows",
+        "Workspaces",
+        "Reset \"General\" to Factory Default"
+      ],
+      "source_ui_path": "mainWindowMenu|menuItem877|workspaceResetMenu",
+      "source_label": "Reset \"General\" to Factory Default",
+      "reason": "Current workspace name is contextual",
+      "source_evidence": {
+        "command": "ResetCurrentWorkspace",
+        "runtimeCommand": "ResetCurrentWorkspace",
+        "dividerLabel": "",
+        "optionBox": false
+      },
+      "replacement": "Reset Current Workspace to Factory Default"
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Mesh Display",
+        "Assign Existing Set"
+      ],
+      "source_ui_path": "mainMeshDisplayMenu|assignExistingVertexBakeSetItem",
+      "source_label": "Assign Existing Set",
+      "reason": "Bake set members require current scene sets",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Mesh Display",
+        "Assign Existing Set",
+        "No bakesets defined"
+      ],
+      "source_ui_path": "mainMeshDisplayMenu|assignExistingVertexBakeSetItem|polyNewNoBakesetsDefined",
+      "source_label": "No bakesets defined",
+      "reason": "Bake set members require current scene sets",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Lighting/Shading",
+        "Assign Existing Material"
+      ],
+      "source_ui_path": "mainShadingMenu|ShadAssignExistingMaterial",
+      "source_label": "Assign Existing Material",
+      "reason": "Scene material instances; startup/buildShaderMenus.mel:342,546-549",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Lighting/Shading",
+        "Assign Existing Material",
+        "lambert1"
+      ],
+      "source_ui_path": "mainShadingMenu|ShadAssignExistingMaterial|menuItem2767",
+      "source_label": "lambert1",
+      "reason": "Scene material instances; startup/buildShaderMenus.mel:342,546-549",
+      "source_evidence": {
+        "command": "hyperShade -assign lambert1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Lighting/Shading",
+        "Assign Existing Material",
+        "lambert1",
+        "Options"
+      ],
+      "source_ui_path": "mainShadingMenu|ShadAssignExistingMaterial|menuItem2768",
+      "source_label": "lambert1 Options",
+      "reason": "Scene material instances; startup/buildShaderMenus.mel:342,546-549",
+      "source_evidence": {
+        "command": "showEditor lambert1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Lighting/Shading",
+        "Assign Existing Material",
+        "openPBR_shader1"
+      ],
+      "source_ui_path": "mainShadingMenu|ShadAssignExistingMaterial|menuItem2769",
+      "source_label": "openPBR_shader1",
+      "reason": "Scene material instances; startup/buildShaderMenus.mel:342,546-549",
+      "source_evidence": {
+        "command": "hyperShade -assign openPBR_shader1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Lighting/Shading",
+        "Assign Existing Material",
+        "openPBR_shader1",
+        "Options"
+      ],
+      "source_ui_path": "mainShadingMenu|ShadAssignExistingMaterial|menuItem2770",
+      "source_label": "openPBR_shader1 Options",
+      "reason": "Scene material instances; startup/buildShaderMenus.mel:342,546-549",
+      "source_evidence": {
+        "command": "showEditor openPBR_shader1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Lighting/Shading",
+        "Assign Existing Material",
+        "standardSurface1"
+      ],
+      "source_ui_path": "mainShadingMenu|ShadAssignExistingMaterial|menuItem2771",
+      "source_label": "standardSurface1",
+      "reason": "Scene material instances; startup/buildShaderMenus.mel:342,546-549",
+      "source_evidence": {
+        "command": "hyperShade -assign standardSurface1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Lighting/Shading",
+        "Assign Existing Material",
+        "standardSurface1",
+        "Options"
+      ],
+      "source_ui_path": "mainShadingMenu|ShadAssignExistingMaterial|menuItem2772",
+      "source_label": "standardSurface1 Options",
+      "reason": "Scene material instances; startup/buildShaderMenus.mel:342,546-549",
+      "source_evidence": {
+        "command": "showEditor standardSurface1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Lighting/Shading",
+        "Assign Existing Material",
+        "particleCloud1"
+      ],
+      "source_ui_path": "mainShadingMenu|ShadAssignExistingMaterial|menuItem2774",
+      "source_label": "particleCloud1",
+      "reason": "Scene material instances; startup/buildShaderMenus.mel:342,546-549",
+      "source_evidence": {
+        "command": "hyperShade -assign particleCloud1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Lighting/Shading",
+        "Assign Existing Material",
+        "particleCloud1",
+        "Options"
+      ],
+      "source_ui_path": "mainShadingMenu|ShadAssignExistingMaterial|menuItem2775",
+      "source_label": "particleCloud1 Options",
+      "reason": "Scene material instances; startup/buildShaderMenus.mel:342,546-549",
+      "source_evidence": {
+        "command": "showEditor particleCloud1",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": true
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Toon",
+        "Assign Outline"
+      ],
+      "source_ui_path": "mainCartoonMenu|toonCreatePfxOutlineItem",
+      "source_label": "Assign Outline",
+      "reason": "Live pfxToon nodes after two fixed actions; paintEffects/buildCartoonMenu.mel:47-64",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "dynamic_provider",
+      "path": [
+        "Toon",
+        "Set Camera Background Color"
+      ],
+      "source_ui_path": "mainCartoonMenu|toonCreateBackgroundColorItem",
+      "source_label": "Set Camera Background Color",
+      "reason": "Live camera instances; paintEffects/buildCartoonMenu.mel:68-88",
+      "source_evidence": {
+        "command": null,
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Toon",
+        "Set Camera Background Color",
+        "persp"
+      ],
+      "source_ui_path": "mainCartoonMenu|toonCreateBackgroundColorItem|menuItem2789",
+      "source_label": "persp",
+      "reason": "Live camera instances; paintEffects/buildCartoonMenu.mel:68-88",
+      "source_evidence": {
+        "command": "editAttributeColor persp.backgroundColor",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Toon",
+        "Set Camera Background Color",
+        "front"
+      ],
+      "source_ui_path": "mainCartoonMenu|toonCreateBackgroundColorItem|menuItem2791",
+      "source_label": "front",
+      "reason": "Live camera instances; paintEffects/buildCartoonMenu.mel:68-88",
+      "source_evidence": {
+        "command": "editAttributeColor front.backgroundColor",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Toon",
+        "Set Camera Background Color",
+        "side"
+      ],
+      "source_ui_path": "mainCartoonMenu|toonCreateBackgroundColorItem|menuItem2792",
+      "source_label": "side",
+      "reason": "Live camera instances; paintEffects/buildCartoonMenu.mel:68-88",
+      "source_evidence": {
+        "command": "editAttributeColor side.backgroundColor",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "remove",
+      "path": [
+        "Toon",
+        "Set Camera Background Color",
+        "top"
+      ],
+      "source_ui_path": "mainCartoonMenu|toonCreateBackgroundColorItem|menuItem2793",
+      "source_label": "top",
+      "reason": "Live camera instances; paintEffects/buildCartoonMenu.mel:68-88",
+      "source_evidence": {
+        "command": "editAttributeColor top.backgroundColor",
+        "runtimeCommand": null,
+        "dividerLabel": "",
+        "optionBox": false
+      }
+    },
+    {
+      "action": "shared_root",
+      "source_ui_path": "mainRigDeformationsMenu",
+      "canonical_ui_path": "mainDeformMenu",
+      "root_id": "modeling.deform",
+      "reason": "Normalized content is identical; reuse one tree and its capabilities"
+    },
+    {
+      "action": "shared_root",
+      "source_ui_path": "mainDeformationMenu",
+      "canonical_ui_path": "mainDeformMenu",
+      "root_id": "modeling.deform",
+      "reason": "Normalized content is identical; reuse one tree and its capabilities"
+    },
+    {
+      "action": "shared_root",
+      "source_ui_path": "mainConstraintsMenu",
+      "canonical_ui_path": "mainRigConstraintsMenu",
+      "root_id": "menubar.rigging.constrain",
+      "reason": "Normalized content is identical; reuse one tree and its capabilities"
+    }
+  ]
+}

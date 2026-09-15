@@ -88,6 +88,7 @@ _modules = [
     "space_statusbar",
     "space_text",
     "space_time",
+    "space_axismeld_menubar",
     "space_topbar",
     "space_userpref",
     "space_view3d",
@@ -124,6 +125,7 @@ def register():
         for cls in mod.classes:
             register_class(cls)
 
+    space_axismeld_menubar.register_props()
     space_filebrowser.register_props()
     properties_paint_common.register()
 
@@ -183,6 +185,7 @@ def register():
 def unregister():
     from bpy.utils import unregister_class
 
+    space_axismeld_menubar.unregister_props()
     properties_paint_common.unregister()
 
     for mod in reversed(_modules_loaded):

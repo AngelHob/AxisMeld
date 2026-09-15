@@ -425,70 +425,83 @@ static void block_bounds_calc_text(Block *block, float offset)
     return;
   }
   const uiStyle *style = style_get();
-  std::unique_ptr<Button> *col_bt;
-  int i = 0, j, x1addval = offset;
-
   fontstyle_set(&style->widget);
-  std::unique_ptr<Button> *end = block->buttons_ptrs.end();
 
-  std::unique_ptr<Button> *init_col_bt = block->buttons_ptrs.begin();
-  for (std::unique_ptr<Button> *bt = init_col_bt; bt < end; bt++) {
-    if (!ELEM((*bt)->type, ButtonType::Sepr, ButtonType::SeprLine, ButtonType::SeprSpacer)) {
-      j = BLF_width(style->widget.uifont_id, (*bt)->drawstr.c_str(), (*bt)->drawstr.size());
+  struct TextBoundsRow {
+    int64_t begin;
+    int64_t end;
+    float original_x;
+    bool aligned;
+  };
+  struct TextBoundsColumn {
+    int64_t begin;
+    int64_t end;
+    float original_x;
+    float width;
+  };
+  Vector<TextBoundsRow> rows;
+  Vector<TextBoundsColumn> columns;
+  const int64_t buttons_num = block->buttons_ptrs.size();
 
-      i = std::max(j, i);
-    }
-
-    /* Skip all buttons that are in a horizontal alignment group.
-     * We don't want to split them apart (but still check the row's width and apply current
-     * offsets). */
-    if (bt + 1 < end && but_is_row_alignment_group((*bt).get(), bt[1].get())) {
-      int width = 0;
-      const int alignnr = (*bt)->alignnr;
-      for (col_bt = bt; col_bt < end && (*col_bt)->alignnr == alignnr; col_bt++) {
-        width += BLI_rctf_size_x(&(*col_bt)->rect);
-        (*col_bt)->rect.xmin += x1addval;
-        (*col_bt)->rect.xmax += x1addval;
+  /* Inspect original geometry before moving any buttons. A horizontal alignment
+   * group is one row, so its Options button cannot look like another column. */
+  for (int64_t begin = 0; begin < buttons_num;) {
+    const Button *first = block->buttons_ptrs[begin].get();
+    int64_t end = begin + 1;
+    const bool aligned = end < buttons_num &&
+                         but_is_row_alignment_group(first, block->buttons_ptrs[end].get());
+    if (aligned) {
+      while (end < buttons_num && block->buttons_ptrs[end]->alignnr == first->alignnr) {
+        end++;
       }
-      i = std::max(width, i);
-      /* Give the following code the last button in the alignment group, there might have to be a
-       * split immediately after. */
-      bt = col_bt != end ? col_bt-- : nullptr;
     }
-
-    if (bt < end && (bt + 1 < end) && (*bt)->rect.xmin < bt[1]->rect.xmin) {
-      /* End of this column, and it's not the last one. */
-      for (col_bt = init_col_bt; (col_bt - 1) != bt; col_bt++) {
-        (*col_bt)->rect.xmin = x1addval;
-        (*col_bt)->rect.xmax = x1addval + i + block->bounds;
-
-        button_update((*col_bt).get()); /* clips text again */
+    float width = 0.0f;
+    for (int64_t index = begin; index < end; index++) {
+      const Button *but = block->buttons_ptrs[index].get();
+      if (aligned) {
+        width = std::max(width, but->rect.xmax - first->rect.xmin);
       }
-
-      /* And we prepare next column. */
-      x1addval += i + block->bounds;
-      i = 0;
-      init_col_bt = col_bt;
+      else if (!ELEM(but->type, ButtonType::Sepr, ButtonType::SeprLine, ButtonType::SeprSpacer)) {
+        width = BLF_width(style->widget.uifont_id, but->drawstr.c_str(), but->drawstr.size());
+      }
     }
+    const int64_t row_index = rows.size();
+    if (columns.is_empty() || first->rect.xmin > rows.last().original_x) {
+      columns.append({row_index, row_index, first->rect.xmin, 0.0f});
+    }
+    TextBoundsColumn &column = columns.last();
+    column.end = row_index + 1;
+    column.width = std::max(column.width, width);
+    rows.append({begin, end, first->rect.xmin, aligned});
+    begin = end;
   }
 
-  /* Last column. */
-  for (col_bt = init_col_bt; col_bt < end; col_bt++) {
-    /* Recognize a horizontally arranged alignment group and skip its items. */
-    if ((col_bt + 1 < end) && but_is_row_alignment_group((*col_bt).get(), col_bt[1].get())) {
-      const int alignnr = (*col_bt)->alignnr;
-      for (; col_bt < end && (*col_bt)->alignnr == alignnr; col_bt++) {
-        /* pass */
+  /* Use the same normalization for every column. Alignment groups translate
+   * from their original column origin exactly once; normal rows fill the column.
+   * No button order, vertical position, or relative position inside a row changes. */
+  float column_x = offset;
+  for (const TextBoundsColumn &column : columns) {
+    float column_right = column_x + column.width + block->bounds;
+    if (column.end == rows.size()) {
+      column_right = std::max(column_right, offset + block->minbounds);
+    }
+    const float translation = column_x - column.original_x;
+    for (int64_t row_index = column.begin; row_index < column.end; row_index++) {
+      const TextBoundsRow &row = rows[row_index];
+      for (int64_t index = row.begin; index < row.end; index++) {
+        Button *but = block->buttons_ptrs[index].get();
+        if (row.aligned) {
+          but->rect.xmin += translation;
+          but->rect.xmax += translation;
+        }
+        else {
+          but->rect.xmin = column_x;
+          but->rect.xmax = column_right;
+        }
+        button_update(but);
       }
     }
-    if (col_bt == end) {
-      break;
-    }
-
-    (*col_bt)->rect.xmin = x1addval;
-    (*col_bt)->rect.xmax = max_ff(x1addval + i + block->bounds, offset + block->minbounds);
-
-    button_update((*col_bt).get()); /* clips text again */
+    column_x = column_right;
   }
 }
 

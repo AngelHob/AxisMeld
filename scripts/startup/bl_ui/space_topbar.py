@@ -28,7 +28,9 @@ class TOPBAR_HT_upper_bar(Header):
         window = context.window
         screen = context.screen
 
-        TOPBAR_MT_editor_menus.draw_collapsible(context, layout)
+        from bl_ui import space_axismeld_menubar
+        if not space_axismeld_menubar.draw_bar(layout, context):
+            TOPBAR_MT_editor_menus.draw_collapsible(context, layout)
 
         layout.separator(type='LINE')
 
