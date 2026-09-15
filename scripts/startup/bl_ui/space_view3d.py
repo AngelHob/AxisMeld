@@ -1495,27 +1495,12 @@ class VIEW3D_MT_snap(Menu):
 class VIEW3D_MT_uv_map(Menu):
     bl_label = "UV Mapping"
 
-    def draw(self, _context):
-        layout = self.layout
-
-        layout.menu_contents("IMAGE_MT_uvs_unwrap")
-
-        layout.separator()
-
-        layout.operator_context = 'INVOKE_REGION_WIN'
-        layout.operator("uv.project_from_view").scale_to_bounds = False
-        layout.operator("uv.project_from_view", text="Project from View (Bounds)").scale_to_bounds = True
-
-        layout.separator()
-
-        layout.operator("mesh.mark_seam", icon='EDGE_SEAM').clear = False
-        layout.operator("mesh.mark_seam", text="Clear Seam").clear = True
-
-        layout.separator()
-
-        layout.operator("uv.reset")
-
-        layout.template_node_operator_asset_menu_items(catalog_path="UV")
+    def draw(self, context):
+        from bl_ui import space_axismeld_menubar
+        if space_axismeld_menubar.draw_native_modeling_menu(self.layout, context, 'modeling.uv'):
+            return
+        from bl_ui import space_axismeld_native_modeling
+        space_axismeld_native_modeling.draw_original(self.layout, context, 'VIEW3D_MT_uv_map')
 
 
 # ********** View menus **********
@@ -3435,7 +3420,7 @@ class VIEW3D_MT_object_constraints(Menu):
 class VIEW3D_MT_object_modifiers(Menu):
     bl_label = "Modifiers"
 
-    def draw(self, _context):
+    def draw(self, context):
         active_object = bpy.context.active_object
         supported_types = {
             'MESH',
@@ -3448,7 +3433,8 @@ class VIEW3D_MT_object_modifiers(Menu):
             'LATTICE',
             'POINTCLOUD'}
 
-        layout = self.layout
+        from bl_ui import space_axismeld_native_modeling
+        layout = space_axismeld_native_modeling.modeling_icon_layout(self.layout, context, 'MODIFIER')
 
         if active_object:
             if active_object.type in supported_types:
@@ -4574,60 +4560,12 @@ class VIEW3D_MT_bone_options_disable(Menu, BoneOptions):
 class VIEW3D_MT_edit_mesh(Menu):
     bl_label = "Mesh"
 
-    def draw(self, _context):
-        layout = self.layout
-
-        with_bullet = bpy.app.build_options.bullet
-
-        layout.menu("VIEW3D_MT_transform")
-        layout.menu("VIEW3D_MT_mirror")
-        layout.menu("VIEW3D_MT_snap")
-
-        layout.separator()
-
-        layout.operator("mesh.duplicate_move", text="Duplicate", icon='DUPLICATE')
-        layout.menu("VIEW3D_MT_edit_mesh_extrude")
-
-        layout.separator()
-
-        layout.menu("VIEW3D_MT_edit_mesh_merge", text="Merge")
-        layout.menu("VIEW3D_MT_edit_mesh_split", text="Split")
-        layout.operator_menu_enum("mesh.separate", "type")
-
-        layout.separator()
-
-        layout.operator("mesh.bisect")
-        layout.operator("mesh.knife_project")
-        props = layout.operator("mesh.knife_tool")
-        props.use_occlude_geometry = True
-        props.only_selected = False
-
-        if with_bullet:
-            layout.operator("mesh.convex_hull")
-
-        layout.separator()
-
-        layout.operator("mesh.symmetrize")
-        layout.operator("mesh.symmetry_snap")
-
-        layout.separator()
-
-        layout.menu("VIEW3D_MT_edit_mesh_normals")
-        layout.menu("VIEW3D_MT_edit_mesh_shading")
-        layout.menu("VIEW3D_MT_edit_mesh_weights")
-        layout.operator("mesh.attribute_set")
-        layout.operator_menu_enum("mesh.sort_elements", "type", text="Sort Elements")
-
-        layout.separator()
-
-        layout.menu("VIEW3D_MT_edit_mesh_showhide")
-        layout.menu("VIEW3D_MT_edit_mesh_clean")
-
-        layout.separator()
-
-        layout.menu("VIEW3D_MT_edit_mesh_delete")
-
-        layout.template_node_operator_asset_menu_items(catalog_path=self.bl_label)
+    def draw(self, context):
+        from bl_ui import space_axismeld_menubar
+        if space_axismeld_menubar.draw_native_modeling_menu(self.layout, context, 'modeling.mesh'):
+            return
+        from bl_ui import space_axismeld_native_modeling
+        space_axismeld_native_modeling.draw_original(self.layout, context, 'VIEW3D_MT_edit_mesh')
 
 
 class VIEW3D_MT_edit_mesh_context_menu(Menu):
@@ -4887,119 +4825,23 @@ class VIEW3D_MT_edit_mesh_extrude(Menu):
 class VIEW3D_MT_edit_mesh_vertices(Menu):
     bl_label = "Vertex"
 
-    def draw(self, _context):
-        layout = self.layout
-        layout.operator_context = 'INVOKE_REGION_WIN'
-
-        layout.operator("mesh.extrude_vertices_move", text="Extrude Vertices")
-        layout.operator("mesh.dupli_extrude_cursor").rotate_source = True
-        layout.operator("mesh.bevel", text="Bevel Vertices").affect = 'VERTICES'
-
-        layout.separator()
-
-        layout.operator("mesh.edge_face_add", text="New Edge/Face from Vertices")
-        layout.operator("mesh.vert_connect_path", text="Connect Vertex Path")
-        layout.operator("mesh.vert_connect", text="Connect Vertex Pairs")
-
-        layout.separator()
-
-        props = layout.operator("mesh.rip_move", text="Rip Vertices")
-        props.MESH_OT_rip.use_fill = False
-        props = layout.operator("mesh.rip_move", text="Rip Vertices and Fill")
-        props.MESH_OT_rip.use_fill = True
-        layout.operator("mesh.rip_edge_move", text="Rip Vertices and Extend")
-
-        layout.separator()
-
-        layout.operator("transform.vert_slide", text="Slide Vertices")
-        layout.operator_context = 'EXEC_REGION_WIN'
-        layout.operator("mesh.vertices_smooth", text="Smooth Vertices").factor = 0.5
-        layout.operator("mesh.vertices_smooth_laplacian", text="Smooth Vertices (Laplacian)")
-        layout.operator_context = 'INVOKE_REGION_WIN'
-
-        layout.separator()
-
-        layout.operator("transform.vert_crease", icon='VERTEX_CREASE')
-
-        layout.separator()
-
-        layout.operator("mesh.blend_from_shape")
-        layout.operator("mesh.shape_propagate_to_all", text="Propagate to Shapes")
-
-        layout.separator()
-
-        layout.menu("VIEW3D_MT_vertex_group")
-        layout.menu("VIEW3D_MT_hook")
-
-        layout.separator()
-
-        layout.operator("object.vertex_parent_set")
-
-        layout.template_node_operator_asset_menu_items(catalog_path=self.bl_label)
+    def draw(self, context):
+        from bl_ui import space_axismeld_menubar
+        if space_axismeld_menubar.draw_native_modeling_menu(self.layout, context, 'viewport.modeling.vertex'):
+            return
+        from bl_ui import space_axismeld_native_modeling
+        space_axismeld_native_modeling.draw_original(self.layout, context, 'VIEW3D_MT_edit_mesh_vertices')
 
 
 class VIEW3D_MT_edit_mesh_edges(Menu):
     bl_label = "Edge"
 
-    def draw(self, _context):
-        layout = self.layout
-
-        with_freestyle = bpy.app.build_options.freestyle
-
-        layout.operator_context = 'INVOKE_REGION_WIN'
-
-        layout.operator("mesh.extrude_edges_move", text="Extrude Edges")
-        layout.operator("mesh.bevel", text="Bevel Edges").affect = 'EDGES'
-        layout.operator("mesh.bridge_edge_loops")
-        layout.operator("mesh.screw")
-
-        layout.separator()
-
-        layout.operator("mesh.subdivide")
-        layout.operator("mesh.subdivide_edgering")
-        layout.operator("mesh.unsubdivide")
-
-        layout.separator()
-
-        layout.operator("mesh.edge_rotate", text="Rotate Edge CW").use_ccw = False
-        layout.operator("mesh.edge_rotate", text="Rotate Edge CCW").use_ccw = True
-
-        layout.separator()
-
-        layout.operator("transform.edge_slide")
-        props = layout.operator("mesh.loopcut_slide")
-        props.TRANSFORM_OT_edge_slide.release_confirm = False
-        layout.operator("mesh.offset_edge_loops_slide")
-
-        layout.separator()
-
-        layout.operator("transform.edge_bevelweight", icon='EDGE_BEVEL')
-        layout.operator("transform.edge_crease", icon='EDGE_CREASE')
-
-        layout.separator()
-
-        layout.operator("mesh.mark_seam", icon='EDGE_SEAM').clear = False
-        layout.operator("mesh.mark_seam", text="Clear Seam").clear = True
-
-        layout.separator()
-
-        layout.operator("mesh.mark_sharp", icon='EDGE_SHARP')
-        layout.operator("mesh.mark_sharp", text="Clear Sharp").clear = True
-
-        layout.operator("mesh.mark_sharp", text="Mark Sharp from Vertices").use_verts = True
-        props = layout.operator("mesh.mark_sharp", text="Clear Sharp from Vertices")
-        props.use_verts = True
-        props.clear = True
-
-        layout.operator("mesh.set_sharpness_by_angle")
-
-        if with_freestyle:
-            layout.separator()
-
-            layout.operator("mesh.mark_freestyle_edge").clear = False
-            layout.operator("mesh.mark_freestyle_edge", text="Clear Freestyle Edge").clear = True
-
-        layout.template_node_operator_asset_menu_items(catalog_path=self.bl_label)
+    def draw(self, context):
+        from bl_ui import space_axismeld_menubar
+        if space_axismeld_menubar.draw_native_modeling_menu(self.layout, context, 'viewport.modeling.edge'):
+            return
+        from bl_ui import space_axismeld_native_modeling
+        space_axismeld_native_modeling.draw_original(self.layout, context, 'VIEW3D_MT_edit_mesh_edges')
 
 
 class VIEW3D_MT_edit_mesh_faces_data(Menu):
@@ -5036,49 +4878,11 @@ class VIEW3D_MT_edit_mesh_faces(Menu):
     bl_idname = "VIEW3D_MT_edit_mesh_faces"
 
     def draw(self, context):
-        layout = self.layout
-
-        layout.operator_context = 'INVOKE_REGION_WIN'
-
-        layout.operator("view3d.edit_mesh_extrude_move_normal", text="Extrude Faces")
-        layout.operator("view3d.edit_mesh_extrude_move_shrink_fatten", text="Extrude Faces Along Normals")
-        layout.operator("mesh.extrude_faces_move", text="Extrude Individual Faces")
-
-        layout.separator()
-
-        layout.operator("mesh.inset")
-        layout.operator("mesh.poke")
-        props = layout.operator("mesh.quads_convert_to_tris")
-        props.quad_method = props.ngon_method = 'BEAUTY'
-        layout.operator("mesh.tris_convert_to_quads")
-        layout.operator("mesh.solidify", text="Solidify Faces")
-        layout.operator("mesh.wireframe")
-
-        layout.separator()
-
-        layout.operator("mesh.fill")
-        layout.operator("mesh.fill_grid")
-        layout.operator("mesh.beautify_fill")
-
-        layout.separator()
-
-        layout.operator("mesh.intersect")
-        layout.operator("mesh.intersect_boolean")
-
-        layout.separator()
-
-        layout.operator("mesh.face_split_by_edges")
-
-        layout.separator()
-
-        layout.operator("mesh.faces_shade_smooth")
-        layout.operator("mesh.faces_shade_flat")
-
-        layout.separator()
-
-        layout.menu("VIEW3D_MT_edit_mesh_faces_data")
-
-        layout.template_node_operator_asset_menu_items(catalog_path=self.bl_label)
+        from bl_ui import space_axismeld_menubar
+        if space_axismeld_menubar.draw_native_modeling_menu(self.layout, context, 'viewport.modeling.face'):
+            return
+        from bl_ui import space_axismeld_native_modeling
+        space_axismeld_native_modeling.draw_original(self.layout, context, 'VIEW3D_MT_edit_mesh_faces')
 
 
 class VIEW3D_MT_edit_mesh_normals_select_strength(Menu):
@@ -5350,61 +5154,32 @@ def draw_curve(self, _context):
 class VIEW3D_MT_edit_curve(Menu):
     bl_label = "Curve"
 
-    draw = draw_curve
+    def draw(self, context):
+        from bl_ui import space_axismeld_menubar
+        if space_axismeld_menubar.draw_native_modeling_menu(self.layout, context, 'modeling.curves'):
+            return
+        from bl_ui import space_axismeld_native_modeling
+        space_axismeld_native_modeling.draw_original(self.layout, context, 'VIEW3D_MT_edit_curve')
 
 
 class VIEW3D_MT_edit_curve_ctrlpoints(Menu):
     bl_label = "Control Points"
 
     def draw(self, context):
-        layout = self.layout
-
-        edit_object = context.edit_object
-
-        if edit_object.type in {'CURVE', 'SURFACE'}:
-            layout.operator("curve.extrude_move")
-            layout.operator("curve.vertex_add")
-
-            layout.separator()
-
-            layout.operator("curve.make_segment")
-
-            layout.separator()
-
-            if edit_object.type == 'CURVE':
-                layout.operator("transform.tilt")
-                layout.operator("curve.tilt_clear")
-
-                layout.separator()
-
-                layout.operator_menu_enum("curve.handle_type_set", "type")
-                layout.operator("curve.normals_make_consistent")
-
-                layout.separator()
-
-            layout.operator("curve.smooth")
-            if edit_object.type == 'CURVE':
-                layout.operator("curve.smooth_tilt")
-                layout.operator("curve.smooth_radius")
-                layout.operator("curve.smooth_weight")
-
-            layout.separator()
-
-        layout.menu("VIEW3D_MT_hook")
-
-        layout.separator()
-
-        layout.operator("object.vertex_parent_set")
+        from bl_ui import space_axismeld_native_modeling
+        if space_axismeld_native_modeling.draw_hosted_menu(self.layout, context, 'VIEW3D_MT_edit_curve_ctrlpoints'):
+            return
+        space_axismeld_native_modeling.draw_original(self.layout, context, 'VIEW3D_MT_edit_curve_ctrlpoints')
 
 
 class VIEW3D_MT_edit_curve_segments(Menu):
     bl_label = "Segments"
 
-    def draw(self, _context):
-        layout = self.layout
-
-        layout.operator("curve.subdivide")
-        layout.operator("curve.switch_direction")
+    def draw(self, context):
+        from bl_ui import space_axismeld_native_modeling
+        if space_axismeld_native_modeling.draw_hosted_menu(self.layout, context, 'VIEW3D_MT_edit_curve_segments'):
+            return
+        space_axismeld_native_modeling.draw_original(self.layout, context, 'VIEW3D_MT_edit_curve_segments')
 
 
 class VIEW3D_MT_edit_curve_clean(Menu):
@@ -5492,7 +5267,12 @@ class VIEW3D_MT_edit_curve_showhide(ShowHideMenu, Menu):
 class VIEW3D_MT_edit_surface(Menu):
     bl_label = "Surface"
 
-    draw = draw_curve
+    def draw(self, context):
+        from bl_ui import space_axismeld_menubar
+        if space_axismeld_menubar.draw_native_modeling_menu(self.layout, context, 'modeling.surfaces'):
+            return
+        from bl_ui import space_axismeld_native_modeling
+        space_axismeld_native_modeling.draw_original(self.layout, context, 'VIEW3D_MT_edit_surface')
 
 
 class VIEW3D_MT_edit_font_chars(Menu):
@@ -6042,49 +5822,32 @@ class VIEW3D_MT_edit_curves_add(Menu):
 class VIEW3D_MT_edit_curves(Menu):
     bl_label = "Curves"
 
-    def draw(self, _context):
-        layout = self.layout
-
-        layout.menu("VIEW3D_MT_transform")
-        layout.menu("VIEW3D_MT_mirror")
-        layout.menu("VIEW3D_MT_snap")
-
-        layout.separator()
-
-        layout.operator("curves.duplicate_move", icon='DUPLICATE')
-        layout.operator("curves.extrude_move")
-
-        layout.separator()
-
-        layout.operator("curves.attribute_set")
-        layout.operator_menu_enum("curves.curve_type_set", "type")
-        layout.operator("curves.cyclic_toggle")
-        layout.template_node_operator_asset_menu_items(catalog_path=self.bl_label)
-
-        layout.separator()
-
-        layout.operator("curves.separate")
-        layout.operator("curves.delete", icon='X')
+    def draw(self, context):
+        from bl_ui import space_axismeld_menubar
+        if space_axismeld_menubar.draw_native_modeling_menu(self.layout, context, 'modeling.curves'):
+            return
+        from bl_ui import space_axismeld_native_modeling
+        space_axismeld_native_modeling.draw_original(self.layout, context, 'VIEW3D_MT_edit_curves')
 
 
 class VIEW3D_MT_edit_curves_control_points(Menu):
     bl_label = "Control Points"
 
-    def draw(self, _context):
-        layout = self.layout
-
-        layout.operator("curves.extrude_move")
-        layout.operator_menu_enum("curves.handle_type_set", "type")
+    def draw(self, context):
+        from bl_ui import space_axismeld_native_modeling
+        if space_axismeld_native_modeling.draw_hosted_menu(self.layout, context, 'VIEW3D_MT_edit_curves_control_points'):
+            return
+        space_axismeld_native_modeling.draw_original(self.layout, context, 'VIEW3D_MT_edit_curves_control_points')
 
 
 class VIEW3D_MT_edit_curves_segments(Menu):
     bl_label = "Segments"
 
-    def draw(self, _context):
-        layout = self.layout
-
-        layout.operator("curves.subdivide")
-        layout.operator("curves.switch_direction")
+    def draw(self, context):
+        from bl_ui import space_axismeld_native_modeling
+        if space_axismeld_native_modeling.draw_hosted_menu(self.layout, context, 'VIEW3D_MT_edit_curves_segments'):
+            return
+        space_axismeld_native_modeling.draw_original(self.layout, context, 'VIEW3D_MT_edit_curves_segments')
 
 
 class VIEW3D_MT_edit_curves_context_menu(Menu):

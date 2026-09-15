@@ -3,27 +3,110 @@
 """Pure placement projection of the reviewed Maya application menu catalog.
 
 The source catalog owns command bindings and Maya provenance. This projection
-only replaces Edit Mesh's five named chapters with viewport menu containers.
+places the reviewed modeling chapters in their viewport menu containers.
 """
 from copy import deepcopy
+from hashlib import sha256
 
 from .menubar_catalog import build_menubar
+from .workspace_native_catalog import integrate_native_groups
 
 
 MODELING_SOURCE_ROOTS = tuple('modeling.' + suffix for suffix in (
     'mesh', 'edit_mesh', 'mesh_tools', 'mesh_display', 'curves', 'surfaces',
-    'deform', 'uv', 'generate',
+    'uv',
 ))
+EXCLUDED_MODELING_ROOTS = ('modeling.deform', 'modeling.generate')
 
 # Maya 2026 PolygonsBuildMenu.mel creates these chapters at lines
 # 76, 201, 231, 264 and 322. Shared component operations stay in Components.
 EDIT_MESH_CHAPTERS = (
-    ('maya.modeling.edit_mesh.components', 'Components', 'viewport.modeling.components', 'EDITMODE_HLT'),
+    ('maya.modeling.edit_mesh.components', 'Components', 'modeling.edit_mesh', 'EDITMODE_HLT'),
     ('maya.modeling.edit_mesh.vertex', 'Vertex', 'viewport.modeling.vertex', 'VERTEXSEL'),
     ('maya.modeling.edit_mesh.edge', 'Edge', 'viewport.modeling.edge', 'EDGESEL'),
     ('maya.modeling.edit_mesh.face', 'Face', 'viewport.modeling.face', 'FACESEL'),
-    ('maya.modeling.edit_mesh.curve', 'Curve', 'viewport.modeling.curve', 'CURVE_DATA'),
+    ('maya.modeling.edit_mesh.curve', 'Curve', 'viewport.modeling.curve_projection', 'CURVE_DATA'),
 )
+
+# Reviewed component ownership for Blender-only Edit Mesh entries. Maya's
+# shared component commands keep their original chapter and source payload.
+_EDIT_EXTENSION_GROUPS = {
+    'viewport.modeling.vertex': {
+        'Extrude': ('extrude_vertices',),
+        'Connect': ('connect_pairs', 'make_edge_face'),
+        'Smooth': ('average_laplacian',),
+        'Split': ('rip', 'rip_fill', 'rip_extend'),
+        'Delete': ('dissolve_vertices',),
+    },
+    'viewport.modeling.edge': {
+        'Extrude': ('extrude_edges', 'screw'),
+        'Split': ('edge_split',),
+        'Loops': ('space_loops',),
+        'Delete': ('dissolve_edges', 'delete_edge_loop'),
+    },
+    'viewport.modeling.face': {
+        'Extrude': ('extrude_faces_individual', 'extrude_along_normals'),
+        'Fill': ('fill', 'grid_fill', 'beautify_fill'),
+        'Topology': ('intersect_faces', 'split_by_edges'),
+        'Delete': ('dissolve_faces',),
+        'Inset and Shell': ('inset', 'solidify_faces', 'wireframe_faces'),
+        'Face Boolean': ('boolean_faces_union', 'boolean_faces_difference', 'boolean_faces_intersection'),
+    },
+    'modeling.edit_mesh': {
+        'Split': ('detach_selection',),
+        'Merge': ('merge_cursor', 'merge_first', 'merge_last', 'merge_collapse'),
+        'Transform': ('flatten',),
+    },
+}
+EDIT_MESH_EXTENSION_ROUTES = {
+    'menubar.command.mesh.' + suffix: (root_id, (purpose,))
+    for root_id, groups in _EDIT_EXTENSION_GROUPS.items()
+    for purpose, suffixes in groups.items() for suffix in suffixes
+}
+
+
+def _walk_nodes(nodes):
+    for node in nodes:
+        yield node
+        yield from _walk_nodes(node.get('children', ()))
+
+
+def _purpose_section(root, path):
+    current = root
+    for label in path:
+        child = next((node for node in current['children']
+                      if node['kind'] == 'menu' and node['label'] == label), None)
+        if child is None:
+            if any(node['kind'] == 'separator' and node['label'] for node in current['children']):
+                raise ValueError('Explicit chapter placement required: ' + current['id'] + ' / ' + label)
+            suffix = sha256((current['id'] + '\0' + label).encode()).hexdigest()[:16]
+            child = dict(id='workspace.section.' + suffix, label=label, kind='menu', children=[],
+                         origin='workspace_section', icon=root.get('icon', 'TOOL_SETTINGS'))
+            current['children'].append(child)
+        current = child
+    return current
+
+
+def _place_edit_mesh_extensions(roots):
+    owners = [roots[identifier] for identifier in _EDIT_EXTENSION_GROUPS]
+    extensions = {node['id']: node for node in _walk_nodes(owners)
+                  if node.get('origin') == 'blender_extension'}
+    if set(extensions) != set(EDIT_MESH_EXTENSION_ROUTES):
+        raise ValueError('Blender Edit Mesh extensions need an updated component placement audit')
+    for node in _walk_nodes(owners):
+        node['children'] = [child for child in node.get('children', ()) if child['id'] not in extensions]
+    for identifier, (root_id, path) in EDIT_MESH_EXTENSION_ROUTES.items():
+        _purpose_section(roots[root_id], path)['children'].append(extensions[identifier])
+
+    def prune(node):
+        for child in node.get('children', ()):
+            prune(child)
+        node['children'] = [child for child in node.get('children', ())
+                            if not (child.get('origin') in {'blender_section', 'workspace_section'}
+                                    and child['kind'] == 'menu' and not child['children'])]
+
+    for root in owners:
+        prune(root)
 
 
 def _split_edit_mesh(root):
@@ -37,7 +120,8 @@ def _split_edit_mesh(root):
                 raise ValueError('Unreviewed Edit Mesh chapter: ' + node['id'])
             label, destination, icon = chapter
             seen.append(node['id'])
-            groups.append(dict(id=destination, label=label, kind='menu', children=[],
+            caption = {'Components': 'Edit Mesh', 'Curve': 'Curve Projection'}.get(label, label)
+            groups.append(dict(id=destination, label=caption, kind='menu', children=[],
                                icon=icon, origin='workspace_projection',
                                source_menu_id=root['id'], source_heading_id=node['id']))
         elif not groups:
@@ -50,31 +134,42 @@ def _split_edit_mesh(root):
 
 
 def build_workspace_menubar():
-    """Return an independent catalog with 13 Modeling viewport root menus.
+    """Return an independent catalog with 10 Modeling viewport root menus.
 
 Every functional node, including its separate Options object, retains its
-complete source payload. Other roots and all other menu sets stay unchanged.
+complete source payload. Deform and Generate leave the Modeling menu set;
+their reference data and all other menu sets stay unchanged.
     """
     catalog = deepcopy(build_menubar())
     source = next((root for root in catalog['menus'] if root['id'] == 'modeling.edit_mesh'), None)
     if source is None:
         raise ValueError('The reviewed Edit Mesh source menu is missing')
     groups = _split_edit_mesh(source)
-    group_ids = tuple(group['id'] for group in groups)
+    header_groups, curve_projection = groups[:4], groups[4]
+    group_ids = tuple(group['id'] for group in header_groups)
+    tools = next((root for root in catalog['menus'] if root['id'] == 'modeling.mesh_tools'), None)
+    if tools is None:
+        raise ValueError('The reviewed Mesh Tools destination is missing')
+    tools['children'].append(curve_projection)
 
     def expand(identifiers):
         return tuple(destination for identifier in identifiers
+                     if identifier not in EXCLUDED_MODELING_ROOTS
                      for destination in (group_ids if identifier == source['id'] else (identifier,)))
 
     catalog['menus'] = tuple(destination for root in catalog['menus']
-                             for destination in (groups if root['id'] == source['id'] else (root,)))
+                             for destination in (header_groups if root['id'] == source['id'] else (root,)))
+    _place_edit_mesh_extensions({root['id']: root for root in catalog['menus']})
     catalog['sets']['MODELING'] = expand(catalog['sets']['MODELING'])
     catalog['modeling_roots'] = expand(MODELING_SOURCE_ROOTS)
-    catalog['edit_mesh_groups'] = {group['label']: group['id'] for group in groups}
+    catalog['edit_mesh_groups'] = {chapter[1]: group['id'] for chapter, group in zip(EDIT_MESH_CHAPTERS, groups)}
+    catalog['excluded_modeling_roots'] = EXCLUDED_MODELING_ROOTS
+    exposed_roots = set().union(*catalog['sets'].values())
+    catalog['archived_roots'] = tuple(root['id'] for root in catalog['menus'] if root['id'] not in exposed_roots)
     # Actual Blender menu hosts belong to the UI integration, not this source
     # projection. Callers can record that independent entrypoint map here.
     catalog['host_roots'] = {}
-    return catalog
+    return integrate_native_groups(catalog)
 
 
 def routes(catalog=None, root_ids=None):

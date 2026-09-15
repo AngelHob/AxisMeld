@@ -29,6 +29,13 @@ _BLENDER_MODELING_MENUS = {
     'viewport.modeling.edge': 'VIEW3D_MT_edit_mesh_edges',
     'viewport.modeling.face': 'VIEW3D_MT_edit_mesh_faces',
     'modeling.uv': 'VIEW3D_MT_uv_map',
+    'modeling.curves': 'VIEW3D_MT_edit_curve',
+    'modeling.surfaces': 'VIEW3D_MT_edit_surface',
+}
+_REPLACED_HEADER_MENUS = frozenset(_BLENDER_MODELING_MENUS.values()) | {
+    'VIEW3D_MT_edit_curve_ctrlpoints', 'VIEW3D_MT_edit_curve_segments',
+    'VIEW3D_MT_edit_curves', 'VIEW3D_MT_edit_curves_control_points',
+    'VIEW3D_MT_edit_curves_segments',
 }
 _VIEWPORT_SUPPLEMENTS = {
     'VIEW3D_MT_view': 'common.display',
@@ -41,7 +48,6 @@ _VIEWPORT_SUPPLEMENTS = {
     'VIEW3D_MT_curve_add': 'common.create',
     'VIEW3D_MT_surface_add': 'common.create',
     'VIEW3D_MT_object': 'common.modify',
-    'VIEW3D_MT_edit_mesh': 'common.modify',
 }
 _HOST_CALLBACKS = []
 
@@ -63,7 +69,7 @@ def modeling_workspace(context):
 
 
 class _ViewportMenuLayout:
-    """Keep the native draw flow, replacing only five same-purpose menu roots."""
+    """Keep the native draw flow while the same Menu IDs host the new groups."""
     def __init__(self, layout):
         self._layout = layout
 
@@ -71,7 +77,7 @@ class _ViewportMenuLayout:
         return getattr(self._layout, name)
 
     def menu(self, identifier, *args, **kwargs):
-        if identifier not in _BLENDER_MODELING_MENUS.values():
+        if identifier not in _REPLACED_HEADER_MENUS:
             return self._layout.menu(identifier, *args, **kwargs)
 
 
@@ -83,10 +89,18 @@ def draw_modeling_menus(layout, context):
     if not modeling_workspace(context):
         return
     for identifier in _CATALOG.get('modeling_roots', ()):
-        # This original Edit Mesh/Curve chapter projects curves onto meshes;
-        # distinguish it from Blender's mode-specific Curve menu.
-        text = 'Mesh Projection' if identifier == 'viewport.modeling.curve' else _NODES[identifier]['label']
-        layout.menu(_MENU_NAMES[identifier], text=text)
+        # Keep real native Menu hosts so their append/prepend hooks still run.
+        menu = _BLENDER_MODELING_MENUS.get(identifier, _MENU_NAMES[identifier])
+        if identifier == 'modeling.curves' and getattr(context, 'mode', '') == 'EDIT_CURVES':
+            menu = 'VIEW3D_MT_edit_curves'
+        layout.menu(menu, text=_NODES[identifier]['label'])
+
+
+def draw_native_modeling_menu(layout, context, identifier):
+    if not modeling_workspace(context):
+        return False
+    draw_menu(layout, context, identifier)
+    return True
 
 
 def draw_supplement(layout, context, identifier):
@@ -100,22 +114,14 @@ def draw_menu_sets_entry(layout, context):
         layout.menu('AXISMELD_MT_workspace_menu_sets', text='Maya Menu Sets', icon='FILE_FOLDER')
 
 
-def draw_blender_modeling_tools(layout, context, identifier):
-    menu = _BLENDER_MODELING_MENUS.get(identifier)
-    if menu:
-        row = layout.row()
-        row.enabled = (getattr(getattr(context, 'area', None), 'type', '') == 'VIEW_3D' and
-                       getattr(context, 'mode', '') == 'EDIT_MESH')
-        row.menu(menu, text='Blender Tools', icon='BLENDER')
-
-
 def menu_columns(nodes, context):
     """Preserve every item and divider; divide only this menu's current level."""
     scale = max(.5, context.preferences.system.ui_scale)
     available = max(3, (context.window.height / scale - 100) / 22)
     columns, column, height = [], [], 0
     for index, node in enumerate(nodes):
-        cost = .3 if node['kind'] == 'separator' and not node.get('label') else 1
+        cost = (max(1, node.get('row_count_hint', 1)) if node['kind'] == 'native_group' else
+                .3 if node['kind'] == 'separator' and not node.get('label') else 1)
         reserve = cost
         if node['kind'] == 'separator' and node.get('label'):
             # A named divider is a group heading, not an orphanable last row.
@@ -159,8 +165,10 @@ class AXISMELD_OT_menubar_execute(Operator):
 
 def _draw_item(layout, context, node):
     kind = node['kind']
-    if kind == 'blender_tools':
-        draw_blender_modeling_tools(layout, context, node['owner'])
+    if kind == 'native_group':
+        from bl_ui import space_axismeld_native_modeling
+        space_axismeld_native_modeling.draw_group(layout, context, node['group_key'],
+                                                include=node.get('include'))
         return
     if kind == 'separator':
         if node.get('label'):
@@ -204,10 +212,6 @@ def _draw_item(layout, context, node):
 
 def draw_menu(layout, context, identifier):
     nodes = list(_NODES[identifier].get('children', ()))
-    if identifier in _BLENDER_MODELING_MENUS:
-        nodes.extend(({'id': identifier + '.blender_separator', 'kind': 'separator', 'label': ''},
-                      {'id': identifier + '.blender_tools', 'kind': 'blender_tools',
-                       'label': 'Blender Tools', 'owner': identifier}))
     columns = menu_columns(nodes, context)
     container = layout.row() if len(columns) > 1 else layout
     scale = max(.5, context.preferences.system.ui_scale)
@@ -222,7 +226,7 @@ def draw_menu(layout, context, identifier):
         # Native rows also contain live shortcut text and dynamic menus. Their
         # native width estimate includes those cells; a caption-only override
         # would shrink them (for example Save As + Shift Ctrl S).
-        if not any(node['kind'] == 'native' for node in nodes):
+        if not any(node['kind'] in {'native', 'native_group'} for node in nodes):
             column.ui_units_x = max(widths, default=100) / 20
         for node in nodes:
             _draw_item(column, context, node)

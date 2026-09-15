@@ -1,5 +1,7 @@
 # Maya 建模菜单融入 Blender 视窗
 
+> 本文记录上一版13根与完整Maya导航方案。本轮用户已进一步限定建模范围、取消Deform/Generate并要求原生功能直接归类；当前结构与验收见 [建模菜单归类与参数列对齐](2026-09-15-modeling-menu-integration.md)。历史计数与测试不作为新版的完成结论。
+
 ## 用户确认的结构
 
 本设计替代此前双排全局 TOPBAR 方案。用户明确保留 Blender 原全局菜单（File、Edit、Render、Window、Help）和工作区标签，并确认 Maya 建模菜单放入 3D 视窗现有 View、Select、Add、Object/Mesh 所在的一排。

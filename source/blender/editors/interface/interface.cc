@@ -478,7 +478,8 @@ static void block_bounds_calc_text(Block *block, float offset)
 
   /* Use the same normalization for every column. Alignment groups translate
    * from their original column origin exactly once; normal rows fill the column.
-   * No button order, vertical position, or relative position inside a row changes. */
+   * An Options gear stays at the final column edge, with its text button taking
+   * the additional width. Other alignment groups keep their internal geometry. */
   float column_x = offset;
   for (const TextBoundsColumn &column : columns) {
     float column_right = column_x + column.width + block->bounds;
@@ -488,11 +489,30 @@ static void block_bounds_calc_text(Block *block, float offset)
     const float translation = column_x - column.original_x;
     for (int64_t row_index = column.begin; row_index < column.end; row_index++) {
       const TextBoundsRow &row = rows[row_index];
+      float options_offset = 0.0f;
+      if (row.aligned) {
+        const Button *options = block->buttons_ptrs[row.end - 1].get();
+        const Button *body = block->buttons_ptrs[row.end - 2].get();
+        /* Do not stretch ordinary icon groups or unrelated trailing controls.
+         * A leading checkbox/radio is before the text button and remains fixed. */
+        if (options->type == ButtonType::But && options->icon == ICON_PREFERENCES &&
+            options->str.empty() && !body->str.empty())
+        {
+          options_offset = std::max(0.0f, column_right - (options->rect.xmax + translation));
+        }
+      }
       for (int64_t index = row.begin; index < row.end; index++) {
         Button *but = block->buttons_ptrs[index].get();
         if (row.aligned) {
           but->rect.xmin += translation;
           but->rect.xmax += translation;
+          if (index == row.end - 2) {
+            but->rect.xmax += options_offset;
+          }
+          else if (index == row.end - 1) {
+            but->rect.xmin += options_offset;
+            but->rect.xmax += options_offset;
+          }
         }
         else {
           but->rect.xmin = column_x;

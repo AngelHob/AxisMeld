@@ -406,8 +406,9 @@ class IMAGE_MT_uvs_split(Menu):
 class IMAGE_MT_uvs_unwrap(Menu):
     bl_label = "Unwrap"
 
-    def draw(self, _context):
-        layout = self.layout
+    def draw(self, context):
+        from bl_ui import space_axismeld_native_modeling
+        layout = space_axismeld_native_modeling.modeling_icon_layout(self.layout, context, 'UV')
 
         # It would be nice to do: `layout.operator_enum("uv.unwrap", "method")`
         # However the menu items don't have an "Unwrap" prefix, so inline the operators.

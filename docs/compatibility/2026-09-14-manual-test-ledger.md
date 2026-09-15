@@ -1,6 +1,6 @@
 # AxisMeld 待人工测试清单
 
-更新：2026-09-15。人工测试继续暂缓。历史253项和稳定编号保留，S/P/C/V/T/R共47项保持用户确认已测试，未补造通过/失败结果。本轮追加MB-01至MB-20，验证真正的顶部Menu Bar、五菜单集、Maya灰占位与Blender能力归类。本次追加MB-21至MB-27，验证章节归属、内置工作区及语义纠偏。MB-28/29双排方案已被用户后续要求替代，保留历史记录。本次追加MB-30至MB-34，验证Modeling视窗菜单和原生全局栏。现合计287项：历史已测试47项，初始未测240项（其中2项为已替代的历史方案，不再作为当前验收要求）。自动化不覆盖用户手工结果。
+更新：2026-09-15。人工测试继续暂缓。历史253项和稳定编号保留，S/P/C/V/T/R共47项保持用户确认已测试，未补造通过/失败结果。本轮追加MB-01至MB-20，验证真正的顶部Menu Bar、五菜单集、Maya灰占位与Blender能力归类。本次追加MB-21至MB-27，验证章节归属、内置工作区及语义纠偏。MB-28/29双排方案已被用户后续要求替代，保留历史记录。本次追加MB-30至MB-34，验证Modeling视窗菜单和原生全局栏。本次追加MB-35至MB-39，验证建模分类、原生能力融合和右侧齿轮。现合计292项：历史已测试47项，初始未测245项（其中2项为已替代的历史方案，不再作为当前验收要求）。自动化不覆盖用户手工结果。
 
 ## 测试准备与反馈
 
@@ -452,3 +452,15 @@ Maya菜单从Space目录进入；Blender专有名称通过键位偏好将一个�
 | MB-32 | 从 Components、Vertex、Edge、Face、Mesh Projection 逐项对照原 Edit Mesh；在临时网格上执行 Components→Add Divisions 并 Undo，再点击灰色 Options | 五组按 Maya 原章节保留29个正文和18个独立 Options，共享操作留在 Components；真实命令仅执行一次且可撤销；灰项不执行正文，不暗改模式或选择 | 待测 |
 | MB-33 | Edit Mesh 下打开 Mesh/Vertex/Edge/Face/UV→Blender Tools；检查已启用插件的 File/Import 和点线面菜单扩展 | 原生工具、节点资产和插件追加入口仍可见可用；插件移除后条目消失；原生操作遵循当前模式，Object 下编辑工具灰显 | 待测 |
 | MB-34 | 打开 Window→Maya Menu Sets 的五个集合，按去向表找公共及专用功能；在窄窗口和常用缩放下复测视窗栏与长菜单末项 | 原1829功能和639 Options 均有可达按钮或灰占位；Display/Select/Create/Modify 可从 View/Select/Add/Object 的 Maya 目录找到，Edit 下 Modify 经 Mesh→Blender Tools；菜单章节及末项完整可读 | 待测 |
+
+## P0：建模功能归类与右侧参数按钮（新增5项）
+
+本批按用户最新六点缩小开发范围：只处理建模，移除Modeling中的Deform/Generate；旧MB-31/32/33/34的13根、Components及Blender Tools入口已替代。保留历史记录，当前入口以以下条目与新版建模去向表为准。候选为 `D:/source/AxisMeld-build/modeling-menu-integration-test-install/blender.exe`。
+
+| 编号 | 前置条件与操作 | 预期 | 人工状态 |
+|---|---|---|---|
+| MB-35 | 在Modeling检查Mesh/Edit Mesh/Vertex/Edge/Face/Mesh Tools/Mesh Display/Curves/Surfaces/UV，展开Mesh Tools→Curve Projection | 仅点线面独立，通用操作仍在Edit Mesh，曲线投射在Mesh Tools内；Deform/Generate不再占用建模菜单入口，已有子目录保留层级 | 待测 |
+| MB-36 | 按新版去向表查找原生切割、法线、UV和点线面操作；对照同一Blender原生工作区 | 原生功能按用途进入新分类，不再整包放在Blender Tools；34项旧扩展分类正确，参数不同的变体仍可找到，未适配Maya正文保留灰占位 | 待测 |
+| MB-37 | 临时Cube经Mesh中的Modifier入口添加一个修改器、查看参数并撤销；测试原生独有建模操作及撤销 | 使用真实Blender修改器和参数界面，不把Maya Deform灰项冒充修改器；操作只执行一次、Undo可恢复，不暗改选择或工作区 | 待测 |
+| MB-38 | 在Modeling的Object/Edit Mesh/无对象、Curve/Surface编辑及Layout之间切换，检查原生插件菜单和资产入口；增加节点资产后检查动态目录高度与滚动 | 原生菜单ID与追加回调仍有效，其他工作区行为保持；新分类保留左侧Blender风格图标，模式不匹配灰显而不抛错；大量动态资产仍待人工压力测试，出现滚动时单独记录 | 待测 |
+| MB-39 | 在100%/150%常用缩放下打开短长标签、状态圆圈/勾选项及多列菜单，分别点击正文和右侧齿轮 | 同列参数齿轮在菜单右侧对齐，宽度与间距稳定；左侧状态图标和文字不挤压；灰齿轮不执行正文，正文新扩宽区域仍点击正确，不产生滚动或折叠 | 待测 |

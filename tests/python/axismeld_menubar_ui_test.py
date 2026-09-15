@@ -80,6 +80,16 @@ class MenuBarUIContract(unittest.TestCase):
         self.assertTrue(all(r[2].get('icon') for r in ops))
         option=next(r for r in ops if r[2]['icon']=='PREFERENCES'); self.assertFalse(option[4])
         command=next(r for r in ops if getattr(r[3],'key','')=='new'); self.assertEqual(command[3].token,'captured')
+    def test_hair_curves_header_keeps_actual_native_plugin_host(self):
+        for mode, host in [('EDIT_CURVES', 'VIEW3D_MT_edit_curves'), ('EDIT_CURVE', 'VIEW3D_MT_edit_curve')]:
+            self.context.mode = mode
+            layout = Layout()
+            with patch.object(self.ui, 'modeling_workspace', return_value=True), \
+                 patch.object(self.ui, '_CATALOG', {'modeling_roots': ('modeling.curves',)}), \
+                 patch.object(self.ui, '_NODES', {'modeling.curves': {'label': 'Curves'}}), \
+                 patch.object(self.ui, '_MENU_NAMES', {'modeling.curves': 'AXISMELD_MT_test_curves'}):
+                self.ui.draw_modeling_menus(layout, self.context)
+            self.assertEqual(layout.log[0][1], host)
     def test_dispatch_never_recaptures_or_adds_undo(self):
         op=self.ui.AXISMELD_OT_menubar_execute(); op.kind='command'; op.key='new'; op.token='old'
         self.assertEqual(op.execute(self.context),(self.context,'command','new','old'))
@@ -152,15 +162,29 @@ class MenuBarUIContract(unittest.TestCase):
         menus=[r for r in layout.log if r[0]=='menu']
         self.assertEqual(menus[0][1],self.ui._MENU_NAMES['common.file'])
         self.assertEqual(menus[1][2]['text'],'Maya Menu Sets')
-    def test_native_vertex_provider_is_gray_without_edit_mesh(self):
+    def test_native_menu_ids_host_new_groups_only_in_modeling(self):
+        self.assertNotIn('Blender Tools', UI.read_text())
+        self.context.window_manager.keyconfigs.active.name='AxisMeld_Maya_2026'
+        self.context.workspace=types.SimpleNamespace(name='Modeling')
         self.context.area=types.SimpleNamespace(type='VIEW_3D')
-        for mode,expected in [('OBJECT',False),('EDIT_MESH',True)]:
-            self.context.mode=mode
-            layout=Layout()
-            self.ui.draw_blender_modeling_tools(layout,self.context,'viewport.modeling.vertex')
-            menu=next(r for r in layout.log if r[0]=='menu')
-            self.assertEqual(menu[1],'VIEW3D_MT_edit_mesh_vertices')
-            self.assertEqual(menu[2]['text'],'Blender Tools')
-            self.assertEqual(menu[3],expected)
+        with patch.object(self.ui,'draw_menu') as draw:
+            self.assertTrue(self.ui.draw_native_modeling_menu(Layout(),self.context,'viewport.modeling.vertex'))
+            self.assertEqual(draw.call_args.args[2],'viewport.modeling.vertex')
+            self.context.workspace.name='Layout'
+            self.assertFalse(self.ui.draw_native_modeling_menu(Layout(),self.context,'viewport.modeling.vertex'))
+            self.assertEqual(draw.call_count,1)
+    def test_native_groups_keep_runtime_drawing_and_actual_height_budget(self):
+        node={'id':'native.vertex.shape','kind':'native_group','label':'Shape Keys','group_key':'vertex.shape','row_count_hint':6}
+        renderer=types.ModuleType('bl_ui.space_axismeld_native_modeling')
+        drawn=[]
+        renderer.draw_group=lambda *args,**kw:drawn.append((args,kw))
+        with patch.dict(sys.modules,{'bl_ui':types.SimpleNamespace(space_axismeld_native_modeling=renderer)}):
+            layout=Layout(); self.ui._draw_item(layout,self.context,node)
+        self.assertEqual(drawn[0][0][1:],(self.context,'vertex.shape'))
+        self.context.window.height=390
+        self.context.preferences.system.ui_scale=1
+        nodes=[dict(node,id='first'),dict(node,id='second'),dict(node,id='third')]
+        columns=self.ui.menu_columns(nodes,self.context)
+        self.assertEqual([len(c) for c in columns],[2,1])
 
 if __name__=='__main__': unittest.main()
