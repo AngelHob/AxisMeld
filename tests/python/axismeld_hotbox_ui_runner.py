@@ -12,13 +12,14 @@ import tempfile
 parser = argparse.ArgumentParser()
 parser.add_argument('--blender', required=True)
 parser.add_argument('--artifacts', help='Optional directory for isolated factory-scene screenshots')
-parser.add_argument('--suite', choices=('menubar-actions', 'menubar-sets', 'menubar-layout', 'menubar', 'maya-hierarchy', 'full-menu-entry', 'full-menu-lifecycle', 'fully-expanded', 'maya-content-state', 'maya-content', 'maya-companion', 'icons', 'object-menu', 'object-modeling', 'context-modeling', 'modeling', 'create', 'components', 'tools', 'hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection', 'appearance'), default='hotbox')
+parser.add_argument('--suite', choices=('menubar-alignment', 'menubar-actions', 'menubar-sets', 'menubar-layout', 'menubar', 'maya-hierarchy', 'full-menu-entry', 'full-menu-lifecycle', 'fully-expanded', 'maya-content-state', 'maya-content', 'maya-companion', 'icons', 'object-menu', 'object-modeling', 'context-modeling', 'modeling', 'create', 'components', 'tools', 'hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection', 'appearance'), default='hotbox')
 args = parser.parse_args()
 binary = Path(args.blender).resolve()
 with binary.open("rb") as stream:
     digest = hashlib.file_digest(stream, "sha256").hexdigest().upper()
 print("AXISMELD_TEST_BINARY", str(binary), "SHA256", digest, "SUITE", args.suite, flush=True)
 suite_script, pass_marker = {
+    'menubar-alignment': ('axismeld_menubar_alignment_events.py', b'AXISMELD_MENUBAR_ALIGNMENT_PASS'),
     'menubar-actions': ('axismeld_menubar_events.py', b'AXISMELD_MENUBAR_ACTIONS_PASS'),
     'menubar-sets': ('axismeld_menubar_events.py', b'AXISMELD_MENUBAR_SETS_PASS'),
     'menubar-layout': ('axismeld_menubar_events.py', b'AXISMELD_MENUBAR_LAYOUT_PASS'),

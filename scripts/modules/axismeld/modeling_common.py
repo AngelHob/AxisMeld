@@ -265,7 +265,6 @@ for native, label, kwargs in (
         ('snap_cursor_to_grid', 'Cursor to Grid', {}), ('snap_cursor_to_active', 'Cursor to Active', {})):
     _specs.append(_entry('snap.' + native.removeprefix('snap_'), label, 'Modify', 'view3d.' + native, modes=ALL,
                         kwargs=kwargs, section=('Snap Actions',), line=1473,
-                        maya=('SnapPointToPoint',) if native == 'snap_selected_to_active' else (),
                         requires='object' if native.endswith('_active') else ''))
 for axis, vector in (('x', (True, False, False)), ('y', (False, True, False)), ('z', (False, False, True))):
     _specs.append(_entry('transform.mirror_' + axis, 'Mirror ' + axis.upper(), 'Modify', 'transform.mirror',
@@ -335,7 +334,7 @@ _specs.extend((
         _call('object.duplicate', O, linked=False), _call('mesh.duplicate', M), _call('curve.duplicate', C)),
         requires='selection', maya=('Duplicate',), key='D', ctrl=True, section=('Duplicate',), line=2914),
     _entry('edit.duplicate_linked', 'Duplicate Linked', 'Edit', 'object.duplicate', kwargs={'linked': True},
-           requires='selection', maya=('DuplicateSpecial',), key='D', ctrl=True, shift=True, section=('Duplicate',),
+           requires='selection', key='D', ctrl=True, shift=True, section=('Duplicate',),
            difference='Blender linked object data instance; arbitrary Maya Duplicate Special arrays/history are not implied.'),
     _multi('edit.duplicate_move', 'Duplicate and Move', 'Edit', (
         NativeCall('object.duplicate_move', O, (), True, True),

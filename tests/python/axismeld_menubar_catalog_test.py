@@ -110,6 +110,75 @@ class MenubarCatalogTest(unittest.TestCase):
             if node.get('origin') == 'blender_section':
                 self.assertLessEqual(len(node['children']), 24, node['id'])
 
+    def test_extensions_belong_to_their_maya_chapter_not_the_last_heading(self):
+        # Independent expectations from the actual Maya chapter captions.
+        expected = {
+            'common.select': {
+                None: ('Object Relationships', 'Hierarchy', 'Grouped', 'Linked Objects', 'Pattern'),
+                'Polygons': ('Mesh Components', 'Similarity Filters'),
+                'NURBS Curves': ('Curve and Surface Points',)},
+            'common.modify': {
+                'Transform': ('Proportional Editing', 'Reset Transformations', 'Apply Transformations', 'Mirror', 'Transform Deltas'),
+                'Pivot': ('Pivot', 'Object Origin'), 'Rotate Order': ('Rotation Order',), 'Naming': ('Naming Tools',)},
+            'common.display': {'Viewport': ('Viewport Settings', 'Viewport'), 'Object': ('Component Display',)},
+            'modeling.mesh': {'Combine': ('Combine Tools',), 'Remesh': ('Remesh',),
+                'Transfer': ('Transfer', 'Element Order'), 'Optimize': ('Cleanup Tools',), 'Blender Modifiers': ('Modifiers',)},
+            'modeling.edit_mesh': {'Components': ('Extrusion Tools', 'Components', 'Merge Tools', 'Topology', 'Interactive Topology'), 'Face': ('Face Boolean',)},
+            'modeling.mesh_tools': {'Tools': ('Tools', 'Immediate Tools',)},
+            'modeling.mesh_display': {'Normals': ('Normals', 'Average Normal Tools', 'Edit Normals', 'Face Strength', 'Shading', 'Normal Modifiers'),
+                'Vertex Colors': ('Vertex Colors',), 'Display Attributes': ('Viewport Analysis', 'Data Marks',)},
+            'modeling.curves': {'Modify': ('Geometry',), 'Edit': ('Control Points', 'Topology', 'Bezier Handles', 'Spline Type',)},
+            'modeling.surfaces': {'Create': ('Construct',), 'Edit NURBS Surfaces': ('Topology', 'Control Points', 'Geometry',)},
+            'modeling.deform': {'Create': ('Blender Deformers',), 'Edit': ('Binding', 'Hook Transforms',),
+                'Weights': ('Vertex Groups',), 'Deformer Sets (legacy)': ('Blender Hook Membership',)},
+        }
+        for root_id, chapters in expected.items():
+            actual, heading = {}, None
+            for node in self.menus[root_id]['children']:
+                if node['kind'] == 'separator' and node['label']:
+                    heading = node['label']
+                elif node.get('origin') == 'blender_section' and node['kind'] == 'menu':
+                    self.assertNotIn(node['label'], actual)
+                    actual[node['label']] = heading
+            required = {label: chapter for chapter, labels in chapters.items() for label in labels}
+            self.assertEqual(actual, required, root_id)
+
+    def test_saving_and_nested_primitives_do_not_leak_into_unrelated_groups(self):
+        file_rows = self.menus['common.file']['children']
+        labels = [node['label'] for node in file_rows]
+        self.assertEqual(labels[labels.index('Save Preferences')+1], 'Save and Recover')
+        primitive = next(node for node in self.nodes if node['id'] == 'maya.common.create.polygon_primitives')
+        labels = [node['label'] for node in primitive['children']]
+        for label in ('Additional Primitives', 'Subdivision Primitives'):
+            self.assertLess(labels.index(label), labels.index('Super Shapes'))
+            self.assertGreater(labels.index(label), labels.index('Soccer Ball'))
+        workspace = next(node for node in self.nodes if node['id'] == 'maya.common.windows.workspaces')
+        labels = [node['label'] for node in workspace['children']]
+        self.assertEqual(labels[labels.index('Switch Workspace')-1], 'Blender Workspaces')
+
+    def test_naming_has_one_native_entry_for_each_equivalent_semantic_command(self):
+        parent = next(node for node in self.menus['common.modify']['children'] if node['label'] == 'Naming Tools')
+        for label, semantic, native in (('Rename Active Item...', 'object.rename', 'modify.rename'),
+                                        ('Batch Rename...', 'object.batch_rename', 'modify.batch_rename')):
+            rows = [node for node in parent['children'] if node['label'] == label]
+            self.assertEqual(len(rows), 1, label)
+            self.assertEqual(rows[0]['kind'], 'native')
+            self.assertEqual(rows[0]['command'], semantic)
+            self.assertEqual(rows[0]['native_key'], native)
+
+    def test_blender_deformer_edits_reuse_the_actual_edit_submenus(self):
+        root = self.menus['modeling.deform']
+        for label, command in (('Blend Shape', 'deform.shape_key_mirror'), ('Lattice', 'deform.lattice_flip_x')):
+            parent = next(node for node in root['children'] if node['kind'] == 'menu' and node['label'] == label)
+            self.assertIn(command, {node.get('command') for node in walk([parent])})
+
+    def test_unreviewed_extensions_cannot_silently_enter_the_last_chapter(self):
+        root = self.menus['common.select']
+        before = [node['id'] for node in root['children']]
+        with self.assertRaisesRegex(ValueError, 'Missing Maya chapter placement'):
+            self.api._section(root, ('Unreviewed Extension',))
+        self.assertEqual([node['id'] for node in root['children']], before)
+
 
 if __name__ == '__main__':
     unittest.main()

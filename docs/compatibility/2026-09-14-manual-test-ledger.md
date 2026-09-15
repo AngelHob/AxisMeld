@@ -1,6 +1,6 @@
 # AxisMeld 待人工测试清单
 
-更新：2026-09-15。人工测试继续暂缓。历史253项和稳定编号保留，S/P/C/V/T/R共47项保持用户确认已测试，未补造通过/失败结果。本轮追加MB-01至MB-20，验证真正的顶部Menu Bar、五菜单集、Maya灰占位与Blender能力归类。现合计273项：历史已测试47项，初始待测226项。自动化不覆盖用户手工结果。
+更新：2026-09-15。人工测试继续暂缓。历史253项和稳定编号保留，S/P/C/V/T/R共47项保持用户确认已测试，未补造通过/失败结果。本轮追加MB-01至MB-20，验证真正的顶部Menu Bar、五菜单集、Maya灰占位与Blender能力归类。本次追加MB-21至MB-27，验证章节归属、内置工作区及语义纠偏。现合计280项：历史已测试47项，初始待测233项。自动化不覆盖用户手工结果。
 
 ## 测试准备与反馈
 
@@ -424,3 +424,10 @@ Maya菜单从Space目录进入；Blender专有名称通过键位偏好将一个�
 | MB-18 | 打开菜单后改变源区域、场景、视图层或工作区，再尝试原菜单动作 | 捕获来源失效后取消，不悄悄改用新区域或新场景；取消不改变几何和撤销历史 | 待测 |
 | MB-19 | 在 1x/2x、较矮窗口及靠近下边缘处逐层打开 File、Generate、Delete All by Type 等菜单 | 原生图标、标签、Options、灰占位、标题和末项可读；当前层完整显示，超高时按原顺序分列，没有人为分页、滚动或删除占位项 | 待测 |
 | MB-20 | 在 AxisMeld 与标准 Blender 键位之间切换，再检查工作区标签和 Back to Previous；复测 RMB/Shift+RMB/QWER/Space | 标准 Blender 恢复原 File/Edit/Render/Window/Help；工作区功能保留；本批顶部变更不改变热盒触发、方向、间隔和释放行为 | 待测 |
+| MB-21 | 逐章检查 Select、Modify、Display 的补充目录和前后 Maya 标题 | 选择扩展不落入 USD；变换、Pivot、Rotation Order 分别归入对应章节而非 Assets；视口设置归 Viewport，组件显示归 Object | 待测 |
+| MB-22 | 检查 Mesh、Edit Mesh、Mesh Display、Curves、Surfaces 的补充操作及分隔标题 | Combine、Remesh、Transfer、Optimize 等用途准确；面布尔不落入 Curve，法线不落入 Display Attributes；曲线/曲面创建与编辑归相应章节，Maya 原顺序与 Options 保留 | 待测 |
+| MB-23 | 逐项查看 Deform 的17个补充动作，分别展开 Create、Edit、Weights 与 legacy | 新建变形归 Create；已有绑定、Lattice、Shape Key 编辑归 Edit；顶点组归 Weights；Hook 成员分配与变换重置分开，不把全部扩展堆入 legacy | 待测 |
+| MB-24 | 展开 Windows→Workspaces，检查 Factory/Module 章节，再独立操作 Blender Next/Previous Workspace | 14个 Factory 预设及 Bifrost Fluids 的名称、顺序、灰色正文与 Options 保留；General 无捕获状态星号；Maya 占位不切布局，Next/Previous 独立切换真实 Blender 工作区 | 待测 |
+| MB-25 | 检查 File→Save and Recover，以及 Create→Polygon Primitives 的 Additional/Subdivision Primitives | Save and Recover 位于 Save Preferences 后、保存段结束前；额外/细分基础体位于 Super Shapes 标题前，不误归超形状；原 Maya 行与参数格完整 | 待测 |
+| MB-26 | 展开 Modify→Naming Tools，在临时对象上查看并使用 Rename Active Item 和 Batch Rename | 两个功能各有且仅有一个入口；准确名称及真实原生行为保留，无同名重复；取消不重命名，执行结果可撤销 | 待测 |
+| MB-27 | 检查 Maya Point to Point、Duplicate Special 及独立 Blender Selection to Active、Duplicate Linked | Maya 两项未适配正文和 Options 灰显；Blender 两项使用准确独立名称，分别执行选区吸附到活动对象和链接复制，不冒充 Maya 两项 | 待测 |

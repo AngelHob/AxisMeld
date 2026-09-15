@@ -27,6 +27,8 @@ PREFERRED_BINDINGS = {
     'PolygonNormalEditTool': 'normals.rotate',
 }
 UNAVAILABLE_BINDINGS = {
+    'SnapPointToPoint': 'Whole-object translation between selected points is not implemented; Selection to Active snaps selected geometry instead',
+    'DuplicateSpecial': 'Copy/instance choice and Duplicate Special transform settings are not implemented; Duplicate Linked always shares object data',
     'ReorderRotationDialog': 'Rotation-order dialog adaptation not implemented',
     'SeparatePolygon': 'Selected-shell separation transaction not implemented',
     'PolyRemesh': 'Maya surface remesh is not equivalent to voxel-volume reconstruction',

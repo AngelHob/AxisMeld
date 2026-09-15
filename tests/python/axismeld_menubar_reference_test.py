@@ -39,6 +39,28 @@ class MenubarReferenceTests(unittest.TestCase):
         cls.source = json.loads(cls.generator['SOURCE'].read_text(encoding='utf-8'))
         cls.data = runpy.run_path(str(ROOT / 'scripts/modules/axismeld/menubar_reference.py'))
 
+    def test_bundled_workspaces_keep_fifteen_ordered_disabled_option_pairs(self):
+        import sys
+        sys.path.insert(0, str(ROOT / 'scripts/modules'))
+        from axismeld.menubar_catalog import build_menubar
+        expected = ('General', 'Modeling - Standard', 'Modeling - Expert', 'Sculpting',
+                    'Pose Sculpting', 'UV Editing', 'XGen', 'XGen - Interactive Groom',
+                    'Rigging', 'Animation', 'Rendering - Standard', 'Rendering - Expert',
+                    'MASH', 'Motion Graphics', 'Bifrost Fluids')
+        workspace = next(n for n in walk(self.data['REFERENCE_MENUS'])
+                         if n.get('path') == ('Windows', 'Workspaces'))
+        rows = [n for n in workspace['children'] if n['label'] in expected]
+        self.assertEqual(tuple(n['label'] for n in rows), expected)
+        actual = {n['id']: n for n in walk(build_menubar()['menus'])}
+        for row in rows:
+            self.assertIn('options', row)
+            self.assertNotIn('checked', row)
+            for identifier in (row['id'], row['options']['id']):
+                self.assertEqual(actual[identifier]['kind'], 'disabled')
+                self.assertFalse(actual[identifier].get('command'))
+                self.assertFalse(actual[identifier].get('native_key'))
+        self.assertIn(rows[-1]['id'], self.data['PLUGIN_DEPENDENCIES'])
+
     def test_exact_five_visible_sequences_and_no_current_pane(self):
         self.assertEqual(self.data['MENU_SETS'], EXPECTED)
         nodes = self.data['REFERENCE_MENUS']

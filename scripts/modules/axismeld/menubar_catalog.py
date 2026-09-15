@@ -63,30 +63,69 @@ SECTION_PATHS = {
     ('Mesh Display', 'Average Normals'): ('Average Normal Tools',),
 }
 
-# Named Maya headings are separators, not fabricated submenus. Supplemental
-# purpose directories are inserted within the appropriate heading's section.
-SECTION_ANCHORS = {
-    ('common.file', 'Scene Templates'): '',
-    ('common.file', 'Save and Recover'): '',
-    ('common.file', 'References and Data'): 'References',
-    ('common.file', 'Project Tools'): 'Project',
-    ('common.file', 'View Previews'): 'View',
-    ('common.create', 'Objects'): 'Objects',
-    ('common.create', 'Rigging'): 'Objects',
-    ('common.create', 'Metaballs'): 'Objects',
-    ('common.create', 'Volumes'): 'Objects',
-    ('common.create', 'Grease Pencil'): 'Objects',
-    ('common.create', 'Audio'): 'Objects',
-    ('common.create', 'Force Fields'): 'Objects',
-    ('common.create', 'Collections'): 'Scene Management',
-    ('common.edit', 'History'): '',
-    ('common.edit', 'Search'): '',
-    ('common.edit', 'Duplicate Tools'): 'Duplicate',
-    ('common.modify', 'Naming Tools'): 'Naming',
-    ('menubar.rendering.render', 'Render Output'): 'Rendering',
-    ('menubar.help', 'Blender Help'): 'Learn',
-    ('menubar.help', 'Diagnostics'): 'Support',
+# Real Maya named dividers define chapters; blank dividers only split groups.
+# Every extension in a chaptered menu has an explicit placement. A missing rule
+# must not silently put unrelated Blender tools under the last Maya heading.
+CHAPTER_EXTENSIONS = {
+    'common.file': {'References': ('References and Data',), 'Project': ('Project Tools',), 'View': ('View Previews',)},
+    'common.edit': {'Duplicate': ('Duplicate Tools',)},
+    'common.create': {'Objects': ('Objects', 'Rigging', 'Metaballs', 'Volumes', 'Grease Pencil', 'Audio', 'Force Fields'),
+                      'Scene Management': ('Collections',)},
+    'common.select': {'Polygons': ('Mesh Components', 'Similarity Filters'), 'NURBS Curves': ('Curve and Surface Points',)},
+    'common.modify': {'Transform': ('Proportional Editing', 'Reset Transformations', 'Apply Transformations', 'Mirror', 'Transform Deltas'),
+                      'Pivot': ('Pivot', 'Object Origin'), 'Rotate Order': ('Rotation Order',), 'Naming': ('Naming Tools',)},
+    'common.display': {'Viewport': ('Viewport Settings', 'Viewport')},
+    'modeling.mesh': {'Combine': ('Combine Tools',), 'Remesh': ('Remesh',),
+                      'Transfer': ('Transfer', 'Element Order'), 'Optimize': ('Cleanup Tools',)},
+    'modeling.edit_mesh': {'Components': ('Extrusion Tools', 'Components', 'Merge Tools', 'Topology', 'Interactive Topology'),
+                           'Face': ('Face Boolean',)},
+    'modeling.mesh_tools': {'Tools': ('Tools', 'Immediate Tools')},
+    'modeling.mesh_display': {'Normals': ('Normals', 'Average Normal Tools', 'Edit Normals', 'Face Strength', 'Shading', 'Normal Modifiers'),
+                              'Vertex Colors': ('Vertex Colors',), 'Display Attributes': ('Viewport Analysis', 'Data Marks')},
+    'modeling.curves': {'Modify': ('Geometry',), 'Edit': ('Control Points', 'Topology')},
+    'modeling.surfaces': {'Edit NURBS Surfaces': ('Topology', 'Control Points')},
+    'modeling.deform': {'Create': ('Blender Deformers',), 'Edit': ('Binding', 'Hook Transforms'),
+                        'Weights': ('Vertex Groups',), 'Deformer Sets (legacy)': ('Blender Hook Membership',)},
+    'menubar.help': {'Learn': ('Blender Help',), 'Support': ('Diagnostics',)},
+    'menubar.rendering.render': {'Rendering': ('Render Output',)},
 }
+SECTION_PLACEMENTS = {(root, label): ('chapter_end', chapter)
+                      for root, chapters in CHAPTER_EXTENSIONS.items()
+                      for chapter, labels in chapters.items() for label in labels}
+SECTION_PLACEMENTS.update({
+    **{('common.select', label): ('opening', '') for label in
+       ('Object Relationships', 'Hierarchy', 'Grouped', 'Linked Objects', 'Pattern')},
+    **{('common.edit', label): ('opening', '') for label in ('History', 'Search')},
+    ('common.file', 'Scene Templates'): ('opening', ''),
+    ('common.file', 'Save and Recover'): ('after', 'Save Preferences'),
+    ('common.display', 'Component Display'): ('after', 'Per Camera Visibility'),
+    ('common.windows', 'Window Management'): ('after', 'Raise Application Windows'),
+    ('modeling.mesh', 'Modifiers'): ('new_heading', 'Blender Modifiers'),
+    ('modeling.curves', 'Bezier Handles'): ('after', 'Bezier Curves'),
+    ('modeling.curves', 'Spline Type'): ('after', 'Rebuild'),
+    ('modeling.surfaces', 'Construct'): ('after', 'Extrude'),
+    ('modeling.surfaces', 'Geometry'): ('after', 'Rebuild'),
+    ('maya.common.create.polygon_primitives', 'Additional Primitives'): ('before_heading', 'Super Shapes'),
+    ('maya.common.create.polygon_primitives', 'Subdivision Primitives'): ('before_heading', 'Super Shapes'),
+    ('maya.common.windows.workspaces', 'Switch Workspace'): ('new_heading', 'Blender Workspaces'),
+})
+
+# These former mixed groups span creating deformers, editing existing bindings,
+# weights and membership. Preserve each command but assign its actual purpose.
+COMMAND_SECTION_PATHS = {
+    **{key: ('Blender Deformers',) for key in ('deform.laplacian', 'deform.smooth',
+        'deform.laplacian_smooth', 'deform.cast', 'deform.warp', 'deform.solidify')},
+    **{key: ('Binding',) for key in ('deform.surface_bind_existing', 'deform.surface_unbind_existing',
+        'deform.mesh_bind_existing', 'deform.mesh_unbind_existing')},
+    'deform.hook_reset': ('Hook Transforms',),
+    'deform.lattice_flip_x': ('Lattice',),
+    'deform.shape_key_mirror': ('Blend Shape',),
+    **{key: ('Vertex Groups',) for key in ('deform.vertex_group_assign',
+        'deform.vertex_group_remove', 'deform.vertex_group_normalize')},
+    'deform.hook_assign': ('Blender Hook Membership',),
+}
+
+NATIVE_COMMAND_ALIASES = {'object.rename': 'modify.rename', 'object.batch_rename': 'modify.batch_rename'}
 
 # Each tuple is (root, real or purpose parent path, fixed native entries).
 # Original native dynamic menu IDs are drawn by menubar_native, preserving hooks.
@@ -211,21 +250,43 @@ def _section(root, path):
         if child is None:
             suffix = sha256((current['id'] + '\0' + label).encode()).hexdigest()[:16]
             child = _node('menubar.section.' + suffix, label, 'menu', origin='blender_section')
-            anchor = SECTION_ANCHORS.get((current['id'], label))
+            placement = SECTION_PLACEMENTS.get((current['id'], label))
             items = current['children']
-            if anchor is None:
+            if placement is None:
+                if any(item['kind'] == 'separator' and item['label'] for item in items):
+                    raise ValueError('Missing Maya chapter placement: ' + current['id'] + ' / ' + label)
                 items.append(child)
             else:
-                start = next((index + 1 for index, item in enumerate(items)
-                              if anchor and item['kind'] == 'separator' and item['label'] == anchor), 0)
-                end = next((index for index in range(start, len(items))
-                            if items[index]['kind'] == 'separator'), len(items))
-                items.insert(end, child)
+                mode, anchor = placement
+                if mode == 'opening':
+                    index = next((i for i, item in enumerate(items) if item['kind'] == 'separator'), len(items))
+                elif mode == 'new_heading':
+                    heading_id = 'menubar.heading.' + sha256((current['id'] + '\0' + anchor).encode()).hexdigest()[:16]
+                    if not any(item['id'] == heading_id for item in items):
+                        items.append(_node(heading_id, anchor, 'separator', origin='blender_section'))
+                    index = len(items)
+                else:
+                    matches = [i for i, item in enumerate(items) if item['label'] == anchor and
+                               ((item['kind'] == 'separator') if mode in {'chapter_end', 'before_heading'}
+                                else item.get('origin') == 'maya' and item['kind'] != 'separator')]
+                    if len(matches) != 1:
+                        raise ValueError('Ambiguous Maya placement anchor: ' + current['id'] + ' / ' + anchor)
+                    index = matches[0]
+                    if mode == 'after':
+                        index += 1
+                    elif mode == 'chapter_end':
+                        index = next((i for i in range(index+1, len(items))
+                                      if items[i]['kind'] == 'separator' and items[i]['label']), len(items))
+                    elif mode != 'before_heading':
+                        raise ValueError('Unknown Maya placement mode: ' + mode)
+                items.insert(index, child)
         current = child
     return current
 
 
 def _extension_path(spec):
+    if spec.id in COMMAND_SECTION_PATHS:
+        return COMMAND_SECTION_PATHS[spec.id]
     path = SECTION_PATHS.get((spec.category, spec.section[0]), spec.section) if spec.section else ()
     if spec.category == 'Display' and spec.section == ('Viewport Settings',):
         # This registry section exceeds one compact menu. These are functional
@@ -277,9 +338,11 @@ def build_menubar():
         if spec.id in used_commands:
             continue
         parent = _section(roots[CATEGORY_ROOTS[spec.category]], _extension_path(spec))
-        parent['children'].append(_node('menubar.command.' + spec.id, spec.label, 'command',
-                                        command=spec.id, reason=spec.difference,
-                                        origin='blender_extension'))
+        native_key = NATIVE_COMMAND_ALIASES.get(spec.id)
+        values = {'native_key': native_key} if native_key else {}
+        parent['children'].append(_node('menubar.command.' + spec.id, spec.label,
+                                        'native' if native_key else 'command', command=spec.id,
+                                        reason=spec.difference, origin='blender_extension', **values))
 
     for root_id, path, entries in NATIVE_GROUPS:
         root = roots[root_id]

@@ -57,6 +57,65 @@ def _without_ids(node):
             for key,value in node.items() if key != 'id'}
 
 
+BUNDLED_WORKSPACES = frozenset({
+    'General', 'Modeling - Standard', 'Modeling - Expert', 'Sculpting', 'Pose Sculpting',
+    'UV Editing', 'XGen', 'XGen - Interactive Groom', 'Rigging', 'Animation',
+    'Rendering - Standard', 'Rendering - Expert', 'MASH', 'Motion Graphics', 'Bifrost Fluids',
+})
+
+
+def _restore_bundled_workspaces(raw, root, audit, environment):
+    """Normalize this version's bundled layouts separately from user instances.
+
+    Factory names: Maya startup/buildViewMenu.mel:29-48 and resources/workspaces.
+    Bifrost Fluids: Bifrost 2.14.1.0 resources/workspaces/Bifrost_Fluids.json.
+    The standalone conversion reuses Options/ID rules without changing the older
+    hotbox normalizer's intentionally different workspace-provider policy.
+    """
+    workspace_raw = next(n for n in raw['children'] if n.get('label') == 'Workspaces')
+    workspace = next(n for n in root['children'] if n['label'] == 'Workspaces')
+    kept = []
+    keep_options = False
+    for item in workspace_raw['children']:
+        label = item.get('label', '').removesuffix('*')
+        if item.get('optionBox'):
+            if keep_options:
+                kept.append(deepcopy(item))
+            continue
+        keep_options = bool(item.get('divider') or label in BUNDLED_WORKSPACES or
+                            item.get('runtimeCommand') in LEGACY['WORKSPACE_ACTIONS'] or
+                            label == 'Disable Docking/Undocking')
+        if not keep_options:
+            continue
+        child = deepcopy(item)
+        child['label'] = label
+        if item.get('runtimeCommand') == 'ResetCurrentWorkspace':
+            child['label'] = 'Reset Current Workspace to Factory Default'
+        kept.append(child)
+    local = dict(environment, ROOTS={'common.windows': ('workspaces',)})
+    converter = types.FunctionType(LEGACY['normalize'].__code__, local)
+    converted, _ = converter({'groups': {'common.windows': [dict(workspace_raw, children=kept)]}})
+    def prefix(node):
+        if 'path' in node:
+            node['path'] = ('Windows',) + node['path']
+        for child in node.get('children', ()):
+            prefix(child)
+        if node.get('options'):
+            prefix(node['options'])
+    for node in converted[0]['children']:
+        prefix(node)
+    workspace['children'] = converted[0]['children']
+    restored_paths = {item['path'] for item in kept}
+    audit[:] = [entry for entry in audit if not
+                (entry['action'] == 'remove' and entry['source_ui_path'] in restored_paths)]
+    for item in workspace_raw['children']:
+        if item.get('label', '').endswith('*') and item['label'][:-1] in BUNDLED_WORKSPACES:
+            audit.append({'action': 'template', 'source_ui_path': item['path'],
+                          'source_label': item['label'], 'path': ('Windows', 'Workspaces', item['label']),
+                          'replacement': item['label'][:-1],
+                          'reason': 'Bundled workspace name retained; current-layout marker is session state'})
+
+
 def _convert(raw, identifier):
     # Reuse audited Options/separator/history normalization in a private globals
     # dictionary. No old source/reference or live module globals are changed.
@@ -76,6 +135,8 @@ def _convert(raw, identifier):
         ('Toon','Assign Outline'): {'Add New Toon Outline','Remove Current Toon Outlines'}}
     converter = types.FunctionType(LEGACY['normalize'].__code__, environment)
     roots, audit = converter({'groups': {group: [raw]}})
+    if identifier == 'common.windows':
+        _restore_bundled_workspaces(raw, roots[0], audit, environment)
     return roots[0], audit
 
 
@@ -130,7 +191,12 @@ def normalize(source):
 def render():
     source = json.loads(SOURCE.read_text(encoding='utf-8'))
     sets, menus, audit = normalize(source)
-    dependencies = source.get('plugin_dependencies', {})
+    dependencies = deepcopy(source.get('plugin_dependencies', {}))
+    dependencies['maya.common.windows.workspaces.bifrost_fluids'] = {
+        'plugin': 'Bifrost 2.14.1.0',
+        'source': 'Bifrost/Maya2026/2.14.1.0/bifrost/resources/workspaces/Bifrost_Fluids.json',
+        'scope': 'Bundled module workspace preset; no Blender layout adaptation',
+    }
     if not {'menubar.flow','menubar.rigging.bifrost_rigging'} <= dependencies.keys():
         raise ValueError('Plugin roots need source-audited dependencies')
     all_ids = {n['id'] for n in LEGACY['walk'](menus)}

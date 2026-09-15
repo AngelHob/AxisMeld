@@ -25,14 +25,40 @@ class MenubarIsolationTests(unittest.TestCase):
         from axismeld.commands import COMMANDS
         from axismeld.hotbox_catalog import default_catalog
         from axismeld.menubar_catalog import build_menubar
-        # Independently recorded before topbar integration at bff4cd9448a.
-        expected_tree = '0627b66398ea3f455b2e2296690eacda7f2f327a53838a8427b712878f8f2e71'
+        # Compared node-by-node with isolated 948aaf000e5 modules. Only the
+        # authorized SnapPointToPoint / DuplicateSpecial corrections differ:
+        # disabled Maya rows/options and the two native actions returned to
+        # Blender extensions. Application-menu construction must not mutate it.
+        expected_tree = '4775a154c8a23f8f12b6fbbaedc9aa395ed2b6280aee0a77a8e154b0b18bde50'
         expected_commands = '40dc0b53a83508d66d7c31f628e5dd53a47982e7273bfec241c93f2ad3a08b72'
         for _ in range(2):
             build_menubar()
             serialized = json.dumps(default_catalog(), sort_keys=True, separators=(',', ':')).encode()
             self.assertEqual(hashlib.sha256(serialized).hexdigest(), expected_tree)
             self.assertEqual(hashlib.sha256('\n'.join(sorted(COMMANDS)).encode()).hexdigest(), expected_commands)
+
+    def test_authorized_maya_corrections_keep_native_actions_in_extensions(self):
+        from axismeld.hotbox_catalog import default_catalog
+        nodes = {node['id']: node for node in walk(default_catalog())}
+        extension = nodes['internal.blender']
+        extension_nodes = {node['id']: node for node in walk((extension,))}
+        for maya_id, native_id, label in (
+                ('maya.common.modify.snap_align_objects.point_to_point',
+                 'snap.selected_to_active', 'Selection to Active'),
+                ('maya.common.edit.duplicate_special', 'edit.duplicate_linked', 'Duplicate Linked')):
+            row = nodes[maya_id]
+            self.assertEqual(row['kind'], 'disabled')
+            self.assertFalse(row['enabled'])
+            self.assertEqual(row['command'], '')
+            self.assertEqual([child['id'] for child in row['children']], [maya_id + '.options'])
+            option = row['children'][0]
+            self.assertEqual(option['kind'], 'disabled')
+            self.assertFalse(option['enabled'])
+            self.assertEqual(option['command'], '')
+            native = extension_nodes['m3.' + native_id]
+            self.assertEqual(native['kind'], 'command')
+            self.assertEqual(native['command'], native_id)
+            self.assertEqual(native['label'], label)
 
     def test_native_application_actions_cannot_be_smuggled_into_hotbox_json(self):
         from axismeld.menubar_catalog import build_menubar
