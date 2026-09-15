@@ -1,0 +1,42 @@
+name: AxisMeld 试用反馈 / Test result
+description: 记录测试结果、复现步骤或试用建议
+title: "[试用反馈] "
+labels: [test-feedback]
+body:
+  - type: input
+    id: test_id
+    attributes:
+      label: 测试编号
+      description: 填写公开清单编号，例如 MB-40；其他反馈可填“其他”。
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: 构建版本
+      description: 预览包名称或 AxisMeld-build.json 中的 buildId。
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: 测试结果
+      options:
+        - 通过
+        - 失败
+        - 已测试，结果待判断
+        - 其他建议
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 实际表现与复现步骤
+      description: 写出操作、预期和实际结果；可附截图或视频。
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 测试环境
+      description: Windows版本、Object/Edit模式、单/四视图、显示缩放比例等。

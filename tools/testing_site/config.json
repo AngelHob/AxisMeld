@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "projectName": "AxisMeld",
+  "buildId": "axismeld-2026.09.15-modeling-preview",
+  "repoUrl": "https://github.com/AngelHob/AxisMeld",
+  "releaseUrl": "https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.15-modeling-preview",
+  "sourceBranch": "axismeld/phase-2a",
+  "feedback": {
+    "mode": "github",
+    "label": "test-feedback",
+    "externalUrl": null,
+    "listUrl": "https://github.com/AngelHob/AxisMeld/issues?q=is%3Aissue+label%3Atest-feedback"
+  }
+}

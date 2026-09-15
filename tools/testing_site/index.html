@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="AxisMeld 公开测试清单：查看测试步骤、在本浏览器记录结果，并通过 GitHub 提交反馈。">
+  <title>AxisMeld · 测试门户</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <a class="skip-link" href="#test-list">跳到测试清单</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="./" aria-label="AxisMeld 测试门户首页"><img src="./favicon.svg" width="30" height="30" alt=""><span>AxisMeld <small>测试门户</small></span></a>
+      <nav aria-label="项目链接">
+        <a id="readme-link" hidden target="_blank" rel="noopener noreferrer">项目说明 <span aria-hidden="true">↗</span></a>
+        <a id="feedback-list-link" hidden target="_blank" rel="noopener noreferrer">公开反馈 <span aria-hidden="true">↗</span></a>
+        <a id="download-link" class="download-link" hidden target="_blank" rel="noopener noreferrer">下载测试版 <span aria-hidden="true">↓</span></a>
+        <span id="download-pending" class="download-pending" hidden>测试包待发布</span>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">PUBLIC PREVIEW · 公开试用</p>
+        <h1 id="page-title">一起把操作体验打磨好</h1>
+        <p class="intro-copy">按清单验证功能，记录你实际看到的结果。</p>
+      </div>
+      <div class="build-box"><span class="subtle">当前测试构建</span><code id="published-build">载入中…</code><a id="source-link" hidden target="_blank" rel="noopener noreferrer">查看源码 ↗</a></div>
+    </section>
+    <div class="privacy-notice"><span class="notice-dot" aria-hidden="true"></span><p><strong>本浏览器记录 ≠ 已提交维护者。</strong> 勾选与备注只保存在这里，不会自动上传或跨设备同步。公开反馈需要在 GitHub 登录并确认提交。</p></div>
+    <div id="storage-warning" class="warning" role="alert" hidden></div>
+    <div id="load-error" class="warning" role="alert" hidden></div>
+    <section id="workspace" hidden aria-label="测试工作区">
+      <div class="summary-heading"><h2>我的测试进度 <small>当前构建清单</small></h2><span id="catalog-summary" class="subtle"></span></div>
+      <div class="stats" aria-label="当前清单的本浏览器进度">
+        <button class="stat active" data-filter="all" type="button" aria-pressed="true"><span>全部项目</span><strong id="count-all">0</strong><i aria-hidden="true"></i></button>
+        <button class="stat" data-filter="untested" type="button" aria-pressed="false"><span>待测试</span><strong id="count-untested">0</strong><i aria-hidden="true"></i></button>
+        <button class="stat" data-filter="tested" type="button" aria-pressed="false"><span>已测试</span><strong id="count-tested">0</strong><i aria-hidden="true"></i></button>
+        <button class="stat" data-filter="passed" type="button" aria-pressed="false"><span>通过</span><strong id="count-passed">0</strong><i aria-hidden="true"></i></button>
+        <button class="stat" data-filter="failed" type="button" aria-pressed="false"><span>失败</span><strong id="count-failed">0</strong><i aria-hidden="true"></i></button>
+      </div>
+      <div class="ledger-heading"><h2>测试清单</h2><div class="ledger-actions"><button id="recent-toggle" class="recent-button" type="button" aria-pressed="false">最近新增 <span id="count-new">0</span></button><button id="export-button" class="secondary-button" type="button">导出我的记录 ↓</button></div></div>
+      <div class="toolbar">
+        <label class="search-field"><span class="sr-only">搜索测试内容</span><span aria-hidden="true">⌕</span><input id="search-input" type="search" placeholder="搜索编号、功能、操作步骤…" autocomplete="off"></label>
+        <label class="group-field"><span class="sr-only">按分组筛选</span><select id="group-filter"><option value="">全部分组</option></select></label>
+        <label class="history-field"><input id="history-toggle" type="checkbox"> 包含历史条目 <span id="count-history"></span></label>
+      </div>
+      <div class="version-bar"><label for="default-build">本次测试版本</label><input id="default-build" maxlength="120" autocomplete="off" spellcheck="false"><span>用于新记录；已记录的条目保留各自版本。</span></div>
+      <div class="results-bar"><p id="results-summary" role="status" aria-live="polite"></p><button id="clear-filters" type="button" class="text-button" hidden>清除筛选</button><span class="subtle">每页 50 项</span></div>
+      <section id="test-list" aria-label="测试项目列表" tabindex="-1"></section>
+      <div id="empty-state" class="empty-state" hidden><strong>没有找到匹配的测试项</strong><p>换一个关键词，或清除筛选。</p></div>
+      <nav id="pagination" class="pagination" aria-label="测试清单分页"><button id="previous-page" type="button" class="secondary-button">← 上一页</button><span id="page-label"></span><button id="next-page" type="button" class="secondary-button">下一页 →</button></nav>
+    </section>
+    <p id="loading-state" class="loading-state" role="status">正在载入公开测试清单…</p>
+    <noscript><p class="warning">此页面需要 JavaScript 才能加载清单与保存本浏览器记录。</p></noscript>
+  </main>
+  <footer><span>AxisMeld · 公开测试清单</span><span id="save-status" role="status" aria-live="polite">本浏览器记录，支持 JSON 导出备份</span></footer>
+  <dialog id="feedback-dialog" aria-labelledby="feedback-title">
+    <div class="dialog-heading"><h2 id="feedback-title">创建公开反馈</h2><button id="close-dialog" class="close-button" type="button" aria-label="关闭反馈预览">×</button></div>
+    <p id="feedback-instructions">以下内容会公开展示。请移除私人信息；继续后需要登录 GitHub，并在 Issue 页面确认提交。</p>
+    <p id="long-feedback-warning" class="warning" hidden>反馈正文较长，继续按钮会打开只预填标题的短链接。请先复制完整正文，再到 GitHub 粘贴；也可导出 JSON 后手动附加。正文没有被截断。</p>
+    <label class="preview-label" for="feedback-body">反馈正文</label><textarea id="feedback-body" readonly rows="12"></textarea>
+    <div class="dialog-actions"><button id="copy-feedback" type="button" class="secondary-button">复制完整正文</button><a id="submit-feedback-link" class="primary-button" target="_blank" rel="noopener noreferrer">去 GitHub 确认提交 ↗</a></div>
+    <p id="copy-status" role="status" aria-live="polite"></p>
+  </dialog>
+</body>
+</html>
