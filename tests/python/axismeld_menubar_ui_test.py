@@ -17,7 +17,7 @@ class Layout:
         child=Layout(self.log)
         self.log.append(('column',child))
         return child
-    def menu(self, name, **kw): self.log.append(('menu', name, kw))
+    def menu(self, name, **kw): self.log.append(('menu', name, kw, self.enabled))
     def operator(self, name, **kw):
         props = types.SimpleNamespace()
         self.log.append(('operator', name, kw, props, self.enabled))
@@ -38,6 +38,8 @@ def load_ui():
     ]}]
     cat = types.ModuleType('axismeld.menubar_catalog')
     cat.build_menubar = lambda: {'sets':{key:('common.file',) for key in ('MODELING','RIGGING','ANIMATION','FX','RENDERING')},'menus':nodes}
+    projection = types.ModuleType('axismeld.workspace_menu_catalog')
+    projection.build_workspace_menubar = cat.build_menubar
     runtime = types.ModuleType('axismeld.menubar_runtime')
     runtime.source_token = lambda context: 'captured'
     runtime.available = lambda *args: (True, '')
@@ -49,7 +51,7 @@ def load_ui():
     blf.dimensions = lambda font, text: (len(text)*10, 12)
     commands = types.ModuleType('axismeld.commands'); commands.PRESET_NAME = 'AxisMeld_Maya_2026'
     package = types.ModuleType('axismeld'); package.__path__ = []
-    modules = {'blf':blf,'bpy':bpy,'bpy.types':bpy.types,'bpy.props':props,'axismeld':package,'axismeld.commands':commands,'axismeld.menubar_catalog':cat,'axismeld.menubar_runtime':runtime,'axismeld.menubar_native':native}
+    modules = {'blf':blf,'bpy':bpy,'bpy.types':bpy.types,'bpy.props':props,'axismeld':package,'axismeld.commands':commands,'axismeld.menubar_catalog':cat,'axismeld.workspace_menu_catalog':projection,'axismeld.menubar_runtime':runtime,'axismeld.menubar_native':native}
     with patch.dict(sys.modules, modules):
         spec=importlib.util.spec_from_file_location('tested_menubar_ui', UI)
         mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
@@ -64,7 +66,7 @@ class MenuBarUIContract(unittest.TestCase):
         self.context.window_manager.keyconfigs.active.name='AxisMeld_Maya_2026'
         self.assertTrue(self.ui.draw_bar(layout,self.context)); self.assertEqual(len([r for r in layout.log if r[0]=='menu']),1)
         source=(ROOT/'scripts/startup/bl_ui/space_topbar.py').read_text()
-        self.assertIn('if not space_axismeld_menubar.draw_bar(layout, context):',source)
+        self.assertNotIn('class TOPBAR_HT_menubar',source)
         registration=(ROOT/'scripts/startup/bl_ui/__init__.py').read_text()
         self.assertIn('space_axismeld_menubar.register_props()',registration)
         self.assertIn('space_axismeld_menubar.unregister_props()',registration)
@@ -129,5 +131,36 @@ class MenuBarUIContract(unittest.TestCase):
         layout=Layout();self.ui.draw_menu(layout,self.context,'common.file')
         column=next(r[1] for r in layout.log if r[0]=='column')
         self.assertFalse(hasattr(column,'ui_units_x'))
+    def test_modeling_host_keeps_native_modes_and_avoids_duplicate_roots(self):
+        self.context.window_manager.keyconfigs.active.name='AxisMeld_Maya_2026'
+        self.context.workspace=types.SimpleNamespace(name='Modeling')
+        self.context.area=types.SimpleNamespace(type='VIEW_3D')
+        layout=Layout(); hosted=self.ui.viewport_menu_layout(layout,self.context)
+        for identifier in ('VIEW3D_MT_view','VIEW3D_MT_edit_mesh','VIEW3D_MT_edit_mesh_vertices','VIEW3D_MT_uv_map','VIEW3D_MT_sculpt'):
+            hosted.menu(identifier)
+        self.assertEqual([r[1] for r in layout.log],['VIEW3D_MT_view','VIEW3D_MT_sculpt'])
+        self.context.workspace.name='Layout'
+        self.assertIs(self.ui.viewport_menu_layout(layout,self.context),layout)
+    def test_global_supplement_and_other_menu_sets_stay_opt_in(self):
+        layout=Layout()
+        self.ui.draw_supplement(layout,self.context,'common.file')
+        self.ui.draw_menu_sets_entry(layout,self.context)
+        self.assertEqual(layout.log,[])
+        self.context.window_manager.keyconfigs.active.name='AxisMeld_Maya_2026'
+        self.ui.draw_supplement(layout,self.context,'common.file')
+        self.ui.draw_menu_sets_entry(layout,self.context)
+        menus=[r for r in layout.log if r[0]=='menu']
+        self.assertEqual(menus[0][1],self.ui._MENU_NAMES['common.file'])
+        self.assertEqual(menus[1][2]['text'],'Maya Menu Sets')
+    def test_native_vertex_provider_is_gray_without_edit_mesh(self):
+        self.context.area=types.SimpleNamespace(type='VIEW_3D')
+        for mode,expected in [('OBJECT',False),('EDIT_MESH',True)]:
+            self.context.mode=mode
+            layout=Layout()
+            self.ui.draw_blender_modeling_tools(layout,self.context,'viewport.modeling.vertex')
+            menu=next(r for r in layout.log if r[0]=='menu')
+            self.assertEqual(menu[1],'VIEW3D_MT_edit_mesh_vertices')
+            self.assertEqual(menu[2]['text'],'Blender Tools')
+            self.assertEqual(menu[3],expected)
 
 if __name__=='__main__': unittest.main()

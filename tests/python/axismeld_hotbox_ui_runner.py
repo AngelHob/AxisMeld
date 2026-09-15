@@ -12,13 +12,16 @@ import tempfile
 parser = argparse.ArgumentParser()
 parser.add_argument('--blender', required=True)
 parser.add_argument('--artifacts', help='Optional directory for isolated factory-scene screenshots')
-parser.add_argument('--suite', choices=('menubar-alignment', 'menubar-actions', 'menubar-sets', 'menubar-layout', 'menubar', 'maya-hierarchy', 'full-menu-entry', 'full-menu-lifecycle', 'fully-expanded', 'maya-content-state', 'maya-content', 'maya-companion', 'icons', 'object-menu', 'object-modeling', 'context-modeling', 'modeling', 'create', 'components', 'tools', 'hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection', 'appearance'), default='hotbox')
+parser.add_argument('--suite', choices=('modeling-viewport', 'workspace-bar', 'menubar-alignment', 'menubar-actions', 'menubar-sets', 'menubar-layout', 'menubar', 'maya-hierarchy', 'full-menu-entry', 'full-menu-lifecycle', 'fully-expanded', 'maya-content-state', 'maya-content', 'maya-companion', 'icons', 'object-menu', 'object-modeling', 'context-modeling', 'modeling', 'create', 'components', 'tools', 'hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection', 'appearance'), default='hotbox')
 args = parser.parse_args()
 binary = Path(args.blender).resolve()
 with binary.open("rb") as stream:
     digest = hashlib.file_digest(stream, "sha256").hexdigest().upper()
 print("AXISMELD_TEST_BINARY", str(binary), "SHA256", digest, "SUITE", args.suite, flush=True)
 suite_script, pass_marker = {
+    'modeling-viewport': ('axismeld_modeling_viewport_events.py', b'AXISMELD_MODELING_VIEWPORT_PASS'),
+    # Historical two-row candidate only; superseded by modeling-viewport.
+    'workspace-bar': ('axismeld_workspace_bar_events.py', b'AXISMELD_WORKSPACE_BAR_PASS'),
     'menubar-alignment': ('axismeld_menubar_alignment_events.py', b'AXISMELD_MENUBAR_ALIGNMENT_PASS'),
     'menubar-actions': ('axismeld_menubar_events.py', b'AXISMELD_MENUBAR_ACTIONS_PASS'),
     'menubar-sets': ('axismeld_menubar_events.py', b'AXISMELD_MENUBAR_SETS_PASS'),
@@ -65,6 +68,9 @@ with tempfile.TemporaryDirectory(prefix='axismeld-hotbox-') as directory:
         artifacts.mkdir(parents=True, exist_ok=True)
         env['AXISMELD_TEST_ARTIFACTS'] = str(artifacts)
     blender_args = [args.blender, '--factory-startup']
+    if args.suite == 'workspace-bar' and os.environ.get('AXISMELD_TEST_WINDOW_SIZE'):
+        width, height = map(int, os.environ['AXISMELD_TEST_WINDOW_SIZE'].split('x'))
+        blender_args += ['--window-border', '--window-geometry', '100', '100', str(width), str(height)]
     if args.suite == 'profiles':
         blender_args.append('--background')
     else:

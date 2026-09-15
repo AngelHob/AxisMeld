@@ -1204,7 +1204,8 @@ class VIEW3D_MT_editor_menus(Menu):
     bl_label = ""
 
     def draw(self, context):
-        layout = self.layout
+        from bl_ui import space_axismeld_menubar
+        layout = space_axismeld_menubar.viewport_menu_layout(self.layout, context)
         obj = context.active_object
         mode_string = context.mode
         edit_object = context.edit_object
@@ -1293,6 +1294,8 @@ class VIEW3D_MT_editor_menus(Menu):
         else:
             layout.menu("VIEW3D_MT_object")
             layout.template_node_operator_asset_root_items()
+
+        space_axismeld_menubar.draw_modeling_menus(self.layout, context)
 
 
 # ********** Menu **********

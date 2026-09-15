@@ -28,10 +28,7 @@ class TOPBAR_HT_upper_bar(Header):
         window = context.window
         screen = context.screen
 
-        from bl_ui import space_axismeld_menubar
-        if not space_axismeld_menubar.draw_bar(layout, context):
-            TOPBAR_MT_editor_menus.draw_collapsible(context, layout)
-
+        TOPBAR_MT_editor_menus.draw_collapsible(context, layout)
         layout.separator(type='LINE')
 
         if not screen.show_fullscreen:
@@ -216,6 +213,9 @@ class TOPBAR_MT_file(Menu):
         layout.separator()
 
         layout.operator("wm.quit_blender", text="Quit", icon='QUIT')
+
+        from bl_ui import space_axismeld_menubar
+        space_axismeld_menubar.draw_supplement(layout, context, 'common.file')
 
 
 class TOPBAR_MT_file_new(Menu):
@@ -575,6 +575,9 @@ class TOPBAR_MT_edit(Menu):
 
         layout.operator("screen.userpref_show", text="Preferences...", icon='PREFERENCES')
 
+        from bl_ui import space_axismeld_menubar
+        space_axismeld_menubar.draw_supplement(layout, context, 'common.edit')
+
 
 class TOPBAR_MT_window(Menu):
     bl_label = "Window"
@@ -620,6 +623,10 @@ class TOPBAR_MT_window(Menu):
             layout.separator()
             layout.operator("wm.set_stereo_3d")
 
+        from bl_ui import space_axismeld_menubar
+        space_axismeld_menubar.draw_supplement(layout, context, 'common.windows')
+        space_axismeld_menubar.draw_menu_sets_entry(layout, context)
+
 
 class TOPBAR_MT_help(Menu):
     bl_label = "Help"
@@ -651,6 +658,9 @@ class TOPBAR_MT_help(Menu):
 
         layout.operator("wm.url_open_preset", text="Report a Bug", icon='URL').type = 'BUG'
         layout.operator("wm.sysinfo")
+
+        from bl_ui import space_axismeld_menubar
+        space_axismeld_menubar.draw_supplement(layout, context, 'menubar.help')
 
 
 class TOPBAR_MT_file_context_menu(Menu):

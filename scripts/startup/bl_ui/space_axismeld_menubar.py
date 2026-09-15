@@ -7,10 +7,10 @@ import blf
 from bpy.types import Menu, Operator
 from bpy.props import EnumProperty, StringProperty
 from axismeld.commands import PRESET_NAME
-from axismeld.menubar_catalog import build_menubar
+from axismeld.workspace_menu_catalog import build_workspace_menubar
 from axismeld import menubar_native, menubar_runtime
 
-_CATALOG = build_menubar()
+_CATALOG = build_workspace_menubar()
 _NODES = {}
 
 def _index(nodes):
@@ -23,6 +23,27 @@ _MENU_NAMES = {key: 'AXISMELD_MT_' + sha256(key.encode()).hexdigest()[:24]
                for key, node in _NODES.items() if node['kind'] == 'menu'}
 _SET_LABELS = {'MODELING': 'Modeling', 'RIGGING': 'Rigging', 'ANIMATION': 'Animation',
                'FX': 'FX', 'RENDERING': 'Rendering'}
+_BLENDER_MODELING_MENUS = {
+    'modeling.mesh': 'VIEW3D_MT_edit_mesh',
+    'viewport.modeling.vertex': 'VIEW3D_MT_edit_mesh_vertices',
+    'viewport.modeling.edge': 'VIEW3D_MT_edit_mesh_edges',
+    'viewport.modeling.face': 'VIEW3D_MT_edit_mesh_faces',
+    'modeling.uv': 'VIEW3D_MT_uv_map',
+}
+_VIEWPORT_SUPPLEMENTS = {
+    'VIEW3D_MT_view': 'common.display',
+    'VIEW3D_MT_select_object': 'common.select',
+    'VIEW3D_MT_select_edit_mesh': 'common.select',
+    'VIEW3D_MT_select_edit_curve': 'common.select',
+    'VIEW3D_MT_select_edit_surface': 'common.select',
+    'VIEW3D_MT_add': 'common.create',
+    'VIEW3D_MT_mesh_add': 'common.create',
+    'VIEW3D_MT_curve_add': 'common.create',
+    'VIEW3D_MT_surface_add': 'common.create',
+    'VIEW3D_MT_object': 'common.modify',
+    'VIEW3D_MT_edit_mesh': 'common.modify',
+}
+_HOST_CALLBACKS = []
 
 
 def _icon(node):
@@ -32,6 +53,60 @@ def _icon(node):
 def enabled(context):
     configs = getattr(context.window_manager, 'keyconfigs', None)
     return getattr(getattr(configs, 'active', None), 'name', '') == PRESET_NAME
+
+
+def modeling_workspace(context):
+    workspace = getattr(context, 'workspace', None)
+    area = getattr(context, 'area', None)
+    return (enabled(context) and getattr(area, 'type', '') == 'VIEW_3D' and
+            getattr(workspace, 'name', '').partition('.')[0] == 'Modeling')
+
+
+class _ViewportMenuLayout:
+    """Keep the native draw flow, replacing only five same-purpose menu roots."""
+    def __init__(self, layout):
+        self._layout = layout
+
+    def __getattr__(self, name):
+        return getattr(self._layout, name)
+
+    def menu(self, identifier, *args, **kwargs):
+        if identifier not in _BLENDER_MODELING_MENUS.values():
+            return self._layout.menu(identifier, *args, **kwargs)
+
+
+def viewport_menu_layout(layout, context):
+    return _ViewportMenuLayout(layout) if modeling_workspace(context) else layout
+
+
+def draw_modeling_menus(layout, context):
+    if not modeling_workspace(context):
+        return
+    for identifier in _CATALOG.get('modeling_roots', ()):
+        # This original Edit Mesh/Curve chapter projects curves onto meshes;
+        # distinguish it from Blender's mode-specific Curve menu.
+        text = 'Mesh Projection' if identifier == 'viewport.modeling.curve' else _NODES[identifier]['label']
+        layout.menu(_MENU_NAMES[identifier], text=text)
+
+
+def draw_supplement(layout, context, identifier):
+    if enabled(context):
+        layout.separator()
+        layout.menu(_MENU_NAMES[identifier], text='Maya ' + _NODES[identifier]['label'], icon='FILE_FOLDER')
+
+
+def draw_menu_sets_entry(layout, context):
+    if enabled(context):
+        layout.menu('AXISMELD_MT_workspace_menu_sets', text='Maya Menu Sets', icon='FILE_FOLDER')
+
+
+def draw_blender_modeling_tools(layout, context, identifier):
+    menu = _BLENDER_MODELING_MENUS.get(identifier)
+    if menu:
+        row = layout.row()
+        row.enabled = (getattr(getattr(context, 'area', None), 'type', '') == 'VIEW_3D' and
+                       getattr(context, 'mode', '') == 'EDIT_MESH')
+        row.menu(menu, text='Blender Tools', icon='BLENDER')
 
 
 def menu_columns(nodes, context):
@@ -84,6 +159,9 @@ class AXISMELD_OT_menubar_execute(Operator):
 
 def _draw_item(layout, context, node):
     kind = node['kind']
+    if kind == 'blender_tools':
+        draw_blender_modeling_tools(layout, context, node['owner'])
+        return
     if kind == 'separator':
         if node.get('label'):
             row = layout.row()
@@ -125,7 +203,12 @@ def _draw_item(layout, context, node):
 
 
 def draw_menu(layout, context, identifier):
-    columns = menu_columns(_NODES[identifier].get('children', ()), context)
+    nodes = list(_NODES[identifier].get('children', ()))
+    if identifier in _BLENDER_MODELING_MENUS:
+        nodes.extend(({'id': identifier + '.blender_separator', 'kind': 'separator', 'label': ''},
+                      {'id': identifier + '.blender_tools', 'kind': 'blender_tools',
+                       'label': 'Blender Tools', 'owner': identifier}))
+    columns = menu_columns(nodes, context)
     container = layout.row() if len(columns) > 1 else layout
     scale = max(.5, context.preferences.system.ui_scale)
     blf.size(0, context.preferences.ui_styles[0].widget.points * scale)
@@ -170,8 +253,25 @@ def _menu_class(identifier):
 def _redraw(_self, context):
     for window in context.window_manager.windows:
         for area in window.screen.areas:
-            if area.type == 'TOPBAR':
+            if area.type in {'TOPBAR', 'VIEW_3D'}:
                 area.tag_redraw()
+
+
+class AXISMELD_MT_workspace_menu_sets(Menu):
+    bl_label = 'Maya Menu Sets'
+
+    def draw(self, _context):
+        for key, label in _SET_LABELS.items():
+            self.layout.menu('AXISMELD_MT_workspace_set_' + key, text=label, icon='FILE_FOLDER')
+
+
+def _set_menu_class(key):
+    def draw(self, _context):
+        for identifier in _CATALOG['sets'][key]:
+            self.layout.menu(_MENU_NAMES[identifier], text=_NODES[identifier]['label'], icon='FILE_FOLDER')
+    return type('AXISMELD_MT_workspace_set_' + key, (Menu,), {
+        '__module__': __name__, 'bl_label': _SET_LABELS[key], 'draw': draw,
+    })
 
 
 def register_props():
@@ -179,11 +279,26 @@ def register_props():
         name='Menu Set', items=tuple((key, _SET_LABELS[key], '') for key in _CATALOG['sets']),
         default='MODELING', options={'SKIP_SAVE'}, update=_redraw,
     )
+    # Append to actual native providers, preserving their mode branches and
+    # add-on callbacks. The header continues using these same Menu IDs.
+    for identifier, root in _VIEWPORT_SUPPLEMENTS.items():
+        menu = getattr(bpy.types, identifier, None)
+        if menu is not None:
+            def draw(self, context, root=root):
+                if modeling_workspace(context):
+                    draw_supplement(self.layout, context, root)
+            menu.append(draw)
+            _HOST_CALLBACKS.append((menu, draw))
 
 
 def unregister_props():
+    for menu, draw in reversed(_HOST_CALLBACKS):
+        menu.remove(draw)
+    _HOST_CALLBACKS.clear()
     if hasattr(bpy.types.WindowManager, 'axismeld_menubar_set'):
         del bpy.types.WindowManager.axismeld_menubar_set
 
 
-classes = (AXISMELD_OT_menubar_execute,) + tuple(_menu_class(key) for key in _MENU_NAMES)
+classes = ((AXISMELD_OT_menubar_execute, AXISMELD_MT_workspace_menu_sets) +
+           tuple(_menu_class(key) for key in _MENU_NAMES) +
+           tuple(_set_menu_class(key) for key in _SET_LABELS))
