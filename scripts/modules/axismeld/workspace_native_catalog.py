@@ -137,14 +137,17 @@ def _parent(root, path, icon):
 
 def integrate_native_groups(catalog, selections=None):
     """Add approved native items; an explicit empty selection omits a duplicate group."""
-    roots = {root['id']: root for root in catalog['menus']}
+    active_roots = [root for root in catalog['menus'] if root['id'] in catalog['modeling_roots']]
+    # Component menus may live inside Edit Mesh while retaining their stable IDs.
+    # Resolve only containers reachable from the active Modeling headers.
+    roots = {node['id']: node for node in _walk(active_roots) if node['kind'] == 'menu'}
     if selections is None:
         selections, aliases = native_selections(catalog)
         catalog['native_equivalences'] = aliases
         catalog['native_item_equivalences'] = deduplicate_native_items(selections)
     placements = []
     for key, group in GROUPS.items():
-        if group['root_id'] not in catalog['modeling_roots']:
+        if group['root_id'] not in roots:
             raise ValueError('Native group is outside current Modeling scope: ' + key)
         known = tuple(item['id'] for item in group['items'])
         included = known if selections is None or key not in selections else tuple(selections[key])

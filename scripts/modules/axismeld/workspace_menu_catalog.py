@@ -19,7 +19,8 @@ MODELING_SOURCE_ROOTS = tuple('modeling.' + suffix for suffix in (
 EXCLUDED_MODELING_ROOTS = ('modeling.deform', 'modeling.generate')
 
 # Maya 2026 PolygonsBuildMenu.mel creates these chapters at lines
-# 76, 201, 231, 264 and 322. Shared component operations stay in Components.
+# 76, 201, 231, 264 and 322. Shared operations stay in Edit Mesh; its
+# Vertex, Edge and Face chapters use stable nested menu IDs.
 EDIT_MESH_CHAPTERS = (
     ('maya.modeling.edit_mesh.components', 'Components', 'modeling.edit_mesh', 'EDITMODE_HLT'),
     ('maya.modeling.edit_mesh.vertex', 'Vertex', 'viewport.modeling.vertex', 'VERTEXSEL'),
@@ -134,7 +135,7 @@ def _split_edit_mesh(root):
 
 
 def build_workspace_menubar():
-    """Return an independent catalog with 10 Modeling viewport root menus.
+    """Return an independent catalog with seven Modeling viewport root menus.
 
 Every functional node, including its separate Options object, retains its
 complete source payload. Deform and Generate leave the Modeling menu set;
@@ -145,23 +146,20 @@ their reference data and all other menu sets stay unchanged.
     if source is None:
         raise ValueError('The reviewed Edit Mesh source menu is missing')
     groups = _split_edit_mesh(source)
-    header_groups, curve_projection = groups[:4], groups[4]
-    group_ids = tuple(group['id'] for group in header_groups)
+    shared, component_groups, curve_projection = groups[0], groups[1:4], groups[4]
     tools = next((root for root in catalog['menus'] if root['id'] == 'modeling.mesh_tools'), None)
     if tools is None:
         raise ValueError('The reviewed Mesh Tools destination is missing')
     tools['children'].append(curve_projection)
 
-    def expand(identifiers):
-        return tuple(destination for identifier in identifiers
-                     if identifier not in EXCLUDED_MODELING_ROOTS
-                     for destination in (group_ids if identifier == source['id'] else (identifier,)))
-
-    catalog['menus'] = tuple(destination for root in catalog['menus']
-                             for destination in (header_groups if root['id'] == source['id'] else (root,)))
-    _place_edit_mesh_extensions({root['id']: root for root in catalog['menus']})
-    catalog['sets']['MODELING'] = expand(catalog['sets']['MODELING'])
-    catalog['modeling_roots'] = expand(MODELING_SOURCE_ROOTS)
+    catalog['menus'] = tuple(shared if root['id'] == source['id'] else root for root in catalog['menus'])
+    # Move extensions before nesting so the reviewed ownership containers do
+    # not overlap while their children are relocated.
+    _place_edit_mesh_extensions({node['id']: node for node in (*catalog['menus'], *component_groups)})
+    shared['children'].extend(component_groups)
+    catalog['sets']['MODELING'] = tuple(identifier for identifier in catalog['sets']['MODELING']
+                                        if identifier not in EXCLUDED_MODELING_ROOTS)
+    catalog['modeling_roots'] = MODELING_SOURCE_ROOTS
     catalog['edit_mesh_groups'] = {chapter[1]: group['id'] for chapter, group in zip(EDIT_MESH_CHAPTERS, groups)}
     catalog['excluded_modeling_roots'] = EXCLUDED_MODELING_ROOTS
     exposed_roots = set().union(*catalog['sets'].values())

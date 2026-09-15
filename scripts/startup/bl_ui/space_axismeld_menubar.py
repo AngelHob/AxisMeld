@@ -23,11 +23,14 @@ _MENU_NAMES = {key: 'AXISMELD_MT_' + sha256(key.encode()).hexdigest()[:24]
                for key, node in _NODES.items() if node['kind'] == 'menu'}
 _SET_LABELS = {'MODELING': 'Modeling', 'RIGGING': 'Rigging', 'ANIMATION': 'Animation',
                'FX': 'FX', 'RENDERING': 'Rendering'}
-_BLENDER_MODELING_MENUS = {
-    'modeling.mesh': 'VIEW3D_MT_edit_mesh',
+_COMPONENT_MENU_HOSTS = {
     'viewport.modeling.vertex': 'VIEW3D_MT_edit_mesh_vertices',
     'viewport.modeling.edge': 'VIEW3D_MT_edit_mesh_edges',
     'viewport.modeling.face': 'VIEW3D_MT_edit_mesh_faces',
+}
+_BLENDER_MODELING_MENUS = {
+    'modeling.mesh': 'VIEW3D_MT_edit_mesh',
+    **_COMPONENT_MENU_HOSTS,
     'modeling.uv': 'VIEW3D_MT_uv_map',
     'modeling.curves': 'VIEW3D_MT_edit_curve',
     'modeling.surfaces': 'VIEW3D_MT_edit_surface',
@@ -180,7 +183,10 @@ def _draw_item(layout, context, node):
         return
     row = layout.row(align=True)
     if kind == 'menu':
-        row.menu(_MENU_NAMES[node['id']], text=node['label'], icon=_icon(node))
+        menu = _MENU_NAMES[node['id']]
+        if modeling_workspace(context):
+            menu = _COMPONENT_MENU_HOSTS.get(node['id'], menu)
+        row.menu(menu, text=node['label'], icon=_icon(node))
     elif kind == 'native':
         menubar_native.draw_native(row, context, node['native_key'], text=node['label'], icon=_icon(node))
     else:

@@ -62,18 +62,18 @@ class WorkspaceMenuCatalogTests(unittest.TestCase):
         self.roots = {node['id']: node for node in self.actual['menus']}
         self.nodes = {node['id']: node for node in walk(self.actual['menus'])}
 
-    def test_only_vertex_edge_face_are_new_roots_and_components_retain_edit_mesh(self):
-        group_ids = tuple(GROUP_IDS[label] for label in ('Components', 'Vertex', 'Edge', 'Face'))
-        expected = []
-        for identifier in self.source['sets']['MODELING']:
-            if identifier in ('modeling.deform', 'modeling.generate'):
-                continue
-            expected.extend(group_ids if identifier == 'modeling.edit_mesh' else (identifier,))
+    def test_vertex_edge_face_are_nested_and_components_retain_edit_mesh(self):
+        component_ids = tuple(GROUP_IDS[label] for label in ('Vertex', 'Edge', 'Face'))
+        expected = [identifier for identifier in self.source['sets']['MODELING']
+                    if identifier not in ('modeling.deform', 'modeling.generate')]
         self.assertEqual(self.actual['sets']['MODELING'], tuple(expected))
+        self.assertFalse(set(component_ids) & set(self.roots))
+        self.assertEqual(tuple(node['id'] for node in self.roots['modeling.edit_mesh']['children']
+                               if node['id'] in component_ids), component_ids)
         self.assertNotIn('viewport.modeling.components', self.roots)
         self.assertNotIn('viewport.modeling.curve_projection', self.roots)
         self.assertNotIn('viewport.modeling.curve', self.roots)
-        self.assertEqual(len(self.roots), 46)
+        self.assertEqual(len(self.roots), 43)
         self.assertEqual(self.actual['edit_mesh_groups'], GROUP_IDS)
         for label, identifier in GROUP_IDS.items():
             caption = {'Components': 'Edit Mesh', 'Curve': 'Curve Projection'}.get(label, label)
@@ -108,8 +108,7 @@ class WorkspaceMenuCatalogTests(unittest.TestCase):
         self.assertEqual(self.actual['archived_roots'], ('modeling.generate',))
 
     def test_modeling_reachability_covers_231_functions_and_161_options(self):
-        expected_roots = ('modeling.mesh', 'modeling.edit_mesh', 'viewport.modeling.vertex',
-                         'viewport.modeling.edge', 'viewport.modeling.face', 'modeling.mesh_tools',
+        expected_roots = ('modeling.mesh', 'modeling.edit_mesh', 'modeling.mesh_tools',
                          'modeling.mesh_display', 'modeling.curves', 'modeling.surfaces', 'modeling.uv')
         self.assertEqual(self.actual['modeling_roots'], expected_roots)
         reference_nodes = list(walk(root for root in REFERENCE_MENUS if root['id'] in MODEL_SOURCE_ROOTS))
@@ -155,11 +154,15 @@ class WorkspaceMenuCatalogTests(unittest.TestCase):
         for purpose, items in targets.items():
             for suffix in items:
                 identifier = 'menubar.command.mesh.' + suffix
-                self.assertEqual(actual_routes[identifier], purpose + (extensions[identifier]['label'],), identifier)
+                prefix = () if purpose[0] == 'Edit Mesh' else ('Edit Mesh',)
+                self.assertEqual(actual_routes[identifier], prefix + purpose + (extensions[identifier]['label'],), identifier)
         expected_counts = {'Vertex': 8, 'Edge': 6, 'Face': 14, 'Edit Mesh': 6}
-        for label, count in expected_counts.items():
-            root_id = 'modeling.edit_mesh' if label == 'Edit Mesh' else 'viewport.modeling.' + label.lower()
-            self.assertEqual(sum(n.get('origin') == 'blender_extension' for n in walk((self.roots[root_id],))), count)
+        actual_counts = dict.fromkeys(expected_counts, 0)
+        for identifier in extensions:
+            child = actual_routes[identifier][1]
+            owner = child if child in ('Vertex', 'Edge', 'Face') else 'Edit Mesh'
+            actual_counts[owner] += 1
+        self.assertEqual(actual_counts, expected_counts)
 
     def test_relocated_extensions_leave_no_empty_legacy_component_folders(self):
         old_root = next(root for root in self.source['menus'] if root['id'] == 'modeling.edit_mesh')
@@ -267,12 +270,46 @@ class WorkspaceMenuCatalogTests(unittest.TestCase):
         for (root_id, label), heading in expected.items():
             self.assertEqual(chapter(root_id, label), heading, root_id + '/' + label)
 
+    def test_route_inventory_uses_nested_component_paths_for_maya_and_native_items(self):
+        from axismeld.workspace_native_groups import GROUPS
+        generator = Path(__file__).resolve().parents[2] / 'tools/utils/axismeld_workspace_menu_routes.py'
+        spec = importlib.util.spec_from_file_location('workspace_routes_for_test', generator)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        inventory = module.build_inventory()
+        self.assertEqual(inventory['counts']['modeling_projected_roots'], 7)
+        self.assertEqual(inventory['counts']['total'], 392)
+        rows = {row['id']: row for row in inventory['entries']}
+        for label, suffixes in GROUP_ITEMS.items():
+            if label not in ('Vertex', 'Edge', 'Face'):
+                continue
+            for suffix in suffixes:
+                row = rows['maya.modeling.edit_mesh.' + suffix]
+                self.assertEqual(row['primary_route'][:4], ('Modeling', '3D View', 'Edit Mesh', label))
+                self.assertEqual(row['projected_root_id'], 'modeling.edit_mesh')
+                self.assertTrue(all(route[:5] == ('Window', 'Maya Menu Sets', 'Modeling', 'Edit Mesh', label)
+                                    for route in row['fallback_routes']))
+        native = inventory['native_integration']['entries']
+        self.assertEqual(len(native), 162)
+        for row in native:
+            group = GROUPS[row['group_key']]
+            if group['root_id'].startswith('viewport.modeling.'):
+                label = group['root_id'].rsplit('.', 1)[-1].title()
+                self.assertEqual(row['destination_container'],
+                                 ('Modeling', '3D View', 'Edit Mesh', label) + group['path'])
+                if row['resolution'] == 'native_draw':
+                    self.assertEqual(row['actual_routes'], [row['destination_container']])
+                elif row['resolution'] == 'existing_command_alias':
+                    visible = self.api.routes(self.actual, self.actual['modeling_roots'])
+                    self.assertEqual(row['actual_routes'], [('Modeling', '3D View') + visible[target]
+                                                           for target in row['equivalent_target_ids']])
+
     def test_projection_cannot_mutate_its_input_or_subsequent_builds(self):
         before = deepcopy(self.source)
         with patch.object(self.api, 'build_menubar', return_value=self.source):
             result = self.api.build_workspace_menubar()
         self.assertEqual(self.source, before)
-        first = next(root for root in result['menus'] if root['id'] == 'viewport.modeling.vertex')['children'][0]
+        first = next(node for node in walk(result['menus']) if node['id'] == 'viewport.modeling.vertex')['children'][0]
         first['options']['reason'] = 'changed'
         self.assertEqual(self.source, before)
         self.assertEqual(self.api.build_workspace_menubar(), self.actual)
@@ -280,9 +317,9 @@ class WorkspaceMenuCatalogTests(unittest.TestCase):
 
     def test_routes_report_new_visible_paths_and_original_options_without_rewriting_provenance(self):
         routes = self.api.routes(self.actual, self.actual['modeling_roots'])
-        self.assertEqual(routes['maya.modeling.edit_mesh.chamfer_vertices'], ('Vertex', 'Chamfer Vertices'))
+        self.assertEqual(routes['maya.modeling.edit_mesh.chamfer_vertices'], ('Edit Mesh', 'Vertex', 'Chamfer Vertices'))
         self.assertEqual(routes['maya.modeling.edit_mesh.chamfer_vertices.options'],
-                         ('Vertex', 'Chamfer Vertices', 'Options'))
+                         ('Edit Mesh', 'Vertex', 'Chamfer Vertices', 'Options'))
         self.assertEqual(routes['maya.modeling.edit_mesh.split_mesh_with_projected_curve'],
                          ('Mesh Tools', 'Curve Projection', 'Split Mesh with Projected Curve'))
         self.assertEqual(routes['maya.modeling.edit_mesh.add_divisions'], ('Edit Mesh', 'Add Divisions'))

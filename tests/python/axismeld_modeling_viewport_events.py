@@ -245,7 +245,7 @@ def suite():
             width=templates[(bpy.context.preferences.system.ui_scale,label)].shape[1]
             native_bounds=(int(point[0]+width/2+2),bounds[1],bounds[2],bounds[3])
         if modeling:
-            for label in ('Mesh','Edit Mesh','Vertex','Edge','Face','Mesh Tools','Mesh Display','Curves','Surfaces','UV'):
+            for label in ('Mesh','Edit Mesh','Mesh Tools','Mesh Display','Curves','Surfaces','UV'):
                 point=locate(pixels,label,bounds,(bounds,),prefer_left=True,ink_levels=(.08,.12,.18,.25))
                 points.append(point)
                 width=templates[(bpy.context.preferences.system.ui_scale,label)].shape[1]
@@ -255,8 +255,8 @@ def suite():
                     except AssertionError:pass
                     else:raise AssertionError(('Duplicate visible viewport menu root',label))
 
-            for label in ('Components','Mesh Projection','Deform','Generate'):
-                try:locate(pixels,label,bounds,ink_levels=(.08,.12,.18,.25))
+            for label in ('Vertex','Edge','Face','Components','Mesh Projection','Deform','Generate'):
+                try:locate(pixels,label,bounds,(bounds,),ink_levels=(.08,.12,.18,.25))
                 except AssertionError:pass
                 else:raise AssertionError(('Out-of-scope root remains in Modeling',label))
         else:
@@ -271,7 +271,13 @@ def suite():
         point=locate(pixels,name,top_rect(),ink_levels=(.08,.12,.18,.25))
         yield from click(point);yield from settle(16)
         assert win.workspace.name==name,('Actual workspace click failed',name,win.workspace.name)
-    sentinels=(('TOPBAR_MT_file','AxisMeld File Plugin Sentinel'),('TOPBAR_MT_file_import','AxisMeld Import Plugin Sentinel'),('VIEW3D_MT_edit_mesh_vertices','AxisMeld Vertex Plugin Sentinel'))
+    sentinels=(
+        ('TOPBAR_MT_file','AxisMeld File Plugin Sentinel'),
+        ('TOPBAR_MT_file_import','AxisMeld Import Plugin Sentinel'),
+        ('VIEW3D_MT_edit_mesh_vertices','AxisMeld Vertex Plugin Sentinel'),
+        ('VIEW3D_MT_edit_mesh_edges','Garnet Loom Beacon'),
+        ('VIEW3D_MT_edit_mesh_faces','Jade Timber Lantern'),
+    )
     native_sentinels={
         # Distinct entire phrases prevent the screenshot matcher mistaking an
         # append label for its prepend partner because of a long common prefix.
@@ -350,9 +356,11 @@ def suite():
                 shot('maya-options-click-no-action')
             yield from close()
         print('MODE_CONTEXT_AND_DISABLED_OPTIONS_PASS',flush=True)
-        pixels,boxes=yield from open_path(('Vertex',),'native-vertex-plugin')
-        locate(pixels,sentinels[2][1],(0,0,win.width,win.height),boxes)
-        yield from close()
+        for label,(_,sentinel) in zip(('Vertex','Edge','Face'),sentinels[2:]):
+            pixels,boxes=yield from open_path(('Edit Mesh',label),'native-'+label.lower()+'-plugin')
+            locate(pixels,sentinel,(0,0,win.width,win.height),boxes)
+            yield from close()
+        print('NATIVE_COMPONENT_SUBMENU_PLUGINS_PASS',flush=True)
         area=view();window_region=next(r for r in area.regions if r.type=='WINDOW')
         with bpy.context.temp_override(window=win,area=area,region=window_region):bpy.ops.ed.undo_push(message='Modeling viewport GUI baseline')
         before=scene_state()

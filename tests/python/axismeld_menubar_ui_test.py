@@ -90,6 +90,20 @@ class MenuBarUIContract(unittest.TestCase):
                  patch.object(self.ui, '_MENU_NAMES', {'modeling.curves': 'AXISMELD_MT_test_curves'}):
                 self.ui.draw_modeling_menus(layout, self.context)
             self.assertEqual(layout.log[0][1], host)
+    def test_component_submenus_keep_native_plugin_hosts_in_modeling(self):
+        for label, host in [('Vertex', 'VIEW3D_MT_edit_mesh_vertices'),
+                            ('Edge', 'VIEW3D_MT_edit_mesh_edges'),
+                            ('Face', 'VIEW3D_MT_edit_mesh_faces')]:
+            identifier = 'viewport.modeling.' + label.lower()
+            node = {'id': identifier, 'kind': 'menu', 'label': label}
+            with patch.object(self.ui, '_MENU_NAMES', {identifier: 'AXISMELD_MT_test_component'}):
+                for active, expected in [(True, host), (False, 'AXISMELD_MT_test_component')]:
+                    with patch.object(self.ui, 'modeling_workspace', return_value=active):
+                        layout = Layout()
+                        self.ui._draw_item(layout, self.context, node)
+                    menu = next(row for row in layout.log if row[0] == 'menu')
+                    self.assertEqual(menu[1], expected)
+                    self.assertEqual(menu[2]['text'], label)
     def test_dispatch_never_recaptures_or_adds_undo(self):
         op=self.ui.AXISMELD_OT_menubar_execute(); op.kind='command'; op.key='new'; op.token='old'
         self.assertEqual(op.execute(self.context),(self.context,'command','new','old'))

@@ -4,7 +4,7 @@
   "source_baseline": "Local audited Maya 2026 menubar reference",
   "scope": "仅列本轮七个保留建模源菜单的231个正文和161个独立Options。Deform、Generate共214个正文和76个Options移出Modeling；原始Maya参考留档。其他模块不在本轮开发范围。表格不含分隔线、目录本身和额外Blender专属功能。",
   "availability_note": "按钮表示已绑定现有操作；是否可用取决于当前模式、选区、编辑器及操作条件。灰色占位不执行动作。Options 独立保留，当前均未适配。",
-  "route_note": "主入口按本轮实际 UI 宿主生成。窗口导航路径始终保留；仍需启用 AxisMeld Maya 键位。当前模式可能使正文按钮灰显。路径末尾的 Options 是正文右侧的独立齿轮按钮，不是下一级子菜单。",
+  "route_note": "建模顶部栏为七项；Vertex、Edge、Face 已收回 Edit Mesh 子菜单，主入口按实际 UI 宿主生成。窗口导航路径始终保留；仍需启用 AxisMeld Maya 键位。当前模式可能使正文按钮灰显。路径末尾的 Options 是正文右侧的独立齿轮按钮，不是下一级子菜单。",
   "counts": {
     "total": 392,
     "body": 231,
@@ -17,10 +17,10 @@
     "edit_mesh_options": 18,
     "source_roots": 7,
     "reference_source_roots": 43,
-    "projected_roots": 46,
+    "projected_roots": 43,
     "excluded_modeling_body": 214,
     "excluded_modeling_options": 76,
-    "modeling_projected_roots": 10
+    "modeling_projected_roots": 7
   },
   "excluded_from_modeling": [
     {
@@ -667,6 +667,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Extrude"
         ],
@@ -678,6 +679,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Extrude"
           ]
@@ -710,6 +712,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Extrude"
         ],
@@ -721,6 +724,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Extrude"
           ]
@@ -755,6 +759,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Extrude"
         ],
@@ -768,6 +773,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Chamfer Vertices"
           ]
@@ -800,6 +806,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Connect"
         ],
@@ -811,6 +818,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Connect"
           ]
@@ -843,6 +851,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Connect"
         ],
@@ -854,6 +863,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Connect"
           ]
@@ -886,6 +896,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Connect"
         ],
@@ -897,6 +908,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Connect"
           ]
@@ -931,6 +943,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Split"
         ],
@@ -944,6 +957,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Split",
             "Rip Vertices"
@@ -979,6 +993,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Split"
         ],
@@ -992,6 +1007,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Split",
             "Rip Vertices and Fill"
@@ -1025,6 +1041,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Split"
         ],
@@ -1038,6 +1055,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Split",
             "Rip Vertices and Extend"
@@ -1071,6 +1089,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Crease"
         ],
@@ -1115,6 +1134,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Shape Keys"
         ],
@@ -1126,6 +1146,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Shape Keys"
           ]
@@ -1158,6 +1179,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Shape Keys"
         ],
@@ -1169,6 +1191,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Shape Keys"
           ]
@@ -1199,6 +1222,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Vertex Groups and Hooks"
         ],
@@ -1210,6 +1234,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Vertex Groups and Hooks"
           ]
@@ -1240,6 +1265,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Vertex Groups and Hooks"
         ],
@@ -1251,6 +1277,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Vertex Groups and Hooks"
           ]
@@ -1281,6 +1308,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Relations"
         ],
@@ -1292,6 +1320,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Relations"
           ]
@@ -1322,6 +1351,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Edge",
           "Subdivision"
         ],
@@ -1333,6 +1363,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Edge",
             "Subdivision"
           ]
@@ -1363,6 +1394,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Edge",
           "Subdivision"
         ],
@@ -1374,6 +1406,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Edge",
             "Subdivision"
           ]
@@ -1404,6 +1437,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Edge",
           "Subdivision"
         ],
@@ -1415,6 +1449,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Edge",
             "Subdivision"
           ]
@@ -1449,6 +1484,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Edge",
           "Rotate"
         ],
@@ -1460,6 +1496,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Edge",
             "Rotate"
           ]
@@ -1494,6 +1531,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Edge",
           "Rotate"
         ],
@@ -1505,6 +1543,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Edge",
             "Rotate"
           ]
@@ -1535,6 +1574,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Edge",
           "Loops"
         ],
@@ -1546,6 +1586,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Edge",
             "Loops"
           ]
@@ -1578,6 +1619,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Edge",
           "Loops"
         ],
@@ -1589,6 +1631,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Edge",
             "Loops"
           ]
@@ -1619,6 +1662,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Edge",
           "Loops"
         ],
@@ -1665,6 +1709,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Edge",
           "Crease and Bevel Weight"
         ],
@@ -1676,6 +1721,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Edge",
             "Crease and Bevel Weight"
           ]
@@ -1708,6 +1754,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Edge",
           "Crease and Bevel Weight"
         ],
@@ -2163,6 +2210,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Face",
           "Extrude"
         ],
@@ -2174,6 +2222,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Face",
             "Extrude"
           ]
@@ -2206,6 +2255,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Face",
           "Extrude"
         ],
@@ -2217,6 +2267,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Face",
             "Extrude"
           ]
@@ -2249,6 +2300,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Face",
           "Extrude"
         ],
@@ -2260,6 +2312,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Face",
             "Extrude"
           ]
@@ -2290,6 +2343,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Face",
           "Fill"
         ],
@@ -2301,6 +2355,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Face",
             "Fill"
           ]
@@ -2331,6 +2386,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Face",
           "Fill"
         ],
@@ -2342,6 +2398,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Face",
             "Fill"
           ]
@@ -2372,6 +2429,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Face",
           "Fill"
         ],
@@ -2383,6 +2441,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Face",
             "Fill"
           ]
@@ -2413,6 +2472,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Face",
           "Face Boolean"
         ],
@@ -2424,6 +2484,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Face",
             "Face Boolean"
           ]
@@ -2454,6 +2515,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Face",
           "Face Boolean"
         ],
@@ -2465,6 +2527,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Face",
             "Face Boolean"
           ]
@@ -2495,6 +2558,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Face",
           "Split"
         ],
@@ -2506,6 +2570,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Face",
             "Split"
           ]
@@ -3048,6 +3113,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Transform"
         ],
@@ -3059,6 +3125,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Transform"
           ]
@@ -3093,6 +3160,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Smooth"
         ],
@@ -3106,6 +3174,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Average Vertices"
           ]
@@ -3138,6 +3207,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Smooth"
         ],
@@ -3151,6 +3221,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Smooth",
             "Laplacian Smooth Vertices"
@@ -3184,6 +3255,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Edge",
           "Extrude"
         ],
@@ -3195,6 +3267,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Edge",
             "Extrude"
           ]
@@ -3225,6 +3298,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Edge",
           "Extrude"
         ],
@@ -3236,6 +3310,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Edge",
             "Extrude"
           ]
@@ -3270,6 +3345,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Edge",
           "Bevel"
         ],
@@ -3313,6 +3389,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Edge",
           "Bridge"
         ],
@@ -3324,6 +3401,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Edge",
             "Bridge"
           ]
@@ -3354,6 +3432,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Face",
           "Topology"
         ],
@@ -3365,6 +3444,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Face",
             "Topology"
           ]
@@ -3398,6 +3478,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Face",
           "Topology"
         ],
@@ -3409,6 +3490,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Face",
             "Topology"
           ]
@@ -3439,6 +3521,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Face",
           "Topology"
         ],
@@ -3450,6 +3533,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Face",
             "Topology"
           ]
@@ -3480,6 +3564,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Face",
           "Inset and Shell"
         ],
@@ -3493,6 +3578,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Face",
             "Inset and Shell",
             "Inset Faces"
@@ -3526,6 +3612,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Face",
           "Inset and Shell"
         ],
@@ -3537,6 +3624,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Face",
             "Inset and Shell"
           ]
@@ -3567,6 +3655,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Face",
           "Inset and Shell"
         ],
@@ -3578,6 +3667,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Face",
             "Inset and Shell"
           ]
@@ -3690,6 +3780,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Weights"
         ],
@@ -3701,6 +3792,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Weights"
           ]
@@ -3860,6 +3952,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Vertex",
           "Asset Tools"
         ],
@@ -3871,6 +3964,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Vertex",
             "Asset Tools"
           ]
@@ -3903,6 +3997,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Edge",
           "Asset Tools"
         ],
@@ -3914,6 +4009,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Edge",
             "Asset Tools"
           ]
@@ -3946,6 +4042,7 @@
         "destination_container": [
           "Modeling",
           "3D View",
+          "Edit Mesh",
           "Face",
           "Asset Tools"
         ],
@@ -3957,6 +4054,7 @@
           [
             "Modeling",
             "3D View",
+            "Edit Mesh",
             "Face",
             "Asset Tools"
           ]
@@ -6986,11 +7084,11 @@
   "source_files": {
     "scripts/modules/axismeld/menubar_reference.py": "6c47aba8e47901242e79fa3ed18c6e837a6a95391de12b539ae87432ea281dbd",
     "scripts/modules/axismeld/menubar_catalog.py": "77f74a5f79ef1576abe985fb0b7f63cae9d0b747a2af64c7c160d410416c7103",
-    "scripts/modules/axismeld/workspace_menu_catalog.py": "f99742e093c0d5984f35dd9e2f1ed9827e21aa0b7cd96df4f22755cf5d9b3210",
-    "scripts/modules/axismeld/workspace_native_catalog.py": "b4dea4dc8c8dd321fe16c8f8f6b71d20b5fd43d31fcad3db55564c407c9ae510",
+    "scripts/modules/axismeld/workspace_menu_catalog.py": "3e2767aea4be3b3b546db437191c00b5abcc9babf4005b20d1cbacbd560170ce",
+    "scripts/modules/axismeld/workspace_native_catalog.py": "4ebf7c6f5d093d41943ce572b903a0581ec8d67f77bd012fa694b3263c1e7ff5",
     "scripts/modules/axismeld/workspace_native_groups.py": "084d6dc15be2ca4cd16cb9c563b0e6fb8f971e0444dd7adcf7259d75ba477933",
     "scripts/startup/bl_ui/space_axismeld_native_modeling.py": "0da1aec7446d556ec67f61a9ccee8c2f4111fcf66eaba6a450b1cf33eb31480f",
-    "scripts/startup/bl_ui/space_axismeld_menubar.py": "4229535cd5f351a1a78dd11dff8746661a8e4f3910bf2aa2b986248cb22a53d5",
+    "scripts/startup/bl_ui/space_axismeld_menubar.py": "e62812cee1682f71bbd3b8057737a0e3e47ba49c78e12882e14b18b04bf26e8c",
     "scripts/startup/bl_ui/space_topbar.py": "4f89643885499f39d706d23b85e7231d228bd4f0aeccaa9d6ffcab9bda49181b",
     "scripts/startup/bl_ui/space_view3d.py": "c255fcfda7128708291f9dee74ed3826698f30d2857beb6f1ff83810bbc74c28"
   },
@@ -10158,10 +10256,11 @@
         "Average Vertices"
       ],
       "maya_command": "AverageVertex",
-      "projected_root_id": "viewport.modeling.vertex",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Vertex",
         "Average Vertices"
       ],
@@ -10173,6 +10272,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Vertex",
           "Average Vertices"
         ]
@@ -10196,10 +10296,11 @@
         "Options"
       ],
       "maya_command": "",
-      "projected_root_id": "viewport.modeling.vertex",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Vertex",
         "Average Vertices",
         "Options"
@@ -10212,6 +10313,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Vertex",
           "Average Vertices",
           "Options"
@@ -10235,10 +10337,11 @@
         "Chamfer Vertices"
       ],
       "maya_command": "ChamferVertex",
-      "projected_root_id": "viewport.modeling.vertex",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Vertex",
         "Chamfer Vertices"
       ],
@@ -10250,6 +10353,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Vertex",
           "Chamfer Vertices"
         ]
@@ -10273,10 +10377,11 @@
         "Options"
       ],
       "maya_command": "ChamferVertexOptions",
-      "projected_root_id": "viewport.modeling.vertex",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Vertex",
         "Chamfer Vertices",
         "Options"
@@ -10289,6 +10394,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Vertex",
           "Chamfer Vertices",
           "Options"
@@ -10312,10 +10418,11 @@
         "Reorder Vertices"
       ],
       "maya_command": "ReorderVertex",
-      "projected_root_id": "viewport.modeling.vertex",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Vertex",
         "Reorder Vertices"
       ],
@@ -10327,6 +10434,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Vertex",
           "Reorder Vertices"
         ]
@@ -10349,10 +10457,11 @@
         "Delete Edge/Vertex"
       ],
       "maya_command": "DeletePolyElements",
-      "projected_root_id": "viewport.modeling.edge",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Edge",
         "Delete Edge/Vertex"
       ],
@@ -10364,6 +10473,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Edge",
           "Delete Edge/Vertex"
         ]
@@ -10386,10 +10496,11 @@
         "Edit Edge Flow"
       ],
       "maya_command": "PolyEditEdgeFlow",
-      "projected_root_id": "viewport.modeling.edge",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Edge",
         "Edit Edge Flow"
       ],
@@ -10401,6 +10512,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Edge",
           "Edit Edge Flow"
         ]
@@ -10424,10 +10536,11 @@
         "Options"
       ],
       "maya_command": "PolyEditEdgeFlowOptions",
-      "projected_root_id": "viewport.modeling.edge",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Edge",
         "Edit Edge Flow",
         "Options"
@@ -10440,6 +10553,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Edge",
           "Edit Edge Flow",
           "Options"
@@ -10463,10 +10577,11 @@
         "Flip Triangle Edge"
       ],
       "maya_command": "FlipTriangleEdge",
-      "projected_root_id": "viewport.modeling.edge",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Edge",
         "Flip Triangle Edge"
       ],
@@ -10478,6 +10593,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Edge",
           "Flip Triangle Edge"
         ]
@@ -10500,10 +10616,11 @@
         "Spin Edge Backward"
       ],
       "maya_command": "PolySpinEdgeBackward",
-      "projected_root_id": "viewport.modeling.edge",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Edge",
         "Spin Edge Backward"
       ],
@@ -10515,6 +10632,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Edge",
           "Spin Edge Backward"
         ]
@@ -10537,10 +10655,11 @@
         "Spin Edge Forward"
       ],
       "maya_command": "PolySpinEdgeForward",
-      "projected_root_id": "viewport.modeling.edge",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Edge",
         "Spin Edge Forward"
       ],
@@ -10552,6 +10671,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Edge",
           "Spin Edge Forward"
         ]
@@ -10574,10 +10694,11 @@
         "Assign Invisible Faces"
       ],
       "maya_command": "PolyAssignSubdivHole",
-      "projected_root_id": "viewport.modeling.face",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Face",
         "Assign Invisible Faces"
       ],
@@ -10589,6 +10710,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Face",
           "Assign Invisible Faces"
         ]
@@ -10612,10 +10734,11 @@
         "Options"
       ],
       "maya_command": "PolyAssignSubdivHoleOptions",
-      "projected_root_id": "viewport.modeling.face",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Face",
         "Assign Invisible Faces",
         "Options"
@@ -10628,6 +10751,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Face",
           "Assign Invisible Faces",
           "Options"
@@ -10651,10 +10775,11 @@
         "Duplicate"
       ],
       "maya_command": "DuplicateFace",
-      "projected_root_id": "viewport.modeling.face",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Face",
         "Duplicate"
       ],
@@ -10666,6 +10791,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Face",
           "Duplicate"
         ]
@@ -10689,10 +10815,11 @@
         "Options"
       ],
       "maya_command": "DuplicateFaceOptions",
-      "projected_root_id": "viewport.modeling.face",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Face",
         "Duplicate",
         "Options"
@@ -10705,6 +10832,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Face",
           "Duplicate",
           "Options"
@@ -10728,10 +10856,11 @@
         "Extract"
       ],
       "maya_command": "ExtractFace",
-      "projected_root_id": "viewport.modeling.face",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Face",
         "Extract"
       ],
@@ -10743,6 +10872,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Face",
           "Extract"
         ]
@@ -10766,10 +10896,11 @@
         "Options"
       ],
       "maya_command": "ExtractFaceOptions",
-      "projected_root_id": "viewport.modeling.face",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Face",
         "Extract",
         "Options"
@@ -10782,6 +10913,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Face",
           "Extract",
           "Options"
@@ -10805,10 +10937,11 @@
         "Poke"
       ],
       "maya_command": "PokePolygon",
-      "projected_root_id": "viewport.modeling.face",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Face",
         "Poke"
       ],
@@ -10820,6 +10953,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Face",
           "Poke"
         ]
@@ -10843,10 +10977,11 @@
         "Options"
       ],
       "maya_command": "PokePolygonOptions",
-      "projected_root_id": "viewport.modeling.face",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Face",
         "Poke",
         "Options"
@@ -10859,6 +10994,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Face",
           "Poke",
           "Options"
@@ -10882,10 +11018,11 @@
         "Wedge"
       ],
       "maya_command": "WedgePolygon",
-      "projected_root_id": "viewport.modeling.face",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Face",
         "Wedge"
       ],
@@ -10897,6 +11034,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Face",
           "Wedge"
         ]
@@ -10920,10 +11058,11 @@
         "Options"
       ],
       "maya_command": "WedgePolygonOptions",
-      "projected_root_id": "viewport.modeling.face",
+      "projected_root_id": "modeling.edit_mesh",
       "primary_route": [
         "Modeling",
         "3D View",
+        "Edit Mesh",
         "Face",
         "Wedge",
         "Options"
@@ -10936,6 +11075,7 @@
           "Window",
           "Maya Menu Sets",
           "Modeling",
+          "Edit Mesh",
           "Face",
           "Wedge",
           "Options"

@@ -50,13 +50,32 @@ def walk(nodes):
             yield node['options'], True
 
 
+def menu_paths(catalog):
+    """Resolve destination containers from the actual tree, including nested roots."""
+    result = {}
+
+    def visit(node, parent):
+        if node['kind'] != 'menu':
+            return
+        path = parent + (node['label'],)
+        if node['id'] in result:
+            raise ValueError('Duplicate menu container ID: ' + node['id'])
+        result[node['id']] = path
+        for child in node.get('children', ()):
+            visit(child, path)
+
+    for root in catalog['menus']:
+        visit(root, ())
+    return result
+
+
 def native_inventory(catalog):
     """Audit each original draw declaration in each required mode placement.
 
 Curve providers reused in Surface modes share source IDs, so a declaration ID
 alone is not the placement key. Composite menu/enum providers remain intact.
     """
-    roots = {root['id']: root for root in catalog['menus']}
+    containers = menu_paths(catalog)
     expected = {(key, item['id']): (group, item)
                 for key, group in GROUPS.items() for item in group['items']}
     included = [(node['group_key'], item_id) for node, _ in walk(catalog['menus'])
@@ -86,17 +105,16 @@ alone is not the placement key. Composite menu/enum providers remain intact.
             command_targets.setdefault(node['command'], []).append(node['id'])
     entries = []
     for (group_key, item_id), (group, item) in expected.items():
-        root = roots[group['root_id']]
         command = aliases.get((group_key, item_id), '')
         native_target = native_aliases.get((group_key, item_id))
         targets = command_targets.get(command, ()) if command else ()
         if command and not targets:
             raise ValueError('Native alias target is not reachable: ' + command)
         actual_paths = [('Modeling', '3D View') + active_routes[target] for target in targets]
-        container = ('Modeling', '3D View', root['label']) + tuple(group['path'])
+        container = ('Modeling', '3D View') + containers[group['root_id']] + tuple(group['path'])
         if native_target:
             target_group = GROUPS[native_target[0]]
-            actual_paths = [('Modeling', '3D View', roots[target_group['root_id']]['label']) +
+            actual_paths = [('Modeling', '3D View') + containers[target_group['root_id']] +
                             tuple(target_group['path'])]
         entries.append({
             'id': group_key + '::' + item_id,
@@ -243,7 +261,7 @@ def build_inventory():
         'source_baseline': 'Local audited Maya 2026 menubar reference',
         'scope': '仅列本轮七个保留建模源菜单的231个正文和161个独立Options。Deform、Generate共214个正文和76个Options移出Modeling；原始Maya参考留档。其他模块不在本轮开发范围。表格不含分隔线、目录本身和额外Blender专属功能。',
         'availability_note': '按钮表示已绑定现有操作；是否可用取决于当前模式、选区、编辑器及操作条件。灰色占位不执行动作。Options 独立保留，当前均未适配。',
-        'route_note': '主入口按本轮实际 UI 宿主生成。窗口导航路径始终保留；仍需启用 AxisMeld Maya 键位。当前模式可能使正文按钮灰显。路径末尾的 Options 是正文右侧的独立齿轮按钮，不是下一级子菜单。',
+        'route_note': '建模顶部栏为七项；Vertex、Edge、Face 已收回 Edit Mesh 子菜单，主入口按实际 UI 宿主生成。窗口导航路径始终保留；仍需启用 AxisMeld Maya 键位。当前模式可能使正文按钮灰显。路径末尾的 Options 是正文右侧的独立齿轮按钮，不是下一级子菜单。',
         'counts': {
             'total': len(entries), 'body': entry_counts['body'], 'options': entry_counts['options'],
             'button': presentation_counts['button'], 'gray_placeholder': presentation_counts['gray_placeholder'],
@@ -283,7 +301,7 @@ h1{font-size:29px;line-height:1.25;margin:0 0 12px}p{margin:6px 0;color:var(--mu
 <section class="controls" aria-label="筛选菜单"><label>搜索<input id="search" type="search" placeholder="例如 Chamfer Vertices、Edit Mesh、Curve Projection" autocomplete="off"></label><label>Maya 原菜单<select id="root"><option value="">全部建模源菜单</option></select></label><label>入口类型<select id="kind"><option value="">正文 + Options</option><option value="body">仅正文功能</option><option value="options">仅 Options</option></select></label><label>按钮状态<select id="status"><option value="">全部状态</option><option value="button">已有操作绑定</option><option value="gray_placeholder">灰色占位</option></select></label></section>
 <div class="toolbar"><div id="result" role="status" aria-live="polite"></div><div class="pager"><button id="prev" type="button">上一页</button><span id="page" class="small"></span><button id="next" type="button">下一页</button></div></div>
 <div class="table-wrap"><table><thead><tr><th>Maya 功能 / 原路径</th><th>Blender 实际入口</th><th>状态 / 适配说明</th></tr></thead><tbody id="rows"></tbody></table></div>
-<footer><p>主入口对应本轮的实际菜单位置；Window → Maya Menu Sets 提供所有工作区可找到的备用入口。启用 AxisMeld Maya 键位后可见。</p><p>原 Edit Mesh 的 Curve 组已放入 Mesh Tools → Curve Projection。Options 是正文右侧的独立齿轮按钮，不是下一级子菜单。</p><p>Deform、Generate 共214个正文和76个Options已移出本轮Modeling范围；原始参考仍留档。其他模块未在本轮开发；目录覆盖核验不等于所有操作的人工验收。</p><p id="coverage"></p></footer>
+<footer><p>建模顶部栏保留七项；Vertex、Edge、Face 已收回 Edit Mesh 子菜单。Window → Maya Menu Sets 提供所有工作区可找到的备用入口。启用 AxisMeld Maya 键位后可见。</p><p>原 Edit Mesh 的 Curve 组已放入 Mesh Tools → Curve Projection。Options 是正文右侧的独立齿轮按钮，不是下一级子菜单。</p><p>Deform、Generate 共214个正文和76个Options已移出本轮Modeling范围；原始参考仍留档。其他模块未在本轮开发；目录覆盖核验不等于所有操作的人工验收。</p><p id="coverage"></p></footer>
 <section aria-labelledby="native-heading" style="margin-top:36px"><h2 id="native-heading">Blender 原生融合核验</h2><p id="native-counts"></p><p class="small" id="native-note"></p><div class="controls"><label>搜索原生来源或入口<input id="native-search" type="search" placeholder="例如 modifiers、mesh.mark_seam、Vertex" autocomplete="off"></label><label>处理方式<select id="native-resolution"><option value="">全部处理方式</option><option value="native_draw">原生绘制</option><option value="existing_command_alias">合并到已有按钮</option><option value="native_item_alias">合并到另一原生入口</option></select></label></div><p id="native-result" role="status" aria-live="polite"></p><div class="table-wrap"><table><thead><tr><th>原生来源声明</th><th>实际目录 / 合并后入口</th><th>参数与上下文</th></tr></thead><tbody id="native-rows"></tbody></table></div></section>
 </main><script id="inventory" type="application/json">__DATA__</script><script>
 'use strict';
