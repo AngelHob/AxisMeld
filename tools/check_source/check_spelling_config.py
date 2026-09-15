@@ -938,5 +938,5 @@ files_ignore = {
 # These contain many typos that could be resolved, then removed from this list.
 directories_ignore = {
     "scripts/addons_core/io_scene_gltf2/",
-    "scripts/addons_core/rigify/",
+    "scripts/modules/rigify/",
 }

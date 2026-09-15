@@ -51,6 +51,10 @@ _addons_hidden_core = {
     "io_scene_fbx",
 }
 
+# Native startup modules may retain an add-on record solely for saved preferences.
+# Their registration belongs to startup, including when an old user add-on copy exists.
+_addons_native = frozenset({"rigify"})
+
 
 # Called only once at startup, avoids calling 'reset_all', correct but slower.
 def _initialize_once():
@@ -72,7 +76,7 @@ def _initialize_once():
         )
 
     for addon in _preferences.addons:
-        if (module_name := addon.module) in _addons_hidden_core:
+        if (module_name := addon.module) in _addons_hidden_core or module_name in _addons_native:
             continue
         enable(
             module_name,
@@ -220,6 +224,8 @@ def modules_refresh(*, module_cache=addons_fake_modules):
 
     for path, pkg_id in _paths_with_extension_repos():
         for mod_name, mod_path in _bpy.path.module_names(path, package=pkg_id):
+            if mod_name in _addons_native:
+                continue
             modules_stale.discard(mod_name)
             mod = module_cache.get(mod_name)
             if mod is not None:
@@ -255,6 +261,10 @@ def modules_refresh(*, module_cache=addons_fake_modules):
 
 
 def modules(*, module_cache=addons_fake_modules, refresh=True):
+    # Also discard pre-migration metadata when callers explicitly skip refreshing.
+    for module_name in _addons_native:
+        module_cache.pop(module_name, None)
+
     if refresh or ((module_cache is addons_fake_modules) and modules._is_first):
         modules_refresh(module_cache=module_cache)
         modules._is_first = False
@@ -283,6 +293,9 @@ def check(module_name):
     :return: (loaded_default, loaded_state)
     :rtype: tuple[bool, bool]
     """
+    if module_name in _addons_native:
+        return False, False
+
     import sys
     loaded_default = module_name in _preferences.addons
 
@@ -354,6 +367,8 @@ def enable(module_name, *, default_set=False, persistent=False, refresh_handled=
     :return: the loaded module or None on failure.
     :rtype: ModuleType
     """
+    if module_name in _addons_native:
+        return None
 
     import os
     import sys
@@ -580,6 +595,9 @@ def disable(module_name, *, default_set=False, refresh_handled=False, handle_err
     :param handle_error: Called in the case of an error, taking an exception argument.
     :type handle_error: Callable[[Exception], None] | None
     """
+    if module_name in _addons_native:
+        return
+
     import sys
 
     if handle_error is None:
@@ -641,6 +659,8 @@ def reset_all(*, reload_scripts=False):
             _bpy.utils._sys_path_ensure_append(path)
 
         for mod_name, _mod_path in _bpy.path.module_names(path, package=pkg_id):
+            if mod_name in _addons_native:
+                continue
             is_enabled, is_loaded = check(mod_name)
 
             # first check if reload is needed before changing state.

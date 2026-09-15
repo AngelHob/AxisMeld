@@ -27,6 +27,10 @@ DEFAULT_NAME = 'rigify'
 INSTALL_PATH = feature_sets._install_path()
 NAME_PREFIX = feature_sets.__name__.split('.')
 
+# Track actual lifecycle calls independently of preferences, which Blender can
+# replace in-place when loading factory or saved settings.
+_registered_feature_sets: set[str] = set()
+
 # noinspection SpellCheckingInspection
 PROMOTED_FEATURE_SETS = [
     {
@@ -167,7 +171,20 @@ def call_function_safe(module_name: str, func_name: str,
 
 
 def call_register_function(feature_set: str, do_register: bool):
+    if do_register:
+        if feature_set in _registered_feature_sets:
+            return
+        _registered_feature_sets.add(feature_set)
+    else:
+        if feature_set not in _registered_feature_sets:
+            return
+        _registered_feature_sets.remove(feature_set)
     call_function_safe(feature_set, 'register' if do_register else 'unregister', mark_error=do_register)
+
+
+def unregister_feature_sets():
+    for feature_set in sorted(_registered_feature_sets):
+        call_register_function(feature_set, False)
 
 
 def get_ui_name(feature_set: str):
@@ -289,13 +306,12 @@ class DATA_OT_rigify_add_feature_set(bpy.types.Operator):
             # Call the register callback of the new set
             addon_prefs.refresh_installed_feature_sets()
 
-            call_register_function(fixed_dirname, True)
-
-            addon_prefs.update_external_rigs()
-
             # Select the new entry
             for i, fs in enumerate(addon_prefs.rigify_feature_sets):
                 if fs.module_name == fixed_dirname:
+                    # Explicit installation enables the selected package via
+                    # its normal callback exactly once.
+                    fs.enabled = True
                     addon_prefs.active_feature_set_index = i
                     break
 

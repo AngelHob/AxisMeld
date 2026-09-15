@@ -201,12 +201,22 @@ class RigifyPreferences(AddonPreferences):
 
     @staticmethod
     def get_instance(context: bpy.types.Context = None) -> 'RigifyPreferences':
-        prefs = (context or bpy.context).preferences.addons[__package__].preferences
+        # Keep the existing serialized preferences compatible with older files.
+        # The native startup module owns registration, not the add-on manager.
+        addons = (context or bpy.context).preferences.addons
+        record = addons.get(__package__)
+        if record is None:
+            record = addons.new()
+            record.module = __package__
+        prefs = record.preferences
         assert isinstance(prefs, RigifyPreferences)
         return prefs
 
     def register_feature_sets(self, do_register: bool):
         """Call register or unregister of external feature sets"""
+        if not do_register:
+            feature_set_list.unregister_feature_sets()
+            return
         self.refresh_installed_feature_sets()
         for set_name in feature_set_list.get_enabled_modules_names():
             feature_set_list.call_register_function(set_name, do_register)
@@ -233,6 +243,11 @@ class RigifyPreferences(AddonPreferences):
                     break
             else:
                 fs = feature_set_prefs.add()
+                # A newly discovered package is optional. Write its initial
+                # state without running a toggle callback before registration.
+                # Existing entries retain their saved value (including an
+                # implicit legacy default of True).
+                fs["enabled"] = False
                 fs.name = feature_set_list.get_ui_name(module_name)
                 fs.module_name = module_name
 
@@ -280,7 +295,9 @@ class RigifyPreferences(AddonPreferences):
     active_feature_set_index: IntProperty()
 
     def draw(self, context: bpy.types.Context):
-        layout: bpy.types.UILayout = self.layout
+        self.draw_settings(self.layout, context)
+
+    def draw_settings(self, layout: bpy.types.UILayout, context: bpy.types.Context):
 
         layout.label(text="Feature Sets:")
 
@@ -898,6 +915,10 @@ def register_rna_properties() -> None:
 
 
 def unregister_rna_properties() -> None:
+    from .utils.action_layers import versioning_5_0
+    if versioning_5_0 in bpy.app.handlers.load_post:
+        bpy.app.handlers.load_post.remove(versioning_5_0)
+
     # Properties on PoseBones and Armature. (Annotated to suppress unknown attribute warnings.)
     pose_bone: typing.Any = bpy.types.PoseBone
 

@@ -50,7 +50,7 @@ try {
   assert.ok(await page.locator('.privacy-notice').textContent().then(t => t.includes('≠ 已提交维护者')));
   assert.equal(await page.evaluate(key => localStorage.getItem(key), STORAGE_KEY), null);
   await page.screenshot({ path: path.join(artifacts, 'desktop-initial.png') });
-  record('294-item catalog loads under /AxisMeld/; fresh visitor has zero tested', { catalog: catalog.items.length, active: active.length, initialDOM: await page.locator('.test-card').count() });
+  record(`${catalog.items.length}-item catalog loads under /AxisMeld/; fresh visitor has zero tested`, { catalog: catalog.items.length, active: active.length, initialDOM: await page.locator('.test-card').count() });
 
   if (active.length > 50) {
     const first = await page.locator('.test-card').first().getAttribute('data-test-id');

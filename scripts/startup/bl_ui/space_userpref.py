@@ -2535,7 +2535,10 @@ class USERPREF_PT_addons(AddOnPanel, Panel):
         layout = self.layout
         wm = context.window_manager
 
-        used_addon_module_name_map = {addon.module: addon for addon in prefs.addons}
+        used_addon_module_name_map = {
+            addon.module: addon for addon in prefs.addons
+            if addon.module not in addon_utils._addons_native
+        }
 
         addon_user_dirs = tuple(
             p for p in (

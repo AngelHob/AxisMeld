@@ -732,7 +732,10 @@ def addons_panel_draw_impl(
                     if (pkg_block := item_remote.block) is not None:
                         addon_extension_block_map[module_name] = pkg_block
 
-    used_addon_module_name_map = {addon.module: addon for addon in prefs.addons}
+    used_addon_module_name_map = {
+        addon.module: addon for addon in prefs.addons
+        if addon.module not in addon_utils._addons_native
+    }
 
     module_names = addons_panel_draw_items(
         layout,
