@@ -13,6 +13,7 @@
 - 最终运行验证：8 个独立 Blender 进程及原始布局关系检查通过；GUI 实际创建 29 骨 Basic Human、绑定与一次 Undo、Normalize 与一次 Undo、三个原生插件菜单宿主、添加/改名/删除工作区及独立进程重开通过。139 项运行资源与源码一致。
 - 默认布局文件约 128 KB，单独改为普通 Git 二进制存储，避免 GitHub 公开 fork 拒绝新 LFS 对象导致源码无法获取；仅调整这一文件的属性，资产内容不变。
 - 新增待人工测试 RG-07 至 RG-14；复杂变形质量、第三方扩展和不同显示缩放仍需用户验收。设计见 [Rigging 独立工作区](development/2026-09-17-rigging-workspace.md)。
+- 发布 [Rigging 工作区 Windows x64 预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-rigging-preview)，对应源码 `617986ac1841`；独立解压与实际启动通过，GitHub ZIP SHA256 与本地一致。测试清单共 308 项，当前 296 项，最近新增 8 项；原 300 项和 47 条历史已测状态保留。
 
 ## 2026-09-15 · Rigify 默认内置
 

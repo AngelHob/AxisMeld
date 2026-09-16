@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "projectName": "AxisMeld",
-  "buildId": "axismeld-2026.09.15-rigify-preview",
+  "buildId": "axismeld-2026.09.17-rigging-preview",
   "repoUrl": "https://github.com/AngelHob/AxisMeld",
-  "releaseUrl": "https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.15-rigify-preview",
+  "releaseUrl": "https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-rigging-preview",
   "sourceBranch": "axismeld/phase-2a",
   "feedback": {
     "mode": "github",
