@@ -2,7 +2,7 @@
 
 日期：2026-09-17。依据 [Rigging 工作区设计](2026-09-17-rigging-workspace.md) 编写。以下验收项已同步到统一清单与公开目录，全部待人工测试；目录收录不表示人工测试已通过。
 
-计划发布标签为 `axismeld-2026.09.17-rigging-preview`。在对应发布包就绪前，不用旧 Rigify 预览版验收新的工作区，也不提前更改公开下载版本。
+已发布 [`axismeld-2026.09.17-rigging-preview`](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-rigging-preview)，对应源码 `617986ac1841`。使用该包验收新增工作区；公开下载和反馈版本已同步，旧 Rigify 预览版不包含本轮工作区。
 
 ## 清单与结果保留
 

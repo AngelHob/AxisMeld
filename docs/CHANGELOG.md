@@ -14,6 +14,7 @@
 - 默认布局文件约 128 KB，单独改为普通 Git 二进制存储，避免 GitHub 公开 fork 拒绝新 LFS 对象导致源码无法获取；仅调整这一文件的属性，资产内容不变。
 - 新增待人工测试 RG-07 至 RG-14；复杂变形质量、第三方扩展和不同显示缩放仍需用户验收。设计见 [Rigging 独立工作区](development/2026-09-17-rigging-workspace.md)。
 - 发布 [Rigging 工作区 Windows x64 预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-rigging-preview)，对应源码 `617986ac1841`；独立解压与实际启动通过，GitHub ZIP SHA256 与本地一致。测试清单共 308 项，当前 296 项，最近新增 8 项；原 300 项和 47 条历史已测状态保留。
+- 发布后匿名核验通过：六份网页资源、发布下载校验值与实际源码布局资产一致；线上浏览器六项验收通过，访客记录隔离、刷新持久化及反馈版本正确，未提交测试 Issue。
 
 ## 2026-09-15 · Rigify 默认内置
 
