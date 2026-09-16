@@ -30,7 +30,9 @@ class ARMATURE_MT_rigify_metarigs(bpy.types.Menu):
 
 
 def _menu_add_rigify_metarigs(self, context):
-    self.layout.menu("ARMATURE_MT_rigify_metarigs")
+    from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+    layout = rigging_icon_layout(self.layout, context, 'ARMATURE_DATA')
+    layout.menu("ARMATURE_MT_rigify_metarigs")
 
 
 class ArmatureSubMenu(bpy.types.Menu):

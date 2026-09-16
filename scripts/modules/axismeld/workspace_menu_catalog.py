@@ -10,6 +10,7 @@ from hashlib import sha256
 
 from .menubar_catalog import build_menubar
 from .workspace_native_catalog import integrate_native_groups
+from .rigging_workspace_catalog import integrate_rigging_groups
 
 
 MODELING_SOURCE_ROOTS = tuple('modeling.' + suffix for suffix in (
@@ -167,7 +168,7 @@ their reference data and all other menu sets stay unchanged.
     # Actual Blender menu hosts belong to the UI integration, not this source
     # projection. Callers can record that independent entrypoint map here.
     catalog['host_roots'] = {}
-    return integrate_native_groups(catalog)
+    return integrate_rigging_groups(integrate_native_groups(catalog))
 
 
 def routes(catalog=None, root_ids=None):

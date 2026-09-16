@@ -17,7 +17,8 @@ class MESH_MT_vertex_group_context_menu(Menu):
     bl_label = "Vertex Group Specials"
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'GROUP_VERTEX')
 
         layout.operator(
             "object.vertex_group_sort",

@@ -111,3 +111,5 @@
 *.btx filter=lfs diff=lfs merge=lfs -text
 scripts/modules/_bpy_internal/assets/remote_library/*_openapi.py linguist-generated=true
 docs/design/references/2026-09-11-user-tool-hotbox.png !text !filter !merge !diff
+# GitHub public forks cannot accept new LFS objects; keep our small default asset pullable.
+release/datafiles/startup.blend -filter -diff -merge -text

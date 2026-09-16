@@ -7084,13 +7084,13 @@
   "source_files": {
     "scripts/modules/axismeld/menubar_reference.py": "6c47aba8e47901242e79fa3ed18c6e837a6a95391de12b539ae87432ea281dbd",
     "scripts/modules/axismeld/menubar_catalog.py": "77f74a5f79ef1576abe985fb0b7f63cae9d0b747a2af64c7c160d410416c7103",
-    "scripts/modules/axismeld/workspace_menu_catalog.py": "3e2767aea4be3b3b546db437191c00b5abcc9babf4005b20d1cbacbd560170ce",
+    "scripts/modules/axismeld/workspace_menu_catalog.py": "fbcdde64417e8f364324cf98dcc10b3406a8329340add372cac98dc119da14a6",
     "scripts/modules/axismeld/workspace_native_catalog.py": "4ebf7c6f5d093d41943ce572b903a0581ec8d67f77bd012fa694b3263c1e7ff5",
     "scripts/modules/axismeld/workspace_native_groups.py": "084d6dc15be2ca4cd16cb9c563b0e6fb8f971e0444dd7adcf7259d75ba477933",
     "scripts/startup/bl_ui/space_axismeld_native_modeling.py": "0da1aec7446d556ec67f61a9ccee8c2f4111fcf66eaba6a450b1cf33eb31480f",
-    "scripts/startup/bl_ui/space_axismeld_menubar.py": "e62812cee1682f71bbd3b8057737a0e3e47ba49c78e12882e14b18b04bf26e8c",
+    "scripts/startup/bl_ui/space_axismeld_menubar.py": "b25ce3db12bd59a4886c4ab048246a6759c9ea5c4c5604867710ab2c89b7d6b4",
     "scripts/startup/bl_ui/space_topbar.py": "4f89643885499f39d706d23b85e7231d228bd4f0aeccaa9d6ffcab9bda49181b",
-    "scripts/startup/bl_ui/space_view3d.py": "c255fcfda7128708291f9dee74ed3826698f30d2857beb6f1ff83810bbc74c28"
+    "scripts/startup/bl_ui/space_view3d.py": "47bd6fcc4b453ad009cf085c981b47ad0d1c4b244841ac93777640852f19cae3"
   },
   "entries": [
     {

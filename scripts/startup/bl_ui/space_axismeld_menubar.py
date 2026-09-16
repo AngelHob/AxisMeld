@@ -40,6 +40,9 @@ _REPLACED_HEADER_MENUS = frozenset(_BLENDER_MODELING_MENUS.values()) | {
     'VIEW3D_MT_edit_curves', 'VIEW3D_MT_edit_curves_control_points',
     'VIEW3D_MT_edit_curves_segments',
 }
+_RIGGING_HEADER_MENUS = frozenset({
+    'VIEW3D_MT_edit_armature', 'VIEW3D_MT_pose', 'VIEW3D_MT_paint_weight',
+})
 _VIEWPORT_SUPPLEMENTS = {
     'VIEW3D_MT_view': 'common.display',
     'VIEW3D_MT_select_object': 'common.select',
@@ -67,25 +70,46 @@ def enabled(context):
 def modeling_workspace(context):
     workspace = getattr(context, 'workspace', None)
     area = getattr(context, 'area', None)
-    return (enabled(context) and getattr(area, 'type', '') == 'VIEW_3D' and
+    return (not rigging_workspace(context) and enabled(context) and getattr(area, 'type', '') == 'VIEW_3D' and
             getattr(workspace, 'name', '').partition('.')[0] == 'Modeling')
+
+
+def rigging_workspace(context):
+    workspace = getattr(context, 'workspace', None)
+    area = getattr(context, 'area', None)
+    if getattr(area, 'type', '') != 'VIEW_3D' or workspace is None:
+        return False
+    # A workspace's purpose survives renaming/duplication and does not depend
+    # on the user's choice of keyboard preset.
+    role = getattr(workspace, 'get', lambda *_: None)('axismeld_workspace_role')
+    return role == 'RIGGING' or getattr(workspace, 'name', '').partition('.')[0] == 'Rigging'
 
 
 class _ViewportMenuLayout:
     """Keep the native draw flow while the same Menu IDs host the new groups."""
-    def __init__(self, layout):
+    def __init__(self, layout, hidden=_REPLACED_HEADER_MENUS):
         self._layout = layout
+        self._hidden = hidden
 
     def __getattr__(self, name):
         return getattr(self._layout, name)
 
     def menu(self, identifier, *args, **kwargs):
-        if identifier not in _REPLACED_HEADER_MENUS:
+        if identifier not in self._hidden:
             return self._layout.menu(identifier, *args, **kwargs)
 
 
 def viewport_menu_layout(layout, context):
+    if rigging_workspace(context):
+        return _ViewportMenuLayout(layout, _RIGGING_HEADER_MENUS)
     return _ViewportMenuLayout(layout) if modeling_workspace(context) else layout
+
+
+def draw_rigging_menus(layout, context):
+    if not rigging_workspace(context):
+        return
+    for identifier in _CATALOG.get('rigging_roots', ()):
+        layout.menu(_MENU_NAMES[identifier], text=_NODES[identifier]['label'])
 
 
 def draw_modeling_menus(layout, context):
@@ -168,6 +192,10 @@ class AXISMELD_OT_menubar_execute(Operator):
 
 def _draw_item(layout, context, node):
     kind = node['kind']
+    if kind == 'rigging_native':
+        from bl_ui import space_axismeld_native_rigging
+        space_axismeld_native_rigging.draw_entry(layout, context, node['native_key'])
+        return
     if kind == 'native_group':
         from bl_ui import space_axismeld_native_modeling
         space_axismeld_native_modeling.draw_group(layout, context, node['group_key'],
@@ -232,7 +260,7 @@ def draw_menu(layout, context, identifier):
         # Native rows also contain live shortcut text and dynamic menus. Their
         # native width estimate includes those cells; a caption-only override
         # would shrink them (for example Save As + Shift Ctrl S).
-        if not any(node['kind'] in {'native', 'native_group'} for node in nodes):
+        if not any(node['kind'] in {'native', 'native_group', 'rigging_native'} for node in nodes):
             column.ui_units_x = max(widths, default=100) / 20
         for node in nodes:
             _draw_item(column, context, node)

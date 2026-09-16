@@ -277,8 +277,11 @@ bool ED_workspace_delete(WorkSpace *workspace, Main *bmain, bContext *C, wmWindo
 
   /* Also delete managed screens if they have no other users. */
   for (WorkSpaceLayout &layout : workspace->layouts) {
-    BKE_id_free_us(bmain, layout.screen);
+    bScreen *screen = layout.screen;
+    /* Freeing the last user unlinks the ID from Main. Clear our reference first
+     * so that the unlink traversal cannot decrement this same user again. */
     layout.screen = nullptr;
+    BKE_id_free_us(bmain, screen);
   }
 
   BKE_id_free(bmain, &workspace->id);

@@ -89,6 +89,7 @@ _modules = [
     "space_text",
     "space_time",
     "space_axismeld_menubar",
+    "space_axismeld_native_rigging",
     "space_topbar",
     "space_userpref",
     "space_view3d",

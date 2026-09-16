@@ -42,7 +42,7 @@ def walk(nodes, *, options=False):
 
 def functions(nodes):
     return {node['id']: node for node in walk(nodes, options=True)
-            if node.get('kind') not in {None, 'menu', 'separator', 'native_group'}}
+            if node.get('kind') not in {None, 'menu', 'separator', 'native_group', 'rigging_native'}}
 
 
 class WorkspaceMenuCatalogTests(unittest.TestCase):
@@ -176,9 +176,15 @@ class WorkspaceMenuCatalogTests(unittest.TestCase):
                     self.assertTrue(node['children'], node['id'])
 
     def test_other_modules_and_four_sets_are_unchanged_and_maya_child_order_is_preserved(self):
+        def without_rigging_entries(node):
+            result = deepcopy(node)
+            result['children'] = [without_rigging_entries(child) for child in node.get('children', ())
+                                  if child.get('origin') != 'native_rigging']
+            return result
+
         for root in self.source['menus']:
             if root['id'] not in MODEL_SOURCE_ROOTS:
-                self.assertEqual(self.roots[root['id']], root, root['id'])
+                self.assertEqual(without_rigging_entries(self.roots[root['id']]), root, root['id'])
         # The approved Edit Mesh split is checked explicitly above. Every
         # other source menu retains its Maya children in the same relative order,
         # even when native purpose groups are inserted between source chapters.

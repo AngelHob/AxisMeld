@@ -1296,6 +1296,7 @@ class VIEW3D_MT_editor_menus(Menu):
             layout.template_node_operator_asset_root_items()
 
         space_axismeld_menubar.draw_modeling_menus(self.layout, context)
+        space_axismeld_menubar.draw_rigging_menus(self.layout, context)
 
 
 # ********** Menu **********
@@ -1309,7 +1310,8 @@ class ShowHideMenu:
     _operator_name = ""
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'HIDE_OFF')
 
         layout.operator("{:s}.reveal".format(self._operator_name))
         layout.operator("{:s}.hide".format(self._operator_name), text="Hide Selected").unselected = False
@@ -1323,7 +1325,8 @@ class VIEW3D_MT_transform_base:
 
     # TODO: get rid of the custom text strings?
     def draw(self, context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, context, 'ORIENTATION_GLOBAL')
 
         layout.operator("transform.translate")
         layout.operator("transform.rotate")
@@ -1407,7 +1410,8 @@ class VIEW3D_MT_transform_object(VIEW3D_MT_transform_base, Menu):
 # Armature EditMode extensions to Transform menu
 class VIEW3D_MT_transform_armature(VIEW3D_MT_transform_base, Menu):
     def draw(self, context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, context, 'ORIENTATION_GLOBAL')
 
         # base menu
         VIEW3D_MT_transform_base.draw(self, context)
@@ -1451,7 +1455,8 @@ class VIEW3D_MT_mirror(Menu):
     bl_translation_context = i18n_contexts.operator_default
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'MOD_MIRROR')
 
         layout.operator("transform.mirror", text="Interactive Mirror")
 
@@ -1477,7 +1482,8 @@ class VIEW3D_MT_snap(Menu):
     bl_label = "Snap"
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'SNAP_ON')
 
         layout.operator("view3d.snap_selected_to_grid", text="Selection to Grid")
         layout.operator("view3d.snap_selected_to_cursor", text="Selection to Cursor").use_offset = False
@@ -2642,7 +2648,8 @@ class VIEW3D_MT_armature_add(Menu):
     bl_options = {'SEARCH_ON_KEY_PRESS'}
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'BONE_DATA')
 
         layout.operator_context = 'EXEC_REGION_WIN'
         layout.operator("object.armature_add", text="Single Bone", icon='BONE_DATA')
@@ -2960,7 +2967,8 @@ class VIEW3D_MT_object_animation(Menu):
     bl_label = "Animation"
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'ANIM_DATA')
 
         layout.menu("VIEW3D_MT_pose_slide")
 
@@ -3351,7 +3359,8 @@ class VIEW3D_MT_object_parent(Menu):
     def draw(self, _context):
         from _bl_ui_utils.layout import operator_context
 
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'BONE_DATA')
 
         layout.operator_enum("object.parent_set", "type")
 
@@ -3639,7 +3648,8 @@ class VIEW3D_MT_vertex_group(Menu):
     bl_label = "Vertex Groups"
 
     def draw(self, context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, context, 'GROUP_VERTEX')
 
         layout.operator_context = 'EXEC_AREA'
         layout.operator("object.vertex_group_assign_new")
@@ -3679,7 +3689,8 @@ class VIEW3D_MT_paint_weight_lock(Menu):
     bl_label = "Vertex Group Locks"
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'WPAINT_HLT')
 
         props = layout.operator("object.vertex_group_lock", icon='LOCKED', text="Lock All")
         props.action, props.mask = 'LOCK', 'ALL'
@@ -3770,7 +3781,9 @@ class VIEW3D_MT_paint_weight(Menu):
         layout.menu("VIEW3D_MT_paint_weight_lock", text="Locks")
 
     def draw(self, _context):
-        self.draw_generic(self.layout, is_editmode=False)
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'WPAINT_HLT')
+        self.draw_generic(layout, is_editmode=False)
 
 
 class VIEW3D_MT_sculpt(Menu):
@@ -4274,7 +4287,8 @@ class VIEW3D_MT_pose(Menu):
     bl_label = "Pose"
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'POSE_HLT')
 
         layout.menu("VIEW3D_MT_transform_armature")
 
@@ -4323,7 +4337,8 @@ class VIEW3D_MT_pose_transform(Menu):
     bl_label = "Clear Transform"
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'POSE_HLT')
 
         layout.operator("pose.transforms_clear", text="All")
 
@@ -4342,7 +4357,8 @@ class VIEW3D_MT_pose_slide(Menu):
     bl_label = "In-Betweens"
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'POSE_HLT')
         operator_context = layout.operator_context
         layout.operator_context = 'INVOKE_REGION_WIN'
         layout.operator("pose.blend_with_rest")
@@ -4357,7 +4373,8 @@ class VIEW3D_MT_pose_propagate(Menu):
     bl_label = "Propagate"
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'POSE_HLT')
 
         layout.operator("pose.propagate", text="To Next Keyframe").mode = 'NEXT_KEY'
         layout.operator("pose.propagate", text="To Last Keyframe (Make Cyclic)").mode = 'LAST_KEY'
@@ -4375,7 +4392,8 @@ class VIEW3D_MT_pose_motion(Menu):
     bl_label = "Motion Paths"
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'POSE_HLT')
 
         layout.operator("pose.paths_calculate", text="Calculate")
         layout.operator("pose.paths_clear", text="Clear")
@@ -4394,7 +4412,8 @@ class VIEW3D_MT_bone_collections(Menu):
         return True
 
     def draw(self, context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, context, 'OUTLINER_COLLECTION')
 
         layout.operator("armature.move_to_collection")
         layout.operator("armature.assign_to_collection")
@@ -4410,7 +4429,8 @@ class VIEW3D_MT_pose_ik(Menu):
     bl_label = "Inverse Kinematics"
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'CON_KINEMATIC')
 
         layout.operator("pose.ik_add")
         layout.operator("pose.ik_clear")
@@ -4420,7 +4440,8 @@ class VIEW3D_MT_pose_constraints(Menu):
     bl_label = "Constraints"
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'CONSTRAINT_BONE')
 
         layout.operator("pose.constraint_add_with_targets", text="Add (with Targets)...")
         layout.operator("pose.constraints_copy")
@@ -4431,7 +4452,8 @@ class VIEW3D_MT_pose_names(Menu):
     bl_label = "Names"
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'SORTALPHA')
 
         layout.operator_context = 'EXEC_REGION_WIN'
         layout.operator("pose.autoside_names", text="Auto-Name Left/Right").axis = 'XAXIS'
@@ -4448,7 +4470,8 @@ class VIEW3D_MT_pose_apply(Menu):
     bl_label = "Apply"
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'POSE_HLT')
 
         layout.operator("pose.armature_apply").selected = False
         layout.operator("pose.armature_apply", text="Apply Selected as Rest Pose").selected = True
@@ -4509,7 +4532,8 @@ class VIEW3D_MT_pose_context_menu(Menu):
 
 class BoneOptions:
     def draw(self, context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, context, 'BONE_DATA')
 
         options = [
             "show_wire",
@@ -5000,7 +5024,8 @@ class VIEW3D_MT_edit_mesh_weights(Menu):
     bl_label = "Weights"
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'WPAINT_HLT')
         VIEW3D_MT_paint_weight.draw_generic(layout, is_editmode=True)
         layout.template_node_operator_asset_menu_items(catalog_path="Mesh/Weights")
 
@@ -5461,7 +5486,8 @@ class VIEW3D_MT_edit_armature(Menu):
     bl_label = "Armature"
 
     def draw(self, context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, context, 'BONE_DATA')
 
         edit_object = context.edit_object
         arm = edit_object.data
@@ -5565,7 +5591,8 @@ class VIEW3D_MT_edit_armature_names(Menu):
     bl_label = "Names"
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'SORTALPHA')
 
         layout.operator_context = 'EXEC_REGION_WIN'
         layout.operator("armature.autoside_names", text="Auto-Name Left/Right").type = 'XAXIS'
@@ -5579,7 +5606,8 @@ class VIEW3D_MT_edit_armature_parent(Menu):
     bl_translation_context = i18n_contexts.operator_default
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'BONE_DATA')
 
         layout.operator("armature.parent_set", text="Make")
         layout.operator("armature.parent_clear", text="Clear")
@@ -5589,7 +5617,8 @@ class VIEW3D_MT_edit_armature_roll(Menu):
     bl_label = "Bone Roll"
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'BONE_DATA')
 
         layout.operator_menu_enum("armature.calculate_roll", "type")
 
@@ -5603,7 +5632,8 @@ class VIEW3D_MT_edit_armature_delete(Menu):
     bl_label = "Delete"
 
     def draw(self, _context):
-        layout = self.layout
+        from bl_ui.space_axismeld_native_rigging import rigging_icon_layout
+        layout = rigging_icon_layout(self.layout, _context, 'BONE_DATA')
         layout.operator_context = 'EXEC_AREA'
 
         layout.operator("armature.delete", text="Bones")
