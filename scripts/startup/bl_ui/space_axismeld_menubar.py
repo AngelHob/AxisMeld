@@ -192,6 +192,31 @@ class AXISMELD_OT_menubar_execute(Operator):
 
 def _draw_item(layout, context, node):
     kind = node['kind']
+    if kind == 'skin_weight':
+        from axismeld.skin_weight_ops import context_error
+        row = layout.row(align=True)
+        row.enabled = not context_error(context)
+        identifier = ('axismeld.skin_normalize_weights' if node['skin_operation'] == 'NORMALIZE'
+                      else 'axismeld.skin_prune_weights')
+        body = row.row(align=True)
+        body.operator_context = 'EXEC_REGION_WIN'
+        op = body.operator(identifier, text=node['label'], icon=_icon(node))
+        op.show_options = False
+        # Explicit defaults prevent a previous F9/Options run changing body semantics.
+        if node['skin_operation'] == 'NORMALIZE':
+            op.lock_active = False
+        else:
+            op.threshold, op.keep_strongest, op.normalize_after = .01, True, True
+        cell = row.row(align=True)
+        cell.alignment = 'RIGHT'
+        cell.operator_context = 'INVOKE_REGION_WIN'
+        options = cell.operator(identifier, text='', icon='PREFERENCES')
+        options.show_options = True
+        if node['skin_operation'] == 'NORMALIZE':
+            options.lock_active = False
+        else:
+            options.threshold, options.keep_strongest, options.normalize_after = .01, True, True
+        return
     if kind == 'rigging_native':
         from bl_ui import space_axismeld_native_rigging
         space_axismeld_native_rigging.draw_entry(layout, context, node['native_key'])

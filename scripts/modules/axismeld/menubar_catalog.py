@@ -324,6 +324,12 @@ def build_menubar():
                 key = ACTION_BINDINGS[identity]
                 result.update(kind='action', action_key=key, icon=ACTIONS[key]['icon'],
                               reason=ACTIONS[key]['reason'])
+            elif root_id == 'menubar.rigging.skin' and identity in {'NormalizeWeights', 'PruneSmallWeights'}:
+                operation = 'NORMALIZE' if identity == 'NormalizeWeights' else 'PRUNE'
+                result.update(kind='skin_weight', skin_operation=operation, icon='WPAINT_HLT',
+                              reason='Bounded one-time deform weights adapter; see Skin weight cleanup design')
+                result['options'].update(kind='skin_weight_options', skin_operation=operation,
+                                         reason='Open independent parameters without modifying weights')
             if identity == 'ExportSelection':
                 result['reason'] = 'Selection export flags are format-specific; use Export All and the native format selection settings'
         elif root_id == 'common.file' and tuple(reference.get('path', ())) == ('File', 'Recent Files'):

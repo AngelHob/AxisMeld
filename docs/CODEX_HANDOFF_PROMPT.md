@@ -40,13 +40,13 @@
   四视图二级热盒是布局和操作标杆：五行的第2/4/3行净间隔、中心取消区、缺席方向和外延划选必须验证。
   伴随菜单不折叠/滚动，下方放不下时底部对齐；保留 QWER 持键时重复长按 LMB 唤出。
 - 不为使按钮可点而暗改选区/模式；测试实际结果、取消和一次 Undo。
-- Rigging 的 Skeleton/Skin 保留82条Maya正文、33个Options，但这些Maya算法仍未适配；9个Blender入口已可用。
+- Rigging 的 Skeleton/Skin 保留82条Maya正文、33个Options，其中一次Normalize Weights/Prune Small Weights及2个Options已做有界适配，其余80正文/31 Options仍灰显；9个Blender入口保留。
   旧文件/用户startup不自动插入Rigging；startup.blend已提交且该文件单独用普通Git存储。
 - AXM-COMPAT-001（Object Global缩放差异）用户明确搁置，不自动重启。
 
-默认下一批任务：先做 Skin 权重整理的有界适配。
-先核实 Normalize Weights / Prune Small Weights 对 Blender Normalize All / Clean 的作用域、锁定、阈值、
-零权重、非骨骼顶点组、Options 和 Undo；更新该批设计后，实施证据充分的适配。
+默认下一批任务：核实A1权重整理最新实现后，按ROADMAP A2做Influences的有界适配。
+先读 docs/development/2026-09-17-skin-weight-cleanup.md，勿重复开发已完成的Normalize/Prune。
+Add/Remove/Remove Unused Influences需识别目标骨架、变形骨与无关用途组，核实锁定、空组、多修改器、失败无修改及Undo；随后再处理绑定/解绑。
 不要把单组 Normalize 当 Normalize All，也不要把一次归一化冒充 Maya Enable/Disable/Post 持续模式。
 不要仅换标签或解除灰显。后续顺序见 ROADMAP：Influences及绑定/解绑 → Mirror/Copy → Skeleton；
 建模缺口继续按已有M3计划处理，UV后置独立推进，不在这一批同时展开。
@@ -54,7 +54,7 @@
 
 先完成本机基线核验，报告源码分支/SHA、构建或下载exe来源、已跑检查和限制，然后继续开发。
 原生Weights现成能力不等于新实现；人工测试暂缓不阻止可自动验证的工作。
-截至该基线，测试清单308项、当前296、历史12；47项只标历史已测不等于通过，RG-07～14仍待测。
+A1后测试清单314项、当前302、历史12；47项只标历史已测不等于通过，RG-07～14仍待测，新增RG-15～20全部待测。
 保留所有稳定编号与原结果。网页记录只在访客浏览器，可导出JSON；不自动跨设备同步，不替我勾选已测。
 
 交付已授权：每批完成并验证后，更新 docs/CHANGELOG.md、相关设计和新的待人工测试内容，提交并推送GitHub，

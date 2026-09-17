@@ -50,9 +50,9 @@ git log -5 --oneline
 4. 准备新机器原生构建并用隔离配置启动。若本批只改 Python 可针对性验证，但 `startup.blend` 或 C++ 有变化必须重新编译内嵌资源，不能复用旧 exe。
 5. 简短报告本机源码 SHA、运行 exe 的来源、检查结果与当前限制，然后继续选定的有界任务。没有图形环境时仍完成可做的开发/结果测试，GUI 留作明确待验收项，不能冒称已经运行。
 
-## 5. 建议下一任务：Skin 权重整理
+## 5. 下一任务：Influences；先核对已完成的 A1
 
-第一批先审计并设计 Normalize Weights / Prune Small Weights 的作用域、Options 与差异，再实现证据充分的适配。入口文件：
+A1 已完成有界 Normalize Weights / Prune Small Weights 及独立 Options，勿重复实现；先读[本批设计与验证](development/2026-09-17-skin-weight-cleanup.md)，核实远端后按 ROADMAP A2 推进 Add/Remove/Remove Unused Influences，再处理绑定。新人工 RG-15～RG-20 全部待测。A1 入口文件：
 
 - `scripts/modules/axismeld/rigging_workspace_catalog.py` 和 `scripts/startup/bl_ui/space_axismeld_native_rigging.py`：目录及真实原生功能入口。
 - `scripts/startup/bl_ui/space_view3d.py` 的 `VIEW3D_MT_paint_weight`，以及 `source/blender/editors/object/object_vgroup.cc`：核实原生 Normalize All/Clean 实际语义。
@@ -61,7 +61,7 @@ git log -5 --oneline
 
 Normalize 单组最大值归一化不等于 Normalize All；Maya Enable/Disable/Post 是持续模式。Clean 还要检查最后影响、阈值、锁定和非骨骼用途组。没有明确定义前不能仅去掉灰色状态。此批不一并开启镜像/复制、Skeleton、UV 或全局缩放改造。
 
-先把审计结论和实际选择的参数策略写入该批设计，再实施；日常实现选择可主动完成，只有影响用户数据、范围或产品语义且无法从现有决定推断的分歧才提出一个具体问题。
+下一批同样先把审计结论和实际选择的参数策略写入该批设计，再实施；日常实现选择可主动完成，只有影响用户数据、范围或产品语义且无法从现有决定推断的分歧才提出一个具体问题。
 
 ## 6. 每批如何交付
 

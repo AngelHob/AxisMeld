@@ -7081,15 +7081,16 @@
     "scope": "Seven retained Maya modeling source roots; other modules are outside this development scope.",
     "method": "Independent retained-modeling reference IDs compared against projected payloads and current Modeling menu-set entrypoints."
   },
+  "source_hash_encoding": "UTF-8 with LF line endings",
   "source_files": {
-    "scripts/modules/axismeld/menubar_reference.py": "6c47aba8e47901242e79fa3ed18c6e837a6a95391de12b539ae87432ea281dbd",
-    "scripts/modules/axismeld/menubar_catalog.py": "77f74a5f79ef1576abe985fb0b7f63cae9d0b747a2af64c7c160d410416c7103",
+    "scripts/modules/axismeld/menubar_reference.py": "7bc6e96cbbdb931bf8ee416356d00823368c503abfba7ed5ca6594e020646ded",
+    "scripts/modules/axismeld/menubar_catalog.py": "4008351765be0bfe893172b94fed3ce1d3a1f0f3d62bc79151ac6148a9bcb4ec",
     "scripts/modules/axismeld/workspace_menu_catalog.py": "fbcdde64417e8f364324cf98dcc10b3406a8329340add372cac98dc119da14a6",
     "scripts/modules/axismeld/workspace_native_catalog.py": "4ebf7c6f5d093d41943ce572b903a0581ec8d67f77bd012fa694b3263c1e7ff5",
-    "scripts/modules/axismeld/workspace_native_groups.py": "084d6dc15be2ca4cd16cb9c563b0e6fb8f971e0444dd7adcf7259d75ba477933",
-    "scripts/startup/bl_ui/space_axismeld_native_modeling.py": "0da1aec7446d556ec67f61a9ccee8c2f4111fcf66eaba6a450b1cf33eb31480f",
-    "scripts/startup/bl_ui/space_axismeld_menubar.py": "b25ce3db12bd59a4886c4ab048246a6759c9ea5c4c5604867710ab2c89b7d6b4",
-    "scripts/startup/bl_ui/space_topbar.py": "4f89643885499f39d706d23b85e7231d228bd4f0aeccaa9d6ffcab9bda49181b",
+    "scripts/modules/axismeld/workspace_native_groups.py": "f565595812692c5fbf0f7554e66d53b7cc69d78e3db6862e913fdd607a7a4d05",
+    "scripts/startup/bl_ui/space_axismeld_native_modeling.py": "f2cff275176ab5b7e5795bbf03a0e9d87b3511e12bc3d0c909e6cf1ee2d404ab",
+    "scripts/startup/bl_ui/space_axismeld_menubar.py": "c4bb73620fb375a1d209556e3e6f66630fdd81c71093b0e3fcea4989ed64ae5d",
+    "scripts/startup/bl_ui/space_topbar.py": "880daa66b4b1b1b739259619463ff2f2f9926ea36c65be0db75eb32ea2511875",
     "scripts/startup/bl_ui/space_view3d.py": "47bd6fcc4b453ad009cf085c981b47ad0d1c4b244841ac93777640852f19cae3"
   },
   "entries": [

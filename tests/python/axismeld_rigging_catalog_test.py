@@ -51,10 +51,15 @@ class RiggingCatalogTests(unittest.TestCase):
                                              if n.get('origin') != 'native_rigging']
             self.assertEqual(projected_source, source)
             rows = [n for n in walk((actual,)) if n['id'].startswith('maya.')]
-            body = [n for n in rows if n['kind'] == 'disabled' and not n['id'].endswith('.options')]
+            body = [n for n in rows if n['kind'] in {'disabled', 'skin_weight'} and not n['id'].endswith('.options')]
             options = [n for n in rows if n['id'].endswith('.options')]
             self.assertEqual((len(body), len(options)), (body_count, options_count))
-            self.assertTrue(all(n['kind'] == 'disabled' for n in body + options))
+            adapted = [n for n in body if n['kind'] == 'skin_weight']
+            self.assertEqual({n['maya_command'] for n in adapted},
+                             {'NormalizeWeights', 'PruneSmallWeights'} if rid.endswith('.skin') else set())
+            adapted_ids = {n['id'] for n in adapted} | {n['options']['id'] for n in adapted}
+            self.assertTrue(all(n['kind'] == 'disabled' for n in body + options if n['id'] not in adapted_ids))
+            self.assertTrue(all(n['options']['kind'] == 'skin_weight_options' for n in adapted))
 
     def test_native_entries_land_in_reviewed_purpose_chapters(self):
         actual = {}

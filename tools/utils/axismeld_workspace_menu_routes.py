@@ -278,7 +278,11 @@ def build_inventory():
                      'every_entry_has_fallback': True,
                      'scope': 'Seven retained Maya modeling source roots; other modules are outside this development scope.',
                      'method': 'Independent retained-modeling reference IDs compared against projected payloads and current Modeling menu-set entrypoints.'},
-        'source_files': {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in SOURCE_FILES},
+        # This catalog describes source text, not an installed binary payload.
+        # Git's Windows CRLF checkout must not invalidate the same source audit.
+        'source_hash_encoding': 'UTF-8 with LF line endings',
+        'source_files': {path: hashlib.sha256((ROOT / path).read_text(encoding='utf-8').encode('utf-8')).hexdigest()
+                         for path in SOURCE_FILES},
         'entries': entries,
     }
 

@@ -279,6 +279,21 @@ python "$Repo/tools/utils/axismeld_release_audit.py" `
 
 ## 8. 公开测试网页与发布顺序
 
+### A1 的固定基线 Python 试用包
+
+`tools/utils/axismeld_python_preview_package.py` 仅用于继承 `617986ac` 的 Python 改动，**不是 C++ 构建器**。它先核验固定 Rigging ZIP/sidecar，检查从 native 源码至 HEAD 的变化白名单，再从已提交 Git blob 读取脚本（不读脏工作树）。任何 C++、startup 或未知运行资源变化都拒绝。完整保留 DLL/运行时/许可，包内清单分别记录 Python 源码 SHA 与复用 native SHA；Git blob 为 LF，验证应使用包内清单或 Git blob，不能用 Windows CRLF checkout 的裸字节哈希代替。
+
+```powershell
+# 完成功能验证和提交，确认工作树干净；输出和sidecar均不可已存在。
+python tools/utils/axismeld_python_preview_package.py --repo $Repo `
+  --base-archive $DownloadedReleaseZip --output $NewPreviewZip `
+  --build-id axismeld-2026.09.17-skin-weights-preview
+```
+
+仍需把新 ZIP 解压到新目录，校验资源指纹/许可，重新运行身份、factory、Skin 数据与实际 GUI/Undo 验证，才能发布下载。A1 已在本次独立 Windows checkout 完成公开基线下载/解压/启动及行为检查；未完成新机从零全量 native 编译，不能关闭 AXM-ISS-001 的整链构建边界。
+
+### 门户部署
+
 门户源目录是 `tools/testing_site/`，运行时无 npm 构建依赖。访客状态在各自浏览器 localStorage，**不跨设备自动同步**。页面可导出 JSON 供自行转移、备份或反馈；目前没有导入功能，不能承诺换机后恢复网页勾选。私人 Sites 数据库和备注不进入公开 catalog。
 
 ```powershell
