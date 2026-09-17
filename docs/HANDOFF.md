@@ -67,7 +67,7 @@ Normalize 单组最大值归一化不等于 Normalize All；Maya Enable/Disable/
 
 按 [AGENTS](../AGENTS.md) 更新设计、CHANGELOG 和有变化的测试条目，执行相称验证，再 commit/push 并核验远端 SHA；用户已授权每批开发完成上传 GitHub，不需要重复确认。未通过的必要检查不得用“已完成”掩盖。
 
-Pages 只同步前端运行资源；发布新试用包先固定源码提交，打包/解压/启动核验成功后才改页面的 `buildId` 与下载链接。本次文档交接不重打 Rigging 预览包，不改其 tag 或历史测试结果。
+Pages 只同步前端运行资源；发布新试用包先固定源码提交，打包/解压/启动核验成功后才改页面的 `buildId` 与下载链接。A1 已另发 Skin weights 预览包（Python 源码 bf35ab393b7c），复用已审计的 Rigging native；未移动旧 tag 或修改历史测试结果。新快照见 compatibility/2026-09-17-skin-weights-snapshot.json。
 
 若新机器无法登录 GitHub，可先完成本机可验证工作并准确说明推送阻碍；不要向用户索取令牌粘贴进对话或文档。使用该机器已有的 Git/凭据管理器或用户自行登录。
 

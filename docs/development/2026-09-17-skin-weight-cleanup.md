@@ -44,4 +44,4 @@
 - 修正单对象 Mesh 的 Fake User 被误当第二个对象的问题，有独立真实数据红→绿回归。保留拒绝真正共享 Mesh 的保护。
 - 公开目录 314 项、当前 302、历史 12、历史已测试 47；站点结构/状态与 12 项本地浏览器检查通过。建模映射仍为 392 条、85 有绑定/307 灰显；去向审计的源码文本指纹统一 LF，避免 Windows CRLF checkout 产生伪变化。
 
-发布核验在完成后补入；本记录不等于人工验收。
+发布 `axismeld-2026.09.17-skin-weights-preview` 对应 `bf35ab393b7c4d94bfdd78680a862ab76c71fc6e`。新 ZIP 的141脚本资源与Git blob一致，6299个未替换基线文件逐项一致、35许可文件保留；独立解压后身份/portable/factory、19数据测试及7个GUI case再次通过。GitHub已返回一致ZIP SHA256，公开指纹见[本批快照](../compatibility/2026-09-17-skin-weights-snapshot.json)。本记录不等于人工验收。

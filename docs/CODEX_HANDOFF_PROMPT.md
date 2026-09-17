@@ -20,12 +20,14 @@
 5. docs/CHANGELOG.md、当前模块设计、相关源码及测试
 不依赖其他电脑的 Codex 记忆或聊天摘要；有冲突先检查当前实现与最新用户决定。
 
-2026-09-17 的已发布基线：
+2026-09-17 的 native 历史发布基线：
 - tag：axismeld-2026.09.17-rigging-preview
 - 对应功能源码：617986ac184125fe2169456bdb525965530ea736
 - 后续开发提交以远端分支为准，不能用这个固定 tag 覆盖后续工作。
 - public site：https://angelhob.github.io/AxisMeld/
 - docs/compatibility/2026-09-17-handoff-snapshot.json 保存公开校验值与历史验证范围。
+- A1 新试用 tag：axismeld-2026.09.17-skin-weights-preview，Python源码：bf35ab393b7c4d94bfdd78680a862ab76c71fc6e；native仍复用以上基线。
+- A1公开资源/ZIP指纹与验证边界见 docs/compatibility/2026-09-17-skin-weights-snapshot.json。
 - 可下载完整试用 ZIP 与 .sha256；原电脑 build/candidate/outputs/work 不是开发依赖。
 
 当前产品约束：

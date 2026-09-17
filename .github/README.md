@@ -5,7 +5,7 @@
 ## 公开试用
 
 - [打开公开测试清单](https://angelhob.github.io/AxisMeld/)：查看完整测试步骤，记录自己的结果，提交 GitHub 反馈。
-- [下载 Windows x64 便携预览版（Rigging 工作区）](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-rigging-preview)：完整解压后运行 `AxisMeld-Preview.cmd`。
+- [下载 Windows x64 便携预览版（Skin 权重整理）](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-skin-weights-preview)：完整解压后运行 `AxisMeld-Preview.cmd`。
 - [查看反馈与测试结果](https://github.com/AngelHob/AxisMeld/issues?q=is%3Aissue+label%3Atest-feedback)。
 - [当前开发源码](https://github.com/AngelHob/AxisMeld/tree/axismeld/phase-2a)。
 - [修改日志](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/CHANGELOG.md)。
@@ -16,7 +16,7 @@
 
 建模顶栏保留 7 项，Vertex / Edge / Face 位于 Edit Mesh 内；原生工具、插件入口和右侧参数齿轮保留。灰色项表示尚未适配，开发预览版仍需人工测试。
 
-Rigging 工作区采用 Modeling 的三栏布局，Skeleton / Skin 保留 Maya 的 82 条功能和 33 个 Options 占位，并收纳 Blender 原生骨架、绑定、权重与姿态功能。旧文件可用顶部 + → General → Rigging 添加；新增人工验收 RG-07 至 RG-14。
+Rigging 工作区采用 Modeling 的三栏布局，Skeleton / Skin 保留 Maya 的 82 条功能和 33 个 Options（其中已适配 2 条一次性权重操作及其 Options），并收纳 Blender 原生骨架、绑定、权重与姿态功能。旧文件可用顶部 + → General → Rigging 添加；新增 Skin 人工验收 RG-15 至 RG-20；RG-07 至 RG-14 仍待测。
 
 Rigify 默认内置，无需安装或启用插件。通过 Add → Armature → Rigify Meta-Rigs 创建骨架，设置位于 Edit → Preferences → Animation → Rigify；外部 Feature Sets 保持用户选择。
 

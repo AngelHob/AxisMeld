@@ -13,15 +13,15 @@ AxisMeld 与 Blender Foundation、Autodesk 及其产品均无隶属、合作、�
 ## 当前开发与接续（2026-09-17）
 
 最新开发位于 **`axismeld/phase-2a`**；GitHub 默认 `axismeld/integration` 尚未集成最新功能。
-已发布紧凑 Modeling 菜单、Rigify 默认内置和独立 Rigging 工作区。Maya 未适配项保留灰色占位；当前是仍需人工验收的开发预览版。
+已发布紧凑 Modeling 菜单、Rigify 默认内置、独立 Rigging 工作区及 Skin 权重整理 A1。Maya 未适配项保留灰色占位；当前是仍需人工验收的开发预览版。
 
 - [整体规划与路线图](docs/ROADMAP.md) · [当前问题](docs/CURRENT_ISSUES.md) · [修改日志](docs/CHANGELOG.md)。
 - [新机器接续开发](docs/HANDOFF.md) · [直接复制给 Codex 的提示词](docs/CODEX_HANDOFF_PROMPT.md) · [构建与交付](docs/BUILD_AND_DELIVERY.md)。
-- [公开测试页](https://angelhob.github.io/AxisMeld/) · [Windows x64 Rigging 预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-rigging-preview)。
+- [公开测试页](https://angelhob.github.io/AxisMeld/) · [Windows x64 Skin 权重预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-skin-weights-preview)。
 
 Modeling 视窗保留 Mesh、Edit Mesh、Mesh Tools、Mesh Display、Curves、Surfaces、UV；Vertex/Edge/Face 收于 Edit Mesh。Rigging 的 Skeleton/Skin 保留 Maya 82 条正文和 33 个 Options，并收纳已有 Blender 骨架、绑定、权重、姿态及 Rigify 入口。
 
-公开清单保留 308 项（当前 296、历史 12）；47 项只记录历史已测，最新 RG-07～RG-14 待测。网页勾选属于各访客本浏览器，不自动跨设备同步或提交到 GitHub。
+公开清单保留 314 项（当前 302、历史 12）；47 项只记录历史已测，RG-07～RG-14 仍待测，最新 RG-15～RG-20 待测。网页勾选属于各访客本浏览器，不自动跨设备同步或提交到 GitHub。
 
 下面的 Phase 0～2B 段落保留基础能力说明；后续完整进度以路线图和修改日志为准。原始架构见 [AxisMeld 架构设计](docs/design/2026-09-08-axismeld-architecture.md)。
 

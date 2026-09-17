@@ -10,7 +10,7 @@ AxisMeld 是可独立拉取、构建、运行的 Blender 衍生版本，以 Maya
 |---|---|
 | 开发源码 | [AngelHob/AxisMeld 的 axismeld/phase-2a](https://github.com/AngelHob/AxisMeld/tree/axismeld/phase-2a)；本批接续基线为 `96e0ce6dd081d6e3df001565e9f7fe223843358a`；后续以远端为准 |
 | 默认分支 | `axismeld/integration`；目前承担仓库首页入口，**未包含最新开发实现**，不能直接用它继续功能开发 |
-| 最新试用包 | [2026.09.17 Rigging preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-rigging-preview)，源码固定为 `617986ac184125fe2169456bdb525965530ea736` |
+| 最新试用包 | [2026.09.17 Skin weights preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-skin-weights-preview)，Python 功能源码 `bf35ab393b7c4d94bfdd78680a862ab76c71fc6e`；native 来源仍为 `617986ac1841` |
 | Blender 基线 | `18d84097b4f859582afdec57eece2ae880371adc`，版本宏为 5.3.0 alpha；不等于后续上游最新版本 |
 | 测试门户 | [GitHub Pages](https://angelhob.github.io/AxisMeld/)，源码 `tools/testing_site/`，部署分支 `gh-pages` |
 | 交接与问题 | [新机器接续](HANDOFF.md) · [可复制提示词](CODEX_HANDOFF_PROMPT.md) · [当前问题](CURRENT_ISSUES.md) · [构建与交付](BUILD_AND_DELIVERY.md) |

@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "projectName": "AxisMeld",
-  "buildId": "axismeld-2026.09.17-rigging-preview",
+  "buildId": "axismeld-2026.09.17-skin-weights-preview",
   "repoUrl": "https://github.com/AngelHob/AxisMeld",
-  "releaseUrl": "https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-rigging-preview",
+  "releaseUrl": "https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-skin-weights-preview",
   "sourceBranch": "axismeld/phase-2a",
   "feedback": {
     "mode": "github",

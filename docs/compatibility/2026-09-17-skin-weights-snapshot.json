@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-17",
+  "release_tag": "axismeld-2026.09.17-skin-weights-preview",
+  "source_commit": "bf35ab393b7c4d94bfdd78680a862ab76c71fc6e",
+  "native_source_commit": "617986ac184125fe2169456bdb525965530ea736",
+  "native_source_method": "Audited published Rigging binary reused; no native rebuild or startup change",
+  "archive_sha256": "7bf1f3f08c15aa32d1a43dd8677d744b5adca233a1c8bc4556b1141652b5de6e",
+  "archive_bytes": 289783592,
+  "resource_count": 141,
+  "resource_fingerprint": "2b6bf08879f5b2d5dbf57506ad46020d3c94dda2091b2d14b31b522d0dd1ae32",
+  "binary_sha256": "75108ab370d1cddd25ed9a992665da1f48f573006eb3298894dac06439c80fb4",
+  "preserved_base_files": 6299,
+  "license_files": 35,
+  "startup_sha256": "07ecbc61e9b9853ab0c81f84c628dc84d6ebebfc0be55d793bfe48f9fbe35382",
+  "verification": {
+    "weight_plan_tests": 36,
+    "blender_data_tests": 19,
+    "existing_menu_input_tests": 97,
+    "real_gui_cases": 7,
+    "package_tool_tests": 10,
+    "local_browser_checks": 12,
+    "independent_zip_extract_resource_and_launch": "PASS",
+    "github_asset_digest_matches": "PASS"
+  },
+  "manual_catalog": {
+    "total": 314,
+    "current": 302,
+    "historical": 12,
+    "historically_tested_not_assumed_passed": 47,
+    "new_pending": [
+      "RG-15",
+      "RG-16",
+      "RG-17",
+      "RG-18",
+      "RG-19",
+      "RG-20"
+    ],
+    "prior_pending_preserved": "RG-07 through RG-14"
+  },
+  "limitations": [
+    "No clean-machine full native compile",
+    "Shared/linked/override meshes, multiple Armature modifiers and multi-object Edit rejected",
+    "No Maya persistent normalization modes",
+    "Production deformation quality, large-role performance, third-party extensions and high DPI remain manual acceptance",
+    "Automated results do not set visitor or maintainer manual statuses"
+  ]
+}

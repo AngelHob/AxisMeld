@@ -11,6 +11,8 @@
 - 新增可移植的固定基线 Python 试用包组装工具，从已提交 Git blob 替换受审资源，记录 native 复用来源，保留许可与完整运行时；拒绝 native 改动和未知运行资源。去向审计采用 LF 文本指纹，避免不同换行 checkout 伪差异。
 - 新增待人工 RG-15～RG-20，清单314项（当前302、历史12），保留47条历史已测试且不改人工结果。公开目录/状态与12项本地浏览器验收通过。设计见 [A1 权重整理](development/2026-09-17-skin-weight-cleanup.md)，下一批为 ROADMAP A2 Influences。
 
+- 已发布 [Skin 权重整理 Windows x64 预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-skin-weights-preview)，对应功能源码 `bf35ab393b7c`。10项打包工具故障/完整性测试通过；新ZIP的141资源、35许可及独立解压启动/19数据/7GUI复验通过，GitHub资产SHA256与本地一致；公开指纹见本批快照。
+
 ## 2026-09-17 · 整体路线与跨机器开发交接
 
 - 新增 [整体路线图](ROADMAP.md)、[当前问题](CURRENT_ISSUES.md)、[新机接续说明](HANDOFF.md)、[可复制 Codex 提示词](CODEX_HANDOFF_PROMPT.md)及[构建交付配方](BUILD_AND_DELIVERY.md)。区分已交付、灰占位、建议开发和人工验收；建议先推进 Skin 归一化/清理，继而影响骨、绑定、镜像复制，保留建模缺口及后续 UV 主线。
