@@ -2,6 +2,15 @@
 
 每批开发完成时更新本文件并与代码一起推送 GitHub。记录功能与修复、验证结果、待人工测试编号；历史日志保留。
 
+## 2026-09-18 · 新环境原生构建与测试前置条件
+
+- 用 VS 2022 Community 17.14.41、MSVC 19.44.35229、CMake/CTest 3.31.6-msvc6 完成 `full developer with_tests` 的 Release 构建和独立干净安装。文档补充低并发命令、显式 `bin/Release` CTest 运行资源安装前缀，以及所选五组测试所需的既有 `tests/files` 资产。
+- 修复 Hotbox 模型测试漏声明 guardedalloc 直接依赖、导致 `MEM_guardedalloc.h` 无法解析的问题；提交 `33dd3a3e591b` 只补测试目标依赖，不改变热盒交互或默认布局。
+- 新 native 来源为干净源码 `33dd3a3e591b825ea983045fbb8e4f7aeb877330`，exe SHA256 为 `d4675f91773fae33b08c007d5bf050fbb0fbb4e036b8702aa7826c417dcc6cdc`。141 个 Python 资源逐字节一致；Runtime 矩阵 20 项通过、0 失败/跳过，含 19 项 Skin 数据测试和官方旧版 fixture 迁移检查。
+- 原生 CTest 的 `BLI`、`guardedalloc`、`blenkernel`、`editor_hotbox`、`editor_hotbox_icons` 五组共 1,982 项通过、0 失败/跳过；这是所选核心组的结果，不是全套 Blender 测试。OptiX SDK 缺失，可选 CUDA/HIP/oneAPI 预编译 kernels 未启用。
+- 新 native GUI 最终 5 项通过、0 失败/跳过（资源验证及四个 GUI 组，Skin 含 7 例）。首轮 1 通过/4 失败由桌面降为 1024 宽度、窗口标签/菜单遮挡触发，原失败记录保留；临时恢复 1920×1080 后复测通过，`finally` 已还原原 1024×768。最终未保留产品或 GUI 测试源码改动。
+- 本轮是本地开发环境和构建接续，没有发布新产品版本、变更公开目录/Pages 或勾选人工验收；既有待人工测试项目保持。完整命令与验证边界见 [构建与交付](BUILD_AND_DELIVERY.md)。
+
 ## 2026-09-17 · Skin 权重整理 A1
 
 - 在 Maya 原位置适配一次 Normalize Weights 与 Prune Small Weights，分别提供独立参数齿轮；82 条正文/33 个 Options、9 个原生入口与原层级保留，持续 Normalize 模式及其他未适配项继续灰显。

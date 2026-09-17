@@ -1,6 +1,6 @@
 # Windows 构建、验证与交付
 
-更新：2026-09-17。本页用于新 Windows 机器和新的 Codex 会话，从源码接续工作；不要求复制维护者的旧磁盘、候选安装、偏好或临时审计目录。开发方向另见项目路线图与交接文档，本页不扩大功能范围。
+更新：2026-09-18。本页用于新 Windows 机器和新的 Codex 会话，从源码接续工作；不要求复制维护者的旧磁盘、候选安装、偏好或临时审计目录。开发方向另见项目路线图与交接文档，本页不扩大功能范围。
 
 ## 1. 正确分支、Git LFS 与依赖
 
@@ -62,22 +62,23 @@ git submodule status -- lib/windows_x64
 
 ## 2. 工具链与验证边界
 
-安装 Git for Windows + Git LFS、Visual Studio Build Tools 的 **Desktop development with C++** 工作负载（x64 MSVC、Windows SDK、CMake 工具）、PowerShell 7。独立测试需要普通 Python，站点逻辑测试另需 Node.js。新机器正常安装这些工具，不复制旧 Visual Studio 安装目录或认证配置。
+安装 Git for Windows + Git LFS、Visual Studio（Community 或 Build Tools）的 **Desktop development with C++** 工作负载（x64 MSVC、Windows SDK、CMake 工具）、PowerShell 7。独立测试需要普通 Python，站点逻辑测试另需 Node.js。新机器正常安装这些工具，不复制旧 Visual Studio 安装目录或认证配置。
 
-| 项目 | 本机核验值，非所有受支持组合的声明 |
+2026-09-18 的独立 Windows 环境已用以下组合完成 `full developer with_tests` 的 Release 构建、干净安装和后台运行验证；这些是实测版本，不是全部受支持组合的声明。
+
+| 项目 | 本次 VS 2022 核验值 |
 | --- | --- |
-| 系统 | Windows 10 19045 x64 |
-| 生成器 | Visual Studio 18 2026，Build Tools |
-| MSVC | 编译器 19.51.36248.0；工具目录 14.51.36231 |
+| Visual Studio / 生成器 | VS 2022 Community 17.14.41 / Visual Studio 17 2022，x64 |
+| MSVC | 编译器 19.44.35229；工具目录 14.44.35207 |
 | Windows SDK | 10.0.26100.0 |
-| CMake | 4.3.1-msvc1 |
-| Git / Git LFS | 2.55.0.windows.3 / 3.7.1 |
-| 普通 Python / Blender Python | 3.14.4 / 3.13 |
-| PowerShell / Node.js | 7.6.5 / 24.15.0 |
+| CMake / CTest | 3.31.6-msvc6 |
+| Git / Git LFS | 2.55.0.windows.1 / 3.7.1 |
+| 普通测试 Python / 固定依赖 Python | 3.11.9 / 3.13.13 |
+| PowerShell / Node.js | 7.6.6 / 24.14.0 |
 
-仓库 CMake 最低版本为 3.21，但选择 VS 2026 时仍需认识该生成器的 CMake，不能据此推断 3.21 可用。`make.bat` 也识别 2022/2022b 等参数；本页没有在新机器重新验证这些组合。
+此前 VS 2026 历史记录为 Windows 10 19045 x64、Visual Studio 18 2026 Build Tools、MSVC 19.51.36248.0（工具目录 14.51.36231）、CMake 4.3.1-msvc1、Git 2.55.0.windows.3、普通 Python 3.14.4、PowerShell 7.6.5、Node.js 24.15.0；不要把它与本次工具链混用。仓库 CMake 最低版本为 3.21，但所选版本还必须认识对应 Visual Studio 生成器。
 
-把所选 cmake/ctest 加入当前终端 PATH，检查 `cmake --version` 和 `cmake --help` 的生成器列表。VS 检测使用 `vswhere`、`vcvarsall.bat`；Build Tools 参数是 **`2026b`**，不是 `2026`。依赖 Python 由 `find_dependencies.cmd` 从 `lib/windows_x64/python/313`（回退 311）检测，普通 Python 不参与编译链接。
+把所选 cmake/ctest 加入当前终端 PATH，检查 `cmake --version` 和 `cmake --help` 的生成器列表。VS 检测使用 `vswhere`、`vcvarsall.bat`；本次 Community 使用 **`2022`**，独立 Build Tools 的参数为 `2022b`（本轮未另测该安装组合），历史 VS 2026 Build Tools 使用 `2026b`。依赖 Python 由 `find_dependencies.cmd` 从 `lib/windows_x64/python/313`（回退 311）检测，普通 Python 不参与编译链接。Python 3.11 的 raw-asset 测试需要独立测试环境中的 `zstandard`，本次使用 0.25.0。
 
 ## 3. 新 build、新 install
 
@@ -86,18 +87,31 @@ git submodule status -- lib/windows_x64
 ```powershell
 Set-Location $Repo
 # 切换编译器/生成器不要复用旧 CMakeCache。
-.\make.bat 2026b x64 full developer with_tests builddir $Build nobuild
-cmake --build $Build --config Release --parallel 2
+.\make.bat 2022 x64 full developer with_tests builddir $Build nobuild
+cmake --build $Build --config Release --parallel 1 -- /p:CL_MPCount=2
+if ($LASTEXITCODE -ne 0) { throw 'Native Build 失败；先检查日志，不继续 Install' }
+
+# 先填充 CTest 在配置时记录的 Release 工作目录与运行资源。
+$CTestRuntime = Join-Path $Build 'bin/Release'
+cmake --install $Build --config Release --prefix $CTestRuntime
+if ($LASTEXITCODE -ne 0) { throw 'CTest 运行资源安装失败' }
 
 $Revision = (git rev-parse --short=12 HEAD).Trim()
 $Candidate = Join-Path $Work "candidate-$Revision"
 if (Test-Path -LiteralPath $Candidate) { throw '选择全新候选目录，不覆盖旧安装或偏好' }
 cmake --install $Build --config Release --prefix $Candidate
+if ($LASTEXITCODE -ne 0) { throw '独立候选安装失败' }
 $Blender = Join-Path $Candidate 'blender.exe'
 & $Blender --version
 ```
 
 `nobuild` 仅配置。随后显式 build/install 可分别记录退出码；省略 nobuild 时，现有 `build_msbuild.cmd` 自己也会构建 INSTALL 项目。
+
+`--parallel 1` 限制 MSBuild 项目并发，`/p:CL_MPCount=2` 同时限制项目内部的 C/C++ 编译并发。只降低前者仍可能启动多个编译进程；先控制内存峰值，再按资源余量提高并发。增量重试保留已有目标文件。
+
+Windows 多配置缓存的默认安装前缀含 `${BUILD_TYPE}`，生成的 Release CTest 记录指向 `$Build/bin/Release`，因此安装时显式指定该前缀。只安装到 `$Candidate` 不会改写已生成的 CTest 工作目录、DLL 路径和 `--test-release-dir`。若主动定制了安装前缀，应核对并填充该缓存实际记录的路径。`$CTestRuntime` 可随构建更新，独立候选必须使用新目录。
+
+Build 与 Install 之间保持相同源码提交和本地改动，并记录完整 SHA；存在未提交修复时同时保存 diff。源码变化后重新构建，不能沿用旧成功标记安装。
 
 已按 CMake 源码核实：
 
@@ -106,7 +120,32 @@ $Blender = Join-Path $Candidate 'blender.exe'
 - Windows 规则安装 `portable/README.txt`。新候选保留标记，但不带个人 userpref、startup 或 profile。
 - startup 由 `source/blender/editors/datafiles/CMakeLists.txt` 的 `data_to_c_simple` 编入 exe。修改资产必须重编 native，仅复制 Python/磁盘 startup 无法更新内嵌工作区。
 
-现有本机 native 构建与候选验收通过；**本页从零安装配方尚未在第二台机器完整执行**。历史 stage/package 编排曾依赖维护者旧候选与临时 receipt，不能当作跨机工具，本页不要求那些文件存在。
+### 2026-09-18 原生实测记录
+
+干净源码 `33dd3a3e591b825ea983045fbb8e4f7aeb877330` 已完成上述 VS 2022 Release Build、CTest 运行资源安装和独立新 Install，各步骤退出码为 0。新 `blender.exe` SHA256 为 `d4675f91773fae33b08c007d5bf050fbb0fbb4e036b8702aa7826c417dcc6cdc`。该 hash 标识本次产物，不要求另一机器生成相同二进制。
+
+新安装的串行 Runtime 矩阵 **20 PASS / 0 FAIL / 0 SKIP**，含 19 项 Skin 数据测试；覆盖身份、portable、资源、factory/reset、Rigify、旧布局及旧偏好迁移。141 个 Python 资源与构建源码逐字节一致，资源指纹为 `8756d58ceded4f80175410c880a3f528f59940ed879c6f77a03d2729ddc25b16`。旧 fixture 使用已核验的官方 Blender 5.2.0 LTS（含真实 Rigify 插件）及源码基线 `18d84097` 的无 Rigging startup。
+
+配置未找到 OptiX SDK 并禁用相应支持；可选 CUDA/HIP/oneAPI 预编译 kernels 未启用。本轮不发布新包，不将本地构建与运行成功当作跨机打包发布流水线完成；历史 stage/package 编排与私人回执仍不是新机器的依赖。新 native GUI 状态见第 5 节。
+
+### 所选原生 CTest 与 tests/files 前置条件
+
+测试配置为 `WITH_GTESTS=ON`、`WITH_TESTS_SINGLE_BINARY=ON`。构建测试程序并安装 `$CTestRuntime` 后，确认根仓库 LFS 已完成，第 1 节的完整性检查通过；`$Repo/tests/files` 必须含真实资产，不能只有 LFS pointer。CTest 自动传入该目录作为 `--test-assets-dir`，不会替测试补下载资源。
+
+相关资源包括 `tests/files/asset_library/новый/blender_assets.cats.txt`，以及 `tests/files/imbuf_io/multilayer/` 下的 `108980.exr`、`124217.exr`、`101227.exr`。这些都在现有源码树中，不需额外测试包。缺失时修复 LFS 下载/checkout，不用空文件或缩小过滤范围掩盖失败。
+
+```powershell
+$CTestGroups = '^(BLI|guardedalloc|blenkernel|editor_hotbox|editor_hotbox_icons)$'
+# -N 只列计划；确认正好匹配五组，不把枚举当成执行通过。
+ctest --test-dir $Build -C Release -N -R $CTestGroups
+ctest --test-dir $Build -C Release -j 1 -R $CTestGroups `
+    --output-on-failure --no-tests=error
+if ($LASTEXITCODE -ne 0) { throw '所选 native CTest 失败；保留日志后定位' }
+```
+
+保留 `$Build/Testing/Temporary/LastTest.log` 和失败列表，除组级状态外还记录 GTest 实际运行、失败及跳过数量。2026-09-18 clean 源码复测为 **5 组、1,982 项通过，0 失败、0 跳过**：`BLI` 1,656、`guardedalloc` 6、`blenkernel` 293、`editor_hotbox` 23、`editor_hotbox_icons` 4。这不是全部上游 Blender 测试结果。
+
+本轮修复的首次编译错误位于 `editor_hotbox_tests`：`BLI_allocator.hh` 无法找到 `MEM_guardedalloc.h`。头文件存在，但 `bf::blenlib` 的 PRIVATE 依赖不会把 guardedalloc 头目录传给该测试目标。提交 `33dd3a3e591b` 在 `source/blender/editors/space_view3d/CMakeLists.txt` 为 Hotbox 测试直接声明 `bf::intern::guardedalloc`；无需扩大全局 include 路径。上述 23 项模型与 4 项图标测试验证修复，不改变热盒交互或布局。
 
 ## 4. 可移植的轻量验证
 
@@ -224,7 +263,11 @@ python "$Repo/tests/python/axismeld_hotbox_ui_runner.py" `
     --blender $Blender --suite modeling-viewport --artifacts "$Audit/modeling-gui"
 ```
 
-runner 自己另起工厂 GUI，模拟事件并隔离配置，不连接用户编辑中的窗口。需要真实图形桌面/GPU；不能给 GUI 用例加 background。既有截图回归主要在 1920×1017、默认缩放运行；其他尺寸/DPI 的失败需区分观察器与产品问题。
+runner 自己另起工厂 GUI，模拟事件并隔离配置，不连接用户编辑中的窗口。需要真实图形桌面/GPU；不能给 GUI 用例加 background。当前坐标/截图回归的前置条件是 **1920×1080 桌面、默认缩放和足够大的测试窗口**；历史窗口可用区域约 1920×1017，实际尺寸受系统窗口装饰影响，应随回执记录。
+
+2026-09-18 新 native GUI 最终为 **5 PASS / 0 FAIL / 0 SKIP**：资源验证及 Rigging、Rigify、Skin、modeling-viewport 四个 GUI 组全部通过，其中 Skin 覆盖 7 例。首轮保留了 1 项资源通过、4 项 GUI 失败的记录，原因是桌面降为 1024 宽度后窗口缩小，标签/菜单遮挡破坏前置条件；不能将这类坐标或可见性失败直接归类为权重或骨架算法错误。
+
+复测使用临时 1920×1080 桌面，退出码为 0，`finally` 已还原原来的 1024×768 模式；最终未保留产品或 GUI 测试源码改动。后续临时调整显示模式也应保存并还原原值，不改用户持久配置。
 
 Rigging GUI 覆盖 metarig 创建、原生绑定/Undo、Normalize/Undo、插件菜单宿主、工作区添加/重命名/删除、保存和独立重开；不证明生产蒙皮质量、第三方 Feature Set 或 Maya 专有算法完成。
 
@@ -290,7 +333,7 @@ python tools/utils/axismeld_python_preview_package.py --repo $Repo `
   --build-id axismeld-2026.09.17-skin-weights-preview
 ```
 
-仍需把新 ZIP 解压到新目录，校验资源指纹/许可，重新运行身份、factory、Skin 数据与实际 GUI/Undo 验证，才能发布下载。A1 已在本次独立 Windows checkout 完成公开基线下载/解压/启动及行为检查；未完成新机从零全量 native 编译，不能关闭 AXM-ISS-001 的整链构建边界。
+仍需把新 ZIP 解压到新目录，校验资源指纹/许可，重新运行身份、factory、Skin 数据与实际 GUI/Undo 验证，才能发布下载。A1 发布时完成了独立 Windows checkout 的公开基线下载/解压/启动及行为检查；2026-09-18 的新 native 构建记录见第 3 节。固定基线 Python 打包器不适用于包含本轮 CMake 改动的源码，后续统一打包与发布验证仍需独立完成，不能据本轮结果关闭 AXM-ISS-001 的整链边界。
 
 ### 门户部署
 
@@ -317,6 +360,6 @@ python -m http.server 8765 --bind 127.0.0.1 --directory tools/testing_site
 
 ## 9. 换机仍需确认
 
-已按当前源码核对命令参数、安装规则、测试入口及本机版本。尚未在第二台 Windows 从空目录完成下载、全量编译、干净安装与 GPU GUI 回归，也未把历史本机打包编排变成跨机流水线。新机器必须记录实际工具链、LFS访问、显卡驱动、缩放和运行时依赖。
+2026-09-18 的独立 Windows 环境已完成依赖获取、全量原生构建、干净安装、所选五组 CTest、后台 Runtime 和第 5 节指定显示条件下的新 native GUI 验证。尚未完成本轮新产物的打包、解压、公开下载验证，也未把历史本机打包编排变成跨机流水线。新机器必须重新安装工具、校验依赖并运行测试，记录实际工具链、LFS 访问、显卡驱动、缩放和运行时依赖；整目录复制不能替代这些步骤。
 
 接续时让 Codex 先读 AGENTS、交接/路线图、本页和 CHANGELOG，确认分支、远端 SHA 与未提交改动，再选择本批需求的验证。以仓库文件和新 receipt 为依据，不依赖旧聊天记忆或维护者磁盘路径。
