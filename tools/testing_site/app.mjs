@@ -145,6 +145,8 @@ async function boot() {
     link('readme-link', readme);
     const source = new URL(`${repo.origin}${repo.pathname.replace(/\/$/, '')}/tree/${asText(config.sourceBranch, 'main').split('/').map(encodeURIComponent).join('/')}`);
     link('source-link', source);
+    const roadmap = new URL(`${repo.origin}${repo.pathname.replace(/\/$/, '')}/blob/${asText(config.sourceBranch, 'main').split('/').map(encodeURIComponent).join('/')}/docs/ROADMAP.md`);
+    link('roadmap-link', roadmap);
   }
   link('download-link', release);
   byId('download-pending').hidden = Boolean(release);

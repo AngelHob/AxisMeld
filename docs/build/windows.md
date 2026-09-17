@@ -1,5 +1,7 @@
 # Building AxisMeld on Windows
 
+> Historical Phase 0 build record. For a new machine, use [BUILD_AND_DELIVERY](../BUILD_AND_DELIVERY.md) and the current `axismeld/phase-2a` branch. Paths, integration-branch commands and environment details below describe the original machine, not the current handoff recipe.
+
 This procedure uses the verified Phase 0 Windows baseline: Visual Studio Build
 Tools 2026 (18.8), its bundled CMake 4.3.1, the `2026b` Blender dependency
 wrapper, and the `Visual Studio 18 2026` generator. Earlier toolchain plans

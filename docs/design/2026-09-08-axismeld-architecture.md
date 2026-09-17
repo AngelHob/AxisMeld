@@ -1,5 +1,7 @@
 # AxisMeld 架构设计
 
+> 历史架构与决策记录。2026-09-17 的当前状态、后续路线和换机入口见 [ROADMAP](../ROADMAP.md)、[CURRENT_ISSUES](../CURRENT_ISSUES.md)、[HANDOFF](../HANDOFF.md)。本文中的“待审核”、M2/M3 尚未实施及早期分支规划均保留当时语境，不覆盖后来已交付的 Modeling/Rigify/Rigging 或用户后续决定。
+
 - 状态：待最终审核
 - 日期：2026-09-08
 - 产品名称：AxisMeld

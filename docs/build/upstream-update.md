@@ -1,5 +1,7 @@
 # Updating AxisMeld from Blender Upstream
 
+> This is an upstream-merge procedure, not the onboarding workflow. Start a new machine from [HANDOFF](../HANDOFF.md); do not merge upstream or the development branch merely to reproduce the current release.
+
 This procedure merges Blender changes into AxisMeld without rewriting either
 project's published history. Run all PowerShell commands from the maintained
 checkout at `D:\source\AxisMeld`, not from a temporary worktree.

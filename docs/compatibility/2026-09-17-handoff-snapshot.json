@@ -1,0 +1,803 @@
+{
+  "schema_version": 1,
+  "snapshot_date": "2026-09-17",
+  "scope": "Public handoff snapshot for the already released Rigging preview; historical evidence is not a new full test run.",
+  "pins": {
+    "repository": "https://github.com/AngelHob/AxisMeld",
+    "development_branch": "axismeld/phase-2a",
+    "development_commit": "5b725820e51b0a277dbe929ca22d3a7063ea823c",
+    "release_source_commit": "617986ac184125fe2169456bdb525965530ea736",
+    "pages_commit": "bec253a583eab2e15698ba317b9d5e51ed7e434a"
+  },
+  "release": {
+    "tag": "axismeld-2026.09.17-rigging-preview",
+    "url": "https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-rigging-preview",
+    "archive_name": "AxisMeld-2026.09.17-rigging-preview-windows-x64.zip",
+    "archive_sha256": "869c54a60c6a7ef68831389acef2ec34a56467e7aeaa8236d5dee354d57e4a73",
+    "archive_bytes": 294933143,
+    "archive_entries": 6440,
+    "manifest_sha256": "68d32f1f734c5ccd1bb34020876d7adb62da70db14e968d678fdde9ddd5c0cd2",
+    "binary_sha256": "75108ab370d1cddd25ed9a992665da1f48f573006eb3298894dac06439c80fb4",
+    "resource_count": 139,
+    "resource_fingerprint": "1513c7239fef8590db7e83d7dd7d82ea081ba8c932de048fb5dd891cd09ac049",
+    "rigify_file_count": 88,
+    "embedded_startup": {
+      "path": "release/datafiles/startup.blend",
+      "sha256": "07ecbc61e9b9853ab0c81f84c628dc84d6ebebfc0be55d793bfe48f9fbe35382",
+      "storage_kind": "git_blob",
+      "byte_size": 127672
+    },
+    "platform": "Windows x64",
+    "channel": "development-preview"
+  },
+  "manual_testing": {
+    "catalog": "tools/testing_site/catalog.json",
+    "ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md",
+    "site": "https://angelhob.github.io/AxisMeld/",
+    "total": 308,
+    "current": 296,
+    "superseded": 12,
+    "historically_tested": 47,
+    "initial_pending_including_superseded": 261,
+    "current_pending_using_historical_maintainer_status": 249,
+    "new_count": 8,
+    "new_ids": [
+      "RG-07",
+      "RG-08",
+      "RG-09",
+      "RG-10",
+      "RG-11",
+      "RG-12",
+      "RG-13",
+      "RG-14"
+    ],
+    "fresh_visitor": {
+      "tested": 0,
+      "pending_current": 296
+    },
+    "note": "Maintainer historical status and each visitor local status are separate; no new human passes are inferred from automated tests.",
+    "groups": [
+      {
+        "label": "P0：热盒划选与重复唤出（上一批仍待测）",
+        "ids": [
+          "G-01",
+          "G-02",
+          "G-03",
+          "G-04",
+          "G-05",
+          "G-06",
+          "G-07",
+          "G-08",
+          "G-09",
+          "G-10"
+        ],
+        "total": 10,
+        "current": 10,
+        "superseded": 0,
+        "historically_tested": 0,
+        "initial_pending": 10,
+        "new": 0
+      },
+      {
+        "label": "P0：空白创建热盒（本批新增12项）",
+        "ids": [
+          "K-01",
+          "K-02",
+          "K-03",
+          "K-04",
+          "K-05",
+          "K-06",
+          "K-07",
+          "K-08",
+          "K-09",
+          "K-10",
+          "K-11",
+          "K-12"
+        ],
+        "total": 12,
+        "current": 12,
+        "superseded": 0,
+        "historically_tested": 0,
+        "initial_pending": 12,
+        "new": 0
+      },
+      {
+        "label": "P0：单选菜单组",
+        "ids": [
+          "S-01",
+          "S-02",
+          "S-03",
+          "S-04",
+          "S-05",
+          "S-06",
+          "S-07"
+        ],
+        "total": 7,
+        "current": 7,
+        "superseded": 0,
+        "historically_tested": 7,
+        "initial_pending": 0,
+        "new": 0
+      },
+      {
+        "label": "P0：鼠标下网格目标（M2b）",
+        "ids": [
+          "P-01",
+          "P-02",
+          "P-03",
+          "P-04",
+          "P-05",
+          "P-06",
+          "P-07",
+          "P-08",
+          "P-09",
+          "P-10",
+          "P-11",
+          "P-12",
+          "P-13"
+        ],
+        "total": 13,
+        "current": 13,
+        "superseded": 0,
+        "historically_tested": 13,
+        "initial_pending": 0,
+        "new": 0
+      },
+      {
+        "label": "P0：组件右键共同回归",
+        "ids": [
+          "C-01",
+          "C-02",
+          "C-03",
+          "C-04",
+          "C-05",
+          "C-06",
+          "C-07",
+          "C-08",
+          "C-09",
+          "C-10",
+          "C-11",
+          "C-12"
+        ],
+        "total": 12,
+        "current": 12,
+        "superseded": 0,
+        "historically_tested": 12,
+        "initial_pending": 0,
+        "new": 0
+      },
+      {
+        "label": "P0：上一批修复与工具热盒",
+        "ids": [
+          "V-01",
+          "V-02",
+          "V-03",
+          "T-01",
+          "T-02",
+          "T-03",
+          "T-04",
+          "T-05",
+          "T-06",
+          "T-07"
+        ],
+        "total": 10,
+        "current": 10,
+        "superseded": 0,
+        "historically_tested": 10,
+        "initial_pending": 0,
+        "new": 0
+      },
+      {
+        "label": "P1：环境与共同回归",
+        "ids": [
+          "R-01",
+          "R-02",
+          "R-03",
+          "R-04",
+          "R-05"
+        ],
+        "total": 5,
+        "current": 5,
+        "superseded": 0,
+        "historically_tested": 5,
+        "initial_pending": 0,
+        "new": 0
+      },
+      {
+        "label": "P0：四视图标杆布局回归（本轮新增6项，全部待人工验证）",
+        "ids": [
+          "L-01",
+          "L-02",
+          "L-03",
+          "L-04",
+          "L-05",
+          "L-06"
+        ],
+        "total": 6,
+        "current": 6,
+        "superseded": 0,
+        "historically_tested": 0,
+        "initial_pending": 6,
+        "new": 0
+      },
+      {
+        "label": "P0/P1：M3建模菜单与快捷键（本轮新增34项，全部待人工验证）",
+        "ids": [
+          "M3-01",
+          "M3-02",
+          "M3-03",
+          "M3-04",
+          "M3-05",
+          "M3-06",
+          "M3-07",
+          "M3-08",
+          "M3-09",
+          "M3-10",
+          "M3-11",
+          "M3-12",
+          "M3-13",
+          "M3-14",
+          "M3-15",
+          "M3-16",
+          "M3-17",
+          "M3-18",
+          "M3-19",
+          "M3-20",
+          "M3-21",
+          "M3-22",
+          "M3-23",
+          "M3-24",
+          "M3-25",
+          "M3-26",
+          "M3-27",
+          "M3-28",
+          "M3-29",
+          "M3-30",
+          "M3-31",
+          "M3-32",
+          "M3-33",
+          "M3-34"
+        ],
+        "total": 34,
+        "current": 34,
+        "superseded": 0,
+        "historically_tested": 0,
+        "initial_pending": 34,
+        "new": 0
+      },
+      {
+        "label": "P0：可见区域与原地取消恢复（本轮新增8项，人工暂缓）",
+        "ids": [
+          "VR-01",
+          "VR-02",
+          "VR-03",
+          "VR-04",
+          "VR-05",
+          "VR-06",
+          "VR-07",
+          "VR-08"
+        ],
+        "total": 8,
+        "current": 8,
+        "superseded": 0,
+        "historically_tested": 0,
+        "initial_pending": 8,
+        "new": 0
+      },
+      {
+        "label": "P0：M2d 已选组件建模热盒（本轮新增14项，人工暂缓）",
+        "ids": [
+          "D-01",
+          "D-02",
+          "D-03",
+          "D-04",
+          "D-05",
+          "D-06",
+          "D-07",
+          "D-08",
+          "D-09",
+          "D-10",
+          "D-11",
+          "D-12",
+          "D-13",
+          "D-14"
+        ],
+        "total": 14,
+        "current": 14,
+        "superseded": 0,
+        "historically_tested": 0,
+        "initial_pending": 14,
+        "new": 0
+      },
+      {
+        "label": "P0：M2d Object 与预选工具入口（本轮新增16项，人工暂缓）",
+        "ids": [
+          "O-01",
+          "O-02",
+          "O-03",
+          "O-04",
+          "O-05",
+          "O-06",
+          "O-07",
+          "O-08",
+          "O-09",
+          "O-10",
+          "O-11",
+          "O-12",
+          "O-13",
+          "O-14",
+          "O-15",
+          "O-16"
+        ],
+        "total": 16,
+        "current": 16,
+        "superseded": 0,
+        "historically_tested": 0,
+        "initial_pending": 16,
+        "new": 0
+      },
+      {
+        "label": "P0/P1：Object 建模组合菜单修正（新增16项）",
+        "ids": [
+          "OM-01",
+          "OM-02",
+          "OM-03",
+          "OM-04",
+          "OM-05",
+          "OM-06",
+          "OM-07",
+          "OM-08",
+          "OM-09",
+          "OM-10",
+          "OM-11",
+          "OM-12",
+          "OM-13",
+          "OM-14",
+          "OM-15",
+          "OM-16"
+        ],
+        "total": 16,
+        "current": 16,
+        "superseded": 0,
+        "historically_tested": 0,
+        "initial_pending": 16,
+        "new": 0
+      },
+      {
+        "label": "P0/P1：热盒与菜单统一图标（新增14项）",
+        "ids": [
+          "IC-01",
+          "IC-02",
+          "IC-03",
+          "IC-04",
+          "IC-05",
+          "IC-06",
+          "IC-07",
+          "IC-08",
+          "IC-09",
+          "IC-10",
+          "IC-11",
+          "IC-12",
+          "IC-13",
+          "IC-14"
+        ],
+        "total": 14,
+        "current": 14,
+        "superseded": 0,
+        "historically_tested": 0,
+        "initial_pending": 14,
+        "new": 0
+      },
+      {
+        "label": "P0/P1：Maya组合菜单内容与分组对齐（本轮MC新增14项，全部待测）",
+        "ids": [
+          "MC-01",
+          "MC-02",
+          "MC-03",
+          "MC-04",
+          "MC-05",
+          "MC-06",
+          "MC-07",
+          "MC-08",
+          "MC-09",
+          "MC-10",
+          "MC-11",
+          "MC-12",
+          "MC-13",
+          "MC-14"
+        ],
+        "total": 14,
+        "current": 14,
+        "superseded": 0,
+        "historically_tested": 0,
+        "initial_pending": 14,
+        "new": 0
+      },
+      {
+        "label": "P0/P1：全热盒菜单内容对齐（本轮 HC 新增20项）",
+        "ids": [
+          "HC-01",
+          "HC-02",
+          "HC-03",
+          "HC-04",
+          "HC-05",
+          "HC-06",
+          "HC-07",
+          "HC-08",
+          "HC-09",
+          "HC-10",
+          "HC-11",
+          "HC-12",
+          "HC-13",
+          "HC-14",
+          "HC-15",
+          "HC-16",
+          "HC-17",
+          "HC-18",
+          "HC-19",
+          "HC-20"
+        ],
+        "total": 20,
+        "current": 20,
+        "superseded": 0,
+        "historically_tested": 0,
+        "initial_pending": 20,
+        "new": 0
+      },
+      {
+        "label": "P0：完整菜单展开与同窗布局（本轮新增10项，全部待人工测试）",
+        "ids": [
+          "FM-01",
+          "FM-02",
+          "FM-03",
+          "FM-04",
+          "FM-05",
+          "FM-06",
+          "FM-07",
+          "FM-08",
+          "FM-09",
+          "FM-10"
+        ],
+        "total": 10,
+        "current": 10,
+        "superseded": 0,
+        "historically_tested": 0,
+        "initial_pending": 10,
+        "new": 0
+      },
+      {
+        "label": "P0：全部Maya菜单实际层级（本轮 MT 新增32项，全部待人工测试）",
+        "ids": [
+          "MT-01",
+          "MT-02",
+          "MT-03",
+          "MT-04",
+          "MT-05",
+          "MT-06",
+          "MT-07",
+          "MT-08",
+          "MT-09",
+          "MT-10",
+          "MT-11",
+          "MT-12",
+          "MT-13",
+          "MT-14",
+          "MT-15",
+          "MT-16",
+          "MT-17",
+          "MT-18",
+          "MT-19",
+          "MT-20",
+          "MT-21",
+          "MT-22",
+          "MT-23",
+          "MT-24",
+          "MT-25",
+          "MT-26",
+          "MT-27",
+          "MT-28",
+          "MT-29",
+          "MT-30",
+          "MT-31",
+          "MT-32"
+        ],
+        "total": 32,
+        "current": 32,
+        "superseded": 0,
+        "historically_tested": 0,
+        "initial_pending": 32,
+        "new": 0
+      },
+      {
+        "label": "P0：Maya逻辑的顶部Menu Bar（MB新增20项，全部待人工测试）",
+        "ids": [
+          "MB-01",
+          "MB-02",
+          "MB-03",
+          "MB-04",
+          "MB-05",
+          "MB-06",
+          "MB-07",
+          "MB-08",
+          "MB-09",
+          "MB-10",
+          "MB-11",
+          "MB-12",
+          "MB-13",
+          "MB-14",
+          "MB-15",
+          "MB-16",
+          "MB-17",
+          "MB-18",
+          "MB-19",
+          "MB-20",
+          "MB-21",
+          "MB-22",
+          "MB-23",
+          "MB-24",
+          "MB-25",
+          "MB-26",
+          "MB-27"
+        ],
+        "total": 27,
+        "current": 22,
+        "superseded": 5,
+        "historically_tested": 0,
+        "initial_pending": 27,
+        "new": 0
+      },
+      {
+        "label": "历史：工作区栏与菜单栏分行（MB-28/29 已由 MB-30–34 替代）",
+        "ids": [
+          "MB-28",
+          "MB-29"
+        ],
+        "total": 2,
+        "current": 0,
+        "superseded": 2,
+        "historically_tested": 0,
+        "initial_pending": 2,
+        "new": 0
+      },
+      {
+        "label": "P0：Modeling 视窗菜单与原生全局栏（新增5项）",
+        "ids": [
+          "MB-30",
+          "MB-31",
+          "MB-32",
+          "MB-33",
+          "MB-34"
+        ],
+        "total": 5,
+        "current": 1,
+        "superseded": 4,
+        "historically_tested": 0,
+        "initial_pending": 5,
+        "new": 0
+      },
+      {
+        "label": "P0：建模功能归类与右侧参数按钮（新增5项）",
+        "ids": [
+          "MB-35",
+          "MB-36",
+          "MB-37",
+          "MB-38",
+          "MB-39"
+        ],
+        "total": 5,
+        "current": 4,
+        "superseded": 1,
+        "historically_tested": 0,
+        "initial_pending": 5,
+        "new": 0
+      },
+      {
+        "label": "P0：紧凑建模菜单与公开试用（新增2项）",
+        "ids": [
+          "MB-40",
+          "MB-41"
+        ],
+        "total": 2,
+        "current": 2,
+        "superseded": 0,
+        "historically_tested": 0,
+        "initial_pending": 2,
+        "new": 0
+      },
+      {
+        "label": "P0：Rigify 默认内置（新增6项）",
+        "ids": [
+          "RG-01",
+          "RG-02",
+          "RG-03",
+          "RG-04",
+          "RG-05",
+          "RG-06"
+        ],
+        "total": 6,
+        "current": 6,
+        "superseded": 0,
+        "historically_tested": 0,
+        "initial_pending": 6,
+        "new": 0
+      },
+      {
+        "label": "P0：Rigging 独立工作区（新增8项）",
+        "ids": [
+          "RG-07",
+          "RG-08",
+          "RG-09",
+          "RG-10",
+          "RG-11",
+          "RG-12",
+          "RG-13",
+          "RG-14"
+        ],
+        "total": 8,
+        "current": 8,
+        "superseded": 0,
+        "historically_tested": 0,
+        "initial_pending": 8,
+        "new": 8
+      }
+    ]
+  },
+  "menu_scope": {
+    "modeling": {
+      "source": "docs/compatibility/maya2026-workspace-menu-routes.json",
+      "roots": [
+        "Mesh",
+        "Edit Mesh",
+        "Mesh Tools",
+        "Mesh Display",
+        "Curves",
+        "Surfaces",
+        "UV"
+      ],
+      "maya_body": 231,
+      "maya_options": 161,
+      "bound_body_buttons": 85,
+      "gray_placeholders_including_options": 307,
+      "native_placement_references": 162,
+      "native_draw_references": 149,
+      "existing_command_aliases": 11,
+      "native_item_aliases": 2,
+      "note": "Only retained modeling source roots. Deform/Generate were removed from Modeling by user decision; archived Maya references remain."
+    },
+    "rigging": {
+      "source": "scripts/modules/axismeld/rigging_workspace_catalog.py",
+      "roots": [
+        "Skeleton",
+        "Skin"
+      ],
+      "maya_body": 82,
+      "maya_options": 33,
+      "maya_rows_remain_placeholders": true,
+      "native_entries": 9,
+      "note": "Native Blender and Rigify menu hosts remain; no new Maya skinning algorithm claim."
+    }
+  },
+  "validation_history": {
+    "verified_at_utc": "2026-09-16T17:06:44.344163+00:00",
+    "behavior_gui_browser_rerun_for_handoff": false,
+    "note": "These records describe the frozen release verification, not a rerun or a claim that all manual acceptance is complete. Independent archive verification is separately repeatable with tools/utils/axismeld_release_audit.py.",
+    "unit_test_count": 57,
+    "unit_suites": [
+      {
+        "path": "tests/python/axismeld_rigging_catalog_test.py",
+        "count": 5,
+        "historical_result": "PASS"
+      },
+      {
+        "path": "tests/python/axismeld_native_rigging_test.py",
+        "count": 11,
+        "historical_result": "PASS"
+      },
+      {
+        "path": "tests/python/axismeld_rigging_ui_test.py",
+        "count": 7,
+        "historical_result": "PASS"
+      },
+      {
+        "path": "tests/python/axismeld_workspace_menu_catalog_test.py",
+        "count": 14,
+        "historical_result": "PASS"
+      },
+      {
+        "path": "tests/python/axismeld_menubar_ui_test.py",
+        "count": 16,
+        "historical_result": "PASS"
+      },
+      {
+        "path": "tests/python/axismeld_native_topbar_preservation_test.py",
+        "count": 4,
+        "historical_result": "PASS"
+      }
+    ],
+    "runtime_entries": 9,
+    "runtime_blender_processes": 8,
+    "raw_asset_relation_checks": 1,
+    "runtime_cases": [
+      "raw-asset",
+      "0-factory",
+      "1-factory",
+      "2-factory-reset",
+      "3-embedded-append",
+      "4-reopen",
+      "5-old-file",
+      "6-no-ui",
+      "7-user-startup"
+    ],
+    "runtime_sources": [
+      "tests/python/axismeld_rigging_workspace_test.py",
+      "tests/python/axismeld_rigging_workspace_events.py",
+      "tools/utils/axismeld_rigging_workspace_asset.py"
+    ],
+    "gui_historical_result": "PASS",
+    "extracted_archive_launch_historical_result": "PASS",
+    "public_browser_checks": 6,
+    "public_browser_historical_result": "PASS",
+    "public_download_sha256_verified": true,
+    "evidence_sources": [
+      "docs/CHANGELOG.md",
+      "docs/development/2026-09-17-rigging-workspace.md",
+      "docs/development/2026-09-17-rigging-manual-testing.md",
+      "tools/testing_site/config.json",
+      "https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-rigging-preview"
+    ]
+  },
+  "limits": [
+    "Production deformation quality, third-party Feature Sets and display scaling require human acceptance.",
+    "Menu visibility or a native button is not evidence of Maya algorithm equivalence.",
+    "Original generated enum rows and third-party dynamic menu rows retain their own icon rules.",
+    "Public visitor test marks are local browser data and are not submitted GitHub Issues.",
+    "A binary digest identifies this published executable; it is not a reproducible-build proof."
+  ],
+  "cross_machine_gaps": [
+    {
+      "id": "release-staging",
+      "status": "local_recipe_only",
+      "local_recipe_names": [
+        "stage_compact_modeling.py",
+        "stage_rigify_builtin.py",
+        "stage_rigging_workspace.py"
+      ],
+      "gap": "Staging recipes inherit prior preview installs and local receipt resource lists. A tracked clean-install release staging recipe is missing."
+    },
+    {
+      "id": "package-publish",
+      "status": "local_recipe_only",
+      "local_recipe_names": [
+        "package_rigging_preview.py",
+        "prepare_rigging_release.py",
+        "finalize_rigging_receipt.py"
+      ],
+      "gap": "ZIP manifest/launcher composition, publication and receipt aggregation are not yet a tracked parameterized release pipeline."
+    },
+    {
+      "id": "runtime-orchestration",
+      "status": "partial",
+      "tracked_sources": [
+        "tests/python/axismeld_rigging_workspace_test.py",
+        "tests/python/axismeld_rigging_workspace_events.py"
+      ],
+      "local_recipe_names": [
+        "verify_rigging_units.py",
+        "check_rigging_factory.py",
+        "check_rigging_release_launch.py"
+      ],
+      "gap": "Individual tests are tracked; frozen-release process orchestration and GUI release-launch probe remain local recipes."
+    },
+    {
+      "id": "published-browser-check",
+      "status": "partial",
+      "tracked_sources": [
+        "tools/testing_site/tests/browser_check.mjs"
+      ],
+      "local_recipe_names": [
+        "live-check.mjs"
+      ],
+      "gap": "Local browser test is tracked; live Pages/release six-check orchestration remains a local audit recipe."
+    }
+  ]
+}

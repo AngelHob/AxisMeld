@@ -10,8 +10,20 @@ AxisMeld 官方版本永久免费，不销售软件，不设置付费功能，�
 
 AxisMeld 与 Blender Foundation、Autodesk 及其产品均无隶属、合作、赞助或官方背书关系。Blender、Autodesk 和 Maya 等名称仅用于事实性说明软件基础及兼容目标。
 
-当前正在本地验证 Phase 1.1 操纵器交互和 Phase 2B Maya 风格热盒；两者均仍待人工验收。
-详见 [AxisMeld 架构设计](docs/design/2026-09-08-axismeld-architecture.md)。
+## 当前开发与接续（2026-09-17）
+
+最新开发位于 **`axismeld/phase-2a`**；GitHub 默认 `axismeld/integration` 尚未集成最新功能。
+已发布紧凑 Modeling 菜单、Rigify 默认内置和独立 Rigging 工作区。Maya 未适配项保留灰色占位；当前是仍需人工验收的开发预览版。
+
+- [整体规划与路线图](docs/ROADMAP.md) · [当前问题](docs/CURRENT_ISSUES.md) · [修改日志](docs/CHANGELOG.md)。
+- [新机器接续开发](docs/HANDOFF.md) · [直接复制给 Codex 的提示词](docs/CODEX_HANDOFF_PROMPT.md) · [构建与交付](docs/BUILD_AND_DELIVERY.md)。
+- [公开测试页](https://angelhob.github.io/AxisMeld/) · [Windows x64 Rigging 预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-rigging-preview)。
+
+Modeling 视窗保留 Mesh、Edit Mesh、Mesh Tools、Mesh Display、Curves、Surfaces、UV；Vertex/Edge/Face 收于 Edit Mesh。Rigging 的 Skeleton/Skin 保留 Maya 82 条正文和 33 个 Options，并收纳已有 Blender 骨架、绑定、权重、姿态及 Rigify 入口。
+
+公开清单保留 308 项（当前 296、历史 12）；47 项只记录历史已测，最新 RG-07～RG-14 待测。网页勾选属于各访客本浏览器，不自动跨设备同步或提交到 GitHub。
+
+下面的 Phase 0～2B 段落保留基础能力说明；后续完整进度以路线图和修改日志为准。原始架构见 [AxisMeld 架构设计](docs/design/2026-09-08-axismeld-architecture.md)。
 
 ## AxisMeld project statement
 
@@ -57,10 +69,11 @@ row visibility and per-button menu mappings are connected. Preferences and Hotbo
 the same validated settings model; user differences are atomically stored in `hotbox_user.json`
 without changing schema-1 keybindings. [Scope and manual acceptance](docs/compatibility/phase-2b-manual-test.md).
 
-File/Edit/Create and most Modeling/UV directories remain visible but disabled; they are not claims
-of implementation. Temporary snapping/pivot gestures and the UV overhaul remain planned work.
-Automated validation is complete, but physical Maya-like handfeel (including adapted exponential
-dolly sensitivity) still requires user acceptance before release.
+Subsequent batches added tool/context hotboxes, modeling command mappings, companion menus,
+native modeling groups and a Rigging workspace. Unsupported Maya actions remain disabled;
+menu visibility does not claim algorithm parity. See the current [roadmap](docs/ROADMAP.md)
+and [issues](docs/CURRENT_ISSUES.md). Physical handfeel, production deformation quality and
+broader display/plugin coverage remain separate manual acceptance work.
 
 ---
 
