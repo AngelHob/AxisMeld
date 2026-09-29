@@ -1,6 +1,6 @@
 # AxisMeld 整体规划与路线图
 
-状态日期：2026-09-17。本文件是当前路线入口；旧日期的规格保留设计与证据，不代表当前完成度。
+状态核对日期：2026-09-29，已拉取并核对远端截至 `f9d388a6bb354f83e13fe02ce7484560c3c0f853` 的进度。本文件是当前路线入口；旧日期的规格保留设计与证据，不代表当前完成度。
 
 ## 1. 目标与当前基线
 
@@ -8,7 +8,7 @@ AxisMeld 是可独立拉取、构建、运行的 Blender 衍生版本，以 Maya
 
 | 入口 | 当前内容 |
 |---|---|
-| 开发源码 | [AngelHob/AxisMeld 的 axismeld/phase-2a](https://github.com/AngelHob/AxisMeld/tree/axismeld/phase-2a)；本批接续基线为 `96e0ce6dd081d6e3df001565e9f7fe223843358a`；后续以远端为准 |
+| 开发源码 | [AngelHob/AxisMeld 的 axismeld/phase-2a](https://github.com/AngelHob/AxisMeld/tree/axismeld/phase-2a)；本次接续基线为 `f9d388a6bb354f83e13fe02ce7484560c3c0f853`；后续以远端为准 |
 | 默认分支 | `axismeld/integration`；目前承担仓库首页入口，**未包含最新开发实现**，不能直接用它继续功能开发 |
 | 最新试用包 | [2026.09.17 Skin weights preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-skin-weights-preview)，Python 功能源码 `bf35ab393b7c4d94bfdd78680a862ab76c71fc6e`；native 来源仍为 `617986ac1841` |
 | Blender 基线 | `18d84097b4f859582afdec57eece2ae880371adc`，版本宏为 5.3.0 alpha；不等于后续上游最新版本 |
@@ -32,6 +32,8 @@ AxisMeld 是可独立拉取、构建、运行的 Blender 衍生版本，以 Maya
 
 Rigging 已发布验证包括 57 项针对菜单测试、8 个独立 Blender 进程及布局关系检查、实际 GUI 操作/撤销和发布包独立启动。这里只引用已发布证据，**本次文档整理没有重新宣称全量功能回归通过**。公开摘要见[交接快照](compatibility/2026-09-17-handoff-snapshot.json)。
 
+后续进度已超过上述历史快照：A1 已发布一次 Normalize/Prune 及独立 Options；9 月 18 日独立 Windows 环境完成源 `33dd3a3e591b` 的原生构建、干净安装、所选五组 1,982 项 CTest、20 项 Runtime 及指定显示条件下的 GUI 验证，详见 [CHANGELOG](CHANGELOG.md) 和 [构建记录](BUILD_AND_DELIVERY.md)。新 native 尚未另发试用包，当前公开 Skin 包仍复用 `617986ac1841` 的 native；完整打包发布自动化仍待收敛。
+
 ## 3. 开发顺序
 
 以下是按现状整理的建议路线，不是已执行任务，也不是对每个参数语义的预先批准。每批先核实设计和当前源码，再实现一个有界结果；具体安排可随用户反馈调整。人工测试暂缓不阻止可自动验证的开发。
@@ -40,7 +42,7 @@ Rigging 已发布验证包括 57 项针对菜单测试、8 个独立 Blender 进
 |---|---|---|---|
 | A0 当前交接 | 可从 GitHub 恢复工作 | 统一路线、问题、分支、构建和提示词，公开经过筛选的发布指纹；清除陈旧首页状态 | 新代理无需聊天记录即可找到正确源码、资产、测试和下一任务；新机器实测仍单独记录 |
 | A1 已实施 | Skin：归一化与小权重清理 | 审计 Normalize Weights / Prune Small Weights；明确骨架、顶点范围、锁定、零权重与阈值；接入可证明的原生适配和独立 Options | 实际权重结果、无关顶点组保持、失败无修改、一次 Undo、参数入口和真实菜单路由有测试；差异明确可见 |
-| A2 下一批 | Skin：影响骨与绑定管理 | Add/Remove/Remove Unused Influences，随后 Bind/Unbind；识别目标 Armature Modifier，区分保留权重、父级与变换 | 不误删其他用途组；多修改器、链接数据、无效选择和撤销有确定行为；不拿 Clear Parent 冒充解绑 |
+| A2 下一批 | Skin：影响骨与绑定管理 | 先 Remove Unused Influences，再 Add Influence、Remove Influence；Bind/Unbind 独立后续处理 | 扫描全网格而非当前选区；不误删锁组、非变形组或其他用途引用；组索引变化、无效上下文及一次 Undo 有验证 |
 | A3 | Skin：镜像与复制 | 明确源目标、方向、骨名匹配、拓扑/空间映射及锁定处理，适配 Mirror/Transfer | 对称/非对称、同/异拓扑、不同变换及一次 Undo 可验证；保留 native Blender 参数差异 |
 | A4 | Skeleton 常用操作 | 在现有 Edit Bones/Pose/IK/Rigify 上按使用频率补 Joint 创建/插入/镜像/定向等语义映射 | 区分 rest/pose、bone roll/关节定向、连接/父子关系；不能仅改标签认定算法相同 |
 | B1 持续主线 | 建模剩余缺口 | 按 M3 现有计划 ID 处理高频灰项、Options 和严格上下文限制；优先能准确适配原生的条目 | 逐项记录 exact/adapted/unsupported、结果/撤销/参数与可达性；不删除未实现占位来减少问题数 |
@@ -52,6 +54,8 @@ Rigging 已发布验证包括 57 项针对菜单测试、8 个独立 Blender 进
 A1 的语义审计、实现及验证见[Skin 权重整理](development/2026-09-17-skin-weight-cleanup.md)。本批已开放两项一次操作，下一批从 A2 Influences 开始。Native `Normalize` 只把单个组最大值缩放为 1，不能映射为 Maya Normalize Weights；本批已审计 `Normalize All` 和 Clean 的范围/锁定差异，使用明确保护的 Mesh/BMesh 适配。Maya Disable/Enable/Post 是持续模式，不是一次性归一化。Clean/Smooth/Limit Total 也不能直接宣称与 Maya 的 Prune/Smooth/最大影响数约束等价。
 
 建模 B1 可与 Rigging 分批交替，但不要同时扩大两套实现范围。用户新报告的数据损坏、崩溃、错误命令或严重误触优先于上表新增功能。
+
+A2 第一切片建议为 **Remove Unused Influences**：先明确全网格没有非零权重的变形骨组如何清理，并保护组锁和其他使用者。不能复用 A1 只扫描可见/选中顶点的快照，否则隐藏或未选顶点上的有效权重会被误判成未使用。实现前补齐作用范围、其他引用、组索引/活动组以及一次 Undo/F9 的设计与结果测试；本次进度同步没有实现该功能。
 
 ## 4. 已确定的产品约束
 

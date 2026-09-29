@@ -46,7 +46,13 @@
   旧文件/用户startup不自动插入Rigging；startup.blend已提交且该文件单独用普通Git存储。
 - AXM-COMPAT-001（Object Global缩放差异）用户明确搁置，不自动重启。
 
+2026-09-29 已核实远端进度至 f9d388a6bb354f83e13fe02ce7484560c3c0f853。
+9月18日新环境已从33dd3a3e591b完成原生构建和指定测试，但尚未另发这个native的ZIP。
+固定旧native的Python组装工具不接受当前HEAD的CMake差异，不能关闭保护来强行发包。
+
 默认下一批任务：核实A1权重整理最新实现后，按ROADMAP A2做Influences的有界适配。
+建议先Remove Unused Influences，再Add、Remove及绑定。删除未使用组必须检查全网格，
+隐藏/未选顶点仍可能有权重，不能复用A1仅可见/选中顶点的快照；锁组和其他用途引用须保护。
 先读 docs/development/2026-09-17-skin-weight-cleanup.md，勿重复开发已完成的Normalize/Prune。
 Add/Remove/Remove Unused Influences需识别目标骨架、变形骨与无关用途组，核实锁定、空组、多修改器、失败无修改及Undo；随后再处理绑定/解绑。
 不要把单组 Normalize 当 Normalize All，也不要把一次归一化冒充 Maya Enable/Disable/Post 持续模式。

@@ -1,6 +1,6 @@
 # 新机器接续开发
 
-本页面向未读过聊天记录的开发者和 Codex。状态基线为 2026-09-17；执行前重新核对远端和当前源码，不把本页固定 SHA 当作永远最新。
+本页面向未读过聊天记录的开发者和 Codex。2026-09-29 已同步远端 `f9d388a6bb35`；A1 已实现并发布，下一批为 A2。执行前重新核对远端和当前源码，不把本页固定 SHA 当作永远最新。
 
 ## 1. 先用正确分支
 
@@ -52,7 +52,7 @@ git log -5 --oneline
 
 ## 5. 下一任务：Influences；先核对已完成的 A1
 
-A1 已完成有界 Normalize Weights / Prune Small Weights 及独立 Options，勿重复实现；先读[本批设计与验证](development/2026-09-17-skin-weight-cleanup.md)，核实远端后按 ROADMAP A2 推进 Add/Remove/Remove Unused Influences，再处理绑定。新人工 RG-15～RG-20 全部待测。A1 入口文件：
+A1 已完成有界 Normalize Weights / Prune Small Weights 及独立 Options，勿重复实现；先读[本批设计与验证](development/2026-09-17-skin-weight-cleanup.md)，核实远端后按 ROADMAP A2 先推进 Remove Unused Influences，再 Add、Remove 和绑定。清理未使用影响组必须扫描全网格，不能沿用 A1 仅可见/选中顶点的范围；具体保护与验收见 CURRENT_ISSUES。新人工 RG-15～RG-20 全部待测。A1 入口文件：
 
 - `scripts/modules/axismeld/rigging_workspace_catalog.py` 和 `scripts/startup/bl_ui/space_axismeld_native_rigging.py`：目录及真实原生功能入口。
 - `scripts/startup/bl_ui/space_view3d.py` 的 `VIEW3D_MT_paint_weight`，以及 `source/blender/editors/object/object_vgroup.cc`：核实原生 Normalize All/Clean 实际语义。
@@ -68,6 +68,8 @@ Normalize 单组最大值归一化不等于 Normalize All；Maya Enable/Disable/
 按 [AGENTS](../AGENTS.md) 更新设计、CHANGELOG 和有变化的测试条目，执行相称验证，再 commit/push 并核验远端 SHA；用户已授权每批开发完成上传 GitHub，不需要重复确认。未通过的必要检查不得用“已完成”掩盖。
 
 Pages 只同步前端运行资源；发布新试用包先固定源码提交，打包/解压/启动核验成功后才改页面的 `buildId` 与下载链接。A1 已另发 Skin weights 预览包（Python 源码 bf35ab393b7c），复用已审计的 Rigging native；未移动旧 tag 或修改历史测试结果。新快照见 compatibility/2026-09-17-skin-weights-snapshot.json。
+
+9 月 18 日新环境已从 `33dd3a3e591b` 完成原生构建和指定测试，但没有另发此 native 的 ZIP；步骤与限制见 BUILD_AND_DELIVERY。固定旧 native 的 Python 打包器不适用于包含本轮 CMake 改动的 HEAD，不能因只计划修改 Python 就绕过它的源码白名单。
 
 若新机器无法登录 GitHub，可先完成本机可验证工作并准确说明推送阻碍；不要向用户索取令牌粘贴进对话或文档。使用该机器已有的 Git/凭据管理器或用户自行登录。
 

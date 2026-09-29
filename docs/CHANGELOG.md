@@ -2,6 +2,15 @@
 
 每批开发完成时更新本文件并与代码一起推送 GitHub。记录功能与修复、验证结果、待人工测试编号；历史日志保留。
 
+## 2026-09-29 · 同步远端进度并明确 A2 入口
+
+- 从本机 `96e0ce6dd08` 快进至远端 `f9d388a6bb35`，接收 A1 实现/发布、Hotbox 测试构建依赖修复及新环境原生验证等四个提交；不重复开发已经交付的 Normalize/Prune。
+- 校正 ROADMAP、CURRENT_ISSUES 和跨机接续文本：独立环境原生构建已完成；尚未闭合的是新 native 的完整打包发布链和统一自动化。当前公开包继续使用 Skin weights preview，不能把本机新 native 构建记录当作已发布新版。
+- 默认分支首页的旧 Rigging 下载入口同步为已经发布的 Skin weights preview，与公开测试页一致；只同步首页说明，不合并未验收功能到默认分支。
+- 明确下一批 A2 建议顺序：Remove Unused Influences → Add Influence → Remove Influence，随后独立处理绑定/解绑。首项必须核查全网格权重、锁组、其他用途引用、组索引和 Undo；本轮没有实现该新功能。
+- 本机同步后重新运行 36 项 Skin 计划器、5 项 Rigging 目录和 16 项菜单 UI 测试，57 项通过；菜单去向、314 项公开目录及网站静态校验通过。线上核实 Skin 发布资产与当前公开目录，GitHub 当前无开放 Issue；既有 47 条历史已测及 RG-15～RG-20 待测状态保持。
+- 本轮只更新进度与交接说明，没有新建人工验收项，也没有重跑原生全量构建或 GUI；9 月 18 日的构建和运行结果仍以历史记录标注。
+
 ## 2026-09-18 · 新环境原生构建与测试前置条件
 
 - 用 VS 2022 Community 17.14.41、MSVC 19.44.35229、CMake/CTest 3.31.6-msvc6 完成 `full developer with_tests` 的 Release 构建和独立干净安装。文档补充低并发命令、显式 `bin/Release` CTest 运行资源安装前缀，以及所选五组测试所需的既有 `tests/files` 资产。
