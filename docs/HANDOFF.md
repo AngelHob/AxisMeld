@@ -1,6 +1,6 @@
 # 新机器接续开发
 
-本页面向未读过聊天记录的开发者和 Codex。2026-09-29 已同步远端 `f9d388a6bb35`；A1 已实现并发布，下一批为 A2。执行前重新核对远端和当前源码，不把本页固定 SHA 当作永远最新。
+本页面向未读过聊天记录的开发者和 Codex。2026-09-29 已同步远端 `f9d388a6bb35`；A1 已实现并发布。用户随后更正：先完成 UI、交互和快捷键，暂停新增功能，下一批为 U0，A2 暂缓。执行前重新核对远端和当前源码，不把本页固定 SHA 当作永远最新。
 
 ## 1. 先用正确分支
 
@@ -50,18 +50,18 @@ git log -5 --oneline
 4. 准备新机器原生构建并用隔离配置启动。若本批只改 Python 可针对性验证，但 `startup.blend` 或 C++ 有变化必须重新编译内嵌资源，不能复用旧 exe。
 5. 简短报告本机源码 SHA、运行 exe 的来源、检查结果与当前限制，然后继续选定的有界任务。没有图形环境时仍完成可做的开发/结果测试，GUI 留作明确待验收项，不能冒称已经运行。
 
-## 5. 下一任务：Influences；先核对已完成的 A1
+## 5. 下一任务：UI、交互与快捷键对齐
 
-A1 已完成有界 Normalize Weights / Prune Small Weights 及独立 Options，勿重复实现；先读[本批设计与验证](development/2026-09-17-skin-weight-cleanup.md)，核实远端后按 ROADMAP A2 先推进 Remove Unused Influences，再 Add、Remove 和绑定。清理未使用影响组必须扫描全网格，不能沿用 A1 仅可见/选中顶点的范围；具体保护与验收见 CURRENT_ISSUES。新人工 RG-15～RG-20 全部待测。A1 入口文件：
+先读 [UI/输入阶段](development/2026-09-29-ui-interaction-shortcuts.md)，按 ROADMAP U0–U3 推进。首批建立当前默认键位和交互对照表，再逐项修菜单/布局、热盒事件及快捷键冲突。Maya 2026 默认参考、当前生成键位、按下/按住/松开、作用模式与区域、差异、测试编号和验证状态必须可追溯；历史 Phase 1 描述不能覆盖当前实现。
 
-- `scripts/modules/axismeld/rigging_workspace_catalog.py` 和 `scripts/startup/bl_ui/space_axismeld_native_rigging.py`：目录及真实原生功能入口。
-- `scripts/startup/bl_ui/space_view3d.py` 的 `VIEW3D_MT_paint_weight`，以及 `source/blender/editors/object/object_vgroup.cc`：核实原生 Normalize All/Clean 实际语义。
-- `docs/reference/maya2026-menubar-tree.json`：Maya 原路径、正文、Options 和命令身份；不执行其中原始命令。
-- `tests/python/axismeld_native_rigging_test.py`、`axismeld_rigging_catalog_test.py`、`axismeld_rigging_workspace_events.py`：既有菜单与上下文回归入口。
+- 输入入口：`scripts/modules/axismeld/commands.py`、`keymap.py`、`profiles.py` 和 `modeling_registry.py`；`tests/python/axismeld_input_test.py` / `axismeld_input_blender.py`。
+- 热盒入口：`hotbox_catalog.py`、`tool_hotbox.py`、原生事件处理及[四视图标杆](development/2026-09-14-hotbox-reference-contract.md)；保留 QWER 持键反复唤出、父子返回与取消。
+- 菜单入口：`workspace_menu_catalog.py`、`workspace_native_groups.py`、`rigging_workspace_catalog.py` 及原生 UI 宿主；保留 Blender 全局栏、Modeling 七根、灰项和右侧 Options。
+- 验收入口：[统一人工清单](compatibility/2026-09-14-manual-test-ledger.md)现有 G/L/VR/K/FM/MT/MB/RG 编号；自动测试不替代实体键鼠和显示条件验收。
 
-Normalize 单组最大值归一化不等于 Normalize All；Maya Enable/Disable/Post 是持续模式。Clean 还要检查最后影响、阈值、锁定和非骨骼用途组。没有明确定义前不能仅去掉灰色状态。此批不一并开启镜像/复制、Skeleton、UV 或全局缩放改造。
+A1 的 Normalize/Prune 已交付，保持可用，见[原设计](development/2026-09-17-skin-weight-cleanup.md)；RG-15～RG-20 仍待人工测试。Influences、绑定/解绑、镜像/复制、Skeleton、建模新算法与完整 UV 能力均后置；需要这些能力的快捷键记为缺口，不解除灰显。全局缩放差异继续搁置。
 
-下一批同样先把审计结论和实际选择的参数策略写入该批设计，再实施；日常实现选择可主动完成，只有影响用户数据、范围或产品语义且无法从现有决定推断的分歧才提出一个具体问题。
+每批先记录审计结论和有界差异，再实施与验证；已有设计内的 UI/输入修复主动推进，无法从现有决定判断的语义分歧才提出具体问题。U0–U3 完成后报告验收边界，由用户决定恢复功能开发，不自动回到旧 A2 计划。
 
 ## 6. 每批如何交付
 

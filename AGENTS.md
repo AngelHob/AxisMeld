@@ -5,6 +5,7 @@
 - 保留 Blender 全局菜单与工作区栏。Modeling 七根菜单保持；Vertex/Edge/Face 在 Edit Mesh 内；不恢复 Deform/Generate 根。Rigging 是原生工作区，Rigify 是内置模块。
 - Maya 未适配功能保留灰占位，Options 与正文独立；使用真实原生 Menu/operator 上下文，不把相似功能冒充等价，不隐式修改选区来绕过不可用条件。
 - `AXM-COMPAT-001` 全局缩放差异按用户决定搁置，不自动重启。人工验收暂缓不阻止可验证的开发，但自动化不得替代人工状态。
+- 当前优先级（2026-09-29 用户更正）：先完成 UI、交互与 Maya 2026 默认快捷键对齐，暂停新增建模、Skin/Skeleton、UV 算法和功能适配。已实现功能保留，缺失能力继续灰占位；A2 Influences 不再是下一批。按 `docs/ROADMAP.md` 的 U0–U3 收敛，阶段完成后报告，再由用户决定何时恢复功能开发。
 
 ## AxisMeld 热盒约束
 

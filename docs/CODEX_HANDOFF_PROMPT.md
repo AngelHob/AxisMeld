@@ -50,15 +50,18 @@
 9月18日新环境已从33dd3a3e591b完成原生构建和指定测试，但尚未另发这个native的ZIP。
 固定旧native的Python组装工具不接受当前HEAD的CMake差异，不能关闭保护来强行发包。
 
-默认下一批任务：核实A1权重整理最新实现后，按ROADMAP A2做Influences的有界适配。
-建议先Remove Unused Influences，再Add、Remove及绑定。删除未使用组必须检查全网格，
-隐藏/未选顶点仍可能有权重，不能复用A1仅可见/选中顶点的快照；锁组和其他用途引用须保护。
-先读 docs/development/2026-09-17-skin-weight-cleanup.md，勿重复开发已完成的Normalize/Prune。
-Add/Remove/Remove Unused Influences需识别目标骨架、变形骨与无关用途组，核实锁定、空组、多修改器、失败无修改及Undo；随后再处理绑定/解绑。
-不要把单组 Normalize 当 Normalize All，也不要把一次归一化冒充 Maya Enable/Disable/Post 持续模式。
-不要仅换标签或解除灰显。后续顺序见 ROADMAP：Influences及绑定/解绑 → Mirror/Copy → Skeleton；
-建模缺口继续按已有M3计划处理，UV后置独立推进，不在这一批同时展开。
-如果这些已被新提交完成，就先报告实际状态并接下一项，避免重复开发。
+最新用户决定（2026-09-29）：先完成UI、交互和快捷键对齐，暂停新增功能。
+这取代同日早些时候的“A2 Influences下一批”建议。先读
+docs/development/2026-09-29-ui-interaction-shortcuts.md，按 ROADMAP U0–U3 收敛：
+1. 汇总当前菜单/热盒/默认快捷键对照，记录参考、当前事件、区域/模式、差异和验证状态；勿照抄旧Phase 1的完成状态。
+2. 对齐正文、层级、分组、图标、右侧齿轮与完整显示，保留已确定的Blender全局栏及工作区组织。
+3. 对齐四视图标杆间距、外延划选、父子返回、取消/松键与QWER持键反复LMB唤出。
+4. 核实Maya 2026默认快捷键、修饰键、别名、临时状态和上下文冲突；个人覆盖、其他编辑器与插件保持边界。
+允许改现有能力的UI、键位、鼠标事件和状态恢复；缺少底层能力的项仍灰显并明确记录。
+暂不新增Influences、绑定/解绑、Mirror/Copy、Skeleton操作、建模算法和完整UV能力。
+已完成的A1 Normalize/Prune保留，勿回退或重复实现；不要把一次归一化冒充Maya持续模式。
+本阶段完成后报告自动/人工验收边界，由用户决定何时恢复功能开发，不自动跳回A2。
+如果当前U阶段已被新提交完成，就先报告实际状态并接后续UI/输入项，避免重复开发。
 
 先完成本机基线核验，报告源码分支/SHA、构建或下载exe来源、已跑检查和限制，然后继续开发。
 原生Weights现成能力不等于新实现；人工测试暂缓不阻止可自动验证的工作。
