@@ -2,7 +2,7 @@
 
 状态核对日期：2026-10-11，首批 GUI 收敛开始时已拉取并核对远端基线 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`；首批历史结果见[GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)，后续提交以远端为准。本文件是当前路线入口；旧日期的规格保留设计与证据，不代表当前完成度。
 
-**最新交付（2026-10-11 GUI short-window polish）：极低窗口说明避让修复及完整原生预览包已发布。** 说明在窗口空白区域完整换行显示，必要时移到菜单侧面；全文无处容纳时暂不显示，扩大窗口后恢复。菜单文字、布局、命中及取消保持。本轮通过 94 项纯 Python、133 项原生，5 组菜单/交互 GUI 回归及 5 组窗口/缩放说明矩阵通过。[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-short-window-preview)，源码/native 均为 `665cb38b123d89d273d6f68e2c748a258abfff47`；匿名下载、干净解压及工厂启动已核验。详见[本轮验收](compatibility/2026-10-11-gui-short-window-acceptance.md)与[发布快照](compatibility/2026-10-11-gui-short-window-preview-snapshot.json)。新增 GU-22 待人工，GU-01～GU-21 及原结果保持。新算法继续暂停。
+**最新交付（2026-10-11 Blender main preview）：Blender 5.4.0 Alpha 主干同步及完整原生预览包已发布。** 合入固定上游 `754ebe3c4b4e1402a159df6e1e58823cc93ef887`，保留七根 Modeling、Rigging、独立 Options、灰占位及极低窗口说明避让；新算法继续暂停。本轮 42 组 415 项纯 Python、8 组 144 项原生，另有 4 组 CLI（profiles 18 项、Blender input 11 项；profiles 与纯 Python 重合，不累加），15 组 GUI 回归、5 组 bpy 功能及 factory、5 个说明矩阵组合通过。[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-blender-main-preview)，源码/native `7beedde071ca5eaa8fce6090f01cf2ddd40b6804`；匿名下载、干净解压及工厂启动已核验。详见[本轮验收](compatibility/2026-10-11-blender-main-acceptance.md)与[发布快照](compatibility/2026-10-11-blender-main-preview-snapshot.json)。公开目录 342 项（当前 330、历史 12），47 项仅历史已测，当前初始未测 283、全表初始未测 295；最新标记 GU-22、GU-23、GU-24、GU-25。既有编号与人工结果保持，自动化不替用户勾选。
 
 ## 1. 目标与当前基线
 
@@ -12,8 +12,8 @@ AxisMeld 是可独立拉取、构建、运行的 Blender 衍生版本，以 Maya
 |---|---|
 | 开发源码 | [AngelHob/AxisMeld 的 axismeld/phase-2a](https://github.com/AngelHob/AxisMeld/tree/axismeld/phase-2a)；首批 GUI 收敛的历史起点为 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`；当前交付见下行，后续以远端为准 |
 | 默认分支 | `axismeld/integration`；目前承担仓库首页入口，**未包含最新开发实现**，不能直接用它继续功能开发 |
-| 当前公开试用包 | [2026.10.11 GUI short-window preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-short-window-preview)，完整原生包；功能/native 源码均为 `665cb38b123d89d273d6f68e2c748a258abfff47`，见[发布快照](compatibility/2026-10-11-gui-short-window-preview-snapshot.json) |
-| Blender 基线 | `18d84097b4f859582afdec57eece2ae880371adc`，版本宏为 5.3.0 alpha；不等于后续上游最新版本 |
+| 当前公开试用包 | [2026.10.11 Blender main preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-blender-main-preview)，完整原生包；功能/native 源码 `7beedde071ca5eaa8fce6090f01cf2ddd40b6804`，见[发布快照](compatibility/2026-10-11-blender-main-preview-snapshot.json) |
+| Blender 基线 | `754ebe3c4b4e1402a159df6e1e58823cc93ef887`，Blender 5.4.0 Alpha；Windows 库固定 `aa0c5db72fa9488bb685bdddbede780d19f483f5`，不代表未来浮动 main |
 | 测试门户 | [GitHub Pages](https://angelhob.github.io/AxisMeld/)，源码 `tools/testing_site/`，部署分支 `gh-pages` |
 | 交接与问题 | [新机器接续](HANDOFF.md) · [可复制提示词](CODEX_HANDOFF_PROMPT.md) · [当前问题](CURRENT_ISSUES.md) · [构建与交付](BUILD_AND_DELIVERY.md) |
 
@@ -53,7 +53,7 @@ Rigging 已发布验证包括 57 项针对菜单测试、8 个独立 Blender 进
 
 2026-10-11 首批补齐 Ctrl+RMB 转换、Ctrl+Shift+RMB 当前工具、Edit 空选择只读预选与原生取消恢复、A+LMB History 操作及 X/V/J 临时吸附；修复九个空动态目录与 Grease Pencil 误过滤。Space → File 的 Open Scene / Save Scene As 复用原生确认链，用精确调用 token 将仍归热盒所有的松键交给对应文件窗口，不扩大到其他 File/Window 入口或继承快捷键。所有当前固定目录逐级核对，原 18+2 条输入参考已闭合。见 [File 设计](development/2026-10-11-file-window-release-design.md)及 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)。
 
-当前生成输入表为 58 个默认命令、60 条含别名绑定、7 个操纵器入口、3 个原生模态持键入口、497 条原生继承、45 条移除项、186 个受保护 keymap。原生继承不是 Maya 等价声明；D/C/F12/1/2/3 及 Shift+J 的后置能力明确保留，不能用近似功能消灭灰项。
+当前生成输入表为 58 默认命令、60 条含别名绑定、7 个操纵器辅助入口、3 个原生模态持键入口、499 条原生继承、45 条移除、187 个受保护 keymap；基准/生成 keymap 为 281/282。原生继承不宣称 Maya 等价；缺失底层能力继续保留明确边界。
 
 之前完成的 Object Mode/Mesh 插件冲突提示修复保持；IN-01～IN-03 与 GU-01～GU-13 全部待人工验收。新原生代码必须使用对应新构建；旧 Skin 包不适用。最终自动回归和包发布状态统一见本页开头。
 
@@ -88,7 +88,7 @@ A2 的后置设计线索保留：Remove Unused Influences 需明确全网格没�
 
 ## 5. 验收与每批交付
 
-人工清单共 **339 项**，其中当前 327、历史 12。47 项仅有历史“已测试”信息，不等于全通过；全表初始未测 292，当前初始未测 280。最近新增 GU-22，原 GU-01～GU-21、IN 与 RG 等编号和状态保持。新 GUI/输入必须使用包含本批 C++ 的新构建，旧 interaction preview 不含本批极低窗口说明避让修复。访客自己的记录仍独立保存，不能据自动化或维护者历史替他勾选。
+公开目录 342 项（当前 330、历史 12），47 项仅历史已测，当前初始未测 283、全表初始未测 295；最新标记 GU-22、GU-23、GU-24、GU-25。既有编号与人工结果保持，自动化不替用户勾选。访客记录独立保存，不据自动化代替人工验收。
 
 每批完成顺序：更新设计 → 实现 → 与改动相称的静态/结果/真实事件或 GUI 验证 → 记录未覆盖人工项 → 更新 [CHANGELOG](CHANGELOG.md) → 提交推送并核验远端。验收变化时同步 Markdown 清单与公开 catalog；发布新版时绑定确切源码 SHA、校验包内资源、重新解压启动，再更新 Pages 构建版本。自动测试不改变人的测试结果。
 

@@ -1,0 +1,1716 @@
+{
+  "schemaVersion": 1,
+  "status": "RELEASE_DOWNLOAD_FACTORY_VERIFIED",
+  "recordedAt": "2026-10-11T12:03:50.583885+00:00",
+  "tag": "axismeld-2026.10.11-blender-main-preview",
+  "sourceCommit": "7beedde071ca5eaa8fce6090f01cf2ddd40b6804",
+  "upstreamCommit": "754ebe3c4b4e1402a159df6e1e58823cc93ef887",
+  "blenderVersion": "5.4.0 Alpha",
+  "binarySha256": "0a4de344f93bafcea9414668746fe1fa0d2fec5dd1bc0b62d86ae3a9acbd56a9",
+  "package": {
+    "status": "STATIC_PACKAGE_PASS",
+    "createdAt": "2026-10-11T11:58:10.317266+00:00",
+    "tag": "axismeld-2026.10.11-blender-main-preview",
+    "sourceCommit": "7beedde071ca5eaa8fce6090f01cf2ddd40b6804",
+    "binarySha256": "0a4de344f93bafcea9414668746fe1fa0d2fec5dd1bc0b62d86ae3a9acbd56a9",
+    "pureGroups": 42,
+    "pureTests": 415,
+    "nativeGroups": 8,
+    "nativeTests": 144,
+    "cli": {
+      "groups": 4,
+      "suites": [
+        "axismeld_cli_identity",
+        "axismeld_portable_paths",
+        "axismeld_input_profiles",
+        "axismeld_input_blender"
+      ],
+      "unittestCountsBySuite": {
+        "axismeld_input_profiles": 18,
+        "axismeld_input_blender": 11
+      },
+      "execution": "build-install CTest; candidate EXE equality checked separately",
+      "sourceCommitAtRun": "bbce9d3483432f30eff1cc94b61d08838eba25eb",
+      "startedAt": "2026-10-11T11:45:37.865863+00:00",
+      "completedAt": "2026-10-11T11:45:42.826004+00:00",
+      "binarySha256": "0a4de344f93bafcea9414668746fe1fa0d2fec5dd1bc0b62d86ae3a9acbd56a9",
+      "receiptSha256": "ec77ff40b325603d7288868873978c9c284c84edd27913790a72ba39dfc308db",
+      "logSha256": "273a83e9880acce3c0d3df902f2d24a9920ac549371f65b43c20d304a98e19fc",
+      "junitSha256": "9038287dcef961d1ea8739a0fecb8d890a76dc1b0cb18e68ca3fbebbb904cb34",
+      "versionLogSha256": "784dcd5cea86ba5f4461e3cc9bad885162227626afaba89eb0ccfb98d3aece98",
+      "runnerSha256": "953e419e1f92a4224c88e2e698a5323165a090844be54672fcb65599220aab41",
+      "countingNote": "Profiles unittest cases overlap the CPython suite; do not add CLI counts to pure or native totals.",
+      "inventoryNote": "Original inventory.json is retained but has invalid JSON escaping; this gate uses hashed log/JUnit and source/install/binary/script evidence."
+    },
+    "guiSuites": [
+      "modeling-viewport",
+      "menu-shortcuts",
+      "menu-options-navigation",
+      "menu-options-access",
+      "menu-options-geometry",
+      "modeling-disabled-reason",
+      "hotbox-repost",
+      "context-entries",
+      "temporary-snap",
+      "history-hotbox",
+      "tools-modifiers",
+      "tools",
+      "full-menu-lifecycle",
+      "file-window",
+      "release-cross-window"
+    ],
+    "bpyRuns": [
+      {
+        "group": "rigify_builtin",
+        "directory": "bpy-rigify-builtin",
+        "processes": [
+          "factory",
+          "generate",
+          "reopen",
+          "lifecycle",
+          "legacy-seed",
+          "legacy-load"
+        ],
+        "receiptSha256": "3bd042076c5e9e2dcc9824ab4de7e81cf36cf731fda9cfc4846cea7db530ff1e"
+      },
+      {
+        "directory": "bpy-feature-lifecycle",
+        "receiptSha256": "94e6c9bbc37827df7b78e0365e4133d400a86c5caf1eddcf97df686b63a946a6",
+        "logSha256": "d40a3fe9657275e5f2879b3cd28d20c6d14dbf62087349233d77f6b494b2e2d4",
+        "scriptSha256": "b09189d83d839cb770ee2f8046afdbbd542e72b63260f239491a3c021f813b17",
+        "group": "rigify_feature_lifecycle"
+      },
+      {
+        "directory": "bpy-addon-isolation",
+        "receiptSha256": "b10991bafa8ba01af296c5f4a1390f63ad8f3e4e60d11cf7fb980f7d5b2f807c",
+        "logSha256": "61865cdd90a6122e346d141dd1a4417ea4fc4edf8608ff979d7f8cb81054781a",
+        "scriptSha256": "d526ed952d7a70baf7b97712a7905b617de33c94725fb0f1a69581780d9c8996",
+        "group": "rigify_addon_isolation"
+      },
+      {
+        "directory": "bpy-skin-weight",
+        "receiptSha256": "00e57ecd7666cb36b1a3d980498450381f282f084f6e0e301bd28419bba1ce1f",
+        "logSha256": "08e4bab4effff02740e81b10c1ca1cb35419cf10883341af4f7032c2e15d69b0",
+        "scriptSha256": "9bea38c7424e422c4cd720d182020cf25ac4847dc5524dde8bdf86671e8cb4cc",
+        "group": "skin_weight"
+      },
+      {
+        "directory": "bpy-workspace-factory",
+        "receiptSha256": "1b6c381dacd47a142fd165560178ba25b3dc0a6efb94e70e701c28e91bbc9f50",
+        "logSha256": "808b54692c775f5073fa6969b32076833a896780bf032208245281630fec3728",
+        "scriptSha256": "97c8947bf19b6274764832a27516b124603997936aeedc58d51501a7578d5da2",
+        "group": "rigging_workspace"
+      },
+      {
+        "directory": "bpy-workspace-factory-reset",
+        "receiptSha256": "49f80f70ece3abe187bab1069248722a967e6a4a3d9255b2a93dfad4b7b09d8f",
+        "logSha256": "fa77eae99794f0e7fbdb8ca45bdd8723ecb013413e87573db0c05070efe37479",
+        "scriptSha256": "97c8947bf19b6274764832a27516b124603997936aeedc58d51501a7578d5da2",
+        "group": "rigging_workspace"
+      },
+      {
+        "directory": "bpy-workspace-raw-asset",
+        "receiptSha256": "f309c139b9c32928b24641802f7b607658d45145da6c1e32e9fdcdcea7766f16",
+        "logSha256": "612e243180a9ad218ff9eb778d3c12f9fbecd843a596417726e7f31db9a82a00",
+        "scriptSha256": "97c8947bf19b6274764832a27516b124603997936aeedc58d51501a7578d5da2",
+        "group": "rigging_workspace"
+      }
+    ],
+    "bpyGroups": 5,
+    "candidateFactory": {
+      "directory": "candidate-factory",
+      "receiptSha256": "83c9523c243740608fa14dc02f8725175fdf20211dae7b2c93b4eac396570e7d",
+      "logSha256": "95303c9a2ca85ecadb6fe728316c9b32222f930ddb60e7d5248273a1ecb45bdb",
+      "scriptSha256": "410d9f25578bceae0340f7ff5299ebe3347ab4c9953ab54b5600fce69cdec9d1"
+    },
+    "reasonRuns": [
+      {
+        "directory": "reason-low-100",
+        "receiptSha256": "41c55be13dbcecdf36aafd0ae406f06b6b260d2b9b69a235959ad3b4263bff95",
+        "logSha256": "e3c55baaaa0009e0980a51779439805209468d09914c5786a9965a454a4a6c9d",
+        "scriptSha256": "df7dcfc75a8d69c454dda3cd7b07dc0df58ed0cceb76e6b0314b7f4024922ee2",
+        "records": 4,
+        "noFit": false,
+        "restore": false
+      },
+      {
+        "directory": "reason-low-150",
+        "receiptSha256": "80f44502ca3a768fa09030523a5e259b2ed54ff21a182c3f5d81dee934d2dca7",
+        "logSha256": "250cb05d46200c6ec1111724d26e9d306197f0a79e9ff538fa1d3b9475860429",
+        "scriptSha256": "df7dcfc75a8d69c454dda3cd7b07dc0df58ed0cceb76e6b0314b7f4024922ee2",
+        "records": 4,
+        "noFit": false,
+        "restore": false
+      },
+      {
+        "directory": "reason-wide",
+        "receiptSha256": "fc8e4233eaa806a4aa6f954771e8b3e90284042c54e9153047c24139d9f09d7f",
+        "logSha256": "5f5872ae4fb52fa3a34e7bf5bc117893348bcc06c613ca7f09e70ce9e1072e71",
+        "scriptSha256": "df7dcfc75a8d69c454dda3cd7b07dc0df58ed0cceb76e6b0314b7f4024922ee2",
+        "records": 4,
+        "noFit": false,
+        "restore": false
+      },
+      {
+        "directory": "reason-quad",
+        "receiptSha256": "db76caf5d8a86a689b98c1a57c80ff8c184dfcffc8253f608ce83c6733d562b4",
+        "logSha256": "c6d6a1872c42eac2b51acf85d496c250c3217c2556f4647d75f9b5f7488eb1ad",
+        "scriptSha256": "df7dcfc75a8d69c454dda3cd7b07dc0df58ed0cceb76e6b0314b7f4024922ee2",
+        "records": 4,
+        "noFit": false,
+        "restore": false
+      },
+      {
+        "directory": "reason-no-fit",
+        "receiptSha256": "334ff330d8b66ab8e81ddbaec1af49e5a36c80ab1bec5aab4e9eef0deb3690cc",
+        "logSha256": "44f5f071e8058611ceec5f7e313b578ac20bbae5380f1b4d37c4f55b6b99a14b",
+        "scriptSha256": "df7dcfc75a8d69c454dda3cd7b07dc0df58ed0cceb76e6b0314b7f4024922ee2",
+        "records": 2,
+        "noFit": true,
+        "restore": true
+      }
+    ],
+    "siteBrowserChecks": 12,
+    "resourceCount": 145,
+    "gateReceiptSha256": {
+      "candidateAudit": "4b1279be2dfa36c48ed69abac994ee0f3f6440d2a950848cd01fcf6eeca9a5a0",
+      "pureReceipt": "3734819471b43cd9d8049e33db01f6b5700b54a55c9720610301612edcb323b0",
+      "cliReceipt": "ec77ff40b325603d7288868873978c9c284c84edd27913790a72ba39dfc308db",
+      "nativeReceipt": "43a31916fc47c77e4ddb342c0cb9eca1020dfaf311c6fd6ed6be1fb52e631021",
+      "guiReceipt": "dc59f40fb2a3d2b5ca9b779382c75a395bdcbaa10f8383786aa685d71550fadc",
+      "siteBrowserReceipt": "3dfe47f131d8d9d2339996ac327a7ad07645d675143e596bea6f300b558a1291",
+      "siteStaticReceipt": "80993ea8fcca64f5ad51fe92bcfc84e49193b9a364e175287db81732d15fe71b"
+    },
+    "archive": "D:\\source\\AxisMeld-build\\gui-2026-10-11-upstream-main-release\\AxisMeld-2026.10.11-blender-main-preview-windows-x64.zip",
+    "archiveBytes": 303157226,
+    "archiveSha256": "f3692f9813cb6c7d144a371e42768229591b89ca5944671a8c886e62d4ae0a52",
+    "stage": "D:\\source\\AxisMeld-build\\gui-2026-10-11-upstream-main-package\\AxisMeld-Preview",
+    "extracted": "D:\\source\\AxisMeld-build\\gui-2026-10-11-upstream-main-extracted\\AxisMeld-Preview",
+    "excluded": [
+      "5.4/python/lib/__pycache__/__future__.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/_colorize.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/_compat_pickle.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/_compression.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/_opcode_metadata.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/_weakrefset.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/argparse.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/ast.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/base64.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/bisect.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/bz2.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/contextlib.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/contextvars.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/copy.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/copyreg.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/dataclasses.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/datetime.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/difflib.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/dis.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/enum.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/fnmatch.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/functools.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/gettext.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/glob.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/gzip.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/hashlib.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/heapq.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/inspect.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/ipaddress.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/keyword.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/linecache.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/locale.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/lzma.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/nturl2path.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/numbers.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/opcode.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/operator.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/pickle.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/pkgutil.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/platform.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/pprint.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/quopri.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/random.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/reprlib.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/selectors.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/shutil.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/signal.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/socket.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/ssl.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/string.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/struct.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/subprocess.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/tempfile.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/textwrap.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/threading.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/token.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/tokenize.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/traceback.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/types.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/typing.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/warnings.cpython-313.pyc",
+      "5.4/python/lib/__pycache__/weakref.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/base_events.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/base_futures.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/base_subprocess.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/base_tasks.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/constants.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/coroutines.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/events.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/exceptions.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/format_helpers.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/futures.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/locks.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/log.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/mixins.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/proactor_events.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/protocols.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/queues.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/runners.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/selector_events.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/sslproto.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/staggered.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/streams.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/subprocess.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/taskgroups.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/tasks.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/threads.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/timeouts.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/transports.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/trsock.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/windows_events.cpython-313.pyc",
+      "5.4/python/lib/asyncio/__pycache__/windows_utils.cpython-313.pyc",
+      "5.4/python/lib/collections/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/concurrent/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/concurrent/futures/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/concurrent/futures/__pycache__/_base.cpython-313.pyc",
+      "5.4/python/lib/ctypes/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/ctypes/__pycache__/_endian.cpython-313.pyc",
+      "5.4/python/lib/ctypes/__pycache__/wintypes.cpython-313.pyc",
+      "5.4/python/lib/email/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/email/__pycache__/_encoded_words.cpython-313.pyc",
+      "5.4/python/lib/email/__pycache__/_parseaddr.cpython-313.pyc",
+      "5.4/python/lib/email/__pycache__/_policybase.cpython-313.pyc",
+      "5.4/python/lib/email/__pycache__/base64mime.cpython-313.pyc",
+      "5.4/python/lib/email/__pycache__/charset.cpython-313.pyc",
+      "5.4/python/lib/email/__pycache__/encoders.cpython-313.pyc",
+      "5.4/python/lib/email/__pycache__/errors.cpython-313.pyc",
+      "5.4/python/lib/email/__pycache__/feedparser.cpython-313.pyc",
+      "5.4/python/lib/email/__pycache__/header.cpython-313.pyc",
+      "5.4/python/lib/email/__pycache__/iterators.cpython-313.pyc",
+      "5.4/python/lib/email/__pycache__/message.cpython-313.pyc",
+      "5.4/python/lib/email/__pycache__/parser.cpython-313.pyc",
+      "5.4/python/lib/email/__pycache__/quoprimime.cpython-313.pyc",
+      "5.4/python/lib/email/__pycache__/utils.cpython-313.pyc",
+      "5.4/python/lib/encodings/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/encodings/__pycache__/aliases.cpython-313.pyc",
+      "5.4/python/lib/encodings/__pycache__/utf_8.cpython-313.pyc",
+      "5.4/python/lib/encodings/__pycache__/utf_8_sig.cpython-313.pyc",
+      "5.4/python/lib/http/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/http/__pycache__/client.cpython-313.pyc",
+      "5.4/python/lib/importlib/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/importlib/__pycache__/_abc.cpython-313.pyc",
+      "5.4/python/lib/json/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/json/__pycache__/decoder.cpython-313.pyc",
+      "5.4/python/lib/json/__pycache__/encoder.cpython-313.pyc",
+      "5.4/python/lib/json/__pycache__/scanner.cpython-313.pyc",
+      "5.4/python/lib/logging/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/pathlib/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/pathlib/__pycache__/_abc.cpython-313.pyc",
+      "5.4/python/lib/pathlib/__pycache__/_local.cpython-313.pyc",
+      "5.4/python/lib/re/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/re/__pycache__/_casefix.cpython-313.pyc",
+      "5.4/python/lib/re/__pycache__/_compiler.cpython-313.pyc",
+      "5.4/python/lib/re/__pycache__/_constants.cpython-313.pyc",
+      "5.4/python/lib/re/__pycache__/_parser.cpython-313.pyc",
+      "5.4/python/lib/site-packages/__pycache__/sitecustomize.cpython-313.pyc",
+      "5.4/python/lib/site-packages/_distutils_hack/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/__pycache__/__config__.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/__pycache__/_array_api_info.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/__pycache__/_distributor_init.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/__pycache__/_expired_attrs_2_0.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/__pycache__/_globals.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/__pycache__/_pytesttester.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/__pycache__/dtypes.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/__pycache__/exceptions.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/__pycache__/version.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/_add_newdocs.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/_add_newdocs_scalars.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/_asarray.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/_dtype.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/_dtype_ctypes.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/_exceptions.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/_internal.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/_machar.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/_methods.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/_string_helpers.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/_type_aliases.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/_ufunc_config.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/arrayprint.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/einsumfunc.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/fromnumeric.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/function_base.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/getlimits.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/memmap.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/multiarray.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/numeric.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/numerictypes.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/overrides.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/printoptions.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/records.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/shape_base.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/__pycache__/umath.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_core/_multiarray_tests.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/numpy/_core/_multiarray_umath.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/numpy/_core/_operand_flag_tests.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/numpy/_core/_rational_tests.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/numpy/_core/_simd.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/numpy/_core/_struct_ufunc_tests.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/numpy/_core/_umath_tests.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/numpy/_core/lib/npymath.lib",
+      "5.4/python/lib/site-packages/numpy/_typing/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_typing/__pycache__/_array_like.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_typing/__pycache__/_char_codes.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_typing/__pycache__/_dtype_like.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_typing/__pycache__/_nbit.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_typing/__pycache__/_nbit_base.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_typing/__pycache__/_nested_sequence.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_typing/__pycache__/_scalars.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_typing/__pycache__/_shape.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_typing/__pycache__/_ufunc.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_utils/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_utils/__pycache__/_convertions.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/_utils/__pycache__/_inspect.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/fft/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/fft/__pycache__/_helper.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/fft/__pycache__/_pocketfft.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/fft/__pycache__/helper.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/fft/_pocketfft_umath.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_array_utils_impl.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_arraypad_impl.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_arraysetops_impl.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_arrayterator_impl.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_datasource.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_format_impl.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_function_base_impl.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_histograms_impl.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_index_tricks_impl.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_iotools.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_nanfunctions_impl.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_npyio_impl.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_polynomial_impl.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_scimath_impl.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_shape_base_impl.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_stride_tricks_impl.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_twodim_base_impl.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_type_check_impl.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_ufunclike_impl.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_utils_impl.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/_version.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/array_utils.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/format.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/introspect.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/mixins.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/npyio.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/scimath.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/lib/__pycache__/stride_tricks.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/linalg/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/linalg/__pycache__/_linalg.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/linalg/__pycache__/linalg.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/linalg/_umath_linalg.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/numpy/linalg/lapack_lite.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/numpy/ma/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/ma/__pycache__/core.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/ma/__pycache__/extras.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/matrixlib/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/matrixlib/__pycache__/defmatrix.cpython-313.pyc",
+      "5.4/python/lib/site-packages/numpy/random/_bounded_integers.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/numpy/random/_common.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/numpy/random/_generator.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/numpy/random/_mt19937.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/numpy/random/_pcg64.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/numpy/random/_philox.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/numpy/random/_sfc64.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/numpy/random/bit_generator.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/numpy/random/lib/npyrandom.lib",
+      "5.4/python/lib/site-packages/numpy/random/mtrand.cp313-win_amd64.lib",
+      "5.4/python/lib/site-packages/zstandard/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/sysconfig/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/tomllib/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/tomllib/__pycache__/_parser.cpython-313.pyc",
+      "5.4/python/lib/tomllib/__pycache__/_re.cpython-313.pyc",
+      "5.4/python/lib/tomllib/__pycache__/_types.cpython-313.pyc",
+      "5.4/python/lib/unittest/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/unittest/__pycache__/case.cpython-313.pyc",
+      "5.4/python/lib/unittest/__pycache__/loader.cpython-313.pyc",
+      "5.4/python/lib/unittest/__pycache__/main.cpython-313.pyc",
+      "5.4/python/lib/unittest/__pycache__/mock.cpython-313.pyc",
+      "5.4/python/lib/unittest/__pycache__/result.cpython-313.pyc",
+      "5.4/python/lib/unittest/__pycache__/runner.cpython-313.pyc",
+      "5.4/python/lib/unittest/__pycache__/signals.cpython-313.pyc",
+      "5.4/python/lib/unittest/__pycache__/suite.cpython-313.pyc",
+      "5.4/python/lib/unittest/__pycache__/util.cpython-313.pyc",
+      "5.4/python/lib/urllib/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/urllib/__pycache__/error.cpython-313.pyc",
+      "5.4/python/lib/urllib/__pycache__/parse.cpython-313.pyc",
+      "5.4/python/lib/urllib/__pycache__/request.cpython-313.pyc",
+      "5.4/python/lib/urllib/__pycache__/response.cpython-313.pyc",
+      "5.4/python/lib/venv/scripts/nt/venvlauncher.pdb",
+      "5.4/python/lib/venv/scripts/nt/venvwlauncher.pdb",
+      "5.4/python/lib/zipfile/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/zipfile/_path/__pycache__/__init__.cpython-313.pyc",
+      "5.4/python/lib/zipfile/_path/__pycache__/glob.cpython-313.pyc",
+      "5.4/scripts/addons_core/bl_pkg/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/addons_core/bl_pkg/__pycache__/bl_extension_cli.cpython-313.pyc",
+      "5.4/scripts/addons_core/bl_pkg/__pycache__/bl_extension_notify.cpython-313.pyc",
+      "5.4/scripts/addons_core/bl_pkg/__pycache__/bl_extension_ops.cpython-313.pyc",
+      "5.4/scripts/addons_core/bl_pkg/__pycache__/bl_extension_ui.cpython-313.pyc",
+      "5.4/scripts/addons_core/bl_pkg/__pycache__/bl_extension_utils.cpython-313.pyc",
+      "5.4/scripts/addons_core/bl_pkg/cli/__pycache__/blender_ext.cpython-313.pyc",
+      "5.4/scripts/addons_core/cycles/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/addons_core/cycles/__pycache__/camera.cpython-313.pyc",
+      "5.4/scripts/addons_core/cycles/__pycache__/engine.cpython-313.pyc",
+      "5.4/scripts/addons_core/cycles/__pycache__/maketx.cpython-313.pyc",
+      "5.4/scripts/addons_core/cycles/__pycache__/operators.cpython-313.pyc",
+      "5.4/scripts/addons_core/cycles/__pycache__/presets.cpython-313.pyc",
+      "5.4/scripts/addons_core/cycles/__pycache__/properties.cpython-313.pyc",
+      "5.4/scripts/addons_core/cycles/__pycache__/ui.cpython-313.pyc",
+      "5.4/scripts/addons_core/cycles/__pycache__/version_update.cpython-313.pyc",
+      "5.4/scripts/addons_core/io_anim_bvh/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/addons_core/io_curve_svg/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/addons_core/io_mesh_uv_layout/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/addons_core/io_scene_fbx/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/addons_core/io_scene_gltf2/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/addons_core/io_scene_gltf2/blender/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/addons_core/io_scene_gltf2/blender/com/__pycache__/gltf2_blender_ui.cpython-313.pyc",
+      "5.4/scripts/addons_core/io_scene_gltf2/blender/com/__pycache__/material_helpers.cpython-313.pyc",
+      "5.4/scripts/addons_core/pose_library/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/addons_core/pose_library/__pycache__/asset_browser.cpython-313.pyc",
+      "5.4/scripts/addons_core/pose_library/__pycache__/functions.cpython-313.pyc",
+      "5.4/scripts/addons_core/pose_library/__pycache__/gui.cpython-313.pyc",
+      "5.4/scripts/addons_core/pose_library/__pycache__/keymaps.cpython-313.pyc",
+      "5.4/scripts/addons_core/pose_library/__pycache__/operators.cpython-313.pyc",
+      "5.4/scripts/addons_core/pose_library/__pycache__/pose_creation.cpython-313.pyc",
+      "5.4/scripts/addons_core/pose_library/__pycache__/pose_usage.cpython-313.pyc",
+      "5.4/scripts/modules/__pycache__/_blendfile_header.cpython-313.pyc",
+      "5.4/scripts/modules/__pycache__/_bpy_restrict_state.cpython-313.pyc",
+      "5.4/scripts/modules/__pycache__/_bpy_types.cpython-313.pyc",
+      "5.4/scripts/modules/__pycache__/_console_python.cpython-313.pyc",
+      "5.4/scripts/modules/__pycache__/_keyingsets_utils.cpython-313.pyc",
+      "5.4/scripts/modules/__pycache__/addon_utils.cpython-313.pyc",
+      "5.4/scripts/modules/__pycache__/bl_app_template_utils.cpython-313.pyc",
+      "5.4/scripts/modules/__pycache__/nodeitems_utils.cpython-313.pyc",
+      "5.4/scripts/modules/__pycache__/rna_prop_ui.cpython-313.pyc",
+      "5.4/scripts/modules/_bl_rna_utils/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/_bl_rna_utils/__pycache__/data_path.cpython-313.pyc",
+      "5.4/scripts/modules/_bl_ui_utils/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/_bl_ui_utils/__pycache__/layout.cpython-313.pyc",
+      "5.4/scripts/modules/_bpy_internal/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/_bpy_internal/assets/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/_bpy_internal/assets/remote_library/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/_bpy_internal/extensions/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/_bpy_internal/extensions/__pycache__/junction_module.cpython-313.pyc",
+      "5.4/scripts/modules/_bpy_internal/extensions/__pycache__/wheel_manager.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/adapter.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/commands.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/context_conversion_hotbox.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/context_hotbox.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/context_modeling_hotbox.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/creation_hotbox.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/edit_preselection.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/history_hotbox.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/hotbox_catalog.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/hotbox_profiles.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/hotbox_runtime.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/keymap.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/maya_menu_catalog.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/maya_menu_reference.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/menubar_actions.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/menubar_catalog.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/menubar_native.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/menubar_reference.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/menubar_runtime.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/modeling_adapter.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/modeling_catalog.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/modeling_common.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/modeling_common_ops.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/modeling_gaps.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/modeling_mesh.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/modeling_mesh_ops.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/modeling_registry.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/modeling_schema.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/modeling_shapes.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/modeling_shapes_ops.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/object_modeling_hotbox.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/object_modeling_ops.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/profiles.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/rigging_workspace_catalog.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/runtime.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/skin_weight_ops.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/skin_weight_plan.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/tool_hotbox.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/workspace_menu_catalog.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/workspace_native_catalog.cpython-313.pyc",
+      "5.4/scripts/modules/axismeld/__pycache__/workspace_native_groups.cpython-313.pyc",
+      "5.4/scripts/modules/bl_keymap_utils/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/bl_keymap_utils/__pycache__/io.cpython-313.pyc",
+      "5.4/scripts/modules/bpy/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/bpy/__pycache__/ops.cpython-313.pyc",
+      "5.4/scripts/modules/bpy/__pycache__/path.cpython-313.pyc",
+      "5.4/scripts/modules/bpy/utils/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/bpy_extras/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/bpy_extras/__pycache__/anim_utils.cpython-313.pyc",
+      "5.4/scripts/modules/bpy_extras/__pycache__/asset_utils.cpython-313.pyc",
+      "5.4/scripts/modules/bpy_extras/__pycache__/io_utils.cpython-313.pyc",
+      "5.4/scripts/modules/bpy_extras/__pycache__/node_utils.cpython-313.pyc",
+      "5.4/scripts/modules/bpy_extras/__pycache__/object_utils.cpython-313.pyc",
+      "5.4/scripts/modules/bpy_extras/__pycache__/view3d_utils.cpython-313.pyc",
+      "5.4/scripts/modules/gpu_extras/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/gpu_extras/__pycache__/presets.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/__pycache__/base_generate.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/__pycache__/base_rig.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/__pycache__/feature_set_list.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/__pycache__/generate.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/__pycache__/metarig_menu.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/__pycache__/rig_lists.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/__pycache__/rig_ui_template.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/__pycache__/rot_mode.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/__pycache__/ui.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/feature_sets/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/metarigs/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/metarigs/__pycache__/human.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/metarigs/Animals/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/metarigs/Animals/__pycache__/bird.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/metarigs/Animals/__pycache__/cat.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/metarigs/Animals/__pycache__/horse.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/metarigs/Animals/__pycache__/shark.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/metarigs/Animals/__pycache__/wolf.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/metarigs/Basic/__pycache__/basic_human.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/metarigs/Basic/__pycache__/basic_quadruped.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/operators/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/operators/__pycache__/action_layers.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/operators/__pycache__/copy_mirror_parameters.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/operators/__pycache__/generic_ui_list.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/operators/__pycache__/upgrade_face.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/__pycache__/chain_rigs.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/__pycache__/utils.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/__pycache__/widgets.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/basic/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/basic/__pycache__/copy_chain.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/basic/__pycache__/pivot.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/basic/__pycache__/raw_copy.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/basic/__pycache__/super_copy.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/experimental/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/experimental/__pycache__/super_chain.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/face/__pycache__/basic_tongue.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/face/__pycache__/skin_eye.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/face/__pycache__/skin_jaw.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/faces/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/faces/__pycache__/super_face.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/limbs/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/limbs/__pycache__/arm.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/limbs/__pycache__/front_paw.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/limbs/__pycache__/leg.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/limbs/__pycache__/limb_rigs.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/limbs/__pycache__/limb_utils.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/limbs/__pycache__/paw.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/limbs/__pycache__/rear_paw.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/limbs/__pycache__/simple_tentacle.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/limbs/__pycache__/spline_tentacle.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/limbs/__pycache__/super_finger.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/limbs/__pycache__/super_limb.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/limbs/__pycache__/super_palm.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/skin/__pycache__/anchor.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/skin/__pycache__/basic_chain.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/skin/__pycache__/glue.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/skin/__pycache__/skin_nodes.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/skin/__pycache__/skin_parents.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/skin/__pycache__/skin_rigs.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/skin/__pycache__/stretchy_chain.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/skin/transform/__pycache__/basic.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/spines/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/spines/__pycache__/basic_spine.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/spines/__pycache__/basic_tail.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/spines/__pycache__/spine_rigs.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/spines/__pycache__/super_head.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/rigs/spines/__pycache__/super_spine.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/action_layers.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/animation.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/bones.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/collections.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/components.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/errors.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/layers.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/mechanism.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/metaclass.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/misc.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/naming.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/node_merger.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/objects.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/rig.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/switch_parent.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/widgets.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/widgets_basic.cpython-313.pyc",
+      "5.4/scripts/modules/rigify/utils/__pycache__/widgets_special.cpython-313.pyc",
+      "5.4/scripts/presets/keyconfig/__pycache__/AxisMeld_Maya_2026.cpython-313.pyc",
+      "5.4/scripts/presets/keyconfig/__pycache__/Blender.cpython-313.pyc",
+      "5.4/scripts/presets/keyconfig/__pycache__/industry_compatible.cpython-313.pyc",
+      "5.4/scripts/presets/keyconfig/keymap_data/__pycache__/blender_default.cpython-313.pyc",
+      "5.4/scripts/presets/keyconfig/keymap_data/__pycache__/industry_compatible_data.cpython-313.pyc",
+      "5.4/scripts/startup/__pycache__/keyingsets_builtins.cpython-313.pyc",
+      "5.4/scripts/startup/__pycache__/nodeitems_builtins.cpython-313.pyc",
+      "5.4/scripts/startup/__pycache__/rigify_builtin.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/add_mesh_torus.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/anim.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/assets.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/axismeld.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/bone_selection_sets.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/clip.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/connect_to_output.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/console.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/constraint.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/copy_global_transform.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/file.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/freestyle.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/geometry_nodes.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/grease_pencil.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/image.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/image_as_planes.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/mesh.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/node.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/object.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/object_align.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/object_quick_effects.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/object_randomize_transform.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/presets.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/project.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/render.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/rigidbody.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/screen_play_rendered_anim.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/sequencer.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/spreadsheet.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/userpref.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/uvcalc_follow_active.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/uvcalc_lightmap.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/uvcalc_transform.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/vertexpaint_dirt.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/view3d.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/wm.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/__pycache__/world.cpython-313.pyc",
+      "5.4/scripts/startup/bl_operators/node_editor/__pycache__/node_functions.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/__init__.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/anim.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/asset_shelf.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/generic_ui_list.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/node_add_menu.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/node_add_menu_compositor.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/node_add_menu_geometry.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/node_add_menu_shader.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/node_add_menu_texture.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_animviz.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_collection.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_compositor.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_constraint.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_data_armature.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_data_bone.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_data_camera.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_data_curve.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_data_curves.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_data_empty.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_data_grease_pencil.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_data_lattice.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_data_light.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_data_lightprobe.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_data_mesh.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_data_metaball.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_data_modifier.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_data_pointcloud.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_data_shaderfx.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_data_speaker.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_data_volume.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_freestyle.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_grease_pencil_common.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_mask_common.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_material.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_material_gpencil.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_object.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_output.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_paint_common.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_particle.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_physics_cloth.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_physics_common.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_physics_dynamicpaint.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_physics_field.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_physics_fluid.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_physics_geometry_nodes.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_physics_rigidbody.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_physics_rigidbody_constraint.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_physics_softbody.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_render.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_scene.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_strip.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_strip_modifier.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_texture.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_view_layer.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_workspace.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/properties_world.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_axismeld_menubar.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_axismeld_native_modeling.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_axismeld_native_rigging.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_clip.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_console.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_dopesheet.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_filebrowser.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_graph.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_image.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_info.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_nla.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_node.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_outliner.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_project.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_properties.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_sequencer.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_spreadsheet.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_statusbar.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_text.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_time.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_toolsystem_common.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_toolsystem_toolbar.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_topbar.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_userpref.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_view3d.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_view3d_sidebar.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/space_view3d_toolbar.cpython-313.pyc",
+      "5.4/scripts/startup/bl_ui/__pycache__/utils.cpython-313.pyc",
+      "blender.pdb",
+      "blender_cpu_check.lib",
+      "BlendThumb.lib",
+      "portable/.gitignore"
+    ],
+    "manifestSha256": "e1d266b1b5e17908e5c72e69886b459b34330712e953fbfb16f9f030629214b7",
+    "configSha256": "c0463e6fe222eb3178fb1f0b82a7a98fdbb3fe9f1bdb53fec469f6de8e887318",
+    "extractedFactory": {
+      "directory": "extracted-factory",
+      "receiptSha256": "dfcea9fb693bea54b6ab8955a69b6b341d342be1ff8e287ad172970963e1586a",
+      "logSha256": "95303c9a2ca85ecadb6fe728316c9b32222f930ddb60e7d5248273a1ecb45bdb",
+      "scriptSha256": "410d9f25578bceae0340f7ff5299ebe3347ab4c9953ab54b5600fce69cdec9d1"
+    },
+    "extractedGui": {
+      "directory": "extracted-gui",
+      "receiptSha256": "4656799e709129e479beac00318a875e4510285070e23a4e2854b40bba662b35",
+      "logSha256": "1f05228ba3c1655144ad1dc69a1b980aa0f2ee417f4a4f385efe934a36b5d3a9",
+      "scriptSha256": "df7dcfc75a8d69c454dda3cd7b07dc0df58ed0cceb76e6b0314b7f4024922ee2"
+    }
+  },
+  "verification": {
+    "sourceCommit": "7beedde071ca5eaa8fce6090f01cf2ddd40b6804",
+    "binarySha256": "0a4de344f93bafcea9414668746fe1fa0d2fec5dd1bc0b62d86ae3a9acbd56a9",
+    "pureGroups": 42,
+    "pureTests": 415,
+    "nativeGroups": 8,
+    "nativeTests": 144,
+    "cli": {
+      "groups": 4,
+      "suites": [
+        "axismeld_cli_identity",
+        "axismeld_portable_paths",
+        "axismeld_input_profiles",
+        "axismeld_input_blender"
+      ],
+      "unittestCountsBySuite": {
+        "axismeld_input_profiles": 18,
+        "axismeld_input_blender": 11
+      },
+      "execution": "build-install CTest; candidate EXE equality checked separately",
+      "sourceCommitAtRun": "bbce9d3483432f30eff1cc94b61d08838eba25eb",
+      "startedAt": "2026-10-11T11:45:37.865863+00:00",
+      "completedAt": "2026-10-11T11:45:42.826004+00:00",
+      "binarySha256": "0a4de344f93bafcea9414668746fe1fa0d2fec5dd1bc0b62d86ae3a9acbd56a9",
+      "receiptSha256": "ec77ff40b325603d7288868873978c9c284c84edd27913790a72ba39dfc308db",
+      "logSha256": "273a83e9880acce3c0d3df902f2d24a9920ac549371f65b43c20d304a98e19fc",
+      "junitSha256": "9038287dcef961d1ea8739a0fecb8d890a76dc1b0cb18e68ca3fbebbb904cb34",
+      "versionLogSha256": "784dcd5cea86ba5f4461e3cc9bad885162227626afaba89eb0ccfb98d3aece98",
+      "runnerSha256": "953e419e1f92a4224c88e2e698a5323165a090844be54672fcb65599220aab41",
+      "countingNote": "Profiles unittest cases overlap the CPython suite; do not add CLI counts to pure or native totals.",
+      "inventoryNote": "Original inventory.json is retained but has invalid JSON escaping; this gate uses hashed log/JUnit and source/install/binary/script evidence."
+    },
+    "guiSuites": [
+      "modeling-viewport",
+      "menu-shortcuts",
+      "menu-options-navigation",
+      "menu-options-access",
+      "menu-options-geometry",
+      "modeling-disabled-reason",
+      "hotbox-repost",
+      "context-entries",
+      "temporary-snap",
+      "history-hotbox",
+      "tools-modifiers",
+      "tools",
+      "full-menu-lifecycle",
+      "file-window",
+      "release-cross-window"
+    ],
+    "bpyRuns": [
+      {
+        "group": "rigify_builtin",
+        "directory": "bpy-rigify-builtin",
+        "processes": [
+          "factory",
+          "generate",
+          "reopen",
+          "lifecycle",
+          "legacy-seed",
+          "legacy-load"
+        ],
+        "receiptSha256": "3bd042076c5e9e2dcc9824ab4de7e81cf36cf731fda9cfc4846cea7db530ff1e"
+      },
+      {
+        "directory": "bpy-feature-lifecycle",
+        "receiptSha256": "94e6c9bbc37827df7b78e0365e4133d400a86c5caf1eddcf97df686b63a946a6",
+        "logSha256": "d40a3fe9657275e5f2879b3cd28d20c6d14dbf62087349233d77f6b494b2e2d4",
+        "scriptSha256": "b09189d83d839cb770ee2f8046afdbbd542e72b63260f239491a3c021f813b17",
+        "group": "rigify_feature_lifecycle"
+      },
+      {
+        "directory": "bpy-addon-isolation",
+        "receiptSha256": "b10991bafa8ba01af296c5f4a1390f63ad8f3e4e60d11cf7fb980f7d5b2f807c",
+        "logSha256": "61865cdd90a6122e346d141dd1a4417ea4fc4edf8608ff979d7f8cb81054781a",
+        "scriptSha256": "d526ed952d7a70baf7b97712a7905b617de33c94725fb0f1a69581780d9c8996",
+        "group": "rigify_addon_isolation"
+      },
+      {
+        "directory": "bpy-skin-weight",
+        "receiptSha256": "00e57ecd7666cb36b1a3d980498450381f282f084f6e0e301bd28419bba1ce1f",
+        "logSha256": "08e4bab4effff02740e81b10c1ca1cb35419cf10883341af4f7032c2e15d69b0",
+        "scriptSha256": "9bea38c7424e422c4cd720d182020cf25ac4847dc5524dde8bdf86671e8cb4cc",
+        "group": "skin_weight"
+      },
+      {
+        "directory": "bpy-workspace-factory",
+        "receiptSha256": "1b6c381dacd47a142fd165560178ba25b3dc0a6efb94e70e701c28e91bbc9f50",
+        "logSha256": "808b54692c775f5073fa6969b32076833a896780bf032208245281630fec3728",
+        "scriptSha256": "97c8947bf19b6274764832a27516b124603997936aeedc58d51501a7578d5da2",
+        "group": "rigging_workspace"
+      },
+      {
+        "directory": "bpy-workspace-factory-reset",
+        "receiptSha256": "49f80f70ece3abe187bab1069248722a967e6a4a3d9255b2a93dfad4b7b09d8f",
+        "logSha256": "fa77eae99794f0e7fbdb8ca45bdd8723ecb013413e87573db0c05070efe37479",
+        "scriptSha256": "97c8947bf19b6274764832a27516b124603997936aeedc58d51501a7578d5da2",
+        "group": "rigging_workspace"
+      },
+      {
+        "directory": "bpy-workspace-raw-asset",
+        "receiptSha256": "f309c139b9c32928b24641802f7b607658d45145da6c1e32e9fdcdcea7766f16",
+        "logSha256": "612e243180a9ad218ff9eb778d3c12f9fbecd843a596417726e7f31db9a82a00",
+        "scriptSha256": "97c8947bf19b6274764832a27516b124603997936aeedc58d51501a7578d5da2",
+        "group": "rigging_workspace"
+      }
+    ],
+    "bpyGroups": 5,
+    "candidateFactory": {
+      "directory": "candidate-factory",
+      "receiptSha256": "83c9523c243740608fa14dc02f8725175fdf20211dae7b2c93b4eac396570e7d",
+      "logSha256": "95303c9a2ca85ecadb6fe728316c9b32222f930ddb60e7d5248273a1ecb45bdb",
+      "scriptSha256": "410d9f25578bceae0340f7ff5299ebe3347ab4c9953ab54b5600fce69cdec9d1"
+    },
+    "reasonRuns": [
+      {
+        "directory": "reason-low-100",
+        "receiptSha256": "41c55be13dbcecdf36aafd0ae406f06b6b260d2b9b69a235959ad3b4263bff95",
+        "logSha256": "e3c55baaaa0009e0980a51779439805209468d09914c5786a9965a454a4a6c9d",
+        "scriptSha256": "df7dcfc75a8d69c454dda3cd7b07dc0df58ed0cceb76e6b0314b7f4024922ee2",
+        "records": 4,
+        "noFit": false,
+        "restore": false
+      },
+      {
+        "directory": "reason-low-150",
+        "receiptSha256": "80f44502ca3a768fa09030523a5e259b2ed54ff21a182c3f5d81dee934d2dca7",
+        "logSha256": "250cb05d46200c6ec1111724d26e9d306197f0a79e9ff538fa1d3b9475860429",
+        "scriptSha256": "df7dcfc75a8d69c454dda3cd7b07dc0df58ed0cceb76e6b0314b7f4024922ee2",
+        "records": 4,
+        "noFit": false,
+        "restore": false
+      },
+      {
+        "directory": "reason-wide",
+        "receiptSha256": "fc8e4233eaa806a4aa6f954771e8b3e90284042c54e9153047c24139d9f09d7f",
+        "logSha256": "5f5872ae4fb52fa3a34e7bf5bc117893348bcc06c613ca7f09e70ce9e1072e71",
+        "scriptSha256": "df7dcfc75a8d69c454dda3cd7b07dc0df58ed0cceb76e6b0314b7f4024922ee2",
+        "records": 4,
+        "noFit": false,
+        "restore": false
+      },
+      {
+        "directory": "reason-quad",
+        "receiptSha256": "db76caf5d8a86a689b98c1a57c80ff8c184dfcffc8253f608ce83c6733d562b4",
+        "logSha256": "c6d6a1872c42eac2b51acf85d496c250c3217c2556f4647d75f9b5f7488eb1ad",
+        "scriptSha256": "df7dcfc75a8d69c454dda3cd7b07dc0df58ed0cceb76e6b0314b7f4024922ee2",
+        "records": 4,
+        "noFit": false,
+        "restore": false
+      },
+      {
+        "directory": "reason-no-fit",
+        "receiptSha256": "334ff330d8b66ab8e81ddbaec1af49e5a36c80ab1bec5aab4e9eef0deb3690cc",
+        "logSha256": "44f5f071e8058611ceec5f7e313b578ac20bbae5380f1b4d37c4f55b6b99a14b",
+        "scriptSha256": "df7dcfc75a8d69c454dda3cd7b07dc0df58ed0cceb76e6b0314b7f4024922ee2",
+        "records": 2,
+        "noFit": true,
+        "restore": true
+      }
+    ],
+    "siteBrowserChecks": 12,
+    "resourceCount": 145,
+    "gateReceiptSha256": {
+      "candidateAudit": "4b1279be2dfa36c48ed69abac994ee0f3f6440d2a950848cd01fcf6eeca9a5a0",
+      "pureReceipt": "3734819471b43cd9d8049e33db01f6b5700b54a55c9720610301612edcb323b0",
+      "cliReceipt": "ec77ff40b325603d7288868873978c9c284c84edd27913790a72ba39dfc308db",
+      "nativeReceipt": "43a31916fc47c77e4ddb342c0cb9eca1020dfaf311c6fd6ed6be1fb52e631021",
+      "guiReceipt": "dc59f40fb2a3d2b5ca9b779382c75a395bdcbaa10f8383786aa685d71550fadc",
+      "siteBrowserReceipt": "3dfe47f131d8d9d2339996ac327a7ad07645d675143e596bea6f300b558a1291",
+      "siteStaticReceipt": "80993ea8fcca64f5ad51fe92bcfc84e49193b9a364e175287db81732d15fe71b"
+    }
+  },
+  "release": {
+    "status": "PUBLISHED",
+    "tag": "axismeld-2026.10.11-blender-main-preview",
+    "sourceCommit": "7beedde071ca5eaa8fce6090f01cf2ddd40b6804",
+    "url": "https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-blender-main-preview",
+    "release_id": 409640329,
+    "assets": [
+      {
+        "name": "AxisMeld-2026.10.11-blender-main-preview-windows-x64.zip",
+        "size": 303157226,
+        "digest": "sha256:f3692f9813cb6c7d144a371e42768229591b89ca5944671a8c886e62d4ae0a52",
+        "url": "https://github.com/AngelHob/AxisMeld/releases/download/axismeld-2026.10.11-blender-main-preview/AxisMeld-2026.10.11-blender-main-preview-windows-x64.zip"
+      },
+      {
+        "name": "AxisMeld-2026.10.11-blender-main-preview-windows-x64.zip.sha256",
+        "size": 124,
+        "digest": "sha256:ed067a7b02c04ee8667c1c0e06373efddcb5c8d16299ae7e4453a27328fc26bf",
+        "url": "https://github.com/AngelHob/AxisMeld/releases/download/axismeld-2026.10.11-blender-main-preview/AxisMeld-2026.10.11-blender-main-preview-windows-x64.zip.sha256"
+      }
+    ],
+    "recordedAt": "2026-10-11T12:01:25.295022+00:00"
+  },
+  "anonymousDownload": {
+    "status": "DOWNLOADED_AND_STATIC_AUDITED",
+    "authenticated": false,
+    "tag": "axismeld-2026.10.11-blender-main-preview",
+    "sourceCommit": "7beedde071ca5eaa8fce6090f01cf2ddd40b6804",
+    "startedAt": "2026-10-11T12:01:52.255246+00:00",
+    "assets": [
+      {
+        "name": "AxisMeld-2026.10.11-blender-main-preview-windows-x64.zip",
+        "size": 303157226,
+        "sha256": "f3692f9813cb6c7d144a371e42768229591b89ca5944671a8c886e62d4ae0a52",
+        "url": "https://github.com/AngelHob/AxisMeld/releases/download/axismeld-2026.10.11-blender-main-preview/AxisMeld-2026.10.11-blender-main-preview-windows-x64.zip"
+      },
+      {
+        "name": "AxisMeld-2026.10.11-blender-main-preview-windows-x64.zip.sha256",
+        "size": 124,
+        "sha256": "ed067a7b02c04ee8667c1c0e06373efddcb5c8d16299ae7e4453a27328fc26bf",
+        "url": "https://github.com/AngelHob/AxisMeld/releases/download/axismeld-2026.10.11-blender-main-preview/AxisMeld-2026.10.11-blender-main-preview-windows-x64.zip.sha256"
+      }
+    ],
+    "completedAt": "2026-10-11T12:02:51.180174+00:00",
+    "binarySha256": "0a4de344f93bafcea9414668746fe1fa0d2fec5dd1bc0b62d86ae3a9acbd56a9",
+    "factoryStatus": "NOT_RUN_BY_THIS_HELPER"
+  },
+  "publicFactory": {
+    "directory": "public-factory",
+    "receiptSha256": "92881f1f631e528bb988ae95350fda20800c456a39b7619a22731d9ed39fd846",
+    "logSha256": "95303c9a2ca85ecadb6fe728316c9b32222f930ddb60e7d5248273a1ecb45bdb",
+    "scriptSha256": "410d9f25578bceae0340f7ff5299ebe3347ab4c9953ab54b5600fce69cdec9d1"
+  },
+  "manualCatalog": {
+    "total": 342,
+    "current": 330,
+    "superseded": 12,
+    "historicallyTested": 47,
+    "currentPending": 283,
+    "allPending": 295,
+    "newIds": [
+      "GU-22",
+      "GU-23",
+      "GU-24",
+      "GU-25"
+    ]
+  },
+  "intendedPublicSnapshot": "docs/compatibility/2026-10-11-blender-main-preview-snapshot.json",
+  "acceptanceDocument": "docs/compatibility/2026-10-11-blender-main-acceptance.md",
+  "publicSiteStatus": "VERIFIED",
+  "limits": [
+    "Manual acceptance remains separate.",
+    "No independent reproducible rebuild claim.",
+    "No blanket GPU, other-machine or arbitrary-plugin certification.",
+    "New AxisMeld modeling, Skin/Skeleton and UV algorithm development remains paused."
+  ],
+  "buildId": "axismeld-2026.10.11-blender-main-preview",
+  "releaseUrl": "https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-blender-main-preview",
+  "nativeSourceCommit": "7beedde071ca5eaa8fce6090f01cf2ddd40b6804",
+  "resourceCount": 145,
+  "distributionFiles": 6572,
+  "resourceFingerprint": "e9a95b384e061d0b2ea99ad299d511d4efb5bb46495a8057d76313d3a3610dfc",
+  "resources": [
+    {
+      "path": "scripts/addons_core/bl_pkg/bl_extension_ui.py",
+      "sha256": "15f216fa9f7584e989400a143754dc6eac4b185156bab9ee9297c8987e25ddb4"
+    },
+    {
+      "path": "scripts/modules/addon_utils.py",
+      "sha256": "e36888a72b4670094ae445a3530c72171bef1a5d5b0028a92bb9ce6c192695e5"
+    },
+    {
+      "path": "scripts/modules/axismeld/__init__.py",
+      "sha256": "aa3e954fa0871ca07f5d19a4a0065f1a993484694297704e7cd8724af481cc9c"
+    },
+    {
+      "path": "scripts/modules/axismeld/adapter.py",
+      "sha256": "03e9e003544a34a09a0d0cfb623b89e9a02df5a74e804d92e8676d212ad37b36"
+    },
+    {
+      "path": "scripts/modules/axismeld/commands.py",
+      "sha256": "2920b74e616a10c0d7f9c911311b8fccb5cb5649ea0af7e851d23d49edc916d7"
+    },
+    {
+      "path": "scripts/modules/axismeld/context_conversion_hotbox.py",
+      "sha256": "8b2d485ca80d15c16811adb8eb41d71be1643c7a0c4ea5b8b62e358f9a08d3ed"
+    },
+    {
+      "path": "scripts/modules/axismeld/context_hotbox.py",
+      "sha256": "eff09ac19b7c35383e93615d0ad461aa6c40ecde9b81f6a44f78e521a8e202cb"
+    },
+    {
+      "path": "scripts/modules/axismeld/context_modeling_hotbox.py",
+      "sha256": "0954ba6c7af5f78edfd88bc5fa1a92baab26699909b44da11d37678f7589461c"
+    },
+    {
+      "path": "scripts/modules/axismeld/creation_hotbox.py",
+      "sha256": "5e6d6ccdaa72a770d6e8788ee6315aa7c26b6e0ab2186a110ba0139363d37485"
+    },
+    {
+      "path": "scripts/modules/axismeld/edit_preselection.py",
+      "sha256": "bcef43201a8a1e5be5dc4a382fc48f6c6447a3d0f71ba99a80bc28e623fcc105"
+    },
+    {
+      "path": "scripts/modules/axismeld/history_hotbox.py",
+      "sha256": "de822adbcc48811c7d88a890830746093ff778bef05cea734fc832234c88a273"
+    },
+    {
+      "path": "scripts/modules/axismeld/hotbox_catalog.py",
+      "sha256": "a6906bb1f73943880bdd953b8d13e5642d0ea9520f83897be1a3112a25619fdc"
+    },
+    {
+      "path": "scripts/modules/axismeld/hotbox_profiles.py",
+      "sha256": "68f447d4670e4f27ea03389bc1c4f943bbc1ee0ff320684d7ebc42d9ec27e0d4"
+    },
+    {
+      "path": "scripts/modules/axismeld/hotbox_runtime.py",
+      "sha256": "01dbe467b582846c2ce49eaa9158e0fdc12cd3d8fc285519cfcbc1b46d6e78c6"
+    },
+    {
+      "path": "scripts/modules/axismeld/keymap.py",
+      "sha256": "ccbbb4745ea38eb56507514c6f0cfaf53bb1d3c2f4a6232adbc323b21be21f6a"
+    },
+    {
+      "path": "scripts/modules/axismeld/maya_menu_catalog.py",
+      "sha256": "c92c59e919f80785a381d75c7fb35c8fee6f71f1e4201a120f53d51defe7cb79"
+    },
+    {
+      "path": "scripts/modules/axismeld/maya_menu_reference.py",
+      "sha256": "b05bd093fb7fc4789b962bbd34177d7168ba36ebc1025a6f4432a05378c567cc"
+    },
+    {
+      "path": "scripts/modules/axismeld/menubar_actions.py",
+      "sha256": "075e0e47415f9b0b5e73273893100b2a386523b872e44f7a719aaaa7900e17d0"
+    },
+    {
+      "path": "scripts/modules/axismeld/menubar_catalog.py",
+      "sha256": "6072d88b20ea90116f9cbdc5b337c32685274010be4f164560dfd632d8c3eb8a"
+    },
+    {
+      "path": "scripts/modules/axismeld/menubar_native.py",
+      "sha256": "9cb6b9afea60f23f7f41dc7c769c2331b226c79ef99691933a583cf03759492a"
+    },
+    {
+      "path": "scripts/modules/axismeld/menubar_reference.py",
+      "sha256": "6c47aba8e47901242e79fa3ed18c6e837a6a95391de12b539ae87432ea281dbd"
+    },
+    {
+      "path": "scripts/modules/axismeld/menubar_runtime.py",
+      "sha256": "95edfd5050eb3d69342c89e754d3e5fc6530d7f8df96cfdddbed11e11dfda184"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_adapter.py",
+      "sha256": "9e7951dd9d8a8aef1aa8d03e386212135c4ef5ad5076f6d186a53a80c152c3a0"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_catalog.py",
+      "sha256": "e65408c7d826dd32489def163d6556920d33cd7886882d098eb2ec7c81276205"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_common.py",
+      "sha256": "49c6e9a99594461a12362358d0316b5d932372b72077b1cef3e9d4fec33df582"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_common_ops.py",
+      "sha256": "b74ee65c43d051490c010c06ce569eee8c8b73836df2ce70c8e4b87240a56e42"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_gaps.py",
+      "sha256": "d6d7aac7f8045bed57fbbb964f30786bee3ac02481c3746433c6a380681e08d2"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_mesh.py",
+      "sha256": "c6e2b922085e00fe5b357f44ad4c2e59f4f7ea1d2f723b83e76285d0e91038ab"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_mesh_ops.py",
+      "sha256": "d1d38e008d1449aedece2e119332fecf14f87df2638f018cfa51faf6a2b9940d"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_registry.py",
+      "sha256": "bb092dc076b2cb72574f101e0598d7b38ddd9f5fce487b398bf31fe2e91fde3e"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_schema.py",
+      "sha256": "837bbd0879c2098c979aca875accec7450c4714512de639adc0ef2af9d063423"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_shapes.py",
+      "sha256": "e18bd73fb87b60be724f7f64aae8c7168c044a9887a76047cd6f961055cf889e"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_shapes_ops.py",
+      "sha256": "f4968b77b86d097a99d46350eb70623e5718f72d885f8c49258219e51bc30019"
+    },
+    {
+      "path": "scripts/modules/axismeld/object_modeling_hotbox.py",
+      "sha256": "b01d9a78c8690f45e529377d2be74857f82543ffc64d7c4c86cc5c3f0eb0f4dc"
+    },
+    {
+      "path": "scripts/modules/axismeld/object_modeling_ops.py",
+      "sha256": "8785978a390bc014d9f0f6deec110370a02b048ec7f4843c4b004678549e3daf"
+    },
+    {
+      "path": "scripts/modules/axismeld/profiles.py",
+      "sha256": "4984010339dce13170c9c1cf9a73172771bc31f37b7b2f08ec0670e7cbdeafae"
+    },
+    {
+      "path": "scripts/modules/axismeld/rigging_workspace_catalog.py",
+      "sha256": "4392b990a010ca0b6622995164b3605f44c1dc06729a9b84464286cfab9371bb"
+    },
+    {
+      "path": "scripts/modules/axismeld/runtime.py",
+      "sha256": "eb0b9ed7622ff119f5534b64ba7c92d032d9cc358f4f808dbe44c411b3cb5964"
+    },
+    {
+      "path": "scripts/modules/axismeld/skin_weight_ops.py",
+      "sha256": "a6509f107632b4a6089f89ce349095c3fcff384cfccdbc0dbd5ca9c8ba8f6bea"
+    },
+    {
+      "path": "scripts/modules/axismeld/skin_weight_plan.py",
+      "sha256": "bbdb9aeb2f0590dca50b067ade9a83f6f88b900ea6dd37dc0dd89aadd18ca6ed"
+    },
+    {
+      "path": "scripts/modules/axismeld/tool_hotbox.py",
+      "sha256": "c4b942b17d00b17cfbbc6a3808f30f2ef11040a28cec50725688707f9fd002c3"
+    },
+    {
+      "path": "scripts/modules/axismeld/workspace_menu_catalog.py",
+      "sha256": "fbcdde64417e8f364324cf98dcc10b3406a8329340add372cac98dc119da14a6"
+    },
+    {
+      "path": "scripts/modules/axismeld/workspace_native_catalog.py",
+      "sha256": "4ebf7c6f5d093d41943ce572b903a0581ec8d67f77bd012fa694b3263c1e7ff5"
+    },
+    {
+      "path": "scripts/modules/axismeld/workspace_native_groups.py",
+      "sha256": "084d6dc15be2ca4cd16cb9c563b0e6fb8f971e0444dd7adcf7259d75ba477933"
+    },
+    {
+      "path": "scripts/modules/rigify/__init__.py",
+      "sha256": "ec7b55296d9db6a2b49cbe57b896080250ae34cf5705a4b7101fb6d36099baf7"
+    },
+    {
+      "path": "scripts/modules/rigify/base_generate.py",
+      "sha256": "e304e886ac32ec952c2a9f0b0b5f89649971011dfe0d4153e130ef6f706736bb"
+    },
+    {
+      "path": "scripts/modules/rigify/base_rig.py",
+      "sha256": "02f4bed5494bee98e729972bf4e3d075ed52c824e8ba8706521198fc526391fc"
+    },
+    {
+      "path": "scripts/modules/rigify/feature_set_list.py",
+      "sha256": "44a5b0cd0afb62b6714e90056465d46ac23e1ffbce669aae590c4c5631ecf15e"
+    },
+    {
+      "path": "scripts/modules/rigify/feature_sets/__init__.py",
+      "sha256": "83bc0ea2d94d4c9bb8ec1d74cf31cf66a5127827e1d7afb25340e958d80bf0a5"
+    },
+    {
+      "path": "scripts/modules/rigify/generate.py",
+      "sha256": "8cf571ce6bc526516369ea67283ff4e2447c4de5b2221e36e7845cb4527a419d"
+    },
+    {
+      "path": "scripts/modules/rigify/metarig_menu.py",
+      "sha256": "2ebf5ae48204833147b5128ad39bbd9483950b5e029e514dfdd558bd5d4b76be"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/Animals/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/Animals/bird.py",
+      "sha256": "ddaa7f073dd51ca67e03f0391c0cded9c526726018c36e481003137ca4bb743b"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/Animals/cat.py",
+      "sha256": "5b78331ad20cf3ec9ea08c07f2e5ef04769276c52242b76297a1ef51607ac4a0"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/Animals/horse.py",
+      "sha256": "21efab0960ac5f5dfccbe6bf794f55aa3e102cb3403034b32a4605315371a030"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/Animals/shark.py",
+      "sha256": "0ad1c29d9fcb20e651f9f675ccfd53298cc06dab799c0b4de899d48b0433ee0b"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/Animals/wolf.py",
+      "sha256": "156b08279a93ad951f626ea10029c41fb1cfd16d3777544b4288ee729c96ee69"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/Basic/basic_human.py",
+      "sha256": "72abfc5baf5ef577ba3a95bc0fc6c4d53f1b83b4fdf9741cce39c57aee92d007"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/Basic/basic_quadruped.py",
+      "sha256": "8e1feb4f47a01fa49c0e4c5baeae42db168fed3d437d3e8cc63d2342b93230e9"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/human.py",
+      "sha256": "5a73068517140a179750be019b2821e6570d98daa0a1409584cacda012ad1958"
+    },
+    {
+      "path": "scripts/modules/rigify/operators/__init__.py",
+      "sha256": "4f389bb2c366559839691beae0d886fbd0f77b11eab732d64452c96a3eac091b"
+    },
+    {
+      "path": "scripts/modules/rigify/operators/action_layers.py",
+      "sha256": "c48ac2f6450da5864fc8d1d4d00d0ae76bb35a15e856a11e5eddbe7ef34a1059"
+    },
+    {
+      "path": "scripts/modules/rigify/operators/copy_mirror_parameters.py",
+      "sha256": "fb041fb22e9a7bcc1ca51a722d724b11ec53322dafef007bd08ed7e828e50945"
+    },
+    {
+      "path": "scripts/modules/rigify/operators/generic_ui_list.py",
+      "sha256": "1249b4c0b3d705663c0a2a89234f58452bc9888ca0a247129091c7271b1d63ee"
+    },
+    {
+      "path": "scripts/modules/rigify/operators/upgrade_face.py",
+      "sha256": "9d9aedea2b2880d8432dfa4973811e36c855a04f4b9bc20c541a3e83e1dce58e"
+    },
+    {
+      "path": "scripts/modules/rigify/rig_lists.py",
+      "sha256": "bc33c05c71b46119c4f5cbcb6aa7906c2d8608d52acfc0f13bc6dcc1bd13a384"
+    },
+    {
+      "path": "scripts/modules/rigify/rig_ui_template.py",
+      "sha256": "d2a484343c7136c616f0584be40e0519f1c6dc6b8b1f7cedde8ec7baf09656ae"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/basic/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/basic/copy_chain.py",
+      "sha256": "1c993fc2c183f07f4d4a997afc22538ae8c2232610f53dea61579b420c185baf"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/basic/pivot.py",
+      "sha256": "00f4f49142e186b20f5e3a66331ae9d434c36d4bee86c584f620f37d6b096221"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/basic/raw_copy.py",
+      "sha256": "269cfe6d940ae3d5b4702d0a2957db5b8d7c62a1cb8dfdec956b681bdabc22d3"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/basic/super_copy.py",
+      "sha256": "0202d86d7b75b447b313187a4b20f546a82976903109254283da52015991d414"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/chain_rigs.py",
+      "sha256": "7eb945b912f7dc810d40bfa0eff38f6440369fe209eb5c6f96f7e675ebb98c52"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/experimental/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/experimental/super_chain.py",
+      "sha256": "51c99ece881ee8ce425c249fded39f7b5c54fda425b9300aa4e213fac3bb65cd"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/face/basic_tongue.py",
+      "sha256": "da4fc57ec61e18439b02909ab789a890feb7f2a7b1b5645306942a6a663d8a5c"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/face/skin_eye.py",
+      "sha256": "e608c33576e056cc218aa30e5fedbd0abd28a419fc87f2536f33a141619d14a0"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/face/skin_jaw.py",
+      "sha256": "501e861bc466dde2cd6fca2fa1eb1a0c338a8f7face3bd715531b37d64a22bc0"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/faces/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/faces/super_face.py",
+      "sha256": "2f7555093ad04cf544f351891e40b1d23caddbcd1bb458c1ab01fd5568521eb2"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/arm.py",
+      "sha256": "73f2bc324b4ac88b11935de2b85fb04b8b6e0b0ffbd252878510c54ec09e3571"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/front_paw.py",
+      "sha256": "bf4d5b7b27be9b33341980f3cd186c99c865786089dc55cf97b200631f56e1ad"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/leg.py",
+      "sha256": "9debc2341574817f117e0970166f79d20eecbf2b01d1ac0f11cfcb48f550a581"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/limb_rigs.py",
+      "sha256": "0ebc6e4d2ee3c915d87e3b65830036b8caac8005a1bca09e47bbba20097bf681"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/limb_utils.py",
+      "sha256": "158290ab57f0bdbee3fe024acbd18767de4e2ca11a7f12aa7fb74bc0fc1381cc"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/paw.py",
+      "sha256": "ec25b2e9b288977bc40229b74eb3149c6e6c1be5748019ff1f3547347d4fb6af"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/rear_paw.py",
+      "sha256": "5c70f8f0c189733b073b151c6028495a496e9c552f3f3502864fdfbc0022c67c"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/simple_tentacle.py",
+      "sha256": "4e75286cf2b2b55a3f32a625dcd7bf53efe9503f77fe6d9f93b6cb3cdc90fa82"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/spline_tentacle.py",
+      "sha256": "603ae274010b56df31bd82c07a00dbf4782dcf3464e0fdca6498a1ebdead6902"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/super_finger.py",
+      "sha256": "44ddb145d6c13a4503e226fdd256f9fa06b294bd4c8ea56711992930991efc10"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/super_limb.py",
+      "sha256": "cc6a0d8a34512eb207d175bd6448b25394ec175a6ec4d520a903c87fe3a07625"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/super_palm.py",
+      "sha256": "35da2d8bd61affd5e8a027340b1523cfcff6026b840a22d91498f03961dbe34f"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/skin/anchor.py",
+      "sha256": "f53e0103b969d65565378b20b70fe49c47200025ae10d984f2482325d3ca4445"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/skin/basic_chain.py",
+      "sha256": "4327d5dbf955311373fe637ac97ee00143c58b1b7f3e7cfdf7877947c7b09c10"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/skin/glue.py",
+      "sha256": "d8d2d209dd699c4fe316b346f61858133148dcfbdb50d623328d5f6481770172"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/skin/skin_nodes.py",
+      "sha256": "bd9b6d6dc90602192e3136db77fe74d7d2b8fe70357770702e008ca75bed5ec9"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/skin/skin_parents.py",
+      "sha256": "c7b55bf62c9b341e25dd24b784ef85cc93fa577e2ab6e15105b57c279868d1fc"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/skin/skin_rigs.py",
+      "sha256": "b9b7ed134809b4383d9eb49d92d6aa8529916f718a0f95194f0adeaf070d43bd"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/skin/stretchy_chain.py",
+      "sha256": "023e03843c0d55250d7ccd7ce36f378f18a5ca51c870d9678546541822cbda08"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/skin/transform/basic.py",
+      "sha256": "cbad8556a33ca2daff64da457dc06295052c4ca7cee50845659479c29438ca40"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/spines/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/spines/basic_spine.py",
+      "sha256": "22d542315922f46f0be551be52293aaf714e906d7fa6d7a82ebadbf493f31f1a"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/spines/basic_tail.py",
+      "sha256": "946069d2fdb7b6ddaa9c0761ca7f71b48c47bf645f9bede11d8bfd625e52b2d4"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/spines/spine_rigs.py",
+      "sha256": "9435f745fd73cac987923508d1dd89e17bffb43b4500f69767c16e0270fcfa23"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/spines/super_head.py",
+      "sha256": "72cde4bf38f6cecc6b7a01f8abace8f32aa49a3829ef1bf8cbb76985aa110e0f"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/spines/super_spine.py",
+      "sha256": "fd2cf4fe674e4b79c32f52dd6c6a4252e24fd01ec8531e7b14275dcd840dcf57"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/utils.py",
+      "sha256": "01ce147039b4daa7ef5de53803a8e514499e77b356399ce5d08b8a2eecb0433a"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/widgets.py",
+      "sha256": "9adda4b2060ca56183410977f003aae0efb08b6366f2806daa6c23cdd2635e50"
+    },
+    {
+      "path": "scripts/modules/rigify/rot_mode.py",
+      "sha256": "43f727345245a613b9fa59bff6e8aed41c1a1f3a48b1605ac0cc60e44e83f619"
+    },
+    {
+      "path": "scripts/modules/rigify/ui.py",
+      "sha256": "a82e8c0561e73c9b1542ca5a44c9c1807101556d9c791487c40dff3b091e4b9e"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/__init__.py",
+      "sha256": "52c2327b136f8b033bf8e604499d2af83bec9ebe7dbf19dba0cf8ff36c8b971a"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/action_layers.py",
+      "sha256": "d1524f5aaf74da7379a1bfaa336908d5bf5b82d95fd9bc29e59b1c921001adf6"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/animation.py",
+      "sha256": "995ab2e058206c11bfe246e3060e0d107aa78a556c8907c52e84ad332f3f1a43"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/bones.py",
+      "sha256": "9e34a0cbeccfc645c83df333978e4cdd6dfd6983f712c65422524dad81de6c4b"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/collections.py",
+      "sha256": "50ea59c5e6d1425f2c20e13a27e14a766a5e85f6a60a348bfdc0b4f31efccaf1"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/components.py",
+      "sha256": "cf5030db47c281c63ee46bed229cd9c5d557459aed849188dcd22a72139f7532"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/errors.py",
+      "sha256": "83a61bfe2dcfcf961e87df8c6df36ffdfb5cfc245f63be95ddb94a9e313e2e40"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/layers.py",
+      "sha256": "012e6b5ca958bb967b807e5321ffc9ead1a22accf1258e6e8a7c13ad9f1b39eb"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/mechanism.py",
+      "sha256": "335678472356b5126b236b9fa42ccd1c6099862795c63ac494a5db41b83354cb"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/metaclass.py",
+      "sha256": "76424ead0644e017fe682865c4a3fa579329f64512a2c02fab8185371f0d517c"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/misc.py",
+      "sha256": "5da4afa21ab24d4aaeff543a47ac5dc8e643668e34ad02c2cacb6121de3e2c20"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/naming.py",
+      "sha256": "8164513f6820d2836d9c92643898babb72ec45fb2a71c52ea0679ccc52ee51ca"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/node_merger.py",
+      "sha256": "4c4460510c2b1e0db967eb132047a992e29b1ac130f3d10431049b171dbee37e"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/objects.py",
+      "sha256": "210f72444a089373ae9282034701538deea48cb4b3cf9796a85e323c003483ed"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/rig.py",
+      "sha256": "46e8a5df89040789be22a5deea4a2c2abd2915beadc113002eb0cc60d45fa3ef"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/switch_parent.py",
+      "sha256": "7b0d2e8ccedf3a3449a5043572e6d341a1d8c532cd9d68ea0a114c9019a3115e"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/widgets.py",
+      "sha256": "a8d0c368490b063ea1ac5ee1efdfe2516d079f914827961b711aba5504f40592"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/widgets_basic.py",
+      "sha256": "b29b83813ec00b26a245e64eb7c480f0c64c7e167536c98d776af734b384ec73"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/widgets_special.py",
+      "sha256": "9d0199c94da181ccbc4b16a77af4fd03c370c563fa8232e970431cd13e60ac5f"
+    },
+    {
+      "path": "scripts/modules/rna_keymap_ui.py",
+      "sha256": "a154cdcd6b1d90ff830db0c4aabcc1dd1bf4f2cd2a46dd405722180cc06f799f"
+    },
+    {
+      "path": "scripts/presets/keyconfig/AxisMeld_Maya_2026.py",
+      "sha256": "0c3085e44b550429056eaa8259f2ef332e2f51efb0b6ff080281cea3892015d1"
+    },
+    {
+      "path": "scripts/startup/bl_operators/axismeld.py",
+      "sha256": "f09d9a612a6a1106c1b1d5d4787e41efb79a303d3179c9b33493d50e03384b95"
+    },
+    {
+      "path": "scripts/startup/bl_ui/__init__.py",
+      "sha256": "b7bf6e6678f9bf580fc9436ff2d411138ffdd03e8422ec155ce02c7f931bd218"
+    },
+    {
+      "path": "scripts/startup/bl_ui/properties_data_mesh.py",
+      "sha256": "67d04dfafd27081bf501e833e51e83fd62c3e022e231dc87e53b278426cf64be"
+    },
+    {
+      "path": "scripts/startup/bl_ui/space_axismeld_menubar.py",
+      "sha256": "b10e60c40505c2e690b9bb83658aa4e42d293d96834b06b7f46bcdb7319d2ac7"
+    },
+    {
+      "path": "scripts/startup/bl_ui/space_axismeld_native_modeling.py",
+      "sha256": "81d29798c046503acb85af27008a726ffcb600ee35443f1406adbc902495014c"
+    },
+    {
+      "path": "scripts/startup/bl_ui/space_axismeld_native_rigging.py",
+      "sha256": "4355bdd8cd7ac716c004e0cb4e7bb67c007d4dd87c3e783dec7a5794f674385e"
+    },
+    {
+      "path": "scripts/startup/bl_ui/space_image.py",
+      "sha256": "81e59bb4947b8ef0bce80d3e75aa83b76cd17cb9b6d35a142a25e05d46ae171d"
+    },
+    {
+      "path": "scripts/startup/bl_ui/space_topbar.py",
+      "sha256": "7838d193174e24817f2165c3e1512a7426a7474565a37495b726deeb5ef74f2a"
+    },
+    {
+      "path": "scripts/startup/bl_ui/space_userpref.py",
+      "sha256": "00749a220b08477f6731a659f3b1b8fd51fe6504f011629d6f0cdbd304539a72"
+    },
+    {
+      "path": "scripts/startup/bl_ui/space_view3d.py",
+      "sha256": "b3269baae3bde26ff9c0d59cc74a8e0ac1b92d4fb5072349e83642197763aff9"
+    },
+    {
+      "path": "scripts/startup/rigify_builtin.py",
+      "sha256": "fc86411b606ed844aceea990de1bbe0c9b0792064b51a99a1cf939691909bcbe"
+    }
+  ],
+  "assets": [
+    {
+      "name": "AxisMeld-2026.10.11-blender-main-preview-windows-x64.zip",
+      "size": 303157226,
+      "digest": "sha256:f3692f9813cb6c7d144a371e42768229591b89ca5944671a8c886e62d4ae0a52",
+      "url": "https://github.com/AngelHob/AxisMeld/releases/download/axismeld-2026.10.11-blender-main-preview/AxisMeld-2026.10.11-blender-main-preview-windows-x64.zip"
+    },
+    {
+      "name": "AxisMeld-2026.10.11-blender-main-preview-windows-x64.zip.sha256",
+      "size": 124,
+      "digest": "sha256:ed067a7b02c04ee8667c1c0e06373efddcb5c8d16299ae7e4453a27328fc26bf",
+      "url": "https://github.com/AngelHob/AxisMeld/releases/download/axismeld-2026.10.11-blender-main-preview/AxisMeld-2026.10.11-blender-main-preview-windows-x64.zip.sha256"
+    }
+  ],
+  "windowsLibraryCommit": "aa0c5db72fa9488bb685bdddbede780d19f483f5",
+  "inputCounts": {
+    "commands_with_default": 58,
+    "bindings_including_aliases": 60,
+    "base_maps": 281,
+    "generated_maps": 282,
+    "protected_maps_checked": 187,
+    "inherited_items": 499,
+    "removed_items": 45,
+    "owned_auxiliary_items": 7
+  },
+  "nativeModalInputs": 3,
+  "publicSite": {
+    "status": "passed",
+    "url": "https://angelhob.github.io/AxisMeld/",
+    "pagesCommit": "9fc6257e35e4aad6158fab4cf92634dbfb59cb02",
+    "verifiedAt": "2026-10-11T12:04:18.247843+00:00",
+    "buildId": "axismeld-2026.10.11-blender-main-preview",
+    "catalog": 342,
+    "new": 4,
+    "assets": [
+      {
+        "name": "index.html",
+        "sha256": "34ffe5a577addc9486bac53cf538ba7369ae11bf7e6c043da25f58acacd7cb71",
+        "bytes": 7191
+      },
+      {
+        "name": "app.mjs",
+        "sha256": "9abe691148a1cde8db22e889d006b2018e45e7501baeeb83ea2a09fc5f6cf97a",
+        "bytes": 22736
+      },
+      {
+        "name": "styles.css",
+        "sha256": "6fe8a8755641ba9af0aa862fd62d55b2d7be2f02aaebd79ef1b5a4eb161079fe",
+        "bytes": 15219
+      },
+      {
+        "name": "config.json",
+        "sha256": "6281a6d6435c3fd537ed65e688c5855e9d69f27daca656683b5346dc86687b0b",
+        "bytes": 507
+      },
+      {
+        "name": "catalog.json",
+        "sha256": "fb65f39b24695f8e6d93a79eeaba7826e2be3afc7a75c096a8aa4afbfe1265b3",
+        "bytes": 231854
+      },
+      {
+        "name": "favicon.svg",
+        "sha256": "2cca7741a0dede35653d222677e15559e566c8dbab6882229ec6ab7b8f410737",
+        "bytes": 246
+      }
+    ]
+  },
+  "documentationRecordedAt": "2026-10-11T12:05:46.851989+00:00"
+}

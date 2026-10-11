@@ -1,6 +1,6 @@
 # Blender 5.4 主干同步验收
 
-日期：2026-10-11。状态：合并冲突、全新原生构建、候选安装与自动回归通过；完整预览包的打包和公开下载验证待完成。
+日期：2026-10-11。状态：固定主干合并、新构建回归与预览发布已完成；自动证据不代替人工验收。
 
 ## 固定基线与合并范围
 
@@ -27,15 +27,30 @@
 
 ## 构建与交付门禁
 
+
 - [x] Windows 精确库 checkout、LFS fsck 与 1,239 个唯一对象长度/SHA256 校验通过，子模块干净。
 - [x] 当前 index 的 360 项构建 LFS 资产已落盘并核验；补齐七个缺失对象后，assets/release/scripts/startup 中无残留指针。AxisMeld 自定义 startup.blend 普通 Git 内容保持。
 - [x] 全新 `D:/source/AxisMeld-build-main-754ebe3c4b4e` 配置完成，使用完整功能预设、Release、CRT、原生测试和 Jolt；不复用旧 5.3 缓存或可执行文件。
-- [x] 全新原生构建与独立安装通过；实际 5.4.0 Alpha，EXE SHA256 `0a4de344f93bafcea9414668746fe1fa0d2fec5dd1bc0b62d86ae3a9acbd56a9`，145 项受管资源一致，候选静态审计通过。
-- [x] 最终纯 Python 42 组 415 项、八组原生 144 项通过；另四组 CLI CTest 通过（profiles 18 项已计入纯测试，installed-input 11 项独立）。factory 与五组 bpy 功能检查通过，Rigify 六子进程覆盖真实旧 addon 偏好迁移。
-- [x] 15 组当前菜单/热盒 GUI 回归通过；低窗 100%/150%、宽窗、四视图和无位置隐藏后恢复共五组合、18 条实际观察通过。720×480/150% 不显示说明，放大到 1920×1080 后同一说明完整恢复且与菜单零交叠。
-- [ ] 完整包静态审计、干净解压、实际运行、匿名下载与公开 Pages 校验。
 
-最终结果和发布快照在取得实际回执后填写；本地完整日志位于 `D:/source/AxisMeld-build/gui-2026-10-11-upstream-main-audit/`。这是本机审计路径，不是公开下载资产。
+- 42 组 415 项纯 Python、8 组 144 项原生，另有 4 组 CLI（profiles 18 项、Blender input 11 项；profiles 与纯 Python 重合，不累加），15 组 GUI 回归、5 组 bpy 功能及 factory、5 个说明矩阵组合全部通过；GUI 与说明矩阵分别计数。
+- GUI suites：modeling-viewport、menu-shortcuts、menu-options-navigation、menu-options-access、menu-options-geometry、modeling-disabled-reason、hotbox-repost、context-entries、temporary-snap、history-hotbox、tools-modifiers、tools、full-menu-lifecycle、file-window、release-cross-window。
+- 145 项资源、6,572 个发行文件通过静态审计；解压包 factory/说明 GUI 与匿名下载 factory 通过。
+- 本地网站静态/状态检查及 12 项浏览器检查通过；Pages 实际字节核验见下方交付。
+- 输入现状：58 默认命令、60 条含别名绑定、7 个操纵器辅助入口、3 个原生模态持键入口、499 条原生继承、45 条移除、187 个受保护 keymap；基准/生成 keymap 为 281/282。
+
+| 实际目录 | 窗口 / 缩放 | 验证范围 |
+| --- | --- | --- |
+| `reason-low-100` | 840×480 / 100% | 完整说明、菜单零交叠 |
+| `reason-low-150` | 840×480 / 150% | 完整说明、菜单零交叠 |
+| `reason-wide` | 1200×800 / 150% | 完整说明、菜单零交叠 |
+| `reason-quad` | 1920×900 / 150% | 完整说明、菜单零交叠；四视图偏移 |
+| `reason-no-fit` | 720×480 / 150% | 无完整空白时隐藏；放大后同一说明恢复 |
+
+完整回执位于本机 `D:/source/AxisMeld-build/gui-2026-10-11-upstream-main-audit/`；这是审计路径，不是公开下载资产。
+
+## 发布与交付
+
+完整 [Blender main preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-blender-main-preview) 已发布；源码/native `7beedde071ca5eaa8fce6090f01cf2ddd40b6804`，基于 Blender 5.4.0 Alpha。ZIP 303,157,226 字节，SHA256 `f3692f9813cb6c7d144a371e42768229591b89ca5944671a8c886e62d4ae0a52`；EXE SHA256 `0a4de344f93bafcea9414668746fe1fa0d2fec5dd1bc0b62d86ae3a9acbd56a9`。6,572 个发行文件、145 项选定资源通过干净解压审计；解压包 factory 和实际说明 GUI、匿名重下载后的校验/解压/factory 已通过。本地网站 12 项浏览器检查通过，Pages `9fc6257e35e4` 的 6 个公开资源逐字节核对通过。[发布快照](2026-10-11-blender-main-preview-snapshot.json)保存精确指纹。旧预览包保留。
 
 ## 待人工
 

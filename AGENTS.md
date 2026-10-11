@@ -1,6 +1,6 @@
 # AxisMeld 开发接续
 
-**最新交付（2026-10-11 GUI short-window polish）：极低窗口说明避让修复及完整原生预览包已发布。** 说明在窗口空白区域完整换行显示，必要时移到菜单侧面；全文无处容纳时暂不显示，扩大窗口后恢复。菜单文字、布局、命中及取消保持。本轮通过 94 项纯 Python、133 项原生，5 组菜单/交互 GUI 回归及 5 组窗口/缩放说明矩阵通过。[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-short-window-preview)，源码/native 均为 `665cb38b123d89d273d6f68e2c748a258abfff47`；匿名下载、干净解压及工厂启动已核验。详见[本轮验收](docs/compatibility/2026-10-11-gui-short-window-acceptance.md)与[发布快照](docs/compatibility/2026-10-11-gui-short-window-preview-snapshot.json)。新增 GU-22 待人工，GU-01～GU-21 及原结果保持。新算法继续暂停。
+**最新交付（2026-10-11 Blender main preview）：Blender 5.4.0 Alpha 主干同步及完整原生预览包已发布。** 合入固定上游 `754ebe3c4b4e1402a159df6e1e58823cc93ef887`，保留七根 Modeling、Rigging、独立 Options、灰占位及极低窗口说明避让；新算法继续暂停。本轮 42 组 415 项纯 Python、8 组 144 项原生，另有 4 组 CLI（profiles 18 项、Blender input 11 项；profiles 与纯 Python 重合，不累加），15 组 GUI 回归、5 组 bpy 功能及 factory、5 个说明矩阵组合通过。[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-blender-main-preview)，源码/native `7beedde071ca5eaa8fce6090f01cf2ddd40b6804`；匿名下载、干净解压及工厂启动已核验。详见[本轮验收](docs/compatibility/2026-10-11-blender-main-acceptance.md)与[发布快照](docs/compatibility/2026-10-11-blender-main-preview-snapshot.json)。公开目录 342 项（当前 330、历史 12），47 项仅历史已测，当前初始未测 283、全表初始未测 295；最新标记 GU-22、GU-23、GU-24、GU-25。既有编号与人工结果保持，自动化不替用户勾选。
 
 - 新接手先读 `docs/ROADMAP.md`、`docs/CURRENT_ISSUES.md`、`docs/HANDOFF.md`，再读当前模块设计与源码。旧日期文档是历史设计，不可据其状态重做已经交付的功能。
 - 当前开发分支为 `axismeld/phase-2a`；默认 `axismeld/integration` 未包含最新功能。不要自动合并到默认分支；新机拉取、LFS、构建、验证及发布说明见 `docs/BUILD_AND_DELIVERY.md`。
@@ -9,7 +9,7 @@
 - `AXM-COMPAT-001` 全局缩放差异按用户决定搁置，不自动重启。人工验收暂缓不阻止可验证的开发，但自动化不得替代人工状态。
 - 当前优先级（2026-09-29 用户更正）：UI、交互与 Maya 2026 默认快捷键优先，暂停新增建模、Skin/Skeleton、UV 算法和功能适配。U0–U3 当前范围实现已完成；保留已实现入口和回归，接续先查本批验收与具体反馈，不重复开发。阶段交付后报告范围与待人工内容，由用户决定何时恢复功能开发；不自动回到 A2 Influences。
 - Space → File 只接入 Open Scene / Save Scene As 两个无默认快捷键的语义命令。跨窗松键依靠精确调用 token 穿过原生确认链；不得改成全局键盘拦截、跳过确认或把其他 File/Window 灰项批量启用。设计见 `docs/development/2026-10-11-file-window-release-design.md`。
-- 最新 GU-22 共 1 项人工待测；公开目录 339 项（当前 327、历史 12），47 项仅历史已测，当前初始未测 280、全表初始未测 292；GU-01～GU-21 等既有项目保持。自动化不修改任何人工测试结果。
+- 公开目录 342 项（当前 330、历史 12），47 项仅历史已测，当前初始未测 283、全表初始未测 295；最新标记 GU-22、GU-23、GU-24、GU-25。既有编号与人工结果保持，自动化不替用户勾选。
 
 ## AxisMeld 热盒约束
 

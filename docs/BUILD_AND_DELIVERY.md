@@ -1,6 +1,6 @@
 # Windows 构建、验证与交付
 
-**当前完整预览包：GUI short-window preview。** [下载](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-short-window-preview)；源码/native `665cb38b123d89d273d6f68e2c748a258abfff47`，exe SHA256 `261dbf8969379ca4c63992f6480038b3b1572d8761612d679464a9d032405273`，145 项选定资源、6,498 个发行文件。ZIP 297,083,907 字节；SHA256 `d49d7fd4a11bb4cdb54e8931c4391deb0a7d07661d64ea22e3e6341c4645d766`。匿名下载、干净解压和工厂启动已验证；本批 94 项纯 Python、133 项原生，5 组菜单/交互 GUI 回归及 5 组窗口/缩放说明矩阵通过。完整记录见[极低窗口验收](compatibility/2026-10-11-gui-short-window-acceptance.md)与[当前快照](compatibility/2026-10-11-gui-short-window-preview-snapshot.json)。下方首批历史构建的 exe、139 项测试、144 项资源及文件/缓存记录保持原口径，不能当作当前包数据。
+**当前完整预览包：Blender main preview。** 完整 [Blender main preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-blender-main-preview) 已发布；源码/native `7beedde071ca5eaa8fce6090f01cf2ddd40b6804`，基于 Blender 5.4.0 Alpha。ZIP 303,157,226 字节，SHA256 `f3692f9813cb6c7d144a371e42768229591b89ca5944671a8c886e62d4ae0a52`；EXE SHA256 `0a4de344f93bafcea9414668746fe1fa0d2fec5dd1bc0b62d86ae3a9acbd56a9`。6,572 个发行文件、145 项选定资源通过干净解压审计；解压包 factory 和实际说明 GUI、匿名重下载后的校验/解压/factory 已通过。本地网站 12 项浏览器检查通过，Pages `9fc6257e35e4` 的 6 个公开资源逐字节核对通过。[发布快照](compatibility/2026-10-11-blender-main-preview-snapshot.json)保存精确指纹。旧预览包保留。验证：42 组 415 项纯 Python、8 组 144 项原生，另有 4 组 CLI（profiles 18 项、Blender input 11 项；profiles 与纯 Python 重合，不累加），15 组 GUI 回归、5 组 bpy 功能及 factory、5 个说明矩阵组合通过。下方注明日期的历史构建与计数保持原口径。
 
 
 更新：2026-09-18。本页用于新 Windows 机器和新的 Codex 会话，从源码接续工作；不要求复制维护者的旧磁盘、候选安装、偏好或临时审计目录。开发方向另见项目路线图与交接文档，本页不扩大功能范围。
@@ -59,7 +59,7 @@ git -C lib/windows_x64 lfs fsck --objects
 git submodule status -- lib/windows_x64
 ```
 
-完整 LFS/依赖下载可能较大。遇到 404、配额、代理或认证错误，保存具体 URL/OID 并处理下载问题；不要把 pointer 文本交给 CMake，不要上传凭据。当前 Windows 子模块 pin 是 `60d6e96b917568278d400a4024c98da0fb777338`；未来以 checkout 的 gitlink 为准，**不要自行切到子模块 main 最新版**。
+完整 LFS/依赖下载可能较大；遇到缺失对象时保存 OID 并按固定来源补齐，不把 pointer 交给 CMake。当前 Windows 子模块 pin 是 `aa0c5db72fa9488bb685bdddbede780d19f483f5`；以源码 gitlink 为准，不自行切到子模块 main。
 
 `make.bat update` 会经 `update_sources.cmd` 调用 `make_update.py` 更新源码与依赖，不是“仅补齐当前提交依赖”的命令。重现固定提交使用上述显式下载流程。
 

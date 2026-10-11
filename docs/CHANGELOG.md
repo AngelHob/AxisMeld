@@ -8,11 +8,17 @@
 
 ### 最终自动验证
 
-全新 5.4 构建与候选安装通过：42 组 415 项纯 Python、八组 144 项原生、四组 CLI、15 组当前 GUI、五组 bpy 功能与 factory、五组合 18 条低窗口说明观察均通过；网页通过 12 项浏览器检查。CLI profiles 18 项已包含在纯测试，installed-input 11 项单列，不重复累加。历史双排工作区栏测试误纳入的失败已保留，适用范围修正为当前单原生顶栏与视窗菜单；旧输入测试补齐既有别名和原生 fallback 的严格断言，生产键位保持。
+
+- 42 组 415 项纯 Python、8 组 144 项原生，另有 4 组 CLI（profiles 18 项、Blender input 11 项；profiles 与纯 Python 重合，不累加），15 组 GUI 回归、5 组 bpy 功能及 factory、5 个说明矩阵组合全部通过；GUI 与说明矩阵分别计数。
+- GUI suites：modeling-viewport、menu-shortcuts、menu-options-navigation、menu-options-access、menu-options-geometry、modeling-disabled-reason、hotbox-repost、context-entries、temporary-snap、history-hotbox、tools-modifiers、tools、full-menu-lifecycle、file-window、release-cross-window。
+- 145 项资源、6,572 个发行文件通过静态审计；解压包 factory/说明 GUI 与匿名下载 factory 通过。
+- 本地网站静态/状态检查及 12 项浏览器检查通过；Pages 实际字节核验见下方交付。
+- 输入现状：58 默认命令、60 条含别名绑定、7 个操纵器辅助入口、3 个原生模态持键入口、499 条原生继承、45 条移除、187 个受保护 keymap；基准/生成 keymap 为 281/282。
 
 ### 发布与交付
 
-本次主干预览包尚未发布，公开下载保持已核验的 short-window preview；完整包与公开下载通过后在此更新精确源码、哈希和发布快照。
+
+完整 [Blender main preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-blender-main-preview) 已发布；源码/native `7beedde071ca5eaa8fce6090f01cf2ddd40b6804`，基于 Blender 5.4.0 Alpha。ZIP 303,157,226 字节，SHA256 `f3692f9813cb6c7d144a371e42768229591b89ca5944671a8c886e62d4ae0a52`；EXE SHA256 `0a4de344f93bafcea9414668746fe1fa0d2fec5dd1bc0b62d86ae3a9acbd56a9`。6,572 个发行文件、145 项选定资源通过干净解压审计；解压包 factory 和实际说明 GUI、匿名重下载后的校验/解压/factory 已通过。本地网站 12 项浏览器检查通过，Pages `9fc6257e35e4` 的 6 个公开资源逐字节核对通过。[发布快照](compatibility/2026-10-11-blender-main-preview-snapshot.json)保存精确指纹。旧预览包保留。
 
 ## 2026-10-11 · 极低窗口说明避让
 

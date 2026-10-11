@@ -5,16 +5,14 @@
 ```text
 请接续开发我的 AxisMeld 项目。默认用中文，结论优先，主动核实并完成有界任务。
 
-最新交付（2026-10-11）：GUI short-window polish 已发布。说明在菜单之外的空白区域完整换行；无处容纳全文时隐藏，扩大窗口后恢复。
-本轮通过94项纯Python、133项原生；5 组菜单/交互 GUI 回归及 5 组窗口/缩放说明矩阵通过，不混用旧批次全量测试数字。
-预发布tag：axismeld-2026.10.11-gui-short-window-preview；完整ZIP匿名下载、干净解压和工厂启动已核验。
-功能/native源码：665cb38b123d89d273d6f68e2c748a258abfff47。
-exe SHA256：261dbf8969379ca4c63992f6480038b3b1572d8761612d679464a9d032405273。
-发布入口：https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-short-window-preview
-先读docs/compatibility/2026-10-11-gui-short-window-acceptance.md及docs/compatibility/2026-10-11-gui-short-window-preview-snapshot.json。
-GU-22一项待人工；原GU-01～GU-21及全部原结果保留。目录339项，当前327，历史12，47项仅历史已测，当前初始待测280，全表初始待测292。
-极低窗口说明遮挡已修复；菜单优先，无完整空白时不显示说明，恢复空间后完整显示。菜单文字、布局、命中与取消保持；实体输入手感及未覆盖显示条件仍待人工，不自动恢复新算法。
-历史menubar-actions仍找已取消的topbar Create，不适用于当前布局；使用modeling-viewport。旧interaction preview不含本轮极低窗口修复。
+最新交付（2026-10-11）：Blender 5.4.0 Alpha 主干同步预览已发布；固定 upstream 754ebe3c4b4e1402a159df6e1e58823cc93ef887。
+本轮42 组 415 项纯 Python、8 组 144 项原生，另有 4 组 CLI（profiles 18 项、Blender input 11 项；profiles 与纯 Python 重合，不累加），15 组 GUI 回归、5 组 bpy 功能及 factory、5 个说明矩阵组合通过。预发布tag：axismeld-2026.10.11-blender-main-preview；匿名下载、干净解压、factory与Pages线上字节已核验。
+功能/native源码：7beedde071ca5eaa8fce6090f01cf2ddd40b6804。
+exe SHA256：0a4de344f93bafcea9414668746fe1fa0d2fec5dd1bc0b62d86ae3a9acbd56a9。
+发布入口：https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-blender-main-preview
+先读docs/compatibility/2026-10-11-blender-main-acceptance.md及docs/compatibility/2026-10-11-blender-main-preview-snapshot.json。
+人工状态：公开目录 342 项（当前 330、历史 12），47 项仅历史已测，当前初始未测 283、全表初始未测 295；最新标记 GU-22、GU-23、GU-24、GU-25。既有编号与人工结果保持，自动化不替用户勾选。
+保留极低窗口完整说明避让、七根菜单、独立Options、占位与输入恢复；新算法暂停。
 
 仓库：https://github.com/AngelHob/AxisMeld
 最新开发分支：axismeld/phase-2a
@@ -73,10 +71,10 @@ GU-22一项待人工；原GU-01～GU-21及全部原结果保留。目录339项�
   精确调用token穿过原生未保存场景/修改图像确认链，只关联对应文件选择器。
   不跳过确认、不加全局键盘拦截，独立Options和其他File/Window项保持原状态。
   设计见docs/development/2026-10-11-file-window-release-design.md。
-最终实际状态必须读取 docs/compatibility/2026-10-11-gui-short-window-acceptance.md 和最新CHANGELOG，
+最终实际状态必须读取 docs/compatibility/2026-10-11-blender-main-acceptance.md 和最新CHANGELOG，
 不得只凭这段提示词宣布GUI已通过；不要重复开发已落地入口。
 
-当前审计：58默认命令、60含别名绑定、7操纵器入口、3原生模态持键、497原生继承、45移除项、186受保护keymap。
+当前审计：58 默认命令、60 条含别名绑定、7 个操纵器辅助入口、3 个原生模态持键入口、499 条原生继承、45 条移除、187 个受保护 keymap；基准/生成 keymap 为 281/282。
 原18+2项参考核对完成，事实/原文件指纹见docs/reference/2026-10-11-input-reference.json。
 先跑 tools/utils/axismeld_input_audit.py --check 和菜单/公开目录生成器 --check，勿重做工具。
 原生继承（包括F1–F5）不宣称Maya等价；D/C/F12/1/2/3及Shift+J缺底层能力，保留明确边界。
@@ -93,8 +91,8 @@ workspace-menu-layout、file-window、release-cross-window，以及相关原有M
 staging/extract核对提交源码、全部文件、受管模块集合、许可与ZIP。静态PASS不替代启动/GUI/跨机验证。
 最终候选/发布状态看GUI验收及公开config，不能把旧包当作本批新C++。
 
-人工目录339项：当前327、历史12；47项只标历史已测，当前初始未测280，全表初始未测292。
-GU-22新增待测，原GU-01～GU-21、IN/RG及其他编号与结果保持；自动化不替我勾选。
+公开目录 342 项（当前 330、历史 12），47 项仅历史已测，当前初始未测 283、全表初始未测 295；最新标记 GU-22、GU-23、GU-24、GU-25。既有编号与人工结果保持，自动化不替用户勾选。
+本轮人工范围：GU-22、GU-23、GU-24、GU-25；原 GU/IN/RG 等编号和状态保持，自动化不替我勾选。
 公开网页数据在各访客浏览器，可导出JSON，不自动跨设备同步；GitHub Issue用于公开共享反馈。
 
 交付已授权：每批完成并验证后，更新 docs/CHANGELOG.md、相关设计和新的待人工测试内容，提交并推送GitHub，
