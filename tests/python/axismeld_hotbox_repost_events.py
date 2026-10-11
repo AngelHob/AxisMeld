@@ -90,9 +90,9 @@ def suite():
     templates = {}
 
     def glyph(text):
-        # Companion rows are 16 logical pixels, against the unchanged 24px
+        # Companion rows are 18 logical pixels, against the unchanged 24px
         # native reference. Redraws share font 0, including after cache hits.
-        blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale * (16 / 24))
+        blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale * (18 / 24))
         blf.disable(0, blf.WORD_WRAP)
         if text not in templates:
             # Both observed captions belong to the compact companion list/cascade.
@@ -123,7 +123,7 @@ def suite():
         # unrelated timeline/header pixels.
         boxes = native_boxes(pixels)
         if text == 'UV Edge Loop':
-            # This leaf only belongs to the child. At 16px its short glyph can
+            # This leaf only belongs to the child. At small sizes its glyph can
             # correlate with part of the longer parent caption; identify that
             # parent by its complete rendered text before excluding its column.
             root_score, root_point = caption(pixels, 'Selection Constraints')

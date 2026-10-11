@@ -5,7 +5,7 @@
 AXISMELD_COMPACT_MODE=record writes AXISMELD_COMPACT_BASELINE; compare (default)
 requires it. Both modes use real public gestures and screenshot-derived geometry.
 No native layout coordinates, command snapshots or OS input APIs are consumed.
-The released baseline has 21.6 logical-pixel rows; the current target is 16.
+The released baseline has 16 logical-pixel rows; the current target is 18.
 """
 import hashlib
 import json
@@ -29,7 +29,7 @@ mode = os.environ.get('AXISMELD_COMPACT_MODE', 'compare')
 assert mode in {'record', 'compare'}
 baseline_path = Path(os.environ['AXISMELD_COMPACT_BASELINE']).resolve()
 baseline = json.loads(baseline_path.read_text(encoding='utf-8')) if mode == 'compare' else None
-ROW_HEIGHT_CONTRACT = {'baseline': 21.6, 'current': 16.0, 'native': 24.0}
+ROW_HEIGHT_CONTRACT = {'baseline': 16.0, 'current': 18.0, 'native': 24.0}
 BASELINE_FONT_FACTOR = ROW_HEIGHT_CONTRACT['baseline'] / ROW_HEIGHT_CONTRACT['native']
 CURRENT_FONT_FACTOR = ROW_HEIGHT_CONTRACT['current'] / ROW_HEIGHT_CONTRACT['native']
 RELATIVE_SCALE = ROW_HEIGHT_CONTRACT['current'] / ROW_HEIGHT_CONTRACT['baseline']
@@ -103,10 +103,13 @@ def suite():
     with override():
         hotbox_runtime.reload_settings(bpy.context, session={'schema_version': 1, 'settings': {
             'style': 'center', 'transparency': 0, 'rows': [], 'center_buttons': {'LEFTMOUSE': 'views'},
-            'appearance': {'theme_background': True, 'brightness': 0, 'text': [255, 255, 255],
+            'appearance': {'theme_background': False, 'background': [204, 10, 166],
+                           'brightness': 0, 'text': [255, 255, 255],
                            'placeholder': [160, 160, 160]}}})
     colors = bpy.context.preferences.themes[0].user_interface
-    for item in (colors.wcol_menu, colors.wcol_menu_back, colors.wcol_menu_item):
+    # Keep toolbar menu buttons at their original color: a translated ring can
+    # touch them, and equal diagnostic backgrounds would merge pixel components.
+    for item in (colors.wcol_menu_back, colors.wcol_menu_item):
         item.inner = item.inner_sel = (.8, .04, .65, 1)
     position = [0, 0]
     origin = [0, 0]
@@ -293,7 +296,7 @@ def suite():
                    and 0 <= r[0]-b[2] <= 10*scale for b in boxes):
                 boxes.append(r)
         # Both known sizes are observed so the released build reaches the explicit
-        # 21.6-to-16 geometry RED. A successful comparison requires the 16px font.
+        # 16-to-18 geometry RED. A successful comparison requires the 18px font.
         candidates = []
         for factor in ((BASELINE_FONT_FACTOR,) if mode == 'record'
                        else (CURRENT_FONT_FACTOR, BASELINE_FONT_FACTOR)):
@@ -351,7 +354,7 @@ def suite():
         pitch = float(min(pitches))
         if mode == 'record':
             check(abs(pitch-ROW_HEIGHT_CONTRACT['baseline']*scale) <= 1.5,
-                  'Released baseline is not the 21.6px build: ' + repr((name, scale, pitch)))
+                  'Released baseline is not the 16px build: ' + repr((name, scale, pitch)))
         result = {'font_factor': factor, 'pitch': pitch,
                   'widths': {label: row['rect'][2]-row['rect'][0] for label, row in rows.items()},
                   'rows': rows, 'columns': [list(r) for r in grouped]}
@@ -368,7 +371,7 @@ def suite():
     if baseline:
         check(baseline['schema'] == 1, 'Unsupported baseline schema')
         check(baseline.get('rowHeightContract') == ROW_HEIGHT_CONTRACT,
-              'Baseline must be recorded from the released 21.6px build for this 16px contract')
+              'Baseline must be recorded from the released 16px build for this 18px contract')
         check(baseline.get('mode') == 'record' and baseline.get('status') == 'BASELINE_RECORDED',
               'Baseline is not a completed record')
         result['baseline'] = {'path': str(baseline_path),
@@ -428,13 +431,13 @@ def suite():
                                           for label, width in new_list['widths'].items()}
                     for label, width in new_list['widths'].items():
                         check(abs(width-old_list['widths'][label]*RELATIVE_SCALE) <= 2,
-                              'Companion width did not scale from 21.6px to 16px: ' + repr((tag, name, label, width, old_list['widths'][label])))
+                              'Companion width did not scale from 16px to 18px: ' + repr((tag, name, label, width, old_list['widths'][label])))
                     check(abs(new_list['pitch']-old_list['pitch']*RELATIVE_SCALE) <= 1.5,
-                          'Companion row spacing did not scale to 16px: ' + repr((tag, name, new_list['pitch'], old_list['pitch'])))
+                          'Companion row spacing did not scale to 18px: ' + repr((tag, name, new_list['pitch'], old_list['pitch'])))
                     check(abs(new_list['pitch']-ROW_HEIGHT_CONTRACT['current']*scale) <= 1.5,
-                          'Companion absolute row height is not 16px times UI scale: ' + repr((tag, name, new_list['pitch'])))
+                          'Companion absolute row height is not 18px times UI scale: ' + repr((tag, name, new_list['pitch'])))
                     check(new_list['font_factor'] == CURRENT_FONT_FACTOR,
-                          'Companion font does not match 16px rows: ' + name)
+                          'Companion font does not match 18px rows: ' + name)
     if mode == 'record':
         result['status'] = 'BASELINE_RECORDED'
         baseline_path.write_text(json.dumps(result, indent=2), encoding='utf-8')
