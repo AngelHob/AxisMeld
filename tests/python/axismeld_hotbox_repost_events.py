@@ -90,11 +90,13 @@ def suite():
     templates = {}
 
     def glyph(text):
+        # Companion rows are 16 logical pixels, against the unchanged 24px
+        # native reference. Redraws share font 0, including after cache hits.
+        blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale * (16 / 24))
+        blf.disable(0, blf.WORD_WRAP)
         if text not in templates:
             # Both observed captions belong to the compact companion list/cascade.
             # Keep this expected font size independent of native layout geometry.
-            blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale * .9)
-            blf.disable(0, blf.WORD_WRAP)
             blf.color(0, 1, 1, 1, 1)
             blf.position(0, 4, 10 * scale, 0)
             canvas = imbuf.new((int(blf.dimensions(0, text)[0]) + 16, int(40 * scale)))
@@ -116,22 +118,35 @@ def suite():
     def caption(pixels, text):
         reference = glyph(text)
         gh, gw = reference.shape
-        # Use the full rendered window: companion menus can legitimately overflow
-        # the originating viewport. The distinctive full caption avoids toolbar text.
+        # Menus can overflow the originating viewport. Observe their actual
+        # backgrounds across the window instead of correlating tiny text with
+        # unrelated timeline/header pixels.
+        boxes = native_boxes(pixels)
+        if text == 'UV Edge Loop':
+            # This leaf only belongs to the child. At 16px its short glyph can
+            # correlate with part of the longer parent caption; identify that
+            # parent by its complete rendered text before excluding its column.
+            root_score, root_point = caption(pixels, 'Selection Constraints')
+            if root_score > .75:
+                boxes = [r for r in boxes if not
+                         (r[0] <= root_point[0] < r[2] and r[1] <= root_point[1] < r[3])]
         best = (0.0, (0, 0))
-        for level in (.18, .3, .5):
-            ink = np.min(pixels[:, :, :3], axis=2) > level
-            shape = (ink.shape[0] + gh - 1, ink.shape[1] + gw - 1)
-            hits = np.fft.irfft2(np.fft.rfft2(ink, s=shape) *
-                                np.fft.rfft2(reference[::-1, ::-1], s=shape), s=shape)
-            hits = hits[gh-1:ink.shape[0], gw-1:ink.shape[1]]
-            total = np.pad(ink.astype(np.int32), ((1, 0), (1, 0))).cumsum(0).cumsum(1)
-            counts = total[gh:, gw:] - total[:-gh, gw:] - total[gh:, :-gw] + total[:-gh, :-gw]
-            scores = 2 * hits / (counts + np.count_nonzero(reference))
-            y, x = np.unravel_index(np.argmax(scores), scores.shape)
-            found = (float(scores[y, x]), (float(x + gw / 2), float(y + gh / 2)))
-            if found[0] > best[0]:
-                best = found
+        for x0, y0, x1, y1 in boxes:
+            for level in (.18, .3, .5):
+                ink = np.min(pixels[y0:y1, x0:x1, :3], axis=2) > level
+                if ink.shape[0] < gh or ink.shape[1] < gw:
+                    continue
+                shape = (ink.shape[0] + gh - 1, ink.shape[1] + gw - 1)
+                hits = np.fft.irfft2(np.fft.rfft2(ink, s=shape) *
+                                    np.fft.rfft2(reference[::-1, ::-1], s=shape), s=shape)
+                hits = hits[gh-1:ink.shape[0], gw-1:ink.shape[1]]
+                total = np.pad(ink.astype(np.int32), ((1, 0), (1, 0))).cumsum(0).cumsum(1)
+                counts = total[gh:, gw:] - total[:-gh, gw:] - total[gh:, :-gw] + total[:-gh, :-gw]
+                scores = 2 * hits / (counts + np.count_nonzero(reference))
+                y, x = np.unravel_index(np.argmax(scores), scores.shape)
+                found = (float(scores[y, x]), (float(x0 + x + gw / 2), float(y0 + y + gh / 2)))
+                if found[0] > best[0]:
+                    best = found
         return best
 
     def locate(pixels, text):

@@ -350,7 +350,7 @@ TEST(axismeld_hotbox_menu, CreationCompanionUsesThinSeparatorsAndIndependentPath
   const auto *a = rect(layout, "fixture.create.a"), *separator = rect(layout, "fixture.create.sep"),
              *b = rect(layout, "fixture.create.b");
   ASSERT_NE(a, nullptr); ASSERT_NE(separator, nullptr); ASSERT_NE(b, nullptr);
-  EXPECT_TRUE(a->companion); EXPECT_FLOAT_EQ(separator->height, 5.4f);
+  EXPECT_TRUE(a->companion); EXPECT_FLOAT_EQ(separator->height, 4.0f);
   EXPECT_EQ(a->y, separator->y + separator->height);
   EXPECT_EQ(separator->y, b->y + b->height);
   EXPECT_EQ(hit_marking_menu_rect(layout, "context.create", separator->x + 5, separator->y + 3), nullptr);
@@ -378,7 +378,7 @@ TEST(axismeld_hotbox_menu, ObjectCompanionIsVisibleWithoutStealingRadialAndOptio
   const MenuRect *main = rect(layout, action.id), *cell = rect(layout, option.id);
   ASSERT_NE(main, nullptr);
   ASSERT_NE(cell, nullptr);
-  EXPECT_FLOAT_EQ(cell->width, 21.6f);
+  EXPECT_FLOAT_EQ(cell->width, 16.0f);
   EXPECT_FALSE(main->interactive);
   EXPECT_TRUE(cell->interactive);
   EXPECT_EQ(main->x + main->width, cell->x);
@@ -2105,7 +2105,7 @@ TEST(axismeld_hotbox_menu, RealDefaultTreeHasClickablePathsAtCornersAndCenter)
               const auto *cell = rect(layout, option.id);
               ASSERT_NE(cell, nullptr) << option.id;
               EXPECT_TRUE(cell->option_box);
-              EXPECT_FLOAT_EQ(cell->width, companion ? 21.6f : 24.0f);
+              EXPECT_FLOAT_EQ(cell->width, companion ? 16.0f : 24.0f);
               EXPECT_EQ(cell->x, item->x + item->width);
               const auto option_hit = hit_menu(layout, cell->x + 12, cell->y + cell->height / 2);
               EXPECT_EQ(option_hit, option.enabled ? option.id : "") << option.id;
@@ -2512,7 +2512,7 @@ TEST(axismeld_hotbox_menu, FullCompanionBottomAlignmentPreservesEveryRow)
     ASSERT_NE(item, nullptr) << node.id;
     bottom = std::min(bottom, item->y);
     EXPECT_FLOAT_EQ(item->height,
-                    node.kind == MenuKind::Separator && node.label.empty() ? 5.4f : 21.6f);
+                    node.kind == MenuKind::Separator && node.label.empty() ? 4.0f : 16.0f);
   }
   float list_top = 0, ring_bottom = 1080;
   for (const auto &item : layout.rects) {
@@ -2557,7 +2557,7 @@ static MenuSnapshot compact_companion_snapshot()
   return snapshot;
 }
 
-TEST(axismeld_hotbox_menu, CompanionUsesNinetyPercentMetricsWithoutChangingOrdinaryListsOrRing)
+TEST(axismeld_hotbox_menu, CompanionUsesSixteenPixelRowsWithoutChangingOrdinaryListsOrRing)
 {
   const auto snapshot = compact_companion_snapshot();
   const auto widths = measured(snapshot);
@@ -2576,11 +2576,11 @@ TEST(axismeld_hotbox_menu, CompanionUsesNinetyPercentMetricsWithoutChangingOrdin
     ASSERT_NE(heading, nullptr); ASSERT_NE(separator, nullptr);
     ASSERT_NE(body, nullptr); ASSERT_NE(options, nullptr);
     EXPECT_EQ(heading->companion, compact);
-    EXPECT_FLOAT_EQ(heading->width, compact ? 129.6f : 144.0f);
-    EXPECT_FLOAT_EQ(heading->height, compact ? 21.6f : 24.0f);
-    EXPECT_FLOAT_EQ(separator->height, compact ? 5.4f : 6.0f);
-    EXPECT_FLOAT_EQ(options->width, compact ? 21.6f : 24.0f);
-    EXPECT_FLOAT_EQ(body->width, compact ? 108.0f : 120.0f);
+    EXPECT_FLOAT_EQ(heading->width, compact ? 96.0f : 144.0f);
+    EXPECT_FLOAT_EQ(heading->height, compact ? 16.0f : 24.0f);
+    EXPECT_FLOAT_EQ(separator->height, compact ? 4.0f : 6.0f);
+    EXPECT_FLOAT_EQ(options->width, compact ? 16.0f : 24.0f);
+    EXPECT_FLOAT_EQ(body->width, compact ? 80.0f : 120.0f);
     EXPECT_FLOAT_EQ(options->x, body->x + body->width);
     EXPECT_FLOAT_EQ(options->x + options->width, heading->x + heading->width);
     EXPECT_FLOAT_EQ(options->height, heading->height);
@@ -2618,18 +2618,18 @@ TEST(axismeld_hotbox_menu, CompanionCascadeUsesSameCompactMetricsAndSeparateOpti
   ASSERT_NE(parent, nullptr); ASSERT_NE(child, nullptr);
   ASSERT_NE(options, nullptr); ASSERT_NE(last, nullptr);
   EXPECT_TRUE(child->companion); EXPECT_TRUE(options->companion);
-  EXPECT_FLOAT_EQ(parent->height, 21.6f); EXPECT_FLOAT_EQ(child->height, 21.6f);
-  EXPECT_FLOAT_EQ(last->width, 129.6f); EXPECT_FLOAT_EQ(options->width, 21.6f);
+  EXPECT_FLOAT_EQ(parent->height, 16.0f); EXPECT_FLOAT_EQ(child->height, 16.0f);
+  EXPECT_FLOAT_EQ(last->width, 96.0f); EXPECT_FLOAT_EQ(options->width, 16.0f);
   EXPECT_FLOAT_EQ(options->x, child->x + child->width);
   EXPECT_FLOAT_EQ(options->x + options->width, last->x + last->width);
   EXPECT_FLOAT_EQ(child->y, last->y + last->height);
-  EXPECT_EQ(hit_menu(layout, options->x + 10.8f, options->y + 10.8f), options->id);
-  EXPECT_TRUE(hit_menu(layout, child->x + 1, child->y + 10.8f).empty());
-  EXPECT_EQ(hit_marking_menu_rect(layout, "context.create", last->x + 1, last->y + 10.8f), nullptr);
+  EXPECT_EQ(hit_menu(layout, options->x + 8, options->y + 8), options->id);
+  EXPECT_TRUE(hit_menu(layout, child->x + 1, child->y + 8).empty());
+  EXPECT_EQ(hit_marking_menu_rect(layout, "context.create", last->x + 1, last->y + 8), nullptr);
   const auto column = std::find_if(layout.native_columns.begin(), layout.native_columns.end(),
                                     [&](const auto &item) { return item.owner == parent->id; });
   ASSERT_NE(column, layout.native_columns.end());
-  EXPECT_FLOAT_EQ(column->width, 129.6f); EXPECT_NEAR(column->height, 43.2f, .001f);
+  EXPECT_FLOAT_EQ(column->width, 96.0f); EXPECT_NEAR(column->height, 32.0f, .001f);
   EXPECT_TRUE(layout.native_scroll_bounds.empty());
 }
 
@@ -2650,8 +2650,8 @@ TEST(axismeld_hotbox_menu, CompactCompanionKeepsEveryRowAcrossColumnsAtWindowBot
   for (const auto &node : list.children) {
     const auto *item = rect(layout, node.id);
     ASSERT_NE(item, nullptr) << node.id;
-    EXPECT_FLOAT_EQ(item->height, 21.6f); EXPECT_FLOAT_EQ(item->width, 108.0f);
-    EXPECT_EQ(hit_menu(layout, item->x + 54, item->y + 10.8f), item->id);
+    EXPECT_FLOAT_EQ(item->height, 16.0f); EXPECT_FLOAT_EQ(item->width, 80.0f);
+    EXPECT_EQ(hit_menu(layout, item->x + 40, item->y + 8), item->id);
     EXPECT_GE(item->x, 12); EXPECT_GE(item->y, 12 - .001f);
     EXPECT_LE(item->x + item->width, 1588); EXPECT_LE(item->y + item->height, 468);
     bottom = std::min(bottom, item->y); list_top = std::max(list_top, item->y + item->height);
@@ -2665,8 +2665,8 @@ TEST(axismeld_hotbox_menu, CompactCompanionKeepsEveryRowAcrossColumnsAtWindowBot
   EXPECT_NEAR(bottom, 12, .001f); EXPECT_NEAR(ring_bottom - list_top, 12, .001f);
   for (size_t index = 1; index < layout.native_columns.size(); index++) {
     const auto &a = layout.native_columns[index - 1], &b = layout.native_columns[index];
-    EXPECT_NEAR(b.x - a.x - a.width, 3.6f, .001f);
-    EXPECT_TRUE(hit_menu(layout, a.x + a.width + 1.8f, a.y + 10.8f).empty());
+    EXPECT_NEAR(b.x - a.x - a.width, 8.0f / 3, .001f);
+    EXPECT_TRUE(hit_menu(layout, a.x + a.width + 4.0f / 3, a.y + 8).empty());
   }
   EXPECT_TRUE(layout.native_scroll_bounds.empty());
 }

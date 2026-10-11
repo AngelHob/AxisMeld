@@ -5,6 +5,7 @@
 AXISMELD_COMPACT_MODE=record writes AXISMELD_COMPACT_BASELINE; compare (default)
 requires it. Both modes use real public gestures and screenshot-derived geometry.
 No native layout coordinates, command snapshots or OS input APIs are consumed.
+The released baseline has 21.6 logical-pixel rows; the current target is 16.
 """
 import hashlib
 import json
@@ -28,6 +29,10 @@ mode = os.environ.get('AXISMELD_COMPACT_MODE', 'compare')
 assert mode in {'record', 'compare'}
 baseline_path = Path(os.environ['AXISMELD_COMPACT_BASELINE']).resolve()
 baseline = json.loads(baseline_path.read_text(encoding='utf-8')) if mode == 'compare' else None
+ROW_HEIGHT_CONTRACT = {'baseline': 21.6, 'current': 16.0, 'native': 24.0}
+BASELINE_FONT_FACTOR = ROW_HEIGHT_CONTRACT['baseline'] / ROW_HEIGHT_CONTRACT['native']
+CURRENT_FONT_FACTOR = ROW_HEIGHT_CONTRACT['current'] / ROW_HEIGHT_CONTRACT['native']
+RELATIVE_SCALE = ROW_HEIGHT_CONTRACT['current'] / ROW_HEIGHT_CONTRACT['baseline']
 bpy.context.preferences.use_preferences_save = False
 bpy.context.preferences.view.show_splash = False
 
@@ -107,6 +112,7 @@ def suite():
     origin = [0, 0]
     scale = 1.0
     templates = {}
+    template_bottoms = {}
 
     def event(kind, value='PRESS', point=None, **modifiers):
         if point is not None:
@@ -146,6 +152,7 @@ def suite():
                 alpha = np.asarray(picture.pixels[:], dtype=np.float32).reshape(height, width, 4)[:, :, 3] > .35
                 yy, xx = np.nonzero(alpha)
                 templates[key] = alpha[yy.min():yy.max()+1, xx.min():xx.max()+1].copy()
+                template_bottoms[key] = int(yy.min())
             finally:
                 bpy.data.images.remove(picture)
         return templates[key]
@@ -178,7 +185,8 @@ def suite():
         if score <= .750001 and not required:
             return None
         check(score > .75, 'Full caption missing/clipped: ' + repr((label, factor, score, rect)))
-        return {'text': [int(x+x0), int(y+y0), int(x+x0+gw), int(y+y0+gh)], 'score': score}
+        return {'text': [int(x+x0), int(y+y0), int(x+x0+gw), int(y+y0+gh)], 'score': score,
+                'baseline_y': int(y+y0)-template_bottoms[(scale, factor, label)]}
 
     def state():
         return (bpy.context.mode, bpy.context.active_object.name if bpy.context.active_object else None,
@@ -285,9 +293,10 @@ def suite():
                    and 0 <= r[0]-b[2] <= 10*scale for b in boxes):
                 boxes.append(r)
         # Both known sizes are observed so the released build reaches the explicit
-        # 90% geometry RED. A successful comparison also requires the 90% font.
+        # 21.6-to-16 geometry RED. A successful comparison requires the 16px font.
         candidates = []
-        for factor in ((1,) if mode == 'record' else (.9, 1)):
+        for factor in ((BASELINE_FONT_FACTOR,) if mode == 'record'
+                       else (CURRENT_FONT_FACTOR, BASELINE_FONT_FACTOR)):
             rows = {}
             for label in LABELS[name]:
                 matches = [(r, locate(pixels, r, label, factor, False)) for r in boxes]
@@ -332,13 +341,17 @@ def suite():
                       'Full caption overlaps independent Options gear: ' + label)
         grouped = {}
         for row in rows.values():
-            grouped.setdefault(tuple(row['rect']), []).append((row['text'][1]+row['text'][3])/2)
+            grouped.setdefault(tuple(row['rect']), []).append(row['baseline_y'])
         pitches = [a-b for centers in grouped.values() for a, b in zip(sorted(centers, reverse=True),
                    sorted(centers, reverse=True)[1:])]
         check(pitches, 'No observed adjacent companion rows')
-        # Separators only increase the gap; the smallest repeated actual text-row
-        # interval measures ordinary row spacing independently from font metrics.
+        # Measure actual rendered baselines, correcting only the independently
+        # drawn glyph's crop offset. Descenders must not shorten apparent rows.
+        # Separators increase the gap, so the minimum is ordinary row spacing.
         pitch = float(min(pitches))
+        if mode == 'record':
+            check(abs(pitch-ROW_HEIGHT_CONTRACT['baseline']*scale) <= 1.5,
+                  'Released baseline is not the 21.6px build: ' + repr((name, scale, pitch)))
         result = {'font_factor': factor, 'pitch': pitch,
                   'widths': {label: row['rect'][2]-row['rect'][0] for label, row in rows.items()},
                   'rows': rows, 'columns': [list(r) for r in grouped]}
@@ -349,10 +362,15 @@ def suite():
         binary_hash = hashlib.file_digest(stream, 'sha256').hexdigest()
     result = {'schema': 1, 'mode': mode, 'status': 'RUNNING', 'binary': bpy.app.binary_path,
               'sha256': binary_hash, 'source': bpy.app.build_hash.decode(),
+              'rowHeightContract': ROW_HEIGHT_CONTRACT,
               'scriptPath': str(Path(__file__).resolve()),
               'scriptSha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), 'cases': {}}
     if baseline:
         check(baseline['schema'] == 1, 'Unsupported baseline schema')
+        check(baseline.get('rowHeightContract') == ROW_HEIGHT_CONTRACT,
+              'Baseline must be recorded from the released 21.6px build for this 16px contract')
+        check(baseline.get('mode') == 'record' and baseline.get('status') == 'BASELINE_RECORDED',
+              'Baseline is not a completed record')
         result['baseline'] = {'path': str(baseline_path),
                               'sha256': hashlib.sha256(baseline_path.read_bytes()).hexdigest(),
                               'binary': baseline['binary'], 'binarySha256': baseline['sha256']}
@@ -409,11 +427,14 @@ def suite():
                     new_list['ratios'] = {label: width/old_list['widths'][label]
                                           for label, width in new_list['widths'].items()}
                     for label, width in new_list['widths'].items():
-                        check(abs(width-old_list['widths'][label]*.9) <= 2,
-                              'Companion width is not 90% of released pixels: ' + repr((tag, name, label, width, old_list['widths'][label])))
-                    check(abs(new_list['pitch']-old_list['pitch']*.9) <= 1.5,
-                          'Companion row spacing is not 90%: ' + repr((tag, name, new_list['pitch'], old_list['pitch'])))
-                    check(new_list['font_factor'] == .9, 'Companion font did not shrink to 90%: ' + name)
+                        check(abs(width-old_list['widths'][label]*RELATIVE_SCALE) <= 2,
+                              'Companion width did not scale from 21.6px to 16px: ' + repr((tag, name, label, width, old_list['widths'][label])))
+                    check(abs(new_list['pitch']-old_list['pitch']*RELATIVE_SCALE) <= 1.5,
+                          'Companion row spacing did not scale to 16px: ' + repr((tag, name, new_list['pitch'], old_list['pitch'])))
+                    check(abs(new_list['pitch']-ROW_HEIGHT_CONTRACT['current']*scale) <= 1.5,
+                          'Companion absolute row height is not 16px times UI scale: ' + repr((tag, name, new_list['pitch'])))
+                    check(new_list['font_factor'] == CURRENT_FONT_FACTOR,
+                          'Companion font does not match 16px rows: ' + name)
     if mode == 'record':
         result['status'] = 'BASELINE_RECORDED'
         baseline_path.write_text(json.dumps(result, indent=2), encoding='utf-8')
