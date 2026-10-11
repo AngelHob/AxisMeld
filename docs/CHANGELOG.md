@@ -4,7 +4,7 @@
 - Modeling 不适用的原生菜单项保留名称和图标，增加所需视窗、模式或活动对象的说明；阻止无对象时灰 Extrude 悬停预览触发 `NoneType.data`。UV 九项、Modifier 条目和可用上下文的原生参数、poll、扩展回调保持。
 - W/E/R 保持按下期间，一次 LMB 操作结束后清空旧伴随子菜单路径，下一次 LMB 从根目录重新唤出；保留灰项/原点取消、World 实际设置与 History 队列。
 - 针对性验证通过 94 项纯 Python、42 项原生和 7 组实际 GUI；其中 W/E/R 重复唤出覆盖 9 组、18 次 LMB，Modeling 灰项与有效上下文恢复覆盖 4 个场景。完整结果与发布状态见[本批验收](compatibility/2026-10-11-gui-interaction-polish-acceptance.md)。
-- 新增待人工 GU-20～GU-21；目录 338 项、当前 326、历史 12，47 项历史已测及其他结果保持，当前初始未测 279。发布和网页更新待本批最终核验后补记。
+- 新增待人工 GU-20～GU-21；目录 338 项、当前 326、历史 12，47 项历史已测及其他结果保持，当前初始未测 279。完整 [GUI interaction preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-interaction-preview) 已发布；源码/native `534eec00698397cc55e27f23f3575e6d4894331a`。ZIP 297,076,617 字节，SHA256 `271fb168454b8f3413dc4f73114a1c941883823eac67d40decde1a9b2b82fa76`。6,498 个发行文件、145 项资源通过干净解压审计；解压包工厂启动和 Modeling 灰项实际 GUI 通过；匿名重新下载后再次核验 ZIP、解压和工厂启动。网站 12 项浏览器检查通过，Pages `185800d9799c` 的 6 个公开资源逐字节核对通过；[发布快照](compatibility/2026-10-11-gui-interaction-preview-snapshot.json)保存指纹。旧预览包保留。
 
 ## 2026-10-11 · 菜单快捷键、灰齿轮导航与窄窗说明
 

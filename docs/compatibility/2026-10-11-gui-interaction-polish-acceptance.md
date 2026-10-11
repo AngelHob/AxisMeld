@@ -20,6 +20,6 @@
 
 新增 **GU-20～GU-21**，目录共 338 项，当前有效 326、历史 12、历史已测 47、当前初始未测 279。既有编号和状态保持，自动测试不替用户勾选。
 
-计划发布独立 `axismeld-2026.10.11-gui-interaction-preview` 完整原生包；当前发布、源码和文件指纹将在下载核验后补记，不覆盖旧 menu preview。
+完整 [GUI interaction preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-interaction-preview) 已发布；源码/native `534eec00698397cc55e27f23f3575e6d4894331a`。ZIP 297,076,617 字节，SHA256 `271fb168454b8f3413dc4f73114a1c941883823eac67d40decde1a9b2b82fa76`。6,498 个发行文件、145 项资源通过干净解压审计；解压包工厂启动和 Modeling 灰项实际 GUI 通过；匿名重新下载后再次核验 ZIP、解压和工厂启动。网站 12 项浏览器检查通过，Pages `185800d9799c` 的 6 个公开资源逐字节核对通过；[发布快照](2026-10-11-gui-interaction-preview-snapshot.json)保存指纹。旧预览包保留。
 
 本批只修交互。实体鼠标手感、其他机器、任意插件组合仍待人工；极低窗口无完整说明空带时的遮挡限制保持，不据本批检查宣称全部 GUI 缺陷消失。

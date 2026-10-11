@@ -5,16 +5,16 @@
 ```text
 请接续开发我的 AxisMeld 项目。默认用中文，结论优先，主动核实并完成有界任务。
 
-最新交付（2026-10-11）：GUI menu polish 已发布。三项为菜单实际快捷键、灰 Options 键盘导航、窄窗长说明。
-本轮通过81项纯Python、42项原生、6组GUI（长说明3种窗口/缩放）；不混用旧批次全量测试数字。
-预发布tag：axismeld-2026.10.11-gui-menu-preview；完整ZIP匿名下载、解压和工厂启动已核验。
-功能/native源码：74dd7159d3a2481780915e065e0bd63312cbdaa0。
-exe SHA256：d8af26aff3b5ae2099ea2c3e3e8d4242b3cbc1354bdcd8de47a6876bee1f400a。
-发布入口：https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-menu-preview
-先读docs/compatibility/2026-10-11-gui-menu-polish-acceptance.md及docs/compatibility/2026-10-11-gui-menu-preview-snapshot.json。
-GU-17～GU-19三项待人工；原GU-01～GU-16及全部原结果保留。目录336项，当前324，历史12，47项仅历史已测，当前初始待测277。
-下一候选为Modeling原生灰项提示一致性，先真实复现。极低窗口没有完整说明空带时仍可能遮菜单；不自动恢复新算法。
-历史menubar-actions仍找已取消的topbar Create，不适用于当前布局；使用modeling-viewport。旧input preview不含本轮三项修复。
+最新交付（2026-10-11）：GUI interaction polish 已发布。两项为 Modeling 原生灰项原因/安全预览，以及 W/E/R 持键重复 LMB 唤出从根目录开始。
+本轮通过94项纯Python、42项原生、7组实际GUI；不混用旧批次全量测试数字。
+预发布tag：axismeld-2026.10.11-gui-interaction-preview；完整ZIP匿名下载、干净解压和工厂启动已核验。
+功能/native源码：534eec00698397cc55e27f23f3575e6d4894331a。
+exe SHA256：26790dd7b0a72158a10154f64d21ba061f675368376e2fb8f6129af07a59221b。
+发布入口：https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-interaction-preview
+先读docs/compatibility/2026-10-11-gui-interaction-polish-acceptance.md及docs/compatibility/2026-10-11-gui-interaction-preview-snapshot.json。
+GU-20～GU-21两项待人工；原GU-01～GU-19及全部原结果保留。目录338项，当前326，历史12，47项仅历史已测，当前初始待测279，全表初始待测291。
+Modeling灰项提示与不安全Extrude预览已修复，不再作为下一待开发项；真实输入手感和极低窗口说明遮挡仍保留验收边界，不自动恢复新算法。
+历史menubar-actions仍找已取消的topbar Create，不适用于当前布局；使用modeling-viewport。旧menu preview不含本轮两项修复。
 
 仓库：https://github.com/AngelHob/AxisMeld
 最新开发分支：axismeld/phase-2a
@@ -66,11 +66,13 @@ GU-17～GU-19三项待人工；原GU-01～GU-16及全部原结果保留。目录
 - A+LMB History八方向：LMB松开排队，A松开提交；取消不FrameAll，队列绑定原目标。
 - 原生X/V/J临时吸附：按下/释放、Ctrl/重叠键、模式切换、失焦、Redo保护。
 - 九个无provider空目录灰占位及原因；Grease Pencil绘画键位隔离。
+- Modeling原生灰项有上下文原因，不创建无效原生子菜单预览；有效模式仍走原生宿主/poll/参数和插件回调。
+- W/E/R持键时每次LMB stroke结束清理伴随路径，下一次从根目录开始；保留当前stroke内父子返回与取消。
 - Space → File只开放Open Scene / Save Scene As两条正文，无新增默认快捷键；
   精确调用token穿过原生未保存场景/修改图像确认链，只关联对应文件选择器。
   不跳过确认、不加全局键盘拦截，独立Options和其他File/Window项保持原状态。
   设计见docs/development/2026-10-11-file-window-release-design.md。
-最终实际状态必须读取 docs/compatibility/2026-10-11-gui-menu-polish-acceptance.md 和最新CHANGELOG，
+最终实际状态必须读取 docs/compatibility/2026-10-11-gui-interaction-polish-acceptance.md 和最新CHANGELOG，
 不得只凭这段提示词宣布GUI已通过；不要重复开发已落地入口。
 
 当前审计：58默认命令、60含别名绑定、7操纵器入口、3原生模态持键、497原生继承、45移除项、186受保护keymap。
@@ -82,7 +84,7 @@ UI阶段结束先报告待人工验收与能力边界，后续优先处理明确
 
 本批改了C++，必须按BUILD_AND_DELIVERY重新编译，不能向9月17日Skin ZIP仅复制Python冒充新版。
 固定旧native的Python打包器也不适用；禁止关闭其保护强行发包。
-真实事件使用 axismeld_hotbox_ui_runner.py 的 context-entries、history-hotbox、temporary-snap、
+真实事件使用 axismeld_hotbox_ui_runner.py 的 modeling-disabled-reason、hotbox-repost、context-entries、history-hotbox、temporary-snap、
 workspace-menu-layout、file-window、release-cross-window，以及相关原有Modeling/Rigging/QWER/菜单回归；
 隔离配置和临时场景，保留实际File入口、确认继续/取消与精确token所有权断言。
 从已验证的新install打包，记录源码完整SHA、资源/二进制/ZIP指纹、许可、运行时边界，重新解压验证。
@@ -90,8 +92,8 @@ workspace-menu-layout、file-window、release-cross-window，以及相关原有M
 staging/extract核对提交源码、全部文件、受管模块集合、许可与ZIP。静态PASS不替代启动/GUI/跨机验证。
 最终候选/发布状态看GUI验收及公开config，不能把旧包当作本批新C++。
 
-人工目录336项：当前324、历史12；47项只标历史已测，当前初始未测277。
-GU-17～GU-19新增待测，原GU-01～GU-16、IN/RG及其他编号与结果保持；自动化不替我勾选。
+人工目录338项：当前326、历史12；47项只标历史已测，当前初始未测279，全表初始未测291。
+GU-20～GU-21新增待测，原GU-01～GU-19、IN/RG及其他编号与结果保持；自动化不替我勾选。
 公开网页数据在各访客浏览器，可导出JSON，不自动跨设备同步；GitHub Issue用于公开共享反馈。
 
 交付已授权：每批完成并验证后，更新 docs/CHANGELOG.md、相关设计和新的待人工测试内容，提交并推送GitHub，

@@ -1,6 +1,6 @@
 # Windows 构建、验证与交付
 
-**当前完整预览包：GUI menu preview。** [下载](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-menu-preview)；源码/native `74dd7159d3a2481780915e065e0bd63312cbdaa0`，exe SHA256 `d8af26aff3b5ae2099ea2c3e3e8d4242b3cbc1354bdcd8de47a6876bee1f400a`，145 项选定资源、6,498 个发行文件。ZIP 297,074,985 字节；SHA256 `3d0f7fbef0044f980654f69b0b2dc6f46dc80fee57e824484470070361519863`。匿名下载、干净解压、工厂启动及解压包 Options GUI 已验证；本批 81 项纯 Python、42 项原生和 6 组 GUI 通过。完整记录见[菜单 GUI 验收](compatibility/2026-10-11-gui-menu-polish-acceptance.md)与[当前快照](compatibility/2026-10-11-gui-menu-preview-snapshot.json)。下方旧 exe、139 项测试和 144 项资源属于首批历史构建，不能当作当前包数据。
+**当前完整预览包：GUI interaction preview。** [下载](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-interaction-preview)；源码/native `534eec00698397cc55e27f23f3575e6d4894331a`，exe SHA256 `26790dd7b0a72158a10154f64d21ba061f675368376e2fb8f6129af07a59221b`，145 项选定资源、6,498 个发行文件。ZIP 297,076,617 字节；SHA256 `271fb168454b8f3413dc4f73114a1c941883823eac67d40decde1a9b2b82fa76`。匿名下载、干净解压和工厂启动已验证；本批 94 项纯 Python、42 项原生和 7 组实际 GUI 通过。完整记录见[交互修复验收](compatibility/2026-10-11-gui-interaction-polish-acceptance.md)与[当前快照](compatibility/2026-10-11-gui-interaction-preview-snapshot.json)。下方首批历史构建的 exe、139 项测试、144 项资源及文件/缓存记录保持原口径，不能当作当前包数据。
 
 
 更新：2026-09-18。本页用于新 Windows 机器和新的 Codex 会话，从源码接续工作；不要求复制维护者的旧磁盘、候选安装、偏好或临时审计目录。开发方向另见项目路线图与交接文档，本页不扩大功能范围。
