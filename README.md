@@ -1,9 +1,5 @@
 # AxisMeld
 
-> 当前分支 `axismeld/integration` 尚未集成最新功能。开发请使用 [axismeld/phase-2a](https://github.com/AngelHob/AxisMeld/tree/axismeld/phase-2a)，先读[整体路线图](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/ROADMAP.md)、[换机接续说明](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/HANDOFF.md)或[复制给 Codex 的提示词](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/CODEX_HANDOFF_PROMPT.md)。下文的早期阶段状态保留历史语境；公开入口见 [.github/README.md](.github/README.md)。
-
-2026-10-11：当前 Modeling／通用视窗／Rigging GUI 批次已完成。下载 [GUI 与交互预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview)，在[公开测试页](https://angelhob.github.io/AxisMeld/)查看 GU-01～GU-13；人工状态与缺失算法灰项保持。首次运行需选择 AxisMeld Maya 2026 键位，再切 Modeling／Rigging。
-
 **Maya-style modeling workflow, built on Blender.**
 
 AxisMeld 是一个基于 Blender 开发、完全非盈利、自由开源的独立项目。它以 Maya 2026 默认交互为公开基线，在尽量保持 Blender 上游兼容性的前提下，改进快捷键、操作逻辑、热盒、视图导航、建模和 UV 编辑体验。
@@ -14,7 +10,24 @@ AxisMeld 官方版本永久免费，不销售软件，不设置付费功能，�
 
 AxisMeld 与 Blender Foundation、Autodesk 及其产品均无隶属、合作、赞助或官方背书关系。Blender、Autodesk 和 Maya 等名称仅用于事实性说明软件基础及兼容目标。
 
-当前已进入 Phase 1 输入基础阶段。详见 [AxisMeld 架构设计](docs/design/2026-09-08-axismeld-architecture.md)。
+## 当前开发与接续（2026-10-11）
+
+最新开发位于 **`axismeld/phase-2a`**；GitHub 默认 `axismeld/integration` 尚未集成最新功能。
+**本批交付状态：当前范围实现、统一候选回归与完整原生预览包发布已完成。** 已通过 40 组 354 项纯 Python、8 组 139 项原生测试、真实 Blender RNA 7+4 项与 7 个实际 File 流程；统一候选的 18 组回归全部通过（17 组 GUI、1 组 profiles 后台验证，按套件计）；exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`。完整原生 [2026.10.11 GUI preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-input-preview) 已发布，功能与原生源码同为 `41d71f26ccf12be5addd5c3453106bfa66f8de5f`；匿名下载、全量解压及工厂启动核验通过，见[发布快照](docs/compatibility/2026-10-11-gui-preview-snapshot.json)。最终结果、构建与包指纹集中记录在 [GUI 验收](docs/compatibility/2026-10-11-gui-completion-acceptance.md)。
+
+本批补齐上下文/工具/History 热盒、Edit 空选预选、X/V/J 临时吸附，以及 Space → File 的 Open Scene / Save Scene As 和跨窗口松键保护。原生未保存场景/修改图像确认链保持；缺失 Maya 能力继续灰显，没有新增 Skin/Skeleton、建模或 UV 算法。实体鼠标、高 DPI 和生产场景仍需人工验收。
+
+- [整体规划与路线图](docs/ROADMAP.md) · [当前问题](docs/CURRENT_ISSUES.md) · [修改日志](docs/CHANGELOG.md)。
+- [新机器接续开发](docs/HANDOFF.md) · [直接复制给 Codex 的提示词](docs/CODEX_HANDOFF_PROMPT.md) · [构建与交付](docs/BUILD_AND_DELIVERY.md)。
+- [公开测试页](https://angelhob.github.io/AxisMeld/) · [Windows x64 GUI 预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-input-preview)（完整原生包，附 ZIP 校验文件）· [发布指纹与验证范围](docs/compatibility/2026-10-11-gui-preview-snapshot.json)。
+
+Modeling 视窗保留 Mesh、Edit Mesh、Mesh Tools、Mesh Display、Curves、Surfaces、UV；Vertex/Edge/Face 收于 Edit Mesh。Rigging 的 Skeleton/Skin 保留 Maya 82 条正文和 33 个 Options，并收纳已有 Blender 骨架、绑定、权重、姿态及 Rigify 入口。
+
+仓库新完整便携包采用干净工厂配置，初次为 Blender 键位与 Layout。试用 Maya 流程时，在 Edit → Preferences → Keymap 选择 **AxisMeld Maya 2026**，再切 Modeling 或 Rigging；需要保留时主动保存偏好。
+
+公开清单保留 330 项（当前 318、历史 12）；47 项只记录历史已测，当前初始未测 271 项。本批新增 GU-01～GU-13 共 13 项待人工测试，原 IN/RG 等编号和结果保持。线上目录与下载版本已核对为本次 GUI preview；网页勾选属于各访客本浏览器，不自动跨设备同步或提交到 GitHub。
+
+下面的 Phase 0～2B 段落保留基础能力说明；后续完整进度以路线图和修改日志为准。原始架构见 [AxisMeld 架构设计](docs/design/2026-09-08-axismeld-architecture.md)。
 
 ## AxisMeld project statement
 
@@ -41,9 +54,30 @@ It covers Q/W/E/R tools, F8–F11 mesh component modes, A/F framing, Alt+mouse n
 These are adapted Blender behaviors, not full Maya parity. Other editors inherit Industry
 Compatible bindings. [Activation, mapping differences and profile format](docs/maya-mapping/phase-1.md).
 
-Hotbox/marking menus, Maya single/quad view switching, temporary snapping/pivot gestures,
-modeling additions and the UV overhaul remain planned work. This is a development baseline;
-physical input and splash visibility still require interactive acceptance before a binary release.
+## Phase 1.1 transform-axis interaction
+
+In the Maya preset, click a Move/Rotate/Scale single-axis handle to keep it selected, then
+middle-drag in empty viewport space. Native transform operators retain confirmation, cancellation
+and undo; direct handle dragging and Alt navigation remain available. Axis state is transient and
+viewport-local. [Usage and manual acceptance checklist](docs/maya-mapping/phase-1-1.md).
+Real simulated-event tests cover object transforms, repeated drags, cancellation/undo, mesh editing,
+tool/mode changes and preset isolation. Physical mouse feel and reported stutter still need user acceptance.
+
+## Phase 2B Maya-style hotbox
+
+The opt-in AxisMeld Maya 2026 preset now has a native Space hotbox in the 3D View WINDOW for
+Object and mesh Edit Mode. A short tap toggles single/quad view; hold shows the actual Common,
+Current Pane, center and Modeling rows. The three center mouse buttons default to a seven-direction
+view marking menu. Click/drag submenus, session-only Recent Commands, display style/transparency,
+row visibility and per-button menu mappings are connected. Preferences and Hotbox Controls share
+the same validated settings model; user differences are atomically stored in `hotbox_user.json`
+without changing schema-1 keybindings. [Scope and manual acceptance](docs/compatibility/phase-2b-manual-test.md).
+
+Subsequent batches added tool/context hotboxes, modeling command mappings, companion menus,
+native modeling groups and a Rigging workspace. Unsupported Maya actions remain disabled;
+menu visibility does not claim algorithm parity. See the current [roadmap](docs/ROADMAP.md)
+and [issues](docs/CURRENT_ISSUES.md). Physical handfeel, production deformation quality and
+broader display/plugin coverage remain separate manual acceptance work.
 
 ---
 
