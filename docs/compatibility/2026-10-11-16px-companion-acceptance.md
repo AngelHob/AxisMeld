@@ -14,7 +14,11 @@
 
 重复唤出测试首轮在小字号下误把时间轴及父菜单字形认成子菜单标题，失败日志保留；修正为在截图实测菜单列内识别完整标题，并排除实测父列，未放宽正负阈值或更改产品逻辑。修正后3组GUI（重复唤出9种情形、上下文入口、QWER工具）全部通过，观察器和二进制在运行前后指纹稳定。以上只记录本批运行结果，不沿用旧版通过数。
 
-候选EXE SHA256：`4878173623cef3b3485e088c2b1b909a0a57107f7193ffe3fca7de3cf8573240`。正式发布及公开下载指纹待交付完成后补齐。
+完整 [16px companion preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-16px-companion-preview) 已发布；源码/native `89fec688b9dd2f0c95f6a814488cd70733b29893`，基于既有 Blender 5.4 Alpha。ZIP 303,157,273 字节，SHA256 `b52299370b7a1e2d41e2f528323868042ae0cea376bba01bc19851fe11120e40`；EXE SHA256 `4878173623cef3b3485e088c2b1b909a0a57107f7193ffe3fca7de3cf8573240`。6,572 个发行文件、145 项选定资源通过干净解压审计；解压包 factory 与 100%/150% 列表 GUI、匿名重下载后的校验/解压/factory 通过。[发布快照](2026-10-11-16px-companion-preview-snapshot.json)保存精确指纹；旧预览包保留。
+
+最终发布回执：6 组 42 项相关 Python、2 组 114 项原生、3 组既有 GUI 回归与 1 组本批列表几何验证通过；GUI suites：hotbox-repost、context-entries、tools。首轮误识别诊断及失败日志按上文保留。
+
+本批未将历史纯测试、GUI 或浏览器检查计为当前通过结果。本批 Pages `43d73f2bff6ce309d426ea5df0010782381d1773` 的6个公开资源与已推送Git对象逐字节一致；目录和状态检查通过。GU-27仍待人工，既有结果保持。
 
 ## 人工记录
 

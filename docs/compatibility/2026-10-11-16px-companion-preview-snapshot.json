@@ -1,0 +1,301 @@
+{
+  "schemaVersion": 1,
+  "status": "RELEASE_DOWNLOAD_FACTORY_VERIFIED",
+  "recordedAt": "2026-10-11T14:53:26.892527+00:00",
+  "tag": "axismeld-2026.10.11-16px-companion-preview",
+  "sourceCommit": "89fec688b9dd2f0c95f6a814488cd70733b29893",
+  "upstreamCommit": "754ebe3c4b4e1402a159df6e1e58823cc93ef887",
+  "blenderVersion": "5.4 Alpha",
+  "binarySha256": "4878173623cef3b3485e088c2b1b909a0a57107f7193ffe3fca7de3cf8573240",
+  "manualCatalog": {
+    "total": 344,
+    "current": 331,
+    "superseded": 13,
+    "historicallyTested": 47,
+    "currentPending": 284,
+    "allPending": 297,
+    "newIds": [
+      "GU-27"
+    ]
+  },
+  "limits": [
+    "Manual acceptance remains separate.",
+    "No independent reproducible rebuild claim.",
+    "No blanket GPU, other-machine or arbitrary-plugin certification.",
+    "New AxisMeld modeling, Skin/Skeleton and UV algorithm development remains paused."
+  ],
+  "package": {
+    "status": "STATIC_PACKAGE_PASS",
+    "createdAt": "2026-10-11T14:42:11.179107+00:00",
+    "archiveBytes": 303157273,
+    "archiveSha256": "b52299370b7a1e2d41e2f528323868042ae0cea376bba01bc19851fe11120e40",
+    "manifestSha256": "518cde63bf3259751d7969c5db27741c86f28cb693125641ebb53b666f7854e3",
+    "configSha256": "00ee187ca15f1e1d1ee101afa057ccc7c2c80019617830d96506f02b36fd00c0",
+    "archiveName": "AxisMeld-2026.10.11-16px-companion-preview-windows-x64.zip",
+    "files": 6572,
+    "resources": 145
+  },
+  "verification": {
+    "sourceCommit": "89fec688b9dd2f0c95f6a814488cd70733b29893",
+    "binarySha256": "4878173623cef3b3485e088c2b1b909a0a57107f7193ffe3fca7de3cf8573240",
+    "nativeGroups": 2,
+    "nativeTests": 114,
+    "guiSuites": [
+      "hotbox-repost",
+      "context-entries",
+      "tools"
+    ],
+    "companionGeometry": {
+      "directory": "geometry-green-01",
+      "receiptSha256": "114fdfbdf773471e16dbe1be3c08128aa9f517fbe8c76a23aeef01c24821fff6",
+      "logSha256": "37d3b5ea19825a29eb3322bcc3788c0fd6450066539dd5dfba16a9fc45c55df5",
+      "scriptSha256": "66ec847462b629bfab7f47dc9ab09e5a5a56138801353079067fc6dfb937c2a0",
+      "observedSha256": "657950557173896b7442080f8e5489305c40f8aa8dc0e48fd9b71c080b2855be",
+      "baselineSha256": "0a917d85c9b5b8d60173a1ba3f4daa338232b414725307a9f7477b12ad88088a",
+      "baselineBinarySha256": "dff87613bb00e70594023312a0cd401ab8b8dd599fdd7fdf4a509f8cdfa34cdf",
+      "observedBinarySha256": "4878173623cef3b3485e088c2b1b909a0a57107f7193ffe3fca7de3cf8573240",
+      "observedBuildSource": "Unknown",
+      "baselineBuildSource": "Unknown",
+      "rowHeightContract": {
+        "baseline": 21.6,
+        "current": 16.0,
+        "native": 24.0
+      },
+      "mode": "compare",
+      "status": "PASS",
+      "scales": [
+        1.0,
+        1.5
+      ],
+      "cases": [
+        "create",
+        "mapping",
+        "move",
+        "object",
+        "views"
+      ]
+    },
+    "candidateFactory": {
+      "directory": "candidate-factory",
+      "receiptSha256": "bc768eb23948eea4994aa26ae28815bb8aff163fe3beb1b2d19c305d5c853fa6",
+      "logSha256": "95303c9a2ca85ecadb6fe728316c9b32222f930ddb60e7d5248273a1ecb45bdb",
+      "scriptSha256": "014d1b9f62ffba0263bddca5368ba572289f6ba9d75e9f85bbddb5f09489a3d3"
+    },
+    "reasonRuns": [],
+    "resourceCount": 145,
+    "scope": "Only hotbox companion dropdown/cascade base row height to 16 pixels at 100% UI scale; radial/Views/native menus unchanged. No new upstream merge.",
+    "inheritedPassResults": false,
+    "gateReceiptSha256": {
+      "installReceipt": "13252fb8ea0a277f6f9fd5cc5c916e854100c3896f9eb2eb2f58fe58752015a0",
+      "candidateAudit": "6436748ebadfc71506465dc36460bf2d6e1087ffa235bd0db945f8ce3c2b30b6",
+      "nativeReceipt": "dbd51f96e30b03f5c9af9e099d08314a5eb084da65c9550ae9e8c30e05216a6b",
+      "guiReceipt": "5238baffc8cbcafdf381c0e4b57fc830d1d92b2892dfdd44a0258b39cc39bc92"
+    },
+    "pure": {
+      "groups": 6,
+      "tests": 42,
+      "receiptSha256": "2299a34782ba933f1b18819100968302133ec752e11e2825c3787849ca6200e0",
+      "results": [
+        {
+          "suite": "component_companion",
+          "exit_code": 0,
+          "tests": 4,
+          "test_sha256": "31ffaec987ed6b16abda03c4feeea950473f10ebd4f018c8d0d6dd785adb7096",
+          "log_sha256": "1b6f69157102cc03f5264c937d138171570f1a3f06ab9ba2d8345507e1df7261",
+          "stable": true
+        },
+        {
+          "suite": "creation_hotbox",
+          "exit_code": 0,
+          "tests": 10,
+          "test_sha256": "5517e9f9282eef5ad5edfe517c4a963f28b4e9392b7c2530c70e63030902ad02",
+          "log_sha256": "bdfddc7e9c034034b142df35dc3791eda65ea9c7a214e71a3e0de9f11c2191fa",
+          "stable": true
+        },
+        {
+          "suite": "object_modeling_composition",
+          "exit_code": 0,
+          "tests": 9,
+          "test_sha256": "84abea035f086bc06ac76910f7230c20fe528dd8486bcaf454af9865fc961ef0",
+          "log_sha256": "5ae3af6661a872bceb0bc8ece5538f5e07defc6deea51d61607e1ad4530e5ebe",
+          "stable": true
+        },
+        {
+          "suite": "maya_companion_alignment",
+          "exit_code": 0,
+          "tests": 4,
+          "test_sha256": "11c5d7f5e40194afe0dcaefa8a2c6dd096b6cac0c8933ca5e607a5577677db76",
+          "log_sha256": "c9d3485c429116824a8ac79708b4fa07c064d6665e8e9e011d2625b944027863",
+          "stable": true
+        },
+        {
+          "suite": "hotbox_geometry_fixture",
+          "exit_code": 0,
+          "tests": 9,
+          "test_sha256": "57e28825cb007c89dbd17973eb90a87cb69badc4a3a1ec5599e2ab372ba6343b",
+          "log_sha256": "f18d65baf99ae215e614d0870c74c1ec4e56546756f73058af668f717d84da3c",
+          "stable": true
+        },
+        {
+          "suite": "tool_hotbox",
+          "exit_code": 0,
+          "tests": 6,
+          "test_sha256": "15c4499c10ebf2454ca8dd20a9fc2427dcc7fb12f9d6c23d37db8be247f55df4",
+          "log_sha256": "b371852c93772033322e286b6fbfc931a70da65c5968c5a4879706994152c8fe",
+          "stable": true
+        }
+      ]
+    },
+    "extractedFactory": {
+      "directory": "extracted-factory",
+      "receiptSha256": "72ec8726b3d7513cea08f2931956834c9c656b680aaacb049148ef774c77ff84",
+      "logSha256": "95303c9a2ca85ecadb6fe728316c9b32222f930ddb60e7d5248273a1ecb45bdb",
+      "scriptSha256": "014d1b9f62ffba0263bddca5368ba572289f6ba9d75e9f85bbddb5f09489a3d3"
+    },
+    "extractedGeometry": {
+      "directory": "extracted-geometry",
+      "receiptSha256": "04e0b490769ca6a2f72a98a40d493f5f14f659e5fe370318e85e59fd27187cbf",
+      "logSha256": "ebc00c0edab29feb979cbbce46f3b755ce81d94170bc3ae42509dfb4b23cec13",
+      "scriptSha256": "66ec847462b629bfab7f47dc9ab09e5a5a56138801353079067fc6dfb937c2a0",
+      "observedSha256": "700f8e093ec4f02f6451224ca99e6eed51a53504daedac43732a9765b6ca7c23",
+      "baselineSha256": "0a917d85c9b5b8d60173a1ba3f4daa338232b414725307a9f7477b12ad88088a",
+      "baselineBinarySha256": "dff87613bb00e70594023312a0cd401ab8b8dd599fdd7fdf4a509f8cdfa34cdf",
+      "observedBinarySha256": "4878173623cef3b3485e088c2b1b909a0a57107f7193ffe3fca7de3cf8573240",
+      "observedBuildSource": "Unknown",
+      "baselineBuildSource": "Unknown",
+      "rowHeightContract": {
+        "baseline": 21.6,
+        "current": 16.0,
+        "native": 24.0
+      },
+      "mode": "compare",
+      "status": "PASS",
+      "scales": [
+        1.0,
+        1.5
+      ],
+      "cases": [
+        "create",
+        "mapping",
+        "move",
+        "object",
+        "views"
+      ]
+    },
+    "publicFactory": {
+      "directory": "public-factory",
+      "receiptSha256": "a38b2ee0f2d04ed47b475d0d3301935ec2c53955426a2724a5af09d1bb787035",
+      "logSha256": "95303c9a2ca85ecadb6fe728316c9b32222f930ddb60e7d5248273a1ecb45bdb",
+      "scriptSha256": "014d1b9f62ffba0263bddca5368ba572289f6ba9d75e9f85bbddb5f09489a3d3"
+    },
+    "observerFixtureHistory": {
+      "firstRun": "gui-regression-01",
+      "status": "FAIL",
+      "receiptSha256": "fffe2525f156375b13defbc7608ed3ba72eafe42ed632349569131942ef76190",
+      "logSha256": "df09cfe7f2961f17895150f1cefaec6c4f543e3b81d3f027fd75492b11b03b36",
+      "note": "首轮 repost 失败源于小字号全屏模板误识别，原始失败日志保留；观察器改为限定真实子列并保持原阈值，最终结果读取本批发布配置指定的 GUI 回执。这项测试观察器修正不计为产品修复。",
+      "finalReceipt": "gui-regression-02/receipt.json",
+      "productFix": false
+    }
+  },
+  "release": {
+    "status": "PUBLISHED",
+    "tag": "axismeld-2026.10.11-16px-companion-preview",
+    "sourceCommit": "89fec688b9dd2f0c95f6a814488cd70733b29893",
+    "url": "https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-16px-companion-preview",
+    "release_id": 409725561,
+    "assets": [
+      {
+        "name": "AxisMeld-2026.10.11-16px-companion-preview-windows-x64.zip",
+        "size": 303157273,
+        "digest": "sha256:b52299370b7a1e2d41e2f528323868042ae0cea376bba01bc19851fe11120e40",
+        "url": "https://github.com/AngelHob/AxisMeld/releases/download/axismeld-2026.10.11-16px-companion-preview/AxisMeld-2026.10.11-16px-companion-preview-windows-x64.zip"
+      },
+      {
+        "name": "AxisMeld-2026.10.11-16px-companion-preview-windows-x64.zip.sha256",
+        "size": 126,
+        "digest": "sha256:a5f659a3def9a5c4a9c64fb3a635b73afc702a93100c28bf4b57542f423948de",
+        "url": "https://github.com/AngelHob/AxisMeld/releases/download/axismeld-2026.10.11-16px-companion-preview/AxisMeld-2026.10.11-16px-companion-preview-windows-x64.zip.sha256"
+      }
+    ],
+    "recordedAt": "2026-10-11T14:47:58.713734+00:00"
+  },
+  "anonymousDownload": {
+    "authenticated": false,
+    "status": "DOWNLOADED_AND_STATIC_AUDITED",
+    "assets": [
+      {
+        "name": "AxisMeld-2026.10.11-16px-companion-preview-windows-x64.zip",
+        "size": 303157273,
+        "sha256": "b52299370b7a1e2d41e2f528323868042ae0cea376bba01bc19851fe11120e40",
+        "url": "https://github.com/AngelHob/AxisMeld/releases/download/axismeld-2026.10.11-16px-companion-preview/AxisMeld-2026.10.11-16px-companion-preview-windows-x64.zip"
+      },
+      {
+        "name": "AxisMeld-2026.10.11-16px-companion-preview-windows-x64.zip.sha256",
+        "size": 126,
+        "sha256": "a5f659a3def9a5c4a9c64fb3a635b73afc702a93100c28bf4b57542f423948de",
+        "url": "https://github.com/AngelHob/AxisMeld/releases/download/axismeld-2026.10.11-16px-companion-preview/AxisMeld-2026.10.11-16px-companion-preview-windows-x64.zip.sha256"
+      }
+    ]
+  },
+  "manualAcceptance": {
+    "new": [
+      "GU-27"
+    ],
+    "status": "pending",
+    "existingResultsUnchanged": true
+  },
+  "siteStatus": "PUBLIC_BYTES_VERIFIED",
+  "pages": {
+    "status": "PASS",
+    "commit": "43d73f2bff6ce309d426ea5df0010782381d1773",
+    "tag": "axismeld-2026.10.11-16px-companion-preview",
+    "checkedAt": "2026-10-11T14:53:53.897233+00:00",
+    "comparison": "Exact Git blobs (LF), no checkout newline substitution",
+    "results": [
+      {
+        "file": "index.html",
+        "sha256": "34ffe5a577addc9486bac53cf538ba7369ae11bf7e6c043da25f58acacd7cb71",
+        "expectedSha256": "34ffe5a577addc9486bac53cf538ba7369ae11bf7e6c043da25f58acacd7cb71",
+        "status": "PASS",
+        "bytes": 7191
+      },
+      {
+        "file": "app.mjs",
+        "sha256": "9abe691148a1cde8db22e889d006b2018e45e7501baeeb83ea2a09fc5f6cf97a",
+        "expectedSha256": "9abe691148a1cde8db22e889d006b2018e45e7501baeeb83ea2a09fc5f6cf97a",
+        "status": "PASS",
+        "bytes": 22736
+      },
+      {
+        "file": "styles.css",
+        "sha256": "6fe8a8755641ba9af0aa862fd62d55b2d7be2f02aaebd79ef1b5a4eb161079fe",
+        "expectedSha256": "6fe8a8755641ba9af0aa862fd62d55b2d7be2f02aaebd79ef1b5a4eb161079fe",
+        "status": "PASS",
+        "bytes": 15219
+      },
+      {
+        "file": "config.json",
+        "sha256": "252fd32f33a2d2d57bd63f8adc427d544cf478d30fed09c8846e0181109853d1",
+        "expectedSha256": "252fd32f33a2d2d57bd63f8adc427d544cf478d30fed09c8846e0181109853d1",
+        "status": "PASS",
+        "bytes": 511
+      },
+      {
+        "file": "catalog.json",
+        "sha256": "a635cc1ebfaa270f7ab661bfd8f20a9e70173820b18068099fcb389613ec5063",
+        "expectedSha256": "a635cc1ebfaa270f7ab661bfd8f20a9e70173820b18068099fcb389613ec5063",
+        "status": "PASS",
+        "bytes": 234134
+      },
+      {
+        "file": "favicon.svg",
+        "sha256": "2cca7741a0dede35653d222677e15559e566c8dbab6882229ec6ab7b8f410737",
+        "expectedSha256": "2cca7741a0dede35653d222677e15559e566c8dbab6882229ec6ab7b8f410737",
+        "status": "PASS",
+        "bytes": 246
+      }
+    ],
+    "receiptSha256": "108c9b16fa73be0634a3cce91559c2e56c47d4e38f15535e5d23b8bc3de1f924"
+  }
+}
