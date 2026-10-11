@@ -5,7 +5,7 @@
 ## 公开试用
 
 - [打开公开测试清单](https://angelhob.github.io/AxisMeld/)：查看完整测试步骤，记录自己的结果，提交 GitHub 反馈。
-- [下载 Windows x64 便携预览版（Blender 5.4.0 Alpha 主干同步）](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-blender-main-preview)：完整解压后运行 `AxisMeld-Preview/blender.exe`。
+- [下载 Windows x64 便携预览版（热盒下方列表缩小，Blender 5.4 Alpha）](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-compact-companion-preview)：完整解压后运行 `AxisMeld-Preview/blender.exe`。
 - [查看反馈与测试结果](https://github.com/AngelHob/AxisMeld/issues?q=is%3Aissue+label%3Atest-feedback)。
 - [当前开发源码](https://github.com/AngelHob/AxisMeld/tree/axismeld/phase-2a)。
 - [修改日志](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/CHANGELOG.md)。
@@ -14,7 +14,9 @@
 
 开发请使用 **`axismeld/phase-2a`**；默认 `axismeld/integration` 目前只同步公开入口，尚未包含最新开发功能。
 
-首次为 Blender 键位与 Layout；在 Edit → Preferences → Keymap 选择 **AxisMeld Maya 2026**，再切 Modeling 或 Rigging。本轮同步 Blender 5.4.0 Alpha 固定主干，保留已交付菜单、输入和极低窗口说明避让。公开目录 342 项（当前 330、历史 12），47 项仅历史已测，当前初始未测 283、全表初始未测 295；最新标记 GU-22、GU-23、GU-24、GU-25。既有编号与人工结果保持，自动化不替用户勾选。新算法继续暂停。
+首次为 Blender 键位与 Layout；在 Edit → Preferences → Keymap 选择 **AxisMeld Maya 2026**，再切 Modeling 或 Rigging。仅将热盒下方伴随列表及其级联缩为原尺寸的 90%，文字、图标、行高、留白和 Options 同步；周围方向按钮、四视图间隔、主热盒栏及普通原生菜单保持原尺寸。完整条目、底部避让和说明无空间时隐藏的规则保持，不折叠、不滚动，不随窗口继续缩小。公开目录 343 项（当前 331、历史 12），47 项仅历史已测，当前初始未测 284、全表初始未测 296；最新标记 GU-26。既有编号与人工结果保持，自动化不替用户勾选。新算法继续暂停。
+
+6 组 42 项相关 Python、2 组 114 项原生、5 组既有 GUI 回归与 1 组新增列表几何验证通过；源码/native `7ebc757ae0826bce1506174f14e639344553423e`。匿名下载、干净解压及工厂启动已核验；[验收](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/compatibility/2026-10-11-compact-companion-acceptance.md)与[快照](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/compatibility/2026-10-11-compact-companion-preview-snapshot.json)保存实际范围和指纹。本批 Pages `01fbd41b47e6` 的 6 个公开资源逐字节核验通过。
 
 建模顶栏保留 7 项，Vertex / Edge / Face 位于 Edit Mesh 内；原生工具、插件入口和右侧参数齿轮保留。灰色项可能表示当前上下文不满足条件或尚未适配，悬停查看原因；开发预览版仍需人工测试。
 
