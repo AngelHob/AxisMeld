@@ -16,6 +16,7 @@ if not Path(bpy.app.tempdir).resolve().is_relative_to(test_root):
 bpy.context.preferences.use_preferences_save = False
 bpy.context.preferences.view.show_splash = False
 events = []
+window_events = {}
 file_results = []
 popup_results = []
 
@@ -36,6 +37,7 @@ class AXISMELD_OT_release_probe(bpy.types.Operator):
 
     def modal(self, context, event):
         events.append((event.type, event.value))
+        window_events.setdefault(context.window.as_pointer(), []).append((event.type, event.value))
         return {'FINISHED', 'PASS_THROUGH'} if event.type == 'ESC' else {'PASS_THROUGH'}
 
 
@@ -93,22 +95,27 @@ def settle(count=4):
         yield
 
 
-def hide_private_windows():
-    if sys.platform == 'win32':
-        import ctypes
-        from ctypes import wintypes
-        user32 = ctypes.windll.user32
-        callback_type = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
-
-        @callback_type
-        def hide(hwnd, _):
-            pid = wintypes.DWORD()
-            user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
-            if pid.value == os.getpid():
-                user32.ShowWindow(hwnd, 0)
-            return True
-
-        user32.EnumWindows(hide, 0)
+def external_focus_probe():
+    """A real OS focus change; event_simulate does not maintain GHOST win.active."""
+    if sys.platform != 'win32':
+        raise RuntimeError('This isolated external-focus fixture currently requires Windows')
+    import ctypes
+    from ctypes import wintypes
+    api = ctypes.windll.user32
+    api.CreateWindowExW.restype = wintypes.HWND
+    api.CreateWindowExW.argtypes = (wintypes.DWORD, wintypes.LPCWSTR, wintypes.LPCWSTR,
+                                   wintypes.DWORD, ctypes.c_int, ctypes.c_int, ctypes.c_int,
+                                   ctypes.c_int, wintypes.HWND, wintypes.HMENU,
+                                   wintypes.HINSTANCE, ctypes.c_void_p)
+    api.SetForegroundWindow.argtypes = (wintypes.HWND,)
+    api.GetForegroundWindow.restype = wintypes.HWND
+    api.DestroyWindow.argtypes = (wintypes.HWND,)
+    hwnd = api.CreateWindowExW(0, 'STATIC', 'AxisMeld isolated focus probe',
+                               0x10000000 | 0x80000000 | 0x00C00000,
+                               20, 20, 280, 80, None, None, None, None)
+    check(hwnd, 'private OS focus probe window could not be created')
+    api.SetForegroundWindow(hwnd)
+    return api, hwnd
 
 
 def suite():
@@ -261,51 +268,131 @@ def suite():
         print('AXISMELD_HOTBOX_RELEASE_EVENTS_PASS same-window scope only', flush=True)
         return
 
-    event(win, 'SPACE')
-    event(win, 'RIGHTMOUSE')
-    yield from settle()
-    event(win, 'ESC')
-    yield from settle()
     check(bpy.context.preferences.view.filebrowser_display_type == 'WINDOW',
           'fixture must exercise default new-window file browser')
-    with bpy.context.temp_override(window=win, area=area, region=region):
-        file_invoke = bpy.ops.axismeld.release_file_probe('INVOKE_DEFAULT')
-        guard()
-    print('FILE_INVOKE', file_invoke, [op.bl_idname for op in win.modal_operators], flush=True)
-    # fileselect_add queues FULL_OPEN; its receiving window does not exist at dispatch return.
-    for _ in range(40):
-        hide_private_windows()
-        if len(bpy.context.window_manager.windows) > 1:
-            break
-        yield
-    print('FILE_PENDING', [op.bl_idname for op in win.modal_operators], file_results, flush=True)
-    check(len(bpy.context.window_manager.windows) > 1,
-          '; '.join(failures + ['queued file FULL_OPEN did not reach file-select handler']))
-    receiver = next(w for w in bpy.context.window_manager.windows if w != win)
-    file_area = next(a for a in receiver.screen.areas if a.type == 'FILE_BROWSER')
-    file_region = next(r for r in file_area.regions if r.type == 'WINDOW')
-    yield from settle(10)
-    with bpy.context.temp_override(window=receiver, area=file_area, region=file_region):
-        bpy.ops.axismeld.release_probe('INVOKE_DEFAULT')
-    events.clear()
-    event(receiver, 'RIGHTMOUSE', 'RELEASE', file_region)
-    event(receiver, 'SPACE', 'RELEASE', file_region)
-    yield from settle()
-    receipt = list(events)
-    print(f'FILE_RECEIPT source={win.as_pointer()} receiver={receiver.as_pointer()} '
-          f'guard={has_guard} residual={receipt!r} results={file_results!r}', flush=True)
-    if any(item in receipt for item in [('RIGHTMOUSE', 'RELEASE'), ('SPACE', 'RELEASE')]):
-        failures.append('new file window: captured residual release reached child')
-    check(not file_results, 'residual release confirmed/cancelled file browser')
-    event(receiver, 'MOUSEMOVE', 'NOTHING', file_region)
-    event(receiver, 'LEFTMOUSE', 'PRESS', file_region)
-    event(receiver, 'LEFTMOUSE', 'RELEASE', file_region)
-    event(receiver, 'ESC', 'PRESS', file_region)
-    yield from settle()
-    yield from settle(10)
-    check(file_results == ['CANCEL'], f'file Esc did not cancel: {file_results!r}')
-    check(len(bpy.context.window_manager.windows) == 1, 'file browser window remained open')
-    print('PASS no-write default WINDOW file picker cancels normally', flush=True)
+    guard_id = 'VIEW3D_OT_axismeld_hotbox_release_guard'
+    for case in ('receiver_only', 'mouse_in_source', 'key_in_source', 'fresh_press',
+                 'external_focus', 'receiver_close', 'source_close'):
+        source, source_area, source_region = win, area, region
+        if case == 'source_close':
+            with bpy.context.temp_override(window=win, area=area, region=region):
+                bpy.ops.wm.window_new()
+            yield from settle(10)
+            source = next(w for w in bpy.context.window_manager.windows if w != win)
+            source_area = next(a for a in source.screen.areas if a.type == 'VIEW_3D')
+            source_region = next(r for r in source_area.regions if r.type == 'WINDOW')
+        source_id = source.as_pointer()
+        initial_windows = {w.as_pointer() for w in bpy.context.window_manager.windows}
+        event(source, 'SPACE', target_region=source_region)
+        event(source, 'RIGHTMOUSE', target_region=source_region)
+        yield from settle()
+        event(source, 'ESC', target_region=source_region)
+        yield from settle()
+        file_results.clear()
+        with bpy.context.temp_override(window=source, area=source_area, region=source_region):
+            bpy.ops.axismeld.release_probe('INVOKE_DEFAULT')
+            file_invoke = bpy.ops.axismeld.release_file_probe('INVOKE_DEFAULT')
+            guard()
+        print('FILE_INVOKE', case, file_invoke,
+              [op.bl_idname for op in source.modal_operators], flush=True)
+        # FULL_OPEN creates the receiver later. Hiding it here would cause a real
+        # external focus-loss event and invalidate the capture being measured.
+        for _ in range(40):
+            if any(w.as_pointer() not in initial_windows for w in bpy.context.window_manager.windows):
+                break
+            yield
+        receiver = next((w for w in bpy.context.window_manager.windows
+                         if w.as_pointer() not in initial_windows), None)
+        check(receiver is not None, 'queued file FULL_OPEN did not reach file-select handler')
+        receiver_id = receiver.as_pointer()
+        file_area = next(a for a in receiver.screen.areas if a.type == 'FILE_BROWSER')
+        file_region = next(r for r in file_area.regions if r.type == 'WINDOW')
+        yield from settle(10)
+        print('FILE_HANDLERS', case, [op.bl_idname for op in source.modal_operators],
+              [op.bl_idname for op in receiver.modal_operators], flush=True)
+        check(guard_id in [op.bl_idname for op in receiver.modal_operators],
+              case + ': exact receiver did not inherit release ownership')
+        with bpy.context.temp_override(window=receiver, area=file_area, region=file_region):
+            bpy.ops.axismeld.release_probe('INVOKE_DEFAULT')
+        events.clear()
+        window_events.clear()
+        focus_probe = None
+        if case == 'source_close':
+            with bpy.context.temp_override(window=source, area=source_area, region=source_region):
+                bpy.ops.wm.window_close()
+            yield from settle(12)
+            live_ids = {w.as_pointer() for w in bpy.context.window_manager.windows}
+            check(source_id not in live_ids, 'disposable source did not close')
+            for current in bpy.context.window_manager.windows:
+                check(guard_id not in [op.bl_idname for op in current.modal_operators],
+                      'source destruction left release ownership alive')
+            if receiver_id in live_ids:
+                event(receiver, 'ESC', target_region=file_region)
+                yield from settle(12)
+            check(len(bpy.context.window_manager.windows) == 1, 'source close left an orphan window')
+            print('PASS FILE_LIFECYCLE source_close', file_results, flush=True)
+            continue
+        if case == 'receiver_close':
+            with bpy.context.temp_override(window=receiver, area=file_area, region=file_region):
+                bpy.ops.wm.window_close()
+            yield from settle(12)
+            check(len(bpy.context.window_manager.windows) == 1, 'receiver did not close')
+            event(source, 'RIGHTMOUSE', 'RELEASE', source_region)
+            event(source, 'SPACE', 'RELEASE', source_region)
+        else:
+            if case == 'external_focus':
+                focus_probe = external_focus_probe()
+                yield from settle(8)
+                api, hwnd = focus_probe
+                check(api.GetForegroundWindow() == hwnd,
+                      'OS did not activate the private external-focus window')
+                # --enable-event-simulate still updates GHOST window activation,
+                # but wm_event_add_ghostevent deliberately drops OS queue input.
+                # Supply its WM event only after the real activation has changed.
+                event(receiver, 'WINDOW_DEACTIVATE', 'NOTHING', file_region)
+                yield from settle(4)
+                check(all(guard_id not in [op.bl_idname for op in w.modal_operators]
+                          for w in (source, receiver)),
+                      'real external focus loss did not retire paired release guards')
+            elif case == 'fresh_press':
+                event(receiver, 'SPACE', 'PRESS', file_region)
+            mouse_target = source if case == 'mouse_in_source' else receiver
+            key_target = source if case == 'key_in_source' else receiver
+            event(mouse_target, 'RIGHTMOUSE', 'RELEASE',
+                  source_region if mouse_target == source else file_region)
+            event(key_target, 'SPACE', 'RELEASE',
+                  source_region if key_target == source else file_region)
+        yield from settle(8)
+        receipt = list(events)
+        print('FILE_RECEIPT', case, window_events, 'results=', file_results, flush=True)
+        if case not in {'external_focus', 'fresh_press'}:
+            if any(item in receipt for item in [('RIGHTMOUSE', 'RELEASE'), ('SPACE', 'RELEASE')]):
+                failures.append(case + ': captured residual release reached child')
+        elif case == 'fresh_press':
+            check(('SPACE', 'PRESS') in receipt and ('SPACE', 'RELEASE') in receipt,
+                  'new press/release after lost release was swallowed')
+            check(('RIGHTMOUSE', 'RELEASE') not in receipt, 'fresh key lost other capture')
+        else:
+            check(('SPACE', 'RELEASE') in receipt and ('RIGHTMOUSE', 'RELEASE') in receipt,
+                  'external focus loss swallowed future releases')
+        if focus_probe:
+            api, hwnd = focus_probe
+            api.DestroyWindow(hwnd)
+            yield from settle(4)
+        if case != 'receiver_close':
+            check(not file_results, 'residual release confirmed/cancelled file browser')
+            event(receiver, 'MOUSEMOVE', 'NOTHING', file_region)
+            event(receiver, 'LEFTMOUSE', 'PRESS', file_region)
+            event(receiver, 'LEFTMOUSE', 'RELEASE', file_region)
+            event(receiver, 'ESC', 'PRESS', file_region)
+            yield from settle(14)
+        check(file_results == ['CANCEL'], f'file cancel failed: {file_results!r}')
+        check(len(bpy.context.window_manager.windows) == 1, 'file browser window remained open')
+        check(guard_id not in [op.bl_idname for op in source.modal_operators],
+              'completed source guard remained attached')
+        event(source, 'ESC', target_region=source_region)
+        yield from settle()
+        print('PASS FILE_LIFECYCLE', case, flush=True)
     check(not failures, '; '.join(failures))
     print('AXISMELD_HOTBOX_CROSS_WINDOW_PASS', flush=True)
 
@@ -333,7 +420,12 @@ def bridge_suite(win, area, region):
         while pending:
             child=pending.pop();pending.extend(child['children'])
             if child['kind'] not in {'menu','separator'}:leaves.append(child)
-        check(leaves and all(not node['enabled'] and not node.get('command') for node in leaves),
+        reviewed = {'maya.common.file.open_scene': 'file.open',
+                    'maya.common.file.save_scene_as': 'file.save_as'}
+        check({node['id']: node.get('command') for node in leaves if node['enabled']} == reviewed,
+              'File selector admission differs from the two reviewed bodies')
+        check(leaves and all(not node['enabled'] and not node.get('command')
+                             for node in leaves if node['id'] not in reviewed),
               'unadapted file/window action became operational')
         check(bpy.ops.axismeld.hotbox_setting(setting='style', value='center') == {'FINISHED'},
               'style setting failed')

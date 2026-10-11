@@ -21,7 +21,8 @@ def walk(nodes):
 class ContentRuntimeTest(unittest.TestCase):
     def test_all_companions_survive_complete_bounded_snapshot(self):
         snap = hotbox_runtime.make_snapshot(generation=1)
-        self.assertEqual(len(snap['menus']), 20)
+        self.assertEqual(len(snap['menus']), 21)
+        self.assertIn('context.convert_menu', {row['id'] for row in snap['menus']})
         self.assertLessEqual(len(list(walk(snap['menus']))), 4096)
         self.assertLessEqual(len(hotbox_runtime.serialize_snapshot(snap).encode()), 1024 * 1024)
         for change in ('unknown', 'duplicate', 'reorder', 'missing'):

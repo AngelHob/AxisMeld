@@ -12,6 +12,8 @@ from .tool_hotbox import (DIRECTIONS, MENU_COMMANDS, ORIENTATIONS,
                          UNAVAILABLE_INDICATORS as TOOL_UNAVAILABLE_INDICATORS)
 from .creation_hotbox import CREATE_COMMANDS, CREATE_ROOT, CREATE_MENU, CREATE_WORKFLOW_INDICATORS
 from .context_hotbox import COMPONENT_MENU, UNAVAILABLE_INDICATORS as COMPONENT_UNAVAILABLE_INDICATORS
+from .context_conversion_hotbox import CONVERSION_MENU, CONVERSION_ROOT
+from .history_hotbox import HISTORY_ROOT
 from .context_modeling_hotbox import (modeling_root, MODEL_ROOTS, MODEL_COMPANION_MAP,
                                      MODEL_COMPANION_ROOTS, MODEL_MENU_COMMANDS)
 from .object_modeling_hotbox import (OBJECT_ROOT, OBJECT_MENU, OBJECT_TOOLS, OBJECT_ACTION_COMMANDS,
@@ -54,9 +56,10 @@ diagnostics = []
 _syncing_preferences = False
 _session_document = {'schema_version': 1, 'settings': {}}
 
-# Deliberately independent of the general adapter registry: new-window/file and interactive
-# navigation actions must not become callable through this batch's menu bridge.
+# Deliberately independent of the general adapter registry. Only the reviewed
+# Open/Save As file selectors are callable; other window/file actions stay excluded.
 SUPPORTED_COMMANDS = frozenset({
+    'file.open', 'file.save_as',
     *OBJECT_TOOLS,
     *OBJECT_ACTION_COMMANDS,
     *MODELING_SPECS,
@@ -88,7 +91,7 @@ class RecentCommands:
 recent = RecentCommands()
 
 
-def dispatch(context, command):
+def dispatch(context, command, *, file_release_token=0):
     """Recheck live availability and record only synchronous successful menu commands."""
     if not isinstance(command, str) or command not in SUPPORTED_COMMANDS:
         return {'CANCELLED'}
@@ -100,7 +103,9 @@ def dispatch(context, command):
         available, _reason = adapter.available(context, command)
         if not available:
             return {'CANCELLED'}
-        result = adapter.run(context, command, invoke=True)
+        options = {'file_release_token': file_release_token} if command in {
+            'file.open', 'file.save_as'} else {}
+        result = adapter.run(context, command, invoke=True, **options)
     except Exception as error:
         logging.getLogger(__name__).error(
             'Hotbox command %s failed: %s: %s', command, type(error).__name__, error)
@@ -329,7 +334,8 @@ def validate_snapshot(value):
                 *MODEL_COMPANION_ROOTS, *TOOL_COMPANION_ROOTS.values()]
     if [node.get('id') for node in menus] not in (canonical, [*canonical, OBJECT_MENU],
                                                 [*canonical, OBJECT_MENU, CREATE_MENU], complete,
-                                                [*complete, 'internal']):
+                                                [*complete, 'internal'],
+                                                [*complete, CONVERSION_MENU, 'internal']):
         raise ValueError('root menus must match a canonical catalog or the complete companion catalog')
     if not all(node.get('kind') == 'menu' for node in menus):
         raise ValueError('root menu groups must have menu kind')
@@ -517,15 +523,15 @@ _CAPABILITY_REASONS = {
 }
 
 
-def _apply_runtime_capabilities(context, menus):
+def _apply_runtime_capabilities(context, menus, *, preselection=None):
     # Importing adapter imports bpy, so keep it out of module initialization and pure tests.
     from . import adapter
 
     # One construction only: aliases share selected-domain counts. Dispatch does
     # not receive this cache and always validates the current scene/selection.
-    capability_cache = {}
-    active_model_root = None
-    model_root_resolved = False
+    capability_cache = {'mesh_selection': [preselection['counts']]} if preselection else {}
+    active_model_root = preselection['root'] if preselection else None
+    model_root_resolved = bool(preselection)
     pending = list(menus)
     while pending:
         node = pending.pop()
@@ -557,6 +563,8 @@ def _apply_runtime_capabilities(context, menus):
         node['reason'] = (node['reason'] if identifier.startswith((OBJECT_MENU + '.', OBJECT_ROOT + '.',
                                                                   CREATE_MENU + '.', CREATE_ROOT + '.',
                                                                   COMPONENT_MENU + '.',
+                                                                  CONVERSION_MENU + '.', CONVERSION_ROOT + '.',
+                                                                  HISTORY_ROOT + '.',
                                                                   *(root + '.' for root in (*MODEL_ROOTS, *MODEL_COMPANION_ROOTS))))
                           else '') if enabled else _CAPABILITY_REASONS.get(str(reason), str(reason))
         if node['command'] in MODELING_SPECS:
@@ -601,7 +609,7 @@ def _apply_runtime_capabilities(context, menus):
     return menus
 
 
-def snapshot(context):
+def snapshot(context, *, preselection=None):
     """Return a capability-resolved snapshot for a live Blender context."""
-    menus = _apply_runtime_capabilities(context, _catalog_with_recent())
+    menus = _apply_runtime_capabilities(context, _catalog_with_recent(), preselection=preselection)
     return serialize_snapshot(make_snapshot(generation=_next_generation(), settings=_settings, menus=menus))

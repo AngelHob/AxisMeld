@@ -4,6 +4,8 @@
 from copy import deepcopy
 
 from .context_hotbox import COMPONENT_HOTBOX
+from .context_conversion_hotbox import CONVERSION_HOTBOX
+from .tool_hotbox import CURRENT_TOOL_HOTBOX
 from .creation_hotbox import CREATE_HOTBOX
 from .context_modeling_hotbox import MODEL_HOTBOX
 from .object_modeling_hotbox import OBJECT_BOUND_COMMANDS
@@ -12,6 +14,8 @@ from .profiles import MODIFIERS
 from .modeling_registry import SPECS as MODELING_SPECS, keymap_targets
 
 CONTEXT_TARGETS = {COMPONENT_HOTBOX: ('Object Mode', 'Mesh'),
+                   CONVERSION_HOTBOX: ('Object Mode', 'Mesh'),
+                   CURRENT_TOOL_HOTBOX: ('Object Mode', 'Mesh'),
                    CREATE_HOTBOX: ('Object Mode',), MODEL_HOTBOX: ('Object Mode', 'Mesh')}
 CONTEXT_HOTBOXES = frozenset(CONTEXT_TARGETS)
 
@@ -27,7 +31,7 @@ def modeling_keymap(name, args):
     return not args.get('modal', False) and (
         name in {'Object Mode', 'Mesh', 'Object Non-modal', '3D View', '3D View Generic',
                  'AxisMeld Hotbox'} or
-        name.startswith('3D View Tool:'))
+        (name.startswith('3D View Tool:') and not name.startswith('3D View Tool: Paint Grease Pencil')))
 
 
 def command_targets(command):

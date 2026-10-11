@@ -1,6 +1,8 @@
 # AxisMeld 整体规划与路线图
 
-状态核对日期：2026-10-11，本批开始时已拉取并核对远端基线 `19add3316c828bb9028bc55a3d3d3b4cb80e9fc3`；本批输入审计与诊断修复见下文，后续提交以远端为准。本文件是当前路线入口；旧日期的规格保留设计与证据，不代表当前完成度。
+状态核对日期：2026-10-11，本批 GUI 收敛开始时已拉取并核对远端基线 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`；本批结果见[GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)，后续提交以远端为准。本文件是当前路线入口；旧日期的规格保留设计与证据，不代表当前完成度。
+
+**本批交付状态：当前范围实现与统一候选回归已完成，发布待本批验收回执。** 已通过 40 组 354 项纯 Python、8 组 139 项原生、真实 RNA 7+4 项与 7 个实际 File 流程；统一候选的 18 组回归全部通过（17 组 GUI、1 组 profiles 后台验证，按套件计）；exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`。新包尚未发布。后续只在本段和 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md) 更新最终构建/发布结果，不把已落地实现重新列为待开发。
 
 ## 1. 目标与当前基线
 
@@ -8,9 +10,9 @@ AxisMeld 是可独立拉取、构建、运行的 Blender 衍生版本，以 Maya
 
 | 入口 | 当前内容 |
 |---|---|
-| 开发源码 | [AngelHob/AxisMeld 的 axismeld/phase-2a](https://github.com/AngelHob/AxisMeld/tree/axismeld/phase-2a)；本批开始时的远端基线为 `19add3316c828bb9028bc55a3d3d3b4cb80e9fc3`；后续以远端为准 |
+| 开发源码 | [AngelHob/AxisMeld 的 axismeld/phase-2a](https://github.com/AngelHob/AxisMeld/tree/axismeld/phase-2a)；本批开始时的远端基线为 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`；后续以远端为准 |
 | 默认分支 | `axismeld/integration`；目前承担仓库首页入口，**未包含最新开发实现**，不能直接用它继续功能开发 |
-| 最新试用包 | [2026.09.17 Skin weights preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-skin-weights-preview)，Python 功能源码 `bf35ab393b7c4d94bfdd78680a862ab76c71fc6e`；native 来源仍为 `617986ac1841` |
+| 当前公开旧试用包 | [2026.09.17 Skin weights preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-skin-weights-preview)，Python 功能源码 `bf35ab393b7c4d94bfdd78680a862ab76c71fc6e`；native 来源仍为 `617986ac1841`，**不包含本批 GUI/原生输入改动** |
 | Blender 基线 | `18d84097b4f859582afdec57eece2ae880371adc`，版本宏为 5.3.0 alpha；不等于后续上游最新版本 |
 | 测试门户 | [GitHub Pages](https://angelhob.github.io/AxisMeld/)，源码 `tools/testing_site/`，部署分支 `gh-pages` |
 | 交接与问题 | [新机器接续](HANDOFF.md) · [可复制提示词](CODEX_HANDOFF_PROMPT.md) · [当前问题](CURRENT_ISSUES.md) · [构建与交付](BUILD_AND_DELIVERY.md) |
@@ -22,7 +24,7 @@ AxisMeld 是可独立拉取、构建、运行的 Blender 衍生版本，以 Maya
 | 模块 | 当前已交付 | 仍需区分的边界 |
 |---|---|---|
 | 基础发行与输入 | Windows x64 原生构建、AxisMeld 标识、Maya 键位预设、语义命令与分层配置 | 不是全平台稳定版；个人配置不得进入公开默认值 |
-| 导航、操纵器与热盒 | Alt 导航、轴选择后中键拖动、单/四视图、Space/QWER/组件/上下文建模与创建热盒；图标、单选组、外延划选及伴随菜单整理 | 真实手感、高 DPI、窄视窗与第三方冲突仍按清单验收；不重新推翻四视图热盒基准 |
+| 导航、操纵器与热盒 | Alt 导航、轴选择后中键拖动、单/四视图、Space/QWER/组件/上下文建模与创建热盒；转换/当前工具/History、只读预选、临时吸附和 File 跨窗释放；图标、单选组、外延划选及伴随菜单整理 | 真实手感、高 DPI、窄视窗与第三方冲突仍按清单验收；不重新推翻四视图热盒基准 |
 | 建模菜单与 M3 覆盖 | 全局 Blender 栏保留；Modeling 视窗七根菜单；原生功能分类接入、Maya 正文/Options 保留、缺失项灰显 | M3 是映射、可用原生能力和缺口计划的交付，**不是 Maya 所有建模算法完成** |
 | Rigify 原生化 | 内置模块自动加载；创建、生成、偏好、Feature Sets 与重载生命周期已有验证 | 不再按可启停插件开发；复杂生成器及真实变形仍需人工验收 |
 | Rigging 工作区 | 默认资产新增 Rigging；Skeleton/Skin 两根；9 个真实 Blender 入口；保留 Maya 82 条正文和 33 个 Options | A1 已适配一次 Normalize Weights / Prune Small Weights（含独立 Options），余下 80 正文/31 Options 仍灰显；原生 Weights 与新适配分开记账 |
@@ -42,16 +44,18 @@ Rigging 已发布验证包括 57 项针对菜单测试、8 个独立 Blender 进
 
 | 顺序 | 当前交付批次 | 工作内容 | 完成标准 |
 |---|---|---|---|
-| U0 进行中 | 当前对照表与差异清单；输入切片已完成 | 当前生成键位已形成可复现审计；继续核对菜单、参考来源和真实手势，将上下文、按下/按住/松开、冲突和测试编号汇总；核实历史文档与当前代码差异 | 每项可追到当前源码及依据；明确已适配、保留差异、待修复、灰占位、待人工验收，不能把历史描述当现状 |
-| U1 | 菜单与布局 | 对照正文、分组、层级、图标、右侧齿轮和工作区归属；热盒伴随菜单完整显示，下方空间不足时底部对齐 | 保留七根 Modeling 及 Edit Mesh 内的 Vertex/Edge/Face；Rigging 菜单结构齐全；缺失功能灰占位；不靠折叠、滚动或删项掩盖问题 |
-| U2 | 热盒与鼠标交互 | 四视图二级热盒作标杆；收敛外延划选、父子返回、取消/释放、边缘避让和 QWER 持键反复 LMB 唤出 | 对实际按钮间距及事件序列有回归；覆盖无选择/有选择、Object/Edit、单/四视图和显示缩放；不误改对象或选区 |
-| U3 | 快捷键与上下文冲突 | 对照已有导航、选择、变换和建模命令的 Maya 默认键；验证组合键、别名、临时状态恢复、原生 fallback 和用户覆盖 | 默认键位与有效生成键位一致；冲突可解释，失败/取消不残留状态，不抢其他编辑器或插件键；需要新功能的键显式列为后置 |
+| U0 当前范围实现完成 | 当前菜单、输入及参考证据 | 当前生成键位已有可复现审计；固定菜单/参考逐项核对，记录上下文、按下/按住/松开、冲突与测试编号 | 每项可追到当前源码及依据；明确已适配、保留差异、灰占位与待人工验收；最终验证状态见本页开头 |
+| U1 当前范围实现完成 | 菜单与布局 | 正文、分组、层级、图标、右侧齿轮和工作区归属已整理；热盒伴随菜单完整显示，下方空间不足时底部对齐 | 保留七根 Modeling 及 Edit Mesh 内的 Vertex/Edge/Face；Rigging 菜单结构齐全；缺失功能灰占位；不靠折叠、滚动或删项掩盖问题 |
+| U2 当前范围实现完成 | 热盒与鼠标交互 | 四视图二级热盒作标杆；外延划选、父子返回、取消/释放、边缘避让、QWER 持键反复唤出与 File 精确跨窗释放已实现 | 实际间距与事件序列有回归；实体鼠标、显示缩放和复杂生产场景仍待人工验收，不误改对象或选区 |
+| U3 当前范围实现完成 | 快捷键与上下文冲突 | 已有命令默认键、组合键、别名、临时状态恢复、原生 fallback 和用户覆盖已核对；需要新算法的键后置 | 默认与有效生成键位一致；冲突可解释，失败/取消不残留状态，不抢其他编辑器或插件键；人工和自动结果分别记录 |
 
-自动化通过与人工手感验收分别记录；人工测试暂缓时仍可推进可验证的 UI/输入工作，不能因此宣布整个阶段完成。U0–U3 收敛后先报告验收边界，由用户决定恢复哪批功能，不自动跳回 A2。
+实现完成、自动回归、人工手感验收和包发布分别记录；当前范围的实现完成不等于人工验收完成或所有 Maya 算法已实现。完成本批交付后先报告边界，由用户决定恢复哪批功能，不自动跳回 A2。
 
-2026-10-11 已完成 U0 的当前输入审计切片：[当前对照表](compatibility/current-input-audit.md)及[机器可读快照](compatibility/current-input-audit.json)由真实键位生成器导出，覆盖 56 个默认命令、含别名的 58 条输入、7 条 AxisMeld 操纵器入口、489 条原生继承项、53 条移除项，并检查 177 个受保护 keymap 不变。已存 Maya 参考的比较结果是 38 条文本记法一致、18 条待核对历史文字参考、2 条待核对标点记法或差异；文本一致不代表行为等价，U0 菜单、参考与手势核对尚未完成。
+2026-10-11 本批补齐 Ctrl+RMB 转换、Ctrl+Shift+RMB 当前工具、Edit 空选择只读预选与原生取消恢复、A+LMB History 操作及 X/V/J 临时吸附；修复九个空动态目录与 Grease Pencil 误过滤。Space → File 的 Open Scene / Save Scene As 复用原生确认链，用精确调用 token 将仍归热盒所有的松键交给对应文件窗口，不扩大到其他 File/Window 入口或继承快捷键。所有当前固定目录逐级核对，原 18+2 条输入参考已闭合。见 [File 设计](development/2026-10-11-file-window-release-design.md)及 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)。
 
-同批修复 Object Mode/Mesh 互斥模式之间的插件键位冲突误报，共享 3D View 和工具 keymap 的潜在冲突仍保留提示。12 项审计测试、18 项输入测试和 4 项真实 Blender RNA 检查通过；不等于 GUI 或 Maya 手感验收。本批未构建新 native、未发布新 ZIP，9 月 17 日 Skin 试用包不含此修复；开发构建人工验收见 [IN-01～IN-03](compatibility/2026-10-11-input-diagnostics-acceptance.md)。
+当前生成输入表为 58 个默认命令、60 条含别名绑定、7 个操纵器入口、3 个原生模态持键入口、497 条原生继承、45 条移除项、186 个受保护 keymap。原生继承不是 Maya 等价声明；D/C/F12/1/2/3 及 Shift+J 的后置能力明确保留，不能用近似功能消灭灰项。
+
+之前完成的 Object Mode/Mesh 插件冲突提示修复保持；IN-01～IN-03 与 GU-01～GU-13 全部待人工验收。新原生代码必须使用对应新构建；旧 Skin 包不适用。最终自动回归和包发布状态统一见本页开头。
 
 以下保留已交付历史和功能积压，**不是当前实施队列**；后置项的具体语义与算法仍需独立核实：
 
@@ -84,7 +88,7 @@ A2 的后置设计线索保留：Remove Unused Influences 需明确全网格没�
 
 ## 5. 验收与每批交付
 
-人工清单共 **317 项**，其中当前 305、已替代历史 12。47 项仅有历史“已测试”信息，不等于全通过；全表初始未测 270，剔除历史后的当前初始未测 258。最近新增 IN-01～IN-03 全部待测，须使用包含 2026-10-11 修复的开发构建；旧 Skin 发布包不适用。RG-07～RG-14、RG-15～RG-20 仍待测。每位网页访客有自己的记录，不能据维护者历史自动替他勾选。
+人工清单共 **330 项**，其中当前 318、历史 12。47 项仅有历史“已测试”信息，不等于全通过；全表初始未测 283，当前初始未测 271。最近新增 GU-01～GU-13，原 IN 与 RG 等编号和状态保持。新 GUI/输入必须使用包含本批 C++ 的新构建，9 月 17 日 Skin 包不适用。访客自己的记录仍独立保存，不能据自动化或维护者历史替他勾选。
 
 每批完成顺序：更新设计 → 实现 → 与改动相称的静态/结果/真实事件或 GUI 验证 → 记录未覆盖人工项 → 更新 [CHANGELOG](CHANGELOG.md) → 提交推送并核验远端。验收变化时同步 Markdown 清单与公开 catalog；发布新版时绑定确切源码 SHA、校验包内资源、重新解压启动，再更新 Pages 构建版本。自动测试不改变人的测试结果。
 
@@ -101,4 +105,4 @@ A2 的后置设计线索保留：Remove Unused Influences 需明确全网格没�
 | 默认布局与所有权 | `release/datafiles/startup.blend`、`source/blender/editors/screen/workspace_edit.cc`；[Rigging 设计和验证](development/2026-09-17-rigging-workspace.md) |
 | 人工验收与公开页面 | [总清单](compatibility/2026-09-14-manual-test-ledger.md)、`tools/testing_site/`；生成器 `tools/utils/axismeld_public_test_catalog.py` |
 
-新机器第一步按 [HANDOFF](HANDOFF.md) 核对分支和启动基线，先检查已生成的输入审计，再补 U0 剩余菜单、参考及手势对照；不要重复开发输入导出器，也不要沿用已被用户更正的 A2 优先建议。
+新机器第一步按 [HANDOFF](HANDOFF.md) 核对分支和启动基线，先检查当前 GUI 验收回执、输入/菜单导出是否漂移，再处理实际反馈；不要重做本批入口和审计，也不要自行恢复 A2 算法。

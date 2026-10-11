@@ -236,6 +236,16 @@ def _draw_item(layout, context, node):
         return
     row = layout.row(align=True)
     if kind == 'menu':
+        # Missing scene/plug-in providers remain visible placeholders. Creating
+        # even a disabled native submenu would still allow an empty preview.
+        # A directory containing disabled commands remains inspectable.
+        if not any(child['kind'] != 'separator' for child in node.get('children', ())):
+            row.enabled = False
+            op = row.operator(AXISMELD_OT_menubar_execute.bl_idname,
+                              text=node['label'], icon=_icon(node))
+            op.kind, op.key, op.token = 'disabled', '', ''
+            op.reason = node.get('reason') or 'Maya dynamic menu provider is not implemented'
+            return
         menu = _MENU_NAMES[node['id']]
         if modeling_workspace(context):
             menu = _COMPONENT_MENU_HOSTS.get(node['id'], menu)

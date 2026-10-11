@@ -21,6 +21,7 @@
 #include "DNA_windowmanager_enums.h"
 
 #include "DEG_depsgraph.hh"
+#include "transform_axismeld_snap.hh"
 
 namespace blender {
 
@@ -842,6 +843,8 @@ struct TransInfo {
 
   /** Snap Data. */
   TransSnap tsnap;
+  /** Held Maya snap modifiers exist only for this transform, never in ToolSettings. */
+  AxisMeldSnapState axismeld_snap;
 
   /** Numerical input. */
   NumInput num;

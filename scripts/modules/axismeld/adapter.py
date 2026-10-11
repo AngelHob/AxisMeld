@@ -4,11 +4,13 @@
 import bpy
 
 from .context_hotbox import COMPONENT_HOTBOX, COMPONENT_ROOT
+from .context_conversion_hotbox import CONVERSION_HOTBOX, CONVERSION_ROOT
 from .creation_hotbox import CREATE_HOTBOX, CREATE_OPERATORS, CREATE_ROOT
 from .context_modeling_hotbox import MODEL_HOTBOX, modeling_root
 from .object_modeling_hotbox import OBJECT_ROOT, OBJECT_TOOLS, OBJECT_ACTION_COMMANDS, object_modeling_targets
 from .commands import COMMANDS
-from .tool_hotbox import TOOL_ROOTS, ORIENTATIONS, SELECTION_TOOLS
+from .tool_hotbox import TOOL_ROOTS, ORIENTATIONS, SELECTION_TOOLS, CURRENT_TOOL_HOTBOX, current_tool_root
+from .history_hotbox import HISTORY_ROOT, HISTORY_TRIGGER
 from . import modeling_adapter
 from .modeling_registry import SPECS as MODELING_SPECS
 
@@ -25,6 +27,7 @@ VIEW_OPS = {'view.focus_selected': ('view_selected', {'use_all_regions': False})
 VIEW_ACTIONS = {'view.toggle_quad': 'TOGGLE_QUAD', 'view.perspective': 'PERSPECTIVE',
                 'view.side': 'SIDE', 'view.front': 'FRONT', 'view.top': 'TOP',
                 'view.left': 'LEFT', 'view.back': 'BACK', 'view.bottom': 'BOTTOM'}
+FILE_SELECTORS = {'file.open': 'open_mainfile', 'file.save_as': 'save_as_mainfile'}
 
 
 def modeling_context(context):
@@ -54,6 +57,16 @@ def available(context, command):
             False, 'Requires a supported modeling 3D View window')
     if not modeling_context(context):
         return False, 'Requires a 3D View window in Object or mesh Edit Mode'
+    if command in FILE_SELECTORS:
+        operation = getattr(bpy.ops.wm, FILE_SELECTORS[command])
+        return (True, '') if operation.poll() else (False, 'Native file selector is unavailable')
+    if command == CONVERSION_HOTBOX:
+        obj = context.active_object
+        if not (obj and obj.type == 'MESH' and obj.select_get() and obj.is_editable and
+                obj.data.is_editable and obj.visible_get(view_layer=context.view_layer)):
+            return False, 'Select a visible, editable mesh first'
+    if command == CURRENT_TOOL_HOTBOX and not current_tool_root(context):
+        return False, 'The active tool has no supported context menu'
     if command in OBJECT_TOOLS:
         return (True, '') if object_modeling_targets(context) else (False, 'Requires selected editable Mesh Objects')
     if command in OBJECT_ACTION_COMMANDS:
@@ -104,12 +117,32 @@ def available(context, command):
     return True, ''
 
 
-def run(context, command, *, invoke=True, keyboard_tool_session=False):
+def run(context, command, *, invoke=True, keyboard_tool_session=False, file_release_token=0):
     valid, reason = available(context, command)
     if not valid:
         raise ValueError(reason)
+    if command in FILE_SELECTORS:
+        if not invoke:
+            raise ValueError('File selectors require explicit invoke and user confirmation')
+        properties = {'display_file_selector': True} if command == 'file.open' else {
+            'show_save_modified_images_dialog': True}
+        if file_release_token:
+            properties['axismeld_release_token'] = file_release_token
+        return getattr(bpy.ops.wm, FILE_SELECTORS[command])('INVOKE_DEFAULT', **properties)
     if command in MODELING_SPECS:
         return modeling_adapter.run(context, command, invoke=invoke)
+    if command == HISTORY_TRIGGER and invoke and keyboard_tool_session:
+        from . import hotbox_runtime
+        return bpy.ops.view3d.axismeld_hotbox(
+            'INVOKE_DEFAULT', menu_json=hotbox_runtime.snapshot(context), tool_menu=HISTORY_ROOT)
+    if command in {CONVERSION_HOTBOX, CURRENT_TOOL_HOTBOX}:
+        if not invoke:
+            raise ValueError('Context hotbox requires an invoke event')
+        from . import hotbox_runtime
+        return bpy.ops.view3d.axismeld_hotbox(
+            'INVOKE_DEFAULT', menu_json=hotbox_runtime.snapshot(context),
+            tool_menu=CONVERSION_ROOT if command == CONVERSION_HOTBOX else current_tool_root(context),
+            direct_context=True)
     if command in OBJECT_TOOLS:
         # Explicit outer undo: bpy calls otherwise suppress this transaction's undo push.
         return bpy.ops.axismeld.object_modeling_tool('EXEC_DEFAULT', True, command=command)

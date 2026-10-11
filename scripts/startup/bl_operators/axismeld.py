@@ -6,8 +6,10 @@ from bpy.props import StringProperty, BoolProperty, EnumProperty, FloatProperty,
 
 from axismeld import adapter, runtime, hotbox_runtime
 from axismeld.context_hotbox import COMPONENT_HOTBOX
+from axismeld.context_conversion_hotbox import CONVERSION_HOTBOX
+from axismeld.tool_hotbox import CURRENT_TOOL_HOTBOX
 from axismeld.creation_hotbox import CREATE_HOTBOX
-from axismeld.context_modeling_hotbox import MODEL_HOTBOX
+from axismeld.context_modeling_hotbox import MODEL_HOTBOX, modeling_root
 from axismeld.object_modeling_hotbox import OBJECT_ROOT
 from axismeld import object_modeling_ops
 from axismeld.commands import PRESET_NAME
@@ -16,6 +18,8 @@ from axismeld.hotbox_profiles import DEFAULT_APPEARANCE
 from axismeld.tool_hotbox import TOOL_ROOTS
 from axismeld import modeling_common_ops, modeling_mesh_ops, modeling_shapes_ops
 from axismeld import skin_weight_ops
+from axismeld import edit_preselection
+from axismeld.history_hotbox import HISTORY_TRIGGER
 
 
 class AXISMELD_OT_command(Operator):
@@ -50,6 +54,21 @@ class AXISMELD_OT_command(Operator):
         return self._run(context, False)
 
     def invoke(self, context, event):
+        if self.command in {CONVERSION_HOTBOX, CURRENT_TOOL_HOTBOX} and (
+                event.value != 'PRESS' or event.is_repeat or event.alt or event.oskey or
+                not adapter.available(context, self.command)[0]):
+            return {'PASS_THROUGH'}
+        if (self.command == MODEL_HOTBOX and context.mode == 'EDIT_MESH' and
+                event.type in {'LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE'} and
+                not adapter.available(context, self.command)[0]):
+            if event.value != 'PRESS' or event.is_repeat or event.alt or event.oskey:
+                return {'PASS_THROUGH'}
+            root = modeling_root(context, allow_empty=True)
+            if not root:
+                return {'PASS_THROUGH'}
+            result = bpy.ops.view3d.axismeld_hotbox(
+                'INVOKE_DEFAULT', menu_json=hotbox_runtime.snapshot(context), tool_menu=root)
+            return {'FINISHED'} if 'RUNNING_MODAL' in result else result
         if (self.command == MODEL_HOTBOX and context.mode == 'OBJECT' and
                 event.type in {'LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE'}):
             if event.value != 'PRESS' or event.is_repeat or event.alt or event.oskey:
@@ -73,7 +92,7 @@ class AXISMELD_OT_command(Operator):
         keyboard = event.value == 'PRESS' and event.type not in {
             'LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE', 'BUTTON4MOUSE', 'BUTTON5MOUSE',
             'ACTIONZONE_AREA', 'ACTIONZONE_REGION', 'NONE'}
-        if self.command in TOOL_ROOTS and event.is_repeat:
+        if (self.command in TOOL_ROOTS or self.command == HISTORY_TRIGGER) and event.is_repeat:
             return {'CANCELLED'}
         return self._run(context, True, keyboard_tool_session=keyboard)
 
@@ -99,9 +118,11 @@ class AXISMELD_OT_hotbox_dispatch(Operator):
     bl_label = 'AxisMeld Hotbox Command'
     bl_options = {'INTERNAL'}
     command: StringProperty(name='Semantic command')
+    file_release_token: IntProperty(default=0, min=0, options={'HIDDEN', 'SKIP_SAVE'})
 
     def execute(self, context):
-        result = hotbox_runtime.dispatch(context, self.command)
+        result = hotbox_runtime.dispatch(context, self.command,
+                                        file_release_token=self.file_release_token)
         # Only the child owns a modal handler. A running child is not successful history yet.
         return {'FINISHED'} if 'RUNNING_MODAL' in result else result
 
@@ -292,7 +313,7 @@ class AXISMELD_Preferences(KeyConfigPreferences):
 classes = (AXISMELD_OT_command, AXISMELD_OT_reload_profile, AXISMELD_OT_hotbox_dispatch,
            AXISMELD_OT_hotbox_setting, AXISMELD_OT_hotbox_refresh, AXISMELD_OT_hotbox_reset_appearance,
            *modeling_common_ops.classes, *modeling_mesh_ops.classes, *modeling_shapes_ops.classes,
-           *object_modeling_ops.classes, *skin_weight_ops.classes)
+           *object_modeling_ops.classes, *skin_weight_ops.classes, *edit_preselection.classes)
 
 
 def register():

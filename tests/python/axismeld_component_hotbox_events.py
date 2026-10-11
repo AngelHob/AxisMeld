@@ -356,28 +356,55 @@ def suite():
     yield from settle()
     check(not modals(), 'focus loss left an owner waiting for an impossible release')
     yield from gesture((0,0))
-    for modifier in ('alt', 'ctrl', 'shift', 'oskey'):
-        before_modified = (bpy.context.mode, bpy.context.active_object.name,
-                           tuple(sorted(o.name for o in bpy.context.selected_objects)))
-        event('RIGHTMOUSE', **{modifier:True})
+    previous_tool = bpy.context.workspace.tools.from_space_view3d_mode('OBJECT').idname
+    with override():
+        bpy.ops.wm.tool_set_by_id(name='builtin.select_box')
+    def modified_state():
+        return (bpy.context.mode, bpy.context.active_object.name,
+                tuple(sorted(o.name for o in bpy.context.selected_objects)),
+                tuple(bpy.context.tool_settings.mesh_select_mode),
+                bpy.context.workspace.tools.from_space_view3d_mode('OBJECT').idname,
+                tuple((o.name, tuple(tuple(row) for row in o.matrix_world),
+                       tuple(tuple(v.co) for v in o.data.vertices) if o.type == 'MESH' else ())
+                      for o in bpy.context.scene.objects))
+    for label, modifiers, context_entry in (
+            ('Alt', {'alt': True}, False), ('OSKey', {'oskey': True}, False),
+            ('Shift', {'shift': True}, True), ('Ctrl', {'ctrl': True}, True),
+            ('Ctrl+Shift', {'ctrl': True, 'shift': True}, True)):
+        before_modified = modified_state()
+        event('RIGHTMOUSE', **modifiers)
         yield from settle()
-        if modifier == 'shift':
-            # M2d owns Shift+RMB on selected Object Mesh independently of the
-            # unmodified component entry. Other modifiers still fall through.
+        if context_entry:
+            # Separate modeling/conversion/current-tool entries own their declared
+            # modifiers. Alt and OSKey still retain the native fallback boundary.
             check(modals().count('VIEW3D_OT_axismeld_hotbox') == 1,
-                  'Shift+RMB must open one Object modeling session')
+                  label + '+RMB must open exactly one declared context session')
+            check(modified_state() == before_modified, label + '+RMB opening changed scene or tool')
         else:
             check('VIEW3D_OT_axismeld_hotbox' not in modals(),
-                  modifier + '+RMB must retain native handling')
-        event('RIGHTMOUSE', 'RELEASE', **{modifier:True})
+                  label + '+RMB must retain native handling')
+        event('RIGHTMOUSE', 'RELEASE', **modifiers)
         event('ESC')
         event('ESC', 'RELEASE')
         yield from settle()
-        if modifier == 'shift':
-            check(not modals() and before_modified == (
-                bpy.context.mode, bpy.context.active_object.name,
-                tuple(sorted(o.name for o in bpy.context.selected_objects))),
-                'Object modeling center cancellation changed context or left ownership')
+        if context_entry:
+            check(not modals() and before_modified == modified_state(),
+                  label + '+RMB center cancellation changed scene/tool or left ownership')
+            # Esc while the trigger is still held must also preserve the scene,
+            # and its later physical release must clear the owned guard.
+            event('RIGHTMOUSE', **modifiers)
+            yield from settle()
+            check(modals().count('VIEW3D_OT_axismeld_hotbox') == 1,
+                  label + '+RMB failed to reopen for Esc cancellation')
+            event('ESC', **modifiers)
+            event('ESC', 'RELEASE', **modifiers)
+            yield from settle()
+            event('RIGHTMOUSE', 'RELEASE', **modifiers)
+            yield from settle()
+            check(not modals() and before_modified == modified_state(),
+                  label + '+RMB Esc changed scene/tool or left ownership')
+    with override():
+        bpy.ops.wm.tool_set_by_id(name=previous_tool)
     with override():
         bpy.ops.object.select_all(action='DESELECT')
     event('LEFTMOUSE', delta=(0,0))

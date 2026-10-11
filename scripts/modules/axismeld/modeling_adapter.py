@@ -64,8 +64,9 @@ def _requirement(context, requirement, cache=None):
         counts = tuple(sum(values[index] for values in per_mesh) for index in range(3))
         if requirement == 'selection':
             return any(counts)
-        if requirement in {'vertices', 'edges', 'faces', 'two_vertices', 'two_edges'}:
-            domain = {'vertices': 0, 'edges': 1, 'faces': 2, 'two_vertices': 0, 'two_edges': 1}[requirement]
+        if requirement in {'vertices', 'edges', 'faces', 'two_vertices', 'two_edges', 'two_faces'}:
+            domain = {'vertices': 0, 'edges': 1, 'faces': 2, 'two_vertices': 0, 'two_edges': 1,
+                      'two_faces': 2}[requirement]
             minimum = 2 if requirement.startswith('two_') else 1
             return any(values[domain] >= minimum for values in per_mesh)
         if requirement == 'merge_history':
@@ -125,6 +126,15 @@ def run(context, command, *, invoke=True):
     if not valid:
         raise ValueError(reason)
     call = resolve(context, command)
+    kwargs = dict(call.kwargs)
+    conversion_domains = {'selection.convert_vert': 0, 'selection.convert_edge': 1,
+                          'selection.convert_face': 2}
+    if command in conversion_domains:
+        # Blender's Ctrl-expand contracts when moving down a component domain. Maya
+        # conversion keeps the source components' constituent vertices/edges instead.
+        # Match native mixed-mode precedence: its highest enabled source domain wins.
+        source = max(index for index, selected in enumerate(context.tool_settings.mesh_select_mode) if selected)
+        kwargs['use_expand'] = conversion_domains[command] > source
     # A running child owns its modal handler. Never turn its start into successful Recent history.
     return operation(call)('INVOKE_DEFAULT' if invoke and call.invoke else 'EXEC_DEFAULT',
-                           call.undo, **dict(call.kwargs))
+                           call.undo, **kwargs)

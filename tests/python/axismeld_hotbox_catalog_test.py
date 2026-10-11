@@ -37,6 +37,22 @@ def menu_node(identifier, children=()):
 
 
 class HotboxCatalogTest(unittest.TestCase):
+    def test_only_reviewed_file_leaves_are_bound_without_shortcuts_or_replay(self):
+        catalog = default_catalog()
+        file_menu = node_by_id(catalog, 'common.file')
+        bound = {n['id']: n['command'] for n in nodes((file_menu,)) if n['command']}
+        self.assertEqual(bound, {
+            'maya.common.file.open_scene': 'file.open',
+            'maya.common.file.save_scene_as': 'file.save_as',
+        })
+        for identifier, command in bound.items():
+            self.assertIsNone(COMMANDS[command].key)
+            self.assertIn(command, hotbox_runtime.SUPPORTED_COMMANDS)
+            self.assertEqual(hotbox_catalog.command_policy(command), (True, False))
+            self.assertFalse(node_by_id(catalog, identifier + '.options')['enabled'])
+        self.assertNotIn('wm.open_mainfile', hotbox_runtime.SUPPORTED_COMMANDS)
+        self.assertNotIn('file.new', hotbox_runtime.SUPPORTED_COMMANDS)
+
     def test_selection_actions_have_verified_keys_and_explicit_contracts(self):
         expected = ('selection.select_all', 'selection.grow', 'selection.shrink')
         expected_differences = {
@@ -79,7 +95,8 @@ class HotboxCatalogTest(unittest.TestCase):
             'context.component_menu', 'context.modeling_vertex_menu', 'context.modeling_edge_menu',
             'context.modeling_face_menu', 'tools.select_menu', 'tools.move_menu', 'tools.rotate_menu',
             'tools.scale_menu', 'tools.select.select_menu', 'tools.move.select_menu',
-            'tools.rotate.select_menu', 'tools.scale.select_menu', 'tools.move.snap_menu', 'internal'])
+            'tools.rotate.select_menu', 'tools.scale.select_menu', 'tools.move.snap_menu',
+            'context.convert_menu', 'internal'])
         expected = {
             'common': ['File', 'Edit', 'Create', 'Select', 'Modify', 'Display', 'Windows'],
             'pane': ['View', 'Shading', 'Lighting', 'Show', 'Renderer', 'Panels'],

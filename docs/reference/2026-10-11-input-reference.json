@@ -1,0 +1,670 @@
+{
+  "schema_version": 1,
+  "reviewed_on": "2026-10-11",
+  "baseline": "Maya 2026 vendor defaults; Windows; US punctuation notation",
+  "scope": "Supplement missing prose and punctuation references; never certify operation equivalence or human GUI acceptance.",
+  "sources": {
+    "official-hotkeys": {
+      "kind": "official_document",
+      "url": "https://help.autodesk.com/cloudhelp/2026/ENU/Maya-KeyboardShortcuts/files/GUID-30CACC9D-8FBE-4B85-8A8F-C5ADF32DDD4E.htm",
+      "checked": "2026-10-11"
+    },
+    "official-components": {
+      "kind": "official_document",
+      "url": "https://help.autodesk.com/cloudhelp/2026/ENU/Maya-Modeling/files/GUID-98B65259-DABA-4C5E-9014-4D76B2DE28B3.htm",
+      "checked": "2026-10-11"
+    },
+    "official-delete": {
+      "kind": "official_document",
+      "url": "https://help.autodesk.com/cloudhelp/2026/ENU/Maya-Modeling/files/GUID-689C75D9-88C8-4F55-91B9-02E5C60DF6AC.htm",
+      "checked": "2026-10-11"
+    },
+    "hotkeys": {
+      "kind": "installed_vendor_default",
+      "product": "Maya 2026",
+      "relative_path": "startup/hotkeySetup.mel",
+      "sha256": "98d8c0cd82b1c02f06f91b9031395cf1890ed023c561f343e20664366d15c3ba",
+      "checked": "2026-10-11",
+      "redistribution": "Identity, line references and facts only; vendor source is not copied."
+    },
+    "runtime": {
+      "kind": "installed_vendor_default",
+      "product": "Maya 2026",
+      "relative_path": "startup/defaultRunTimeCommands.mel",
+      "sha256": "4228c6f71b1a0f638a9fe5855f579ee2ddeb61193ab45031cd9b30651ea682a5",
+      "checked": "2026-10-11",
+      "redistribution": "Identity, line references and facts only; vendor source is not copied."
+    },
+    "panel": {
+      "kind": "installed_vendor_default",
+      "product": "Maya 2026",
+      "relative_path": "others/ModelEdMenu.mel",
+      "sha256": "fb0034016aad452dae3c0c612e4fea635602d6db78dafddd8d0d573117ccaac7",
+      "checked": "2026-10-11",
+      "redistribution": "Identity, line references and facts only; vendor source is not copied."
+    }
+  },
+  "maya_actions": [
+    {
+      "commands": [
+        "edit.delete"
+      ],
+      "identity": "Delete",
+      "inputs": [
+        {
+          "input": "Delete",
+          "event": {
+            "type": "DEL",
+            "value": "PRESS"
+          },
+          "release": "",
+          "source": [
+            "official-delete"
+          ]
+        }
+      ],
+      "notes": "Input exists in Maya; Blender delete versus Maya dissolve/topology rules remain an adaptation."
+    },
+    {
+      "commands": [
+        "tool.mesh_poly_build"
+      ],
+      "identity": "QuadDrawTool",
+      "inputs": [
+        {
+          "input": "Ctrl+Shift+Q",
+          "event": {
+            "type": "Q",
+            "value": "PRESS",
+            "ctrl": true,
+            "shift": true
+          },
+          "release": "",
+          "source": [
+            "hotkeys:353",
+            "official-hotkeys"
+          ]
+        }
+      ],
+      "notes": "Existing Blender Poly Build activation; not Maya Quad Draw feature equivalence."
+    },
+    {
+      "commands": [
+        "tool.mesh_knife"
+      ],
+      "identity": "MultiCutTool",
+      "inputs": [
+        {
+          "input": "Ctrl+Shift+X",
+          "event": {
+            "type": "X",
+            "value": "PRESS",
+            "ctrl": true,
+            "shift": true
+          },
+          "release": "",
+          "source": [
+            "hotkeys:354",
+            "official-hotkeys"
+          ]
+        }
+      ],
+      "notes": "Existing Blender Knife activation; not Maya Multi-Cut feature equivalence."
+    },
+    {
+      "commands": [
+        "context.create_hotbox"
+      ],
+      "identity": "contextToolsMM.empty",
+      "inputs": [
+        {
+          "input": "Shift+RMB",
+          "event": {
+            "type": "RIGHTMOUSE",
+            "value": "PRESS",
+            "shift": true
+          },
+          "release": "RMB release commits marking choice; Escape/cancel must preserve selection.",
+          "source": [
+            "panel:80-92"
+          ]
+        }
+      ],
+      "notes": "Model panel popup routes empty versus selected context; not a keyboard hotkey."
+    },
+    {
+      "commands": [
+        "context.modeling_hotbox"
+      ],
+      "identity": "contextToolsMM.selection",
+      "inputs": [
+        {
+          "input": "Shift+RMB",
+          "event": {
+            "type": "RIGHTMOUSE",
+            "value": "PRESS",
+            "shift": true
+          },
+          "release": "RMB release commits marking choice; Escape/cancel must preserve selection.",
+          "source": [
+            "panel:80-92"
+          ]
+        }
+      ],
+      "notes": "Same physical input as create, distinguished by current/pointer selection."
+    },
+    {
+      "commands": [
+        "tool.select"
+      ],
+      "identity": "SelectToolOptions",
+      "inputs": [
+        {
+          "input": "Q",
+          "event": {
+            "type": "Q",
+            "value": "PRESS"
+          },
+          "release": "Key-up uses the declared release command to close the held marking menu.",
+          "source": [
+            "hotkeys:319-320",
+            "official-hotkeys"
+          ]
+        }
+      ],
+      "notes": "Tap selects tool; held key plus LMB opens its marking menu. Release, repeat and cancel need GUI verification."
+    },
+    {
+      "commands": [
+        "transform.move"
+      ],
+      "identity": "TranslateToolWithSnapMarkingMenu",
+      "inputs": [
+        {
+          "input": "W",
+          "event": {
+            "type": "W",
+            "value": "PRESS"
+          },
+          "release": "Key-up uses the declared release command to close the held marking menu.",
+          "source": [
+            "hotkeys:341-342",
+            "official-hotkeys"
+          ]
+        }
+      ],
+      "notes": "Tap selects tool; held key plus LMB opens its marking menu. Release, repeat and cancel need GUI verification."
+    },
+    {
+      "commands": [
+        "transform.rotate"
+      ],
+      "identity": "RotateToolWithSnapMarkingMenu",
+      "inputs": [
+        {
+          "input": "E",
+          "event": {
+            "type": "E",
+            "value": "PRESS"
+          },
+          "release": "Key-up uses the declared release command to close the held marking menu.",
+          "source": [
+            "hotkeys:343-344",
+            "official-hotkeys"
+          ]
+        }
+      ],
+      "notes": "Tap selects tool; held key plus LMB opens its marking menu. Release, repeat and cancel need GUI verification."
+    },
+    {
+      "commands": [
+        "transform.scale"
+      ],
+      "identity": "ScaleToolWithSnapMarkingMenu",
+      "inputs": [
+        {
+          "input": "R",
+          "event": {
+            "type": "R",
+            "value": "PRESS"
+          },
+          "release": "Key-up uses the declared release command to close the held marking menu.",
+          "source": [
+            "hotkeys:345-346",
+            "official-hotkeys"
+          ]
+        }
+      ],
+      "notes": "Tap selects tool; held key plus LMB opens its marking menu. Release, repeat and cancel need GUI verification."
+    },
+    {
+      "commands": [
+        "context.component_hotbox"
+      ],
+      "identity": "buildObjectMenuItemsNow",
+      "inputs": [
+        {
+          "input": "RMB",
+          "event": {
+            "type": "RIGHTMOUSE",
+            "value": "PRESS"
+          },
+          "release": "RMB release commits marking choice; no selection mutation on cancel.",
+          "source": [
+            "panel:39-62",
+            "official-components"
+          ]
+        }
+      ],
+      "notes": "Popup based on current/pointer context; unsupported component domains remain disabled."
+    },
+    {
+      "commands": [
+        "selection.grow"
+      ],
+      "identity": "GrowPolygonSelectionRegion",
+      "inputs": [
+        {
+          "input": "Shift+.",
+          "event": {
+            "type": "PERIOD",
+            "value": "PRESS",
+            "shift": true
+          },
+          "release": "",
+          "source": [
+            "hotkeys:300",
+            "official-hotkeys"
+          ]
+        }
+      ],
+      "notes": "Maya > is Shift+PERIOD on a US keyboard. Topology semantics are not compared."
+    },
+    {
+      "commands": [
+        "selection.shrink"
+      ],
+      "identity": "ShrinkPolygonSelectionRegion",
+      "inputs": [
+        {
+          "input": "Shift+,",
+          "event": {
+            "type": "COMMA",
+            "value": "PRESS",
+            "shift": true
+          },
+          "release": "",
+          "source": [
+            "hotkeys:302",
+            "official-hotkeys"
+          ]
+        }
+      ],
+      "notes": "Maya < is Shift+COMMA on a US keyboard. Topology semantics are not compared."
+    },
+    {
+      "commands": [
+        "view.focus_selected"
+      ],
+      "identity": "FitSelectedWithoutChildren",
+      "inputs": [
+        {
+          "input": "F",
+          "event": {
+            "type": "F",
+            "value": "PRESS"
+          },
+          "release": "",
+          "source": [
+            "hotkeys:265",
+            "official-hotkeys"
+          ]
+        }
+      ],
+      "notes": "Current-panel framing; Blender bounds and hidden-object rules apply."
+    },
+    {
+      "commands": [
+        "view.frame_all"
+      ],
+      "identity": "FitAllInActivePanelMMenu",
+      "inputs": [
+        {
+          "input": "A",
+          "event": {
+            "type": "A",
+            "value": "PRESS"
+          },
+          "release": "Key A release frames only if no marking menu was posted; owned LMB release executes a chosen History action without an additional Frame All.",
+          "source": [
+            "hotkeys:262",
+            "official-hotkeys"
+          ]
+        }
+      ],
+      "notes": "A tap releases to Frame All; hold A+LMB opens History Operations. This batch implements that entry using existing actions/placeholders; GUI acceptance remains separate."
+    },
+    {
+      "commands": [
+        "view.orbit"
+      ],
+      "identity": "Tumble",
+      "inputs": [
+        {
+          "input": "Alt+LMB",
+          "event": {
+            "type": "LEFTMOUSE",
+            "value": "PRESS",
+            "alt": true
+          },
+          "release": "Owned mouse button release ends camera manipulation.",
+          "source": [
+            "official-hotkeys"
+          ]
+        }
+      ],
+      "notes": "Native Blender camera/navigation semantics; event definition alone does not verify direction or feel."
+    },
+    {
+      "commands": [
+        "view.pan"
+      ],
+      "identity": "Track",
+      "inputs": [
+        {
+          "input": "Alt+MMB",
+          "event": {
+            "type": "MIDDLEMOUSE",
+            "value": "PRESS",
+            "alt": true
+          },
+          "release": "Owned mouse button release ends camera manipulation.",
+          "source": [
+            "official-hotkeys"
+          ]
+        }
+      ],
+      "notes": "Native Blender camera/navigation semantics; event definition alone does not verify direction or feel."
+    },
+    {
+      "commands": [
+        "view.dolly"
+      ],
+      "identity": "Dolly",
+      "inputs": [
+        {
+          "input": "Alt+RMB",
+          "event": {
+            "type": "RIGHTMOUSE",
+            "value": "PRESS",
+            "alt": true
+          },
+          "release": "Owned mouse button release ends camera manipulation.",
+          "source": [
+            "official-hotkeys"
+          ]
+        }
+      ],
+      "notes": "Native Blender camera/navigation semantics; event definition alone does not verify direction or feel."
+    },
+    {
+      "commands": [
+        "view.wireframe"
+      ],
+      "identity": "WireframeDisplay",
+      "inputs": [
+        {
+          "input": "4",
+          "event": {
+            "type": "FOUR",
+            "value": "PRESS"
+          },
+          "release": "",
+          "source": [
+            "hotkeys:375",
+            "official-hotkeys"
+          ]
+        }
+      ],
+      "notes": "Wireframe shading adaptation."
+    },
+    {
+      "commands": [
+        "view.shaded"
+      ],
+      "identity": "ShadedDisplay",
+      "inputs": [
+        {
+          "input": "5",
+          "event": {
+            "type": "FIVE",
+            "value": "PRESS"
+          },
+          "release": "",
+          "source": [
+            "hotkeys:376",
+            "official-hotkeys"
+          ]
+        }
+      ],
+      "notes": "Blender Solid shading adaptation; not Maya materials/rendering."
+    },
+    {
+      "commands": [
+        "hotbox.open"
+      ],
+      "identity": "PopHotbox",
+      "inputs": [
+        {
+          "input": "Space",
+          "event": {
+            "type": "SPACE",
+            "value": "PRESS"
+          },
+          "release": "UnpopHotbox on key-up; tap switches single/multi-pane view.",
+          "source": [
+            "hotkeys:386",
+            "official-hotkeys"
+          ]
+        }
+      ],
+      "notes": "AxisMeld uses its approved compact main menu and quad-view template, not a full Maya screen replica."
+    },
+    {
+      "commands": [
+        "context.conversion_hotbox"
+      ],
+      "identity": "buildConvertMM",
+      "inputs": [
+        {
+          "input": "Ctrl+RMB",
+          "event": {
+            "type": "RIGHTMOUSE",
+            "value": "PRESS",
+            "ctrl": true,
+            "shift": false
+          },
+          "release": "RMB release commits marking choice; cancel leaves the previous selection unchanged.",
+          "source": [
+            "panel:65-77"
+          ]
+        }
+      ],
+      "notes": "Model panel popup modifier contract; content and context dispatch need separate verification."
+    },
+    {
+      "commands": [
+        "context.tool_hotbox"
+      ],
+      "identity": "buildToolOptionsMM",
+      "inputs": [
+        {
+          "input": "Ctrl+Shift+RMB",
+          "event": {
+            "type": "RIGHTMOUSE",
+            "value": "PRESS",
+            "ctrl": true,
+            "shift": true
+          },
+          "release": "RMB release commits marking choice; cancel leaves the previous selection unchanged.",
+          "source": [
+            "panel:95-109"
+          ]
+        }
+      ],
+      "notes": "Model panel popup modifier contract; content and context dispatch need separate verification."
+    }
+  ],
+  "reserved": [
+    {
+      "key": "D",
+      "input": "D",
+      "identity": "EnterEditModePress/Release",
+      "source": "hotkeys:389; runtime:20449-20460",
+      "scope": "deferred_capability",
+      "reason": "Maya custom component and independent rotate/scale pivots need transient transform-center data. Blender Object Origins Only mutates object origin and cannot stand in for the Maya pivot tool. No equivalent pivot capability is present."
+    },
+    {
+      "key": "X",
+      "input": "X",
+      "identity": "SnapToGridPress/Release",
+      "source": "hotkeys:306-307; runtime:20190-20201",
+      "scope": "native_modal_input",
+      "reason": "Existing Blender GRID snapping can be held temporarily. Maya sets grid on then off; restoration of prior Blender settings is an explicit adaptation."
+    },
+    {
+      "key": "V",
+      "input": "V",
+      "identity": "SnapToPointPress/Release",
+      "source": "hotkeys:315-316; runtime:20218-20229",
+      "scope": "native_modal_input",
+      "reason": "Existing Blender VERTEX snapping can be held temporarily. Target and transform behavior remain native."
+    },
+    {
+      "key": "J",
+      "input": "J",
+      "identity": "MoveRotateScaleToolToggleSnapMode",
+      "source": "hotkeys:328-329; runtime:2518-2528",
+      "scope": "native_modal_input",
+      "reason": "Maya toggles incremental snapping on both press/release; Shift+J additionally toggles relative mode. Blender increment settings and units differ."
+    },
+    {
+      "key": "C",
+      "input": "C",
+      "identity": "SnapToCurvePress/Release",
+      "source": "hotkeys:313-314",
+      "scope": "deferred_capability",
+      "reason": "Blender EDGE snapping follows mesh edges and is not Maya closest point on arbitrary parametric curves. No equivalent curve-target solver is implemented; do not relabel EDGE as curve snap."
+    },
+    {
+      "key": "F12",
+      "input": "F12",
+      "identity": "SelectUVMask",
+      "source": "hotkeys:290",
+      "scope": "deferred_capability",
+      "reason": "UV selection domain and synchronized viewport UV editing are deferred; mapping F12 to face selection or opening UV Editor would not implement the Maya selection mask."
+    },
+    {
+      "key": "ONE",
+      "input": "1",
+      "identity": "LowQualityDisplaySetting",
+      "source": "hotkeys:371-373",
+      "scope": "deferred_capability",
+      "reason": "Maya base/cage/smooth mesh preview needs nondestructive per-object preview state; not equivalent to changing selection mode."
+    },
+    {
+      "key": "TWO",
+      "input": "2",
+      "identity": "MediumQualityDisplaySetting",
+      "source": "hotkeys:371-373",
+      "scope": "deferred_capability",
+      "reason": "Cage plus smooth preview needs managed preview state. Silently adding/changing subdivision modifiers is outside the GUI-only scope."
+    },
+    {
+      "key": "THREE",
+      "input": "3",
+      "identity": "HighQualityDisplaySetting",
+      "source": "hotkeys:371-373",
+      "scope": "deferred_capability",
+      "reason": "Smooth preview and restoring previous state need a preview capability, not an arbitrary Subdivision modifier command."
+    }
+  ],
+  "native_boundaries": [
+    {
+      "id": "native-navigation-ownership",
+      "inputs": [
+        "Alt+LMB",
+        "Alt+MMB",
+        "Alt+RMB"
+      ],
+      "decision": "Native overlapping PRESS and DOUBLE_CLICK gestures are removed from owned modeling maps; keep navigation ownership.",
+      "reason": "Restoring Alt+LMB DOUBLE_CLICK edge-ring selection would conflict with Maya camera input; Shift/Ctrl variants and menu selection remain available. Actual event/feel verification remains separate."
+    },
+    {
+      "id": "measure-x",
+      "inputs": [
+        "X",
+        "Delete"
+      ],
+      "decision": "Measure X is unavailable when X belongs to Maya temporary grid snap. Native ruler Delete remains.",
+      "reason": "Same physical key cannot concurrently delete the ruler and act as a held snap modifier. This is an explicit input-ownership adaptation."
+    },
+    {
+      "id": "drawing-mode-protection",
+      "maps": [
+        "3D View Tool: Paint Grease Pencil, Line",
+        "3D View Tool: Paint Grease Pencil, Box",
+        "3D View Tool: Paint Grease Pencil, Circle",
+        "3D View Tool: Paint Grease Pencil, Arc"
+      ],
+      "decision": "Preserve native painting-tool keymaps outside the modeling input scope.",
+      "reason": "The eight Alt mouse primitive bindings are native drawing inputs, not redundant Maya modeling navigation definitions."
+    },
+    {
+      "id": "inherited-extension",
+      "decision": "Other unowned Industry Compatible entries remain native extensions, not Maya-verified shortcuts.",
+      "reason": "Includes F1-F5 view navigation versus Maya help/menu sets, editor-specific tool inputs, and global Blender menus/workspaces; do not claim every inherited key is a Maya match."
+    }
+  ],
+  "native_modal_inputs": [
+    {
+      "input": "X",
+      "event_values": [
+        "PRESS",
+        "RELEASE"
+      ],
+      "invoke_modifier": "X",
+      "operation": "GRID",
+      "scope": "AxisMeld preset; Object or Mesh Edit; VIEW_3D WINDOW; Translate/Rotate/Scale; excluding camera-view, cursor and texture-space transforms",
+      "owner": "source/blender/editors/transform/transform_axismeld_snap.cc",
+      "lifecycle": "Held input changes only the active TransInfo; release, cancel, focus loss and save restore its baseline.",
+      "verification": "Source and automated events are separate from human acceptance."
+    },
+    {
+      "input": "V",
+      "event_values": [
+        "PRESS",
+        "RELEASE"
+      ],
+      "invoke_modifier": "V",
+      "operation": "VERTEX",
+      "scope": "AxisMeld preset; Object or Mesh Edit; VIEW_3D WINDOW; Translate/Rotate/Scale; excluding camera-view, cursor and texture-space transforms",
+      "owner": "source/blender/editors/transform/transform_axismeld_snap.cc",
+      "lifecycle": "Held input changes only the active TransInfo; release, cancel, focus loss and save restore its baseline.",
+      "verification": "Source and automated events are separate from human acceptance."
+    },
+    {
+      "input": "J",
+      "event_values": [
+        "PRESS",
+        "RELEASE"
+      ],
+      "invoke_modifier": "J",
+      "operation": "INCREMENT",
+      "scope": "AxisMeld preset; Object or Mesh Edit; VIEW_3D WINDOW; Translate/Rotate/Scale; excluding camera-view, cursor and texture-space transforms",
+      "owner": "source/blender/editors/transform/transform_axismeld_snap.cc",
+      "lifecycle": "Held input changes only the active TransInfo; release, cancel, focus loss and save restore its baseline.",
+      "verification": "Source and automated events are separate from human acceptance."
+    }
+  ]
+}

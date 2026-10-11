@@ -14,6 +14,7 @@
 #define DNA_DEPRECATED_ALLOW
 
 #include <cstring>
+#include <unordered_map>
 
 #include "DNA_ID_enums.h"
 #include "DNA_layer_types.h"
@@ -251,8 +252,43 @@ IDTypeInfo IDType_ID_WM = {
 
 #define MAX_OP_REGISTERED 32
 
+namespace {
+struct OperatorCompletion {
+  void (*callback)(bContext *, void *, bool);
+  void *userdata;
+  void (*free_userdata)(void *);
+};
+/* UI-thread runtime ownership, separate from saved/copied wmOperator DNA. */
+std::unordered_map<wmOperator *, OperatorCompletion> operator_completions;
+}
+
+bool WM_operator_completion_callback_set(wmOperator *op,
+                                        void (*callback)(bContext *, void *, bool),
+                                        void *userdata,
+                                        void (*free_userdata)(void *))
+{
+  if (!op || !callback || !free_userdata) { return false; }
+  return operator_completions.emplace(op, OperatorCompletion{callback, userdata, free_userdata}).second;
+}
+
+void WM_operator_completion_callback_call(bContext *C, wmOperator *op, const bool finished)
+{
+  const auto found = operator_completions.find(op);
+  if (found == operator_completions.end()) { return; }
+  const OperatorCompletion completion = found->second;
+  operator_completions.erase(found);  // Erase before the callback can re-enter operator code.
+  completion.callback(C, completion.userdata, finished);
+  completion.free_userdata(completion.userdata);
+}
+
 void WM_operator_free(wmOperator *op)
 {
+  const auto completion = operator_completions.find(op);
+  if (completion != operator_completions.end()) {
+    const OperatorCompletion owned = completion->second;
+    operator_completions.erase(completion);
+    owned.free_userdata(owned.userdata);
+  }
 
 #ifdef WITH_PYTHON
   if (op->py_instance) {

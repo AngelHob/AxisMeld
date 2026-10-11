@@ -4,9 +4,72 @@
 #include <limits>
 
 #include "AXM_hotbox_state.hh"
+#include "AXM_history_hold.hh"
 #include "testing/testing.h"
 
 namespace blender::axismeld::tests {
+
+TEST(axismeld_hotbox_state, HistoryFramesOnlyOnTriggerReleaseWithoutPosting)
+{
+  HistoryHoldState state;
+  EXPECT_EQ(state.release_command({}), "view.frame_all");
+  EXPECT_FALSE(state.select("transform.reset_all", {}));
+  EXPECT_EQ(state.release_command({}), "view.frame_all");
+  state.post({});
+  EXPECT_TRUE(state.release_command({}).empty());
+}
+
+TEST(axismeld_hotbox_state, HistoryRecordsOnlyAllowedChoicesAndRepostingClearsThem)
+{
+  HistoryHoldState state;
+  state.post({});
+  EXPECT_TRUE(state.select("transform.reset_all", {}));
+  EXPECT_EQ(state.release_command({}), "transform.reset_all");
+  state.post({});
+  EXPECT_TRUE(state.release_command({}).empty());
+  EXPECT_FALSE(state.select("view.frame_all", {}));
+  EXPECT_TRUE(state.release_command({}).empty());
+  EXPECT_TRUE(state.select("edit.bake_selected_non_deform", {}));
+  EXPECT_EQ(state.release_command({}), "edit.bake_selected_non_deform");
+  EXPECT_FALSE(state.select("wm.open_mainfile", {}));
+  EXPECT_TRUE(state.release_command({}).empty());
+}
+
+TEST(axismeld_hotbox_state, HistoryNeverRetargetsPendingActionAfterSelectionOrDataChanges)
+{
+  const HistorySelectionSignature original{10, 100, {{10, 100}, {20, 200}}};
+  for (const HistorySelectionSignature &changed : {
+           HistorySelectionSignature{20, 200, {{10, 100}, {20, 200}}},
+           HistorySelectionSignature{10, 100, {{10, 100}}},
+           HistorySelectionSignature{10, 100, {{10, 100}, {20, 201}}},
+           HistorySelectionSignature{10, 101, {{10, 100}, {20, 200}}},
+           HistorySelectionSignature{30, 300, {{30, 300}}}})
+  {
+    HistoryHoldState state;
+    state.post(original);
+    EXPECT_TRUE(state.select("edit.bake_selected", original));
+    EXPECT_TRUE(state.release_command(changed).empty());
+    EXPECT_TRUE(state.release_command(original).empty());
+    EXPECT_FALSE(state.select("transform.reset_all", original));
+    state.post(changed);
+    EXPECT_TRUE(state.select("transform.reset_all", changed));
+    EXPECT_EQ(state.release_command(changed), "transform.reset_all");
+  }
+}
+
+TEST(axismeld_hotbox_state, HistoryInvalidatesChangedContextBeforeQueueAndBetweenEvents)
+{
+  const HistorySelectionSignature original{10, 100, {{10, 100}}};
+  const HistorySelectionSignature changed{10, 100, {{10, 100}, {20, 200}}};
+  HistoryHoldState state;
+  state.post(original);
+  EXPECT_FALSE(state.select("transform.reset_all", changed));
+  EXPECT_TRUE(state.release_command(original).empty());
+  state.post(original);
+  EXPECT_TRUE(state.select("transform.reset_all", original));
+  EXPECT_FALSE(state.validate_context(changed));
+  EXPECT_TRUE(state.release_command(original).empty());
+}
 
 TEST(axismeld_hotbox_state, ShortTapTogglesExactlyOnce)
 {

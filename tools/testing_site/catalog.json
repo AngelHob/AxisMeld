@@ -4111,7 +4111,7 @@
         "从GitHub仓库首页进入公开测试页，下载Windows便携预览包并启动；用另一个浏览器记录测试结果，导出JSON，再通过GitHub提交带版本的反馈"
       ],
       "expected": [
-        "无需登录可查看和下载；便携启动自动启用Maya键位与Modeling工作区；每位访客独立保存状态；反馈带编号、版本、结果及复现说明，GitHub确认提交后才成为公开Issue，本地勾选不冒充已提交"
+        "无需登录可查看和下载；干净首次启动使用Blender键位和Layout；在Preferences→Keymap选择AxisMeld Maya 2026后可切Modeling／Rigging验证本批；每位访客独立保存状态；反馈带编号、版本、结果及复现说明，GitHub确认提交后才成为公开Issue，本地勾选不冒充已提交"
       ],
       "superseded": false,
       "maintainerStatus": "pending",
@@ -4409,7 +4409,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "IN-02",
@@ -4423,7 +4423,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "IN-03",
@@ -4434,6 +4434,188 @@
       ],
       "expected": [
         "测试提示消失，无残留插件键位拦截；正常配置和其他插件保持，未自动保存测试偏好；记录实际开发构建版本而非沿用旧下载标签"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": false
+    },
+    {
+      "id": "GU-01",
+      "title": "Edit Mesh 选择组件，Ctrl+RMB 查看转换方向环、下方菜单和各级子环；分别转换 Vertex、Edge、Face，再 Undo；检查空选择和取消",
+      "group": "P0：GUI 收敛与临时输入（2026-10-11 新构建，新增13项）",
+      "steps": [
+        "Edit Mesh 选择组件，Ctrl+RMB 查看转换方向环、下方菜单和各级子环；分别转换 Vertex、Edge、Face，再 Undo；检查空选择和取消"
+      ],
+      "expected": [
+        "Maya 转换目录、顺序与占位完整，已有转换在有效上下文执行一次；未实现 UV/Vertex Face 域明确灰显。Face Path 保留两预选面原生适配说明，不冒充 Maya 连续拾取；取消不改选区"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "GU-02",
+      "title": "激活 Q/W/E/R 各工具，Ctrl+Shift+RMB 开当前工具热盒，中心取消并重复打开，再选有效方向；另外选非对应的原生工具",
+      "group": "P0：GUI 收敛与临时输入（2026-10-11 新构建，新增13项）",
+      "steps": [
+        "激活 Q/W/E/R 各工具，Ctrl+Shift+RMB 开当前工具热盒，中心取消并重复打开，再选有效方向；另外选非对应的原生工具"
+      ],
+      "expected": [
+        "根据当前实际工具开对应菜单，不为了开菜单切工具；鼠标拥有者松开后关闭，无须重新按 QWER；无对应工具时安全拒绝，不残留会话"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "GU-03",
+      "title": "Edit Mesh 单一 Vertex/Edge/Face 模式中清空选择，鼠标分别停在可见组件和空白，Shift+RMB 打开、悬停、中心释放与 Esc；加入隐藏元素及多对象编辑",
+      "group": "P0：GUI 收敛与临时输入（2026-10-11 新构建，新增13项）",
+      "steps": [
+        "Edit Mesh 单一 Vertex/Edge/Face 模式中清空选择，鼠标分别停在可见组件和空白，Shift+RMB 打开、悬停、中心释放与 Esc；加入隐藏元素及多对象编辑"
+      ],
+      "expected": [
+        "只读取鼠标下可见有效组件；打开、悬停、取消均不改模式、活动对象、几何、选区和历史，不为使按钮可用偷选全部组件"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "GU-04",
+      "title": "Edit Mesh 空选择，鼠标指向一个面，用 Shift+RMB 执行已有 Poke 等即时操作，再一次 Undo；在其他可见对象的组件上重复",
+      "group": "P0：GUI 收敛与临时输入（2026-10-11 新构建，新增13项）",
+      "steps": [
+        "Edit Mesh 空选择，鼠标指向一个面，用 Shift+RMB 执行已有 Poke 等即时操作，再一次 Undo；在其他可见对象的组件上重复"
+      ],
+      "expected": [
+        "只提交捕获的目标组件并执行一次；其他对象及组件不受影响，一次 Undo 恢复操作前空选和几何；对象/网格已失效时拒绝，不用旧索引操作新数据"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "GU-05",
+      "title": "Edit Mesh 空边选择，Shift+RMB 执行 Bevel 后移动鼠标再 Esc；以 Crease 重复；另测试确认后一次 Undo",
+      "group": "P0：GUI 收敛与临时输入（2026-10-11 新构建，新增13项）",
+      "steps": [
+        "Edit Mesh 空边选择，Shift+RMB 执行 Bevel 后移动鼠标再 Esc；以 Crease 重复；另测试确认后一次 Undo"
+      ],
+      "expected": [
+        "独立模态取消后恢复原空选、几何、活动面和选择历史；确认只有一条正常 Undo。Extrude 等原生宏的 Esc 可能保留挤出拓扑，应按原生语义用一次 Undo 完整撤回，不混同菜单取消"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "GU-06",
+      "title": "原吸附关闭及开启两种状态，分别先持 X 再拖动 Move、变换中再按 X；先松 X、确认仍持 X、Esc、切应用后回到窗口",
+      "group": "P0：GUI 收敛与临时输入（2026-10-11 新构建，新增13项）",
+      "steps": [
+        "原吸附关闭及开启两种状态，分别先持 X 再拖动 Move、变换中再按 X；先松 X、确认仍持 X、Esc、切应用后回到窗口"
+      ],
+      "expected": [
+        "X 临时网格吸附，不变成 X 轴约束；松键恢复原吸附方式，确认/取消/失焦不污染持久设置与 Redo。Object 和 Mesh Edit 均检查，Empty 等对象不误禁用"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "GU-07",
+      "title": "临时场景设置独立目标顶点，先持 V 再移动及移动中再按 V，先松字母或先确认；之后再移动一次",
+      "group": "P0：GUI 收敛与临时输入（2026-10-11 新构建，新增13项）",
+      "steps": [
+        "临时场景设置独立目标顶点，先持 V 再移动及移动中再按 V，先松字母或先确认；之后再移动一次"
+      ],
+      "expected": [
+        "V 临时顶点吸附具有可观察的几何结果；释放后恢复原吸附方式，下一次操作不残留临时 V 状态，原生目标过滤仍适用"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "GU-08",
+      "title": "Translate/Rotate/Scale 中测试 J；按 J→X→V 并按不同顺序释放，叠加 Ctrl，切换变换模式，再取消或确认",
+      "group": "P0：GUI 收敛与临时输入（2026-10-11 新构建，新增13项）",
+      "steps": [
+        "Translate/Rotate/Scale 中测试 J；按 J→X→V 并按不同顺序释放，叠加 Ctrl，切换变换模式，再取消或确认"
+      ],
+      "expected": [
+        "J 临时反转有效增量吸附，步长遵循 Blender 设置；重叠字母以最后仍按住者为准，Ctrl 恢复到当前真实状态；无粘键、设置或 Redo 污染。Shift+J 相对模式未适配，不标为完成"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "GU-09",
+      "title": "A 单按和仅长按后松开；再持 A+LMB 打开 History Operations，选 Freeze/Reset 后先松 LMB、再松 A；执行后一次 Undo",
+      "group": "P0：GUI 收敛与临时输入（2026-10-11 新构建，新增13项）",
+      "steps": [
+        "A 单按和仅长按后松开；再持 A+LMB 打开 History Operations，选 Freeze/Reset 后先松 LMB、再松 A；执行后一次 Undo"
+      ],
+      "expected": [
+        "未打开菜单时 A 松开 Frame All；打开后 LMB 松开只记录选择，A 松开才执行一次；8方向、4个灰输入/输出及独立灰 Options 保留，原有 history/apply/reset 适配差异可见"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "GU-10",
+      "title": "A 持键中中心取消、灰方向取消、连续三次 LMB 重开；先松 A 后松 LMB、Esc、切应用及改变选择后再释放",
+      "group": "P0：GUI 收敛与临时输入（2026-10-11 新构建，新增13项）",
+      "steps": [
+        "A 持键中中心取消、灰方向取消、连续三次 LMB 重开；先松 A 后松 LMB、Esc、切应用及改变选择后再释放"
+      ],
+      "expected": [
+        "已打开菜单的取消不退回 Frame All，不执行旧队列动作；反复打开位置正确，早松 A 安全收尾，下一次输入没有残留"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "GU-11",
+      "title": "查看 Recent Increments、Recent Projects、Delete by Type的Sounds、Quick Select Sets、Assign Existing Set 等空动态目录；同时查看有固定灰正文的目录和真实原生资产/插件菜单",
+      "group": "P0：GUI 收敛与临时输入（2026-10-11 新构建，新增13项）",
+      "steps": [
+        "查看 Recent Increments、Recent Projects、Delete by Type的Sounds、Quick Select Sets、Assign Existing Set 等空动态目录；同时查看有固定灰正文的目录和真实原生资产/插件菜单"
+      ],
+      "expected": [
+        "无数据提供器的空目录显示同名、同图标、带原因的灰占位，不再弹空菜单；有正文的灰目录仍可展开，真实原生 provider 不因当前场景为空被误禁用，打开菜单不写 Undo/Recent"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "GU-12",
+      "title": "在隔离实例切换 Grease Pencil 绘画、UV编辑器、非3D编辑器及 Blender/Industry Compatible 键位；返回 AxisMeld，重载个人改键并重试 Ctrl 入口与持键",
+      "group": "P0：GUI 收敛与临时输入（2026-10-11 新构建，新增13项）",
+      "steps": [
+        "在隔离实例切换 Grease Pencil 绘画、UV编辑器、非3D编辑器及 Blender/Industry Compatible 键位；返回 AxisMeld，重载个人改键并重试 Ctrl 入口与持键"
+      ],
+      "expected": [
+        "新入口与临时吸附只接管声明范围；Grease Pencil 原工具键保留，非 AxisMeld 仍有原生 X 轴约束，其他编辑器/插件/个人配置不被覆盖；D/C/F12/1/2/3 的能力缺口未错误映射到近似功能"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "GU-13",
+      "title": "在临时场景从 Space 热盒的 File 分别调用 Open Scene、Save Scene As，保持触发键后移到新文件窗口再松键；分别先松鼠标、先松 Space，在两个窗口之间释放，并用 Esc 取消；对未保存场景分别选择 Don't Save 继续和 Cancel 退出确认框；重新打开后测试切应用再返回及关闭文件窗口",
+      "group": "P0：GUI 收敛与临时输入（2026-10-11 新构建，新增13项）",
+      "steps": [
+        "在临时场景从 Space 热盒的 File 分别调用 Open Scene、Save Scene As，保持触发键后移到新文件窗口再松键；分别先松鼠标、先松 Space，在两个窗口之间释放，并用 Esc 取消；对未保存场景分别选择 Don't Save 继续和 Cancel 退出确认框；重新打开后测试切应用再返回及关闭文件窗口"
+      ],
+      "expected": [
+        "打开真实 Blender 文件选择器，热盒拥有的残余释放不会在新窗口触发点击或确认；取消不加载场景或保存目标文件，普通新输入仍可用，不残留 guard 或粘键；原生全局 File 与 Ctrl+O/Ctrl+S 保持原行为，独立 Options 仍灰显"
       ],
       "superseded": false,
       "maintainerStatus": "pending",

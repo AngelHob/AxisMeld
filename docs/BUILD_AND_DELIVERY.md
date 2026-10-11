@@ -289,7 +289,7 @@ python "$Repo/tools/utils/axismeld_rigging_workspace_asset.py" `
 
 目前没有已在另一机器验证的一键 build→stage→publish 工具。历史本机编排不作为依赖；从完整**新 install**开始。
 
-现有开发缓存为 `WITH_WINDOWS_BUNDLE_CRT=OFF`、`WITH_CYCLES_NATIVE_ONLY=ON`、`WITH_BUILDINFO=OFF`。面向其他机器发布时，应在独立发布 build 审查这些设置、运行时依赖、CPU/GPU支持和许可证，不能自动称为官方 Blender 等价发行版。full/release 区别以仓库 preset 为准，后者涉及额外 GPU 内核配置，不可未经验证替换。
+2026-09-18 历史开发缓存为 `WITH_WINDOWS_BUNDLE_CRT=OFF`、`WITH_CYCLES_NATIVE_ONLY=ON`、`WITH_BUILDINFO=OFF`；2026-10-11 GUI 完整包已启用 CRT 打包，配置及核验流程见本文末节。面向其他机器发布时，应在独立发布 build 审查这些设置、运行时依赖、CPU/GPU支持和许可证，不能自动称为官方 Blender 等价发行版。full/release 区别以仓库 preset 为准，后者涉及额外 GPU 内核配置，不可未经验证替换。
 
 ZIP 使用未经过个人交互的新候选，保留 DLL、blender.shared、Python、数据及 portable 标记；不能只打包 exe。去除 PDB/测试符号应在独立 staging 副本逐项记录，不改已验收原目录。
 
@@ -363,3 +363,35 @@ python -m http.server 8765 --bind 127.0.0.1 --directory tools/testing_site
 2026-09-18 的独立 Windows 环境已完成依赖获取、全量原生构建、干净安装、所选五组 CTest、后台 Runtime 和第 5 节指定显示条件下的新 native GUI 验证。尚未完成本轮新产物的打包、解压、公开下载验证，也未把历史本机打包编排变成跨机流水线。新机器必须重新安装工具、校验依赖并运行测试，记录实际工具链、LFS 访问、显卡驱动、缩放和运行时依赖；整目录复制不能替代这些步骤。
 
 接续时让 Codex 先读 AGENTS、交接/路线图、本页和 CHANGELOG，确认分支、远端 SHA 与未提交改动，再选择本批需求的验证。以仓库文件和新 receipt 为依据，不依赖旧聊天记忆或维护者磁盘路径。
+
+
+## 2026-10-11 GUI 原生构建与完整包核验
+
+本批包含新的原生热盒/变换/终结回调，必须重编；9 月 17 日固定 native 的 Python overlay 打包器不适用。工具链为 VS 2026 BuildTools / MSVC 14.51.36231、CMake/CTest 4.3.1-msvc1、Windows SDK 10.0.26100.0。当前 exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`，版本输出 `AxisMeld 0.1.0-dev (based on Blender 5.3.0 Alpha)`；最终发布源与 ZIP 指纹由本批 GUI 快照记录。
+
+现有缓存验证后复用；另一机器按前文重新配置，不复制此机器缓存。关键配置为 `WITH_GTESTS=ON`、`WITH_TESTS_SINGLE_BINARY=OFF`、`WITH_WINDOWS_BUNDLE_CRT=ON`。将 `CMAKE_INSTALL_PREFIX` 指向测试运行资源目录，使生成的 CTest 环境也使用新运行库。只给 `cmake --install` 传 prefix 不会改写已生成的 CTest 工作目录。
+
+```powershell
+cmake -S $Repo -B $Build -DWITH_WINDOWS_BUNDLE_CRT=ON -DCMAKE_INSTALL_PREFIX="$Build/bin/Release"
+cmake --build $Build --config Release --parallel 2 --target blender editor_hotbox_icons_hotbox_icons_test editor_hotbox_hotbox_model_test transform_axismeld_snap_test axismeld_hotbox_menu_test axismeld_hotbox_state_test axismeld_identity_test axismeld_transform_axis_test windowmanager_wm_operator_completion_test -- /p:CL_MPCount=4
+cmake --install $Build --config Release --prefix "$Build/bin/Release"
+cmake --install $Build --config Release --prefix $Candidate
+ctest --test-dir $Build -C Release --output-on-failure -R '^(editor_hotbox_icons_hotbox_icons|editor_hotbox_hotbox_model|transform_axismeld_snap|axismeld_(hotbox_menu|hotbox_state|identity|transform_axis)|windowmanager_wm_operator_completion)$'
+python -B tools/utils/axismeld_native_preview_audit.py --install $Candidate --repo $Repo --report "$Audit/candidate-static.json" --phase candidate
+```
+
+本次所选 8 组原生测试共 139 项通过；不是 Blender 全量测试。Build01 的头文件/trivial 初始化错误、Build02 主动停止无关测试重链、原生目录计数的旧测试失败均保留在本地回执；最终目标构建/安装和重跑结果单独记录。144 个 Python 资源与当前源码逐字节一致。
+
+新增只读核验器 `tools/utils/axismeld_native_preview_audit.py` 不依赖旧安装、个人配置或原电脑回执。candidate 模式列出 staging 待办；staging/extract 模式强制核对已提交源码、全部文件清单、完整 license、CRT/shared manifest 中所有 DLL、portable 标记、资源指纹、startup 来源及私人文件排除。它不能仅凭静态 hash 证明 exe 由某源码编译，也不替代启动/GUI/其他机器验证。
+
+完整包从新 candidate 复制到独立 staging；只在 staging 排除 `.pdb/.lib/.exp/.pyc/.pyo`、`__pycache__` 和 `portable/.gitignore`。补源码 `COPYING` 为 `copying.txt`，保留 `license/`、CRT、Python、数据和 `portable/README.txt`，不复制个人配置。`AxisMeld-build.json` 的字段为：
+
+- `sourceCommit` 与 `nativeSourceCommit`：本轮最终功能提交，完整 40 位 SHA，必须一致；`source` 为对应 GitHub tree URL。
+- `binarySha256`、`resources: [{path, sha256}]`：exe 与 144 个选定脚本；资源路径从 `scripts/` 开始。
+- `resourceFingerprint`：`json.dumps({path: sha256}, sort_keys=True, separators=(',', ':'))` 的 UTF-8 SHA256。
+- `embeddedSourceAssets`：`release/datafiles/startup.blend` 的源码 SHA256。
+- `files`：除 manifest 自身外，安装根下所有文件的相对路径及 SHA256，可附 size；打包前补齐所有说明文档后再生成。
+
+先以 `--phase staging` 核验，再 ZIP 整个 `AxisMeld-Preview` 目录。侧边 `.zip.sha256` 使用 `<小写SHA256>  <zip文件名>`。解压到另一个新目录，以 `--phase extract --archive $Zip --archive-prefix AxisMeld-Preview` 核验每个 ZIP 条目与解压文件。之后清除继承的 `BLENDER_USER_*` 覆盖，隔离验证 portable/factory，再运行真实 GUI；所有 GUI 用例见本批 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)。测试应禁用写入字节码，避免核验后的包目录生成缓存。
+
+本机配置 `WITH_BUILDINFO=OFF`、`WITH_CYCLES_NATIVE_ONLY=ON`，未提供 OptiX SDK 或可选 GPU 预编译 kernels。本包是 GUI 开发预览；渲染性能、老 CPU 和另一台机器运行仍需单独验证。源码提交与构建身份主要由发布 manifest/快照记录，不依赖本次关闭的 buildinfo。

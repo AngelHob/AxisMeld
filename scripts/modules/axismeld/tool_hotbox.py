@@ -4,6 +4,17 @@
 
 TOOL_ROOTS = {'tool.select': 'tools.select', 'transform.move': 'tools.move',
               'transform.rotate': 'tools.rotate', 'transform.scale': 'tools.scale'}
+CURRENT_TOOL_HOTBOX = 'context.tool_hotbox'
+
+
+def current_tool_root(context):
+    """Read the existing workspace tool; opening its menu must never select a tool."""
+    tool = context.workspace.tools.from_space_view3d_mode(context.mode, create=False)
+    return {'builtin.select_box': 'tools.select', 'builtin.select_lasso': 'tools.select',
+            'builtin.select_circle': 'tools.select', 'builtin.select': 'tools.select',
+            'builtin.move': 'tools.move', 'builtin.rotate': 'tools.rotate',
+            'builtin.scale': 'tools.scale'}.get(tool.idname if tool else '')
+
 DIRECTIONS = frozenset({'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'})
 ORIENTATIONS = {f'orientation.{tool}.{name}': (slot, value)
                 for tool, slot in (('move', 1), ('rotate', 2), ('scale', 3))

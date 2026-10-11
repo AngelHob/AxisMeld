@@ -7089,7 +7089,7 @@
     "scripts/modules/axismeld/workspace_native_catalog.py": "4ebf7c6f5d093d41943ce572b903a0581ec8d67f77bd012fa694b3263c1e7ff5",
     "scripts/modules/axismeld/workspace_native_groups.py": "f565595812692c5fbf0f7554e66d53b7cc69d78e3db6862e913fdd607a7a4d05",
     "scripts/startup/bl_ui/space_axismeld_native_modeling.py": "f2cff275176ab5b7e5795bbf03a0e9d87b3511e12bc3d0c909e6cf1ee2d404ab",
-    "scripts/startup/bl_ui/space_axismeld_menubar.py": "c4bb73620fb375a1d209556e3e6f66630fdd81c71093b0e3fcea4989ed64ae5d",
+    "scripts/startup/bl_ui/space_axismeld_menubar.py": "16fd96667bfb54e8788d59073c306d231986828f175c6997bbd0966d18ec7e71",
     "scripts/startup/bl_ui/space_topbar.py": "880daa66b4b1b1b739259619463ff2f2f9926ea36c65be0db75eb32ea2511875",
     "scripts/startup/bl_ui/space_view3d.py": "47bd6fcc4b453ad009cf085c981b47ad0d1c4b244841ac93777640852f19cae3"
   },

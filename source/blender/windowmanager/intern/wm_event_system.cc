@@ -1209,6 +1209,9 @@ static void wm_operator_reports(bContext *C,
                                 const wmOperatorStatus retval,
                                 const bool caller_owns_reports)
 {
+  if (retval & (OPERATOR_FINISHED | OPERATOR_CANCELLED)) {
+    WM_operator_completion_callback_call(C, op, (retval & OPERATOR_FINISHED) != 0);
+  }
   if (G.background == 0 && caller_owns_reports == false) { /* Popup. */
     if (op->reports->list.first()) {
       /* FIXME: temp setting window, see other call to #popup_menu_reports for why. */
@@ -1283,6 +1286,7 @@ static void wm_operator_finished(bContext *C,
                                  const bool has_undo_step,
                                  const bool has_register)
 {
+  WM_operator_completion_callback_call(C, op, true);
   wmWindowManager *wm = CTX_wm_manager(C);
   enum {
     NOP,
@@ -2337,10 +2341,20 @@ void WM_event_remove_handlers(bContext *C, ListBaseT<wmEventHandler> *handlers)
 
           handler->op->type->cancel(C, handler->op);
 
+          WM_operator_completion_callback_call(C, handler->op, false);
+
           if (handler->op->type->flag & OPTYPE_UNDO) {
             wm->op_undo_depth--;
           }
 
+          CTX_wm_area_set(C, area);
+          CTX_wm_region_set(C, region);
+        }
+        else {
+          ScrArea *area = CTX_wm_area(C);
+          ARegion *region = CTX_wm_region(C);
+          wm_handler_op_context(C, handler, win->runtime->eventstate);
+          WM_operator_completion_callback_call(C, handler->op, false);
           CTX_wm_area_set(C, area);
           CTX_wm_region_set(C, region);
         }
@@ -2737,6 +2751,7 @@ static eHandlerActionFlag wm_handler_operator_call(bContext *C,
           handler->op = nullptr;
         }
         else if (retval & (OPERATOR_CANCELLED | OPERATOR_FINISHED)) {
+          WM_operator_completion_callback_call(C, op, false);
           WM_operator_free(op);
           handler->op = nullptr;
         }
@@ -2899,6 +2914,34 @@ static eHandlerActionFlag wm_handler_fileselect_do(bContext *C,
       /* Settings for file-browser, #sfile is not operator owner but sends events. */
       SpaceFile *sfile = area->spacedata.first_as<SpaceFile>();
       sfile->op = handler->op;
+
+      /* The queued selector now has its actual receiving window. Only explicitly
+       * registered source handlers may hand their captured input to this window. */
+      wmWindow *receiver_window = CTX_wm_window(C);
+      wmWindow *source_window = handler->context.win;
+      if (receiver_window && source_window && receiver_window != source_window &&
+          BLI_findindex(&wm->windows, source_window) != -1)
+      {
+        for (wmEventHandler &source_base : source_window->runtime->modalhandlers) {
+          if (source_base.type != WM_HANDLER_TYPE_OP) {
+            continue;
+          }
+          auto &source_handler = reinterpret_cast<wmEventHandler_Op &>(source_base);
+          if (!source_handler.op || !source_handler.fileselect_handoff) {
+            continue;
+          }
+          wmOperator *receiver_op = wm_operator_create(
+              wm, source_handler.op->type, source_handler.op->ptr, nullptr);
+          if (source_handler.fileselect_handoff(
+                  source_handler.op, receiver_op, handler->op, receiver_window))
+          {
+            WM_event_add_modal_handler_ex(receiver_window, nullptr, nullptr, receiver_op);
+          }
+          else {
+            WM_operator_free(receiver_op);
+          }
+        }
+      }
 
       ED_fileselect_set_params_from_userdef(sfile);
 

@@ -117,6 +117,8 @@ bool appearance(const DictionaryValue &dict, MenuAppearance &out)
 }
 
 const std::unordered_set<std::string> commands = {"tool.select",
+                                                  "file.open",
+                                                  "file.save_as",
                                                   "mesh.create_disc",
                                                   "mesh.create_sphere",
                                                   "mesh.create_torus",
@@ -354,9 +356,10 @@ bool parse_menu_snapshot(const std::string_view json, MenuSnapshot &out, std::st
   const bool has_internal = !next.menus.empty() && next.menus.back().id == "internal";
   const size_t ordinary_count = next.menus.size() - size_t(has_internal);
   const size_t complete_count = 4 + std::size(companion_roots);
+  const size_t legacy_complete_count = complete_count - 1;
   if ((ordinary_count != 4 && ordinary_count != 5 && ordinary_count != 6 &&
-       ordinary_count != complete_count) ||
-      (has_internal && (ordinary_count != 4 + std::size(companion_roots) ||
+       ordinary_count != complete_count && ordinary_count != legacy_complete_count) ||
+      (has_internal && ((ordinary_count != complete_count && ordinary_count != legacy_complete_count) ||
                         next.menus.back().kind != MenuKind::Menu ||
                         next.menus.back().presentation != "list"))) {
     return false;

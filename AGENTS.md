@@ -1,11 +1,15 @@
 # AxisMeld 开发接续
 
+**本批交付状态（2026-10-11）：当前范围实现与统一候选回归已完成，发布待本批验收回执。** 已验证 40 组 354 项纯 Python、8 组 139 项原生、真实 RNA 7+4 项及 7 个实际 File 流程；统一候选的 18 组回归全部通过（17 组 GUI、1 组 profiles 后台验证，按套件计）；exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`。新包尚未发布。以 [GUI 验收](docs/compatibility/2026-10-11-gui-completion-acceptance.md) 更新最终状态；9 月 17 日旧下载不包含本批改动。
+
 - 新接手先读 `docs/ROADMAP.md`、`docs/CURRENT_ISSUES.md`、`docs/HANDOFF.md`，再读当前模块设计与源码。旧日期文档是历史设计，不可据其状态重做已经交付的功能。
 - 当前开发分支为 `axismeld/phase-2a`；默认 `axismeld/integration` 未包含最新功能。不要自动合并到默认分支；新机拉取、LFS、构建、验证及发布说明见 `docs/BUILD_AND_DELIVERY.md`。
 - 保留 Blender 全局菜单与工作区栏。Modeling 七根菜单保持；Vertex/Edge/Face 在 Edit Mesh 内；不恢复 Deform/Generate 根。Rigging 是原生工作区，Rigify 是内置模块。
 - Maya 未适配功能保留灰占位，Options 与正文独立；使用真实原生 Menu/operator 上下文，不把相似功能冒充等价，不隐式修改选区来绕过不可用条件。
 - `AXM-COMPAT-001` 全局缩放差异按用户决定搁置，不自动重启。人工验收暂缓不阻止可验证的开发，但自动化不得替代人工状态。
-- 当前优先级（2026-09-29 用户更正）：先完成 UI、交互与 Maya 2026 默认快捷键对齐，暂停新增建模、Skin/Skeleton、UV 算法和功能适配。已实现功能保留，缺失能力继续灰占位；A2 Influences 不再是下一批。按 `docs/ROADMAP.md` 的 U0–U3 收敛，阶段完成后报告，再由用户决定何时恢复功能开发。
+- 当前优先级（2026-09-29 用户更正）：UI、交互与 Maya 2026 默认快捷键优先，暂停新增建模、Skin/Skeleton、UV 算法和功能适配。U0–U3 当前范围实现已完成；保留已实现入口和回归，接续先查本批验收与具体反馈，不重复开发。阶段交付后报告范围与待人工内容，由用户决定何时恢复功能开发；不自动回到 A2 Influences。
+- Space → File 只接入 Open Scene / Save Scene As 两个无默认快捷键的语义命令。跨窗松键依靠精确调用 token 穿过原生确认链；不得改成全局键盘拦截、跳过确认或把其他 File/Window 灰项批量启用。设计见 `docs/development/2026-10-11-file-window-release-design.md`。
+- 本批 GU-01～GU-13 共 13 项人工待测；公开目录 330 项（当前 318、历史 12），47 项仅历史已测，当前初始未测 271。自动化不修改任何人工测试结果。
 
 ## AxisMeld 热盒约束
 

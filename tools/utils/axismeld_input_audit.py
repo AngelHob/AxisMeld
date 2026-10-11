@@ -25,13 +25,14 @@ elif Path(sys.modules[_API].__file__).resolve() != _package_path:
     raise RuntimeError('An input audit from another checkout is already loaded')
 from _axismeld_input_audit_api.commands import COMMANDS, RESERVED_KEYS, baseline_bindings, binding_events
 from _axismeld_input_audit_api.keymap import (
-    CONTEXT_TARGETS, addon_conflicts, generate_keymaps, modeling_keymap, validate_global_bindings,
+    CONTEXT_TARGETS, addon_conflicts, generate_keymaps, modeling_keymap, overlaps, validate_global_bindings,
 )
 from _axismeld_input_audit_api.modeling_registry import SPECS
 from _axismeld_input_audit_api.object_modeling_hotbox import OBJECT_BOUND_COMMANDS
 
 OUTPUT = ROOT / 'docs/compatibility/current-input-audit'
 REFERENCE = 'docs/maya-mapping/2026-09-14-m3-modeling-coverage.json'
+INPUT_REFERENCE = 'docs/reference/2026-10-11-input-reference.json'
 MODE_MAPS = {'OBJECT': 'Object Mode', 'EDIT_MESH': 'Mesh', 'EDIT_CURVE': 'Curve',
              'EDIT_SURFACE': 'Curve', 'EDIT_LATTICE': 'Lattice'}
 AUDIT_MAPS = {'Object Mode', 'Mesh', 'Curve', 'Lattice', 'Object Non-modal',
@@ -81,6 +82,10 @@ def load_reference():
     return json.loads((ROOT / REFERENCE).read_text(encoding='utf-8'))
 
 
+def load_input_reference():
+    return json.loads((ROOT / INPUT_REFERENCE).read_text(encoding='utf-8'))
+
+
 def command_id(item):
     operator, _event, properties = item
     return dict((properties or {}).get('properties', ())).get('command') if operator == 'axismeld.command' else None
@@ -111,7 +116,7 @@ def targets(command):
     return ['3D View'] if command.startswith('view.') else ['Mesh', 'Object Mode']
 
 
-def references_for(command, reference):
+def references_for(command, reference, input_reference):
     found = []
     for item in reference['maya_actions']:
         if command in item.get('commands', ()) and item.get('maya_default_inputs'):
@@ -120,6 +125,10 @@ def references_for(command, reference):
                                       'release': entry.get('release', ''),
                                       'source': Path(entry.get('source', '').replace('\\', '/')).name}
                                      for entry in item['maya_default_inputs']]})
+    for item in input_reference['maya_actions']:
+        if command in item['commands']:
+            found.append({'document': INPUT_REFERENCE, 'identity': item['identity'],
+                          'inputs': item['inputs'], 'notes': item['notes']})
     if found:
         return found
     document = ('docs/maya-mapping/2026-09-11-tool-marking-menus.md'
@@ -154,12 +163,13 @@ def json_snapshot(value):
     return value
 
 
-def build_report(*, base=None, generated=None, reference=None):
+def build_report(*, base=None, generated=None, reference=None, input_reference=None):
     base = load_base() if base is None else base
     bindings = baseline_bindings()
     validate_global_bindings(base, bindings)
     generated = generate_keymaps(base, bindings) if generated is None else generated
     reference = load_reference() if reference is None else reference
+    input_reference = load_input_reference() if input_reference is None else input_reference
     rows, errors, inherited, removed, observed, details, auxiliary = [], [], [], [], [], [], []
     expected_contexts = {name: args for name, args, _content in base}
     expected_contexts['AxisMeld Hotbox'] = {'space_type': 'VIEW_3D', 'region_type': 'WINDOW'}
@@ -194,9 +204,13 @@ def build_report(*, base=None, generated=None, reference=None):
                 errors.append(f'missing: {command} / {input_label(event)} / {name}')
             elif counts[key] > 1:
                 errors.append(f'duplicate: {command} / {input_label(event)} / {name}')
-        refs = references_for(command, reference)
+        refs = references_for(command, reference, input_reference)
         reference_inputs = {entry['input'] for ref in refs for entry in ref['inputs']}
-        comparison = ('same_notation' if input_label(event) in reference_inputs else
+        reference_events = [entry['event'] for ref in refs for entry in ref['inputs'] if 'event' in entry]
+        comparison = (('same_event_definition' if any(event_signature(item) == event_signature(event)
+                                                     for item in reference_events)
+                       else 'event_definition_difference') if reference_events else
+                      'same_notation' if input_label(event) in reference_inputs else
                       'review_notation_or_difference' if reference_inputs else 'prose_reference_review')
         rows.append({'command': command, 'label': COMMANDS[command].label, 'input': input_label(event),
                      'event': event, 'alias': event != bindings[command], 'expected_maps': expected_maps,
@@ -223,24 +237,38 @@ def build_report(*, base=None, generated=None, reference=None):
                 if item not in current['items']:
                     removed.append({'map': name, 'context': args, 'operator': item[0], 'event': item[1],
                                     'properties': item[2],
+                                    'ownership': {
+                                        'commands': sorted({command for command, event in binding_events(bindings)
+                                                            if event and overlaps(item[1], event)}),
+                                        'reserved': [key for key in RESERVED_KEYS
+                                                     if overlaps(item[1], {'type': key})],
+                                        'meaning': 'Physical ownership candidates; not command equivalence or GUI acceptance'},
                                     'status': 'removed_by_current_preset_review_if_needed'})
     return json_snapshot({'schema_version': 1,
             'scope': 'Current public AxisMeld preset; no personal overrides or live addon enumeration',
             'verification': {'configuration': 'generated_source_only', 'gui': 'not_run_by_generator',
-                             'manual': 'not_reassessed', 'reference': 'stored_reference_not_new_maya_runtime_audit'},
+                             'manual': 'not_reassessed',
+                             'reference': 'vendor_defaults_and_official_docs_not_maya_runtime_audit'},
             'counts': {'commands_with_default': len(bindings), 'bindings_including_aliases': len(rows),
                        'base_maps': len(base), 'generated_maps': len(generated),
                        'protected_maps_checked': protected, 'inherited_items': len(inherited),
                        'removed_items': len(removed), 'owned_auxiliary_items': len(auxiliary)},
             'bindings': rows,
-            'reserved': [{'key': key, 'status': 'reserved_not_implemented'} for key in RESERVED_KEYS],
+            'reserved': [next((row for row in input_reference['reserved'] if row['key'] == key),
+                              {'key': key, 'scope': 'unreviewed', 'reason': 'New reserved key needs reference review'}) |
+                         {'status': 'native_modal_owned_not_global_binding' if any(
+                             row['input'] == key for row in input_reference['native_modal_inputs'])
+                          else 'reserved_not_implemented'} for key in RESERVED_KEYS],
+            'native_modal_inputs': input_reference['native_modal_inputs'],
+            'reference_sources': input_reference['sources'],
+            'native_boundaries': input_reference['native_boundaries'],
             'inherited': inherited, 'owned_auxiliary': auxiliary, 'removed': removed, 'errors': errors,
             'review_notes': [
                 'Same-map RMB native fallback and Shift+RMB create/model dispatch are intentional; verify runtime predicates.',
                 'Shared Frames Space and mode/3D View overlaps need handler order and poll; equality is not proof of a bug.',
                 'Alt+LMB DOUBLE_CLICK edgering_select is removed by current PRESS ownership; requires modal event verification.',
                 'Measure X ruler_remove is removed by reserved-X ownership; DEL remains. Classify before changing.',
-                'Reference same_notation compares only stored input text, not operation equivalence or release behavior.',
+                'Reference same_notation/event_definition compares inputs only, not operation equivalence or release behavior.',
             ]})
 
 
@@ -260,7 +288,8 @@ def render_markdown(report):
                          if ref['inputs'] else ref['document'] for ref in row['references'])
         lines.append('| ' + ' | '.join(map(cell, (row['input'] + ('（别名）' if row['alias'] else ''),
                      row['command'], ', '.join(row['placements']), refs, row['reference_comparison']))) + ' |')
-    lines += ['', '`same_notation` 仅表示与已存输入文本相同；`review_notation_or_difference` 需要核对写法或差异；'
+    lines += ['', '`same_event_definition` 仅表示与已核实的按键/修饰键/事件值相同；松键说明单独保留。'
+              '`same_notation` 仅表示与已存输入文本相同；`review_notation_or_difference` 需要核对写法或差异；'
               '`prose_reference_review` 需要读取所指文档。均不等于功能通过。', '',
               '## 直接注入的操纵器输入', '',
               '这些输入由 AxisMeld 注入，不属于原生继承：', '',
@@ -268,13 +297,20 @@ def render_markdown(report):
     lines += ['| ' + ' | '.join(map(cell, (input_label(row['event']) + ' / ' + row['event']['value'],
                                          row['operator'], row['map']))) + ' |'
               for row in report['owned_auxiliary']]
+    lines += ['', '## 原生变换中的持键输入', '',
+              '这些按键没有全局 PRESS 命令；仅由原生变换会话拥有，单独按键不修改场景设置。', '',
+              '| 持键 | 原生吸附 | 生效范围 |', '|---|---|---|']
+    lines += ['| ' + ' | '.join(map(cell, (row['input'], row['operation'], row['scope']))) + ' |'
+              for row in report['native_modal_inputs']]
     lines += ['', '## 按住、松开与人工入口', '']
     lines += ['- ' + text for text in dict.fromkeys(r['interaction'] for r in report['bindings'])]
     lines += ['', '[统一人工清单](2026-09-14-manual-test-ledger.md) · '
               '[当前 UI/输入阶段](../development/2026-09-29-ui-interaction-shortcuts.md)', '',
               '## 预留、继承与待核实', '',
-              '预留裸键：' + '、'.join(row['key'] for row in report['reserved']) + '。缺失能力暂缓，不解除灰显。', '',
+              '预留裸键：' + '、'.join(row['key'] for row in report['reserved']) + '。按逐项原因区分临时交互和缺失能力。', '',
               '原生继承项标为 `native_inherited_not_maya_verified`；移除项保留原事件值，便于发现 PRESS/双击等差异。', '']
+    lines += ['- ' + row['key'] + ' / `' + row['scope'] + '`：' + row['reason'] for row in report['reserved']]
+    lines += ['', '[输入参考复核说明](../development/2026-10-11-input-reference-review.md)', '']
     lines += ['- ' + text for text in report['review_notes']]
     lines += ['', '## 生成一致性错误', ''] + (report['errors'] or ['无。仅表示当前绑定位置及受保护 keymap 检查通过。'])
     return '\n'.join(lines) + '\n'

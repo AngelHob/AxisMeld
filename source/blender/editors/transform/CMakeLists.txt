@@ -86,6 +86,7 @@ set(SRC
   transform_mode_vert_slide.cc
   transform_ops.cc
   transform_axismeld.cc
+  transform_axismeld_snap.cc
   transform_orientations.cc
   transform_snap.cc
   transform_snap_animation.cc
@@ -99,6 +100,7 @@ set(SRC
   transform_snap_sequencer.cc
 
   transform.hh
+  transform_axismeld_snap.hh
   transform_constraints.hh
   transform_convert.hh
   transform_draw_cursors.hh
@@ -133,3 +135,12 @@ blender_add_lib(bf_editor_transform "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
 
 # RNA_prototypes.hh
 add_dependencies(bf_editor_transform bf_rna)
+
+if(WITH_GTESTS)
+  blender_add_test_suite_lib(transform_axismeld
+    "tests/transform_axismeld_snap_test.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+    ""
+    ""
+  )
+endif()

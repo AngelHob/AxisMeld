@@ -1,4 +1,5 @@
 import importlib.util
+from copy import deepcopy
 from pathlib import Path
 import sys
 import types
@@ -80,6 +81,52 @@ class MenuBarUIContract(unittest.TestCase):
         self.assertTrue(all(r[2].get('icon') for r in ops))
         option=next(r for r in ops if r[2]['icon']=='PREFERENCES'); self.assertFalse(option[4])
         command=next(r for r in ops if getattr(r[3],'key','')=='new'); self.assertEqual(command[3].token,'captured')
+    def test_empty_dynamic_directory_is_visible_gray_with_reason_and_no_empty_popup(self):
+        for children in ([], [{'id':'heading','kind':'separator','label':'Scene items'},
+                              {'id':'gap','kind':'separator','label':''}]):
+            node={'id':'dynamic','kind':'menu','label':'Assign Existing Material',
+                  'children':children,'reason':'Scene material provider is not adapted',
+                  'icon':'MATERIAL'}
+            layout=Layout()
+            with patch.object(self.ui,'_MENU_NAMES',{'dynamic':'AXISMELD_MT_empty'}), \
+                 patch.object(self.ui.menubar_runtime,'source_token',side_effect=AssertionError('No capture')):
+                self.ui._draw_item(layout,self.context,node)
+            self.assertFalse(any(row[0]=='menu' for row in layout.log), 'Empty submenu must not open')
+            row=next(row for row in layout.log if row[0]=='operator')
+            self.assertEqual((row[2]['text'],row[2]['icon'],row[4]),
+                             ('Assign Existing Material','MATERIAL',False))
+            self.assertEqual((row[3].kind,row[3].key,row[3].token),('disabled','',''))
+            self.assertEqual(row[3].reason,node['reason'])
+    def test_directory_with_disabled_body_keeps_its_inspectable_hierarchy(self):
+        node={'id':'dynamic','kind':'menu','label':'Unavailable Tools',
+              'children':[{'id':'tool','kind':'disabled','label':'Tool'}]}
+        layout=Layout()
+        with patch.object(self.ui,'_MENU_NAMES',{'dynamic':'AXISMELD_MT_tools'}):
+            self.ui._draw_item(layout,self.context,node)
+        self.assertEqual([row[1] for row in layout.log if row[0]=='menu'],['AXISMELD_MT_tools'])
+        self.assertFalse(any(row[0]=='operator' for row in layout.log))
+    def test_all_current_empty_directories_keep_their_labels_icons_and_provenance(self):
+        sys.path.insert(0, str(ROOT / 'scripts/modules'))
+        from axismeld.workspace_menu_catalog import build_workspace_menubar
+        catalog=build_workspace_menubar()
+        before=deepcopy(catalog)
+        def walk(nodes):
+            for node in nodes:
+                yield node
+                yield from walk(node.get('children',()))
+        empty=[node for node in walk(catalog['menus']) if node['kind']=='menu' and
+               not any(child['kind']!='separator' for child in node['children'])]
+        self.assertEqual(len(empty),9)
+        for node in empty:
+            with self.subTest(menu=node['id']):
+                layout=Layout()
+                self.ui._draw_item(layout,self.context,node)
+                self.assertFalse(any(row[0]=='menu' for row in layout.log))
+                row=next(row for row in layout.log if row[0]=='operator')
+                self.assertEqual((row[2]['text'],row[2]['icon']), (node['label'],node['icon']))
+                self.assertFalse(row[4])
+                self.assertTrue(row[3].reason)
+        self.assertEqual(catalog,before)
     def test_hair_curves_header_keeps_actual_native_plugin_host(self):
         for mode, host in [('EDIT_CURVES', 'VIEW3D_MT_edit_curves'), ('EDIT_CURVE', 'VIEW3D_MT_edit_curve')]:
             self.context.mode = mode
@@ -95,7 +142,8 @@ class MenuBarUIContract(unittest.TestCase):
                             ('Edge', 'VIEW3D_MT_edit_mesh_edges'),
                             ('Face', 'VIEW3D_MT_edit_mesh_faces')]:
             identifier = 'viewport.modeling.' + label.lower()
-            node = {'id': identifier, 'kind': 'menu', 'label': label}
+            node = {'id': identifier, 'kind': 'menu', 'label': label,
+                    'children': [{'id': identifier + '.entry', 'kind': 'disabled', 'label': 'Entry'}]}
             with patch.object(self.ui, '_MENU_NAMES', {identifier: 'AXISMELD_MT_test_component'}):
                 for active, expected in [(True, host), (False, 'AXISMELD_MT_test_component')]:
                     with patch.object(self.ui, 'modeling_workspace', return_value=active):

@@ -5,19 +5,219 @@
     "configuration": "generated_source_only",
     "gui": "not_run_by_generator",
     "manual": "not_reassessed",
-    "reference": "stored_reference_not_new_maya_runtime_audit"
+    "reference": "vendor_defaults_and_official_docs_not_maya_runtime_audit"
   },
   "counts": {
-    "commands_with_default": 56,
-    "bindings_including_aliases": 58,
+    "commands_with_default": 58,
+    "bindings_including_aliases": 60,
     "base_maps": 280,
     "generated_maps": 281,
-    "protected_maps_checked": 177,
-    "inherited_items": 489,
-    "removed_items": 53,
+    "protected_maps_checked": 186,
+    "inherited_items": 497,
+    "removed_items": 45,
     "owned_auxiliary_items": 7
   },
   "bindings": [
+    {
+      "command": "context.conversion_hotbox",
+      "label": "Convert Selection Hotbox",
+      "input": "Ctrl+RMB",
+      "event": {
+        "type": "RIGHTMOUSE",
+        "value": "PRESS",
+        "alt": false,
+        "ctrl": true,
+        "shift": false,
+        "oskey": false
+      },
+      "alias": false,
+      "expected_maps": [
+        "Mesh",
+        "Object Mode"
+      ],
+      "placements": [
+        "Mesh",
+        "Object Mode"
+      ],
+      "placement_details": [
+        {
+          "map": "Object Mode",
+          "context": {
+            "space_type": "EMPTY",
+            "region_type": "WINDOW"
+          },
+          "index": 4,
+          "operator": "axismeld.command",
+          "event": {
+            "type": "RIGHTMOUSE",
+            "value": "PRESS",
+            "alt": false,
+            "ctrl": true,
+            "shift": false,
+            "oskey": false
+          },
+          "properties": {
+            "properties": [
+              [
+                "command",
+                "context.conversion_hotbox"
+              ]
+            ]
+          }
+        },
+        {
+          "map": "Mesh",
+          "context": {
+            "space_type": "EMPTY",
+            "region_type": "WINDOW"
+          },
+          "index": 3,
+          "operator": "axismeld.command",
+          "event": {
+            "type": "RIGHTMOUSE",
+            "value": "PRESS",
+            "alt": false,
+            "ctrl": true,
+            "shift": false,
+            "oskey": false
+          },
+          "properties": {
+            "properties": [
+              [
+                "command",
+                "context.conversion_hotbox"
+              ]
+            ]
+          }
+        }
+      ],
+      "references": [
+        {
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "buildConvertMM",
+          "inputs": [
+            {
+              "input": "Ctrl+RMB",
+              "event": {
+                "type": "RIGHTMOUSE",
+                "value": "PRESS",
+                "ctrl": true,
+                "shift": false
+              },
+              "release": "RMB release commits marking choice; cancel leaves the previous selection unchanged.",
+              "source": [
+                "panel:65-77"
+              ]
+            }
+          ],
+          "notes": "Model panel popup modifier contract; content and context dispatch need separate verification."
+        }
+      ],
+      "reference_comparison": "same_event_definition",
+      "interaction": "RMB context session; pointer target/selection/domain choose branch; commit or cancel on release: P/C/K/D/O groups.",
+      "difference": "Maya polygon conversion menu; existing Blender adapters retain their mode restrictions.",
+      "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
+    },
+    {
+      "command": "context.tool_hotbox",
+      "label": "Current Tool Hotbox",
+      "input": "Ctrl+Shift+RMB",
+      "event": {
+        "type": "RIGHTMOUSE",
+        "value": "PRESS",
+        "alt": false,
+        "ctrl": true,
+        "shift": true,
+        "oskey": false
+      },
+      "alias": false,
+      "expected_maps": [
+        "Mesh",
+        "Object Mode"
+      ],
+      "placements": [
+        "Mesh",
+        "Object Mode"
+      ],
+      "placement_details": [
+        {
+          "map": "Object Mode",
+          "context": {
+            "space_type": "EMPTY",
+            "region_type": "WINDOW"
+          },
+          "index": 3,
+          "operator": "axismeld.command",
+          "event": {
+            "type": "RIGHTMOUSE",
+            "value": "PRESS",
+            "alt": false,
+            "ctrl": true,
+            "shift": true,
+            "oskey": false
+          },
+          "properties": {
+            "properties": [
+              [
+                "command",
+                "context.tool_hotbox"
+              ]
+            ]
+          }
+        },
+        {
+          "map": "Mesh",
+          "context": {
+            "space_type": "EMPTY",
+            "region_type": "WINDOW"
+          },
+          "index": 2,
+          "operator": "axismeld.command",
+          "event": {
+            "type": "RIGHTMOUSE",
+            "value": "PRESS",
+            "alt": false,
+            "ctrl": true,
+            "shift": true,
+            "oskey": false
+          },
+          "properties": {
+            "properties": [
+              [
+                "command",
+                "context.tool_hotbox"
+              ]
+            ]
+          }
+        }
+      ],
+      "references": [
+        {
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "buildToolOptionsMM",
+          "inputs": [
+            {
+              "input": "Ctrl+Shift+RMB",
+              "event": {
+                "type": "RIGHTMOUSE",
+                "value": "PRESS",
+                "ctrl": true,
+                "shift": true
+              },
+              "release": "RMB release commits marking choice; cancel leaves the previous selection unchanged.",
+              "source": [
+                "panel:95-109"
+              ]
+            }
+          ],
+          "notes": "Model panel popup modifier contract; content and context dispatch need separate verification."
+        }
+      ],
+      "reference_comparison": "same_event_definition",
+      "interaction": "RMB context session; pointer target/selection/domain choose branch; commit or cancel on release: P/C/K/D/O groups.",
+      "difference": "Open the active supported tool menu without changing the active tool.",
+      "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
+    },
     {
       "command": "selection.invert",
       "label": "Invert",
@@ -50,7 +250,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 35,
+          "index": 37,
           "operator": "axismeld.command",
           "event": {
             "type": "I",
@@ -100,7 +300,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 37,
+          "index": 39,
           "operator": "axismeld.command",
           "event": {
             "type": "I",
@@ -189,7 +389,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 38,
+          "index": 40,
           "operator": "axismeld.command",
           "event": {
             "type": "F9",
@@ -224,7 +424,7 @@
       ],
       "reference_comparison": "same_notation",
       "interaction": "PRESS dispatches declared command; result/poll/Undo remain native or adapted; see M3 and input acceptance.",
-      "difference": "Uses Blender selection expansion when changing domain; contained/perimeter rules differ.",
+      "difference": "Higher domains select incident components; lower domains retain the source components' vertices or edges.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
     },
     {
@@ -253,7 +453,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 39,
+          "index": 41,
           "operator": "axismeld.command",
           "event": {
             "type": "F10",
@@ -288,7 +488,7 @@
       ],
       "reference_comparison": "same_notation",
       "interaction": "PRESS dispatches declared command; result/poll/Undo remain native or adapted; see M3 and input acceptance.",
-      "difference": "Uses Blender selection expansion when changing domain; contained/perimeter rules differ.",
+      "difference": "Higher domains select incident components; lower domains retain the source components' vertices or edges.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
     },
     {
@@ -317,7 +517,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 40,
+          "index": 42,
           "operator": "axismeld.command",
           "event": {
             "type": "F11",
@@ -352,7 +552,7 @@
       ],
       "reference_comparison": "same_notation",
       "interaction": "PRESS dispatches declared command; result/poll/Undo remain native or adapted; see M3 and input acceptance.",
-      "difference": "Uses Blender selection expansion when changing domain; contained/perimeter rules differ.",
+      "difference": "Higher domains select incident components; lower domains retain the source components' vertices or edges.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
     },
     {
@@ -387,7 +587,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 36,
+          "index": 38,
           "operator": "axismeld.command",
           "event": {
             "type": "Z",
@@ -437,7 +637,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 41,
+          "index": 43,
           "operator": "axismeld.command",
           "event": {
             "type": "Z",
@@ -537,7 +737,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 37,
+          "index": 39,
           "operator": "axismeld.command",
           "event": {
             "type": "Z",
@@ -587,7 +787,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 42,
+          "index": 44,
           "operator": "axismeld.command",
           "event": {
             "type": "Z",
@@ -687,7 +887,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 38,
+          "index": 40,
           "operator": "axismeld.command",
           "event": {
             "ctrl": true,
@@ -737,7 +937,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 43,
+          "index": 45,
           "operator": "axismeld.command",
           "event": {
             "ctrl": true,
@@ -831,7 +1031,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 39,
+          "index": 41,
           "operator": "axismeld.command",
           "event": {
             "type": "C",
@@ -895,7 +1095,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 40,
+          "index": 42,
           "operator": "axismeld.command",
           "event": {
             "type": "V",
@@ -959,7 +1159,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 41,
+          "index": 43,
           "operator": "axismeld.command",
           "event": {
             "type": "X",
@@ -1023,7 +1223,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 42,
+          "index": 44,
           "operator": "axismeld.command",
           "event": {
             "type": "G",
@@ -1087,7 +1287,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 43,
+          "index": 45,
           "operator": "axismeld.command",
           "event": {
             "type": "P",
@@ -1151,7 +1351,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 44,
+          "index": 46,
           "operator": "axismeld.command",
           "event": {
             "type": "P",
@@ -1219,7 +1419,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 45,
+          "index": 47,
           "operator": "axismeld.command",
           "event": {
             "type": "D",
@@ -1269,7 +1469,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 44,
+          "index": 46,
           "operator": "axismeld.command",
           "event": {
             "type": "D",
@@ -1333,7 +1533,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 46,
+          "index": 48,
           "operator": "axismeld.command",
           "event": {
             "type": "D",
@@ -1397,7 +1597,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 47,
+          "index": 49,
           "operator": "axismeld.command",
           "event": {
             "type": "D",
@@ -1465,7 +1665,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 48,
+          "index": 50,
           "operator": "axismeld.command",
           "event": {
             "type": "DEL",
@@ -1515,7 +1715,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 45,
+          "index": 47,
           "operator": "axismeld.command",
           "event": {
             "type": "DEL",
@@ -1537,12 +1737,25 @@
       ],
       "references": [
         {
-          "document": "docs/maya-mapping/phase-1.md",
-          "identity": "review_prose_and_current_source",
-          "inputs": []
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "Delete",
+          "inputs": [
+            {
+              "input": "Delete",
+              "event": {
+                "type": "DEL",
+                "value": "PRESS"
+              },
+              "release": "",
+              "source": [
+                "official-delete"
+              ]
+            }
+          ],
+          "notes": "Input exists in Maya; Blender delete versus Maya dissolve/topology rules remain an adaptation."
         }
       ],
-      "reference_comparison": "prose_reference_review",
+      "reference_comparison": "same_event_definition",
       "interaction": "PRESS dispatches declared command; result/poll/Undo remain native or adapted; see M3 and input acceptance.",
       "difference": "Uses Blender native selection, geometry and parameter semantics.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -1573,7 +1786,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 49,
+          "index": 51,
           "operator": "axismeld.command",
           "event": {
             "type": "H",
@@ -1637,7 +1850,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 50,
+          "index": 52,
           "operator": "axismeld.command",
           "event": {
             "type": "H",
@@ -1701,7 +1914,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 51,
+          "index": 53,
           "operator": "axismeld.command",
           "event": {
             "type": "H",
@@ -1765,7 +1978,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 52,
+          "index": 54,
           "operator": "axismeld.command",
           "event": {
             "type": "H",
@@ -1829,7 +2042,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 53,
+          "index": 55,
           "operator": "axismeld.command",
           "event": {
             "type": "H",
@@ -1920,7 +2133,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 46,
+          "index": 48,
           "operator": "axismeld.command",
           "event": {
             "type": "H",
@@ -1990,7 +2203,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 54,
+          "index": 56,
           "operator": "axismeld.command",
           "event": {
             "type": "F",
@@ -2040,7 +2253,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 47,
+          "index": 49,
           "operator": "axismeld.command",
           "event": {
             "type": "F",
@@ -2146,7 +2359,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 55,
+          "index": 57,
           "operator": "axismeld.command",
           "event": {
             "ctrl": true,
@@ -2196,7 +2409,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 48,
+          "index": 50,
           "operator": "axismeld.command",
           "event": {
             "ctrl": true,
@@ -2302,7 +2515,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 56,
+          "index": 58,
           "operator": "axismeld.command",
           "event": {
             "type": "A",
@@ -2352,7 +2565,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 49,
+          "index": 51,
           "operator": "axismeld.command",
           "event": {
             "type": "A",
@@ -2441,7 +2654,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 50,
+          "index": 52,
           "operator": "axismeld.command",
           "event": {
             "type": "F7",
@@ -2511,7 +2724,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 57,
+          "index": 59,
           "operator": "axismeld.command",
           "event": {
             "type": "T",
@@ -2561,7 +2774,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 51,
+          "index": 53,
           "operator": "axismeld.command",
           "event": {
             "type": "T",
@@ -2650,7 +2863,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 58,
+          "index": 60,
           "operator": "axismeld.command",
           "event": {
             "type": "D",
@@ -2714,7 +2927,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 52,
+          "index": 54,
           "operator": "axismeld.command",
           "event": {
             "type": "E",
@@ -2778,7 +2991,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 53,
+          "index": 55,
           "operator": "axismeld.command",
           "event": {
             "type": "B",
@@ -2842,7 +3055,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 54,
+          "index": 56,
           "operator": "axismeld.command",
           "event": {
             "type": "RIGHT_ARROW",
@@ -2906,7 +3119,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 55,
+          "index": 57,
           "operator": "axismeld.command",
           "event": {
             "type": "LEFT_ARROW",
@@ -2970,7 +3183,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 56,
+          "index": 58,
           "operator": "axismeld.command",
           "event": {
             "type": "Q",
@@ -2992,12 +3205,28 @@
       ],
       "references": [
         {
-          "document": "docs/maya-mapping/phase-1.md",
-          "identity": "review_prose_and_current_source",
-          "inputs": []
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "QuadDrawTool",
+          "inputs": [
+            {
+              "input": "Ctrl+Shift+Q",
+              "event": {
+                "type": "Q",
+                "value": "PRESS",
+                "ctrl": true,
+                "shift": true
+              },
+              "release": "",
+              "source": [
+                "hotkeys:353",
+                "official-hotkeys"
+              ]
+            }
+          ],
+          "notes": "Existing Blender Poly Build activation; not Maya Quad Draw feature equivalence."
         }
       ],
-      "reference_comparison": "prose_reference_review",
+      "reference_comparison": "same_event_definition",
       "interaction": "PRESS dispatches declared command; result/poll/Undo remain native or adapted; see M3 and input acceptance.",
       "difference": "Activate the registered Blender tool; subsequent viewport strokes perform edits. Poly Build is not the complete Maya Quad Draw/Append/Target Weld workflow.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -3028,7 +3257,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 57,
+          "index": 59,
           "operator": "axismeld.command",
           "event": {
             "type": "X",
@@ -3050,12 +3279,28 @@
       ],
       "references": [
         {
-          "document": "docs/maya-mapping/phase-1.md",
-          "identity": "review_prose_and_current_source",
-          "inputs": []
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "MultiCutTool",
+          "inputs": [
+            {
+              "input": "Ctrl+Shift+X",
+              "event": {
+                "type": "X",
+                "value": "PRESS",
+                "ctrl": true,
+                "shift": true
+              },
+              "release": "",
+              "source": [
+                "hotkeys:354",
+                "official-hotkeys"
+              ]
+            }
+          ],
+          "notes": "Existing Blender Knife activation; not Maya Multi-Cut feature equivalence."
         }
       ],
-      "reference_comparison": "prose_reference_review",
+      "reference_comparison": "same_event_definition",
       "interaction": "PRESS dispatches declared command; result/poll/Undo remain native or adapted; see M3 and input acceptance.",
       "difference": "Activate the registered Blender tool; subsequent viewport strokes perform edits. Poly Build is not the complete Maya Quad Draw/Append/Target Weld workflow.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -3108,12 +3353,26 @@
       ],
       "references": [
         {
-          "document": "docs/maya-mapping/2026-09-14-empty-create-hotbox.md",
-          "identity": "review_prose_and_current_source",
-          "inputs": []
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "contextToolsMM.empty",
+          "inputs": [
+            {
+              "input": "Shift+RMB",
+              "event": {
+                "type": "RIGHTMOUSE",
+                "value": "PRESS",
+                "shift": true
+              },
+              "release": "RMB release commits marking choice; Escape/cancel must preserve selection.",
+              "source": [
+                "panel:80-92"
+              ]
+            }
+          ],
+          "notes": "Model panel popup routes empty versus selected context; not a keyboard hotkey."
         }
       ],
-      "reference_comparison": "prose_reference_review",
+      "reference_comparison": "same_event_definition",
       "interaction": "RMB context session; pointer target/selection/domain choose branch; commit or cancel on release: P/C/K/D/O groups.",
       "difference": "Object-only empty-selection creation menu; direct mouse entry requires empty pointer space.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -3193,12 +3452,26 @@
       ],
       "references": [
         {
-          "document": "docs/maya-mapping/2026-09-14-empty-create-hotbox.md",
-          "identity": "review_prose_and_current_source",
-          "inputs": []
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "contextToolsMM.selection",
+          "inputs": [
+            {
+              "input": "Shift+RMB",
+              "event": {
+                "type": "RIGHTMOUSE",
+                "value": "PRESS",
+                "shift": true
+              },
+              "release": "RMB release commits marking choice; Escape/cancel must preserve selection.",
+              "source": [
+                "panel:80-92"
+              ]
+            }
+          ],
+          "notes": "Same physical input as create, distinguished by current/pointer selection."
         }
       ],
-      "reference_comparison": "prose_reference_review",
+      "reference_comparison": "same_event_definition",
       "interaction": "RMB context session; pointer target/selection/domain choose branch; commit or cancel on release: P/C/K/D/O groups.",
       "difference": "Selected Mesh Objects or empty-selection pointer Mesh tools; single selected Edit domain modeling.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -3231,7 +3504,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 59,
+          "index": 61,
           "operator": "axismeld.command",
           "event": {
             "type": "D",
@@ -3256,7 +3529,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 58,
+          "index": 60,
           "operator": "axismeld.command",
           "event": {
             "type": "D",
@@ -3322,7 +3595,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 60,
+          "index": 62,
           "operator": "axismeld.command",
           "event": {
             "type": "Q",
@@ -3347,7 +3620,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 59,
+          "index": 61,
           "operator": "axismeld.command",
           "event": {
             "type": "Q",
@@ -3369,12 +3642,26 @@
       ],
       "references": [
         {
-          "document": "docs/maya-mapping/2026-09-11-tool-marking-menus.md",
-          "identity": "review_prose_and_current_source",
-          "inputs": []
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "SelectToolOptions",
+          "inputs": [
+            {
+              "input": "Q",
+              "event": {
+                "type": "Q",
+                "value": "PRESS"
+              },
+              "release": "Key-up uses the declared release command to close the held marking menu.",
+              "source": [
+                "hotkeys:319-320",
+                "official-hotkeys"
+              ]
+            }
+          ],
+          "notes": "Tap selects tool; held key plus LMB opens its marking menu. Release, repeat and cancel need GUI verification."
         }
       ],
-      "reference_comparison": "prose_reference_review",
+      "reference_comparison": "same_event_definition",
       "interaction": "QWER press selects tool; held key + repeated LMB opens marking menu; owned release/cancel: G-03/G-04/G-07.",
       "difference": "Native box select; hold Q + LMB opens classic tool options; toolkit variants deferred.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -3407,7 +3694,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 61,
+          "index": 63,
           "operator": "axismeld.command",
           "event": {
             "type": "W",
@@ -3432,7 +3719,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 60,
+          "index": 62,
           "operator": "axismeld.command",
           "event": {
             "type": "W",
@@ -3454,12 +3741,26 @@
       ],
       "references": [
         {
-          "document": "docs/maya-mapping/2026-09-11-tool-marking-menus.md",
-          "identity": "review_prose_and_current_source",
-          "inputs": []
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "TranslateToolWithSnapMarkingMenu",
+          "inputs": [
+            {
+              "input": "W",
+              "event": {
+                "type": "W",
+                "value": "PRESS"
+              },
+              "release": "Key-up uses the declared release command to close the held marking menu.",
+              "source": [
+                "hotkeys:341-342",
+                "official-hotkeys"
+              ]
+            }
+          ],
+          "notes": "Tap selects tool; held key plus LMB opens its marking menu. Release, repeat and cancel need GUI verification."
         }
       ],
-      "reference_comparison": "prose_reference_review",
+      "reference_comparison": "same_event_definition",
       "interaction": "QWER press selects tool; held key + repeated LMB opens marking menu; owned release/cancel: G-03/G-04/G-07.",
       "difference": "Native Move tool with classic held-LMB menu; same-tool tap does not reset the active axis.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -3492,7 +3793,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 62,
+          "index": 64,
           "operator": "axismeld.command",
           "event": {
             "type": "E",
@@ -3517,7 +3818,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 61,
+          "index": 63,
           "operator": "axismeld.command",
           "event": {
             "type": "E",
@@ -3539,12 +3840,26 @@
       ],
       "references": [
         {
-          "document": "docs/maya-mapping/2026-09-11-tool-marking-menus.md",
-          "identity": "review_prose_and_current_source",
-          "inputs": []
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "RotateToolWithSnapMarkingMenu",
+          "inputs": [
+            {
+              "input": "E",
+              "event": {
+                "type": "E",
+                "value": "PRESS"
+              },
+              "release": "Key-up uses the declared release command to close the held marking menu.",
+              "source": [
+                "hotkeys:343-344",
+                "official-hotkeys"
+              ]
+            }
+          ],
+          "notes": "Tap selects tool; held key plus LMB opens its marking menu. Release, repeat and cancel need GUI verification."
         }
       ],
-      "reference_comparison": "prose_reference_review",
+      "reference_comparison": "same_event_definition",
       "interaction": "QWER press selects tool; held key + repeated LMB opens marking menu; owned release/cancel: G-03/G-04/G-07.",
       "difference": "Native Rotate tool with classic held-LMB menu; same-tool tap does not reset the active axis.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -3577,7 +3892,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 63,
+          "index": 65,
           "operator": "axismeld.command",
           "event": {
             "type": "R",
@@ -3602,7 +3917,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 62,
+          "index": 64,
           "operator": "axismeld.command",
           "event": {
             "type": "R",
@@ -3624,12 +3939,26 @@
       ],
       "references": [
         {
-          "document": "docs/maya-mapping/2026-09-11-tool-marking-menus.md",
-          "identity": "review_prose_and_current_source",
-          "inputs": []
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "ScaleToolWithSnapMarkingMenu",
+          "inputs": [
+            {
+              "input": "R",
+              "event": {
+                "type": "R",
+                "value": "PRESS"
+              },
+              "release": "Key-up uses the declared release command to close the held marking menu.",
+              "source": [
+                "hotkeys:345-346",
+                "official-hotkeys"
+              ]
+            }
+          ],
+          "notes": "Tap selects tool; held key plus LMB opens its marking menu. Release, repeat and cancel need GUI verification."
         }
       ],
-      "reference_comparison": "prose_reference_review",
+      "reference_comparison": "same_event_definition",
       "interaction": "QWER press selects tool; held key + repeated LMB opens marking menu; owned release/cancel: G-03/G-04/G-07.",
       "difference": "Native Scale tool with classic held-LMB menu; global object-scale difference remains deferred.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -3709,12 +4038,26 @@
       ],
       "references": [
         {
-          "document": "docs/maya-mapping/2026-09-13-component-pointer-target.md",
-          "identity": "review_prose_and_current_source",
-          "inputs": []
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "buildObjectMenuItemsNow",
+          "inputs": [
+            {
+              "input": "RMB",
+              "event": {
+                "type": "RIGHTMOUSE",
+                "value": "PRESS"
+              },
+              "release": "RMB release commits marking choice; no selection mutation on cancel.",
+              "source": [
+                "panel:39-62",
+                "official-components"
+              ]
+            }
+          ],
+          "notes": "Popup based on current/pointer context; unsupported component domains remain disabled."
         }
       ],
-      "reference_comparison": "prose_reference_review",
+      "reference_comparison": "same_event_definition",
       "interaction": "RMB context session; pointer target/selection/domain choose branch; commit or cancel on release: P/C/K/D/O groups.",
       "difference": "Context component menu with Object-mode pointer targeting; unsupported entries remain disabled.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -3747,7 +4090,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 64,
+          "index": 66,
           "operator": "axismeld.command",
           "event": {
             "type": "F8",
@@ -3772,7 +4115,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 63,
+          "index": 65,
           "operator": "axismeld.command",
           "event": {
             "type": "F8",
@@ -3838,7 +4181,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 65,
+          "index": 67,
           "operator": "axismeld.command",
           "event": {
             "type": "F9",
@@ -3863,7 +4206,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 64,
+          "index": 66,
           "operator": "axismeld.command",
           "event": {
             "type": "F9",
@@ -3929,7 +4272,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 66,
+          "index": 68,
           "operator": "axismeld.command",
           "event": {
             "type": "F10",
@@ -3954,7 +4297,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 65,
+          "index": 67,
           "operator": "axismeld.command",
           "event": {
             "type": "F10",
@@ -4020,7 +4363,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 67,
+          "index": 69,
           "operator": "axismeld.command",
           "event": {
             "type": "F11",
@@ -4045,7 +4388,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 66,
+          "index": 68,
           "operator": "axismeld.command",
           "event": {
             "type": "F11",
@@ -4111,7 +4454,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 68,
+          "index": 70,
           "operator": "axismeld.command",
           "event": {
             "type": "A",
@@ -4136,7 +4479,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 67,
+          "index": 69,
           "operator": "axismeld.command",
           "event": {
             "type": "A",
@@ -4202,7 +4545,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 69,
+          "index": 71,
           "operator": "axismeld.command",
           "event": {
             "type": "PERIOD",
@@ -4227,7 +4570,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 68,
+          "index": 70,
           "operator": "axismeld.command",
           "event": {
             "type": "PERIOD",
@@ -4258,9 +4601,29 @@
               "source": "hotkeySetup.mel:300"
             }
           ]
+        },
+        {
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "GrowPolygonSelectionRegion",
+          "inputs": [
+            {
+              "input": "Shift+.",
+              "event": {
+                "type": "PERIOD",
+                "value": "PRESS",
+                "shift": true
+              },
+              "release": "",
+              "source": [
+                "hotkeys:300",
+                "official-hotkeys"
+              ]
+            }
+          ],
+          "notes": "Maya > is Shift+PERIOD on a US keyboard. Topology semantics are not compared."
         }
       ],
-      "reference_comparison": "review_notation_or_difference",
+      "reference_comparison": "same_event_definition",
       "interaction": "PRESS dispatches declared command; result/poll/Undo remain native or adapted; see M3 and input acceptance.",
       "difference": "Uses Blender native topology traversal; Maya GrowPolygonSelectionRegion equivalence is not claimed.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -4293,7 +4656,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 70,
+          "index": 72,
           "operator": "axismeld.command",
           "event": {
             "type": "COMMA",
@@ -4318,7 +4681,7 @@
             "space_type": "EMPTY",
             "region_type": "WINDOW"
           },
-          "index": 69,
+          "index": 71,
           "operator": "axismeld.command",
           "event": {
             "type": "COMMA",
@@ -4349,9 +4712,29 @@
               "source": "hotkeySetup.mel:302"
             }
           ]
+        },
+        {
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "ShrinkPolygonSelectionRegion",
+          "inputs": [
+            {
+              "input": "Shift+,",
+              "event": {
+                "type": "COMMA",
+                "value": "PRESS",
+                "shift": true
+              },
+              "release": "",
+              "source": [
+                "hotkeys:302",
+                "official-hotkeys"
+              ]
+            }
+          ],
+          "notes": "Maya < is Shift+COMMA on a US keyboard. Topology semantics are not compared."
         }
       ],
-      "reference_comparison": "review_notation_or_difference",
+      "reference_comparison": "same_event_definition",
       "interaction": "PRESS dispatches declared command; result/poll/Undo remain native or adapted; see M3 and input acceptance.",
       "difference": "Uses Blender native topology traversal; Maya ShrinkPolygonSelectionRegion equivalence is not claimed.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -4404,12 +4787,26 @@
       ],
       "references": [
         {
-          "document": "docs/maya-mapping/phase-1.md",
-          "identity": "review_prose_and_current_source",
-          "inputs": []
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "FitSelectedWithoutChildren",
+          "inputs": [
+            {
+              "input": "F",
+              "event": {
+                "type": "F",
+                "value": "PRESS"
+              },
+              "release": "",
+              "source": [
+                "hotkeys:265",
+                "official-hotkeys"
+              ]
+            }
+          ],
+          "notes": "Current-panel framing; Blender bounds and hidden-object rules apply."
         }
       ],
-      "reference_comparison": "prose_reference_review",
+      "reference_comparison": "same_event_definition",
       "interaction": "PRESS dispatches declared command; result/poll/Undo remain native or adapted; see M3 and input acceptance.",
       "difference": "Uses Blender semantics; input lifecycle and context are verified separately.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -4462,14 +4859,28 @@
       ],
       "references": [
         {
-          "document": "docs/maya-mapping/phase-1.md",
-          "identity": "review_prose_and_current_source",
-          "inputs": []
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "FitAllInActivePanelMMenu",
+          "inputs": [
+            {
+              "input": "A",
+              "event": {
+                "type": "A",
+                "value": "PRESS"
+              },
+              "release": "Key A release frames only if no marking menu was posted; owned LMB release executes a chosen History action without an additional Frame All.",
+              "source": [
+                "hotkeys:262",
+                "official-hotkeys"
+              ]
+            }
+          ],
+          "notes": "A tap releases to Frame All; hold A+LMB opens History Operations. This batch implements that entry using existing actions/placeholders; GUI acceptance remains separate."
         }
       ],
-      "reference_comparison": "prose_reference_review",
+      "reference_comparison": "same_event_definition",
       "interaction": "PRESS dispatches declared command; result/poll/Undo remain native or adapted; see M3 and input acceptance.",
-      "difference": "Uses Blender semantics; input lifecycle and context are verified separately.",
+      "difference": "Keyboard release frames the view only when no A + LMB History Operations menu was posted; menu calls frame immediately.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
     },
     {
@@ -4520,12 +4931,26 @@
       ],
       "references": [
         {
-          "document": "docs/maya-mapping/phase-1.md",
-          "identity": "review_prose_and_current_source",
-          "inputs": []
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "Tumble",
+          "inputs": [
+            {
+              "input": "Alt+LMB",
+              "event": {
+                "type": "LEFTMOUSE",
+                "value": "PRESS",
+                "alt": true
+              },
+              "release": "Owned mouse button release ends camera manipulation.",
+              "source": [
+                "official-hotkeys"
+              ]
+            }
+          ],
+          "notes": "Native Blender camera/navigation semantics; event definition alone does not verify direction or feel."
         }
       ],
-      "reference_comparison": "prose_reference_review",
+      "reference_comparison": "same_event_definition",
       "interaction": "Alt + mouse press starts native navigation; drag/release handled by native modal operator.",
       "difference": "Uses Blender semantics; input lifecycle and context are verified separately.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -4578,12 +5003,26 @@
       ],
       "references": [
         {
-          "document": "docs/maya-mapping/phase-1.md",
-          "identity": "review_prose_and_current_source",
-          "inputs": []
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "Track",
+          "inputs": [
+            {
+              "input": "Alt+MMB",
+              "event": {
+                "type": "MIDDLEMOUSE",
+                "value": "PRESS",
+                "alt": true
+              },
+              "release": "Owned mouse button release ends camera manipulation.",
+              "source": [
+                "official-hotkeys"
+              ]
+            }
+          ],
+          "notes": "Native Blender camera/navigation semantics; event definition alone does not verify direction or feel."
         }
       ],
-      "reference_comparison": "prose_reference_review",
+      "reference_comparison": "same_event_definition",
       "interaction": "Alt + mouse press starts native navigation; drag/release handled by native modal operator.",
       "difference": "Uses Blender semantics; input lifecycle and context are verified separately.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -4636,12 +5075,26 @@
       ],
       "references": [
         {
-          "document": "docs/maya-mapping/phase-1.md",
-          "identity": "review_prose_and_current_source",
-          "inputs": []
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "Dolly",
+          "inputs": [
+            {
+              "input": "Alt+RMB",
+              "event": {
+                "type": "RIGHTMOUSE",
+                "value": "PRESS",
+                "alt": true
+              },
+              "release": "Owned mouse button release ends camera manipulation.",
+              "source": [
+                "official-hotkeys"
+              ]
+            }
+          ],
+          "notes": "Native Blender camera/navigation semantics; event definition alone does not verify direction or feel."
         }
       ],
-      "reference_comparison": "prose_reference_review",
+      "reference_comparison": "same_event_definition",
       "interaction": "Alt + mouse press starts native navigation; drag/release handled by native modal operator.",
       "difference": "Uses Blender semantics; input lifecycle and context are verified separately.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -4694,12 +5147,26 @@
       ],
       "references": [
         {
-          "document": "docs/maya-mapping/phase-1.md",
-          "identity": "review_prose_and_current_source",
-          "inputs": []
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "WireframeDisplay",
+          "inputs": [
+            {
+              "input": "4",
+              "event": {
+                "type": "FOUR",
+                "value": "PRESS"
+              },
+              "release": "",
+              "source": [
+                "hotkeys:375",
+                "official-hotkeys"
+              ]
+            }
+          ],
+          "notes": "Wireframe shading adaptation."
         }
       ],
-      "reference_comparison": "prose_reference_review",
+      "reference_comparison": "same_event_definition",
       "interaction": "PRESS dispatches declared command; result/poll/Undo remain native or adapted; see M3 and input acceptance.",
       "difference": "Uses Blender semantics; input lifecycle and context are verified separately.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -4752,12 +5219,26 @@
       ],
       "references": [
         {
-          "document": "docs/maya-mapping/phase-1.md",
-          "identity": "review_prose_and_current_source",
-          "inputs": []
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "ShadedDisplay",
+          "inputs": [
+            {
+              "input": "5",
+              "event": {
+                "type": "FIVE",
+                "value": "PRESS"
+              },
+              "release": "",
+              "source": [
+                "hotkeys:376",
+                "official-hotkeys"
+              ]
+            }
+          ],
+          "notes": "Blender Solid shading adaptation; not Maya materials/rendering."
         }
       ],
-      "reference_comparison": "prose_reference_review",
+      "reference_comparison": "same_event_definition",
       "interaction": "PRESS dispatches declared command; result/poll/Undo remain native or adapted; see M3 and input acceptance.",
       "difference": "Uses Blender semantics; input lifecycle and context are verified separately.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -4810,12 +5291,26 @@
       ],
       "references": [
         {
-          "document": "docs/maya-mapping/hotbox-maya2026.md",
-          "identity": "review_prose_and_current_source",
-          "inputs": []
+          "document": "docs/reference/2026-10-11-input-reference.json",
+          "identity": "PopHotbox",
+          "inputs": [
+            {
+              "input": "Space",
+              "event": {
+                "type": "SPACE",
+                "value": "PRESS"
+              },
+              "release": "UnpopHotbox on key-up; tap switches single/multi-pane view.",
+              "source": [
+                "hotkeys:386",
+                "official-hotkeys"
+              ]
+            }
+          ],
+          "notes": "AxisMeld uses its approved compact main menu and quad-view template, not a full Maya screen replica."
         }
       ],
-      "reference_comparison": "prose_reference_review",
+      "reference_comparison": "same_event_definition",
       "interaction": "Tap toggles quad; hold opens main menu; center mouse dispatches Views; Space/owned release/cancel: G/MT groups.",
       "difference": "Hold opens the main hotbox with configurable center mouse menus (Views by default); tap toggles single/quad view.",
       "manual_ledger": "docs/compatibility/2026-09-14-manual-test-ledger.md"
@@ -4824,39 +5319,203 @@
   "reserved": [
     {
       "key": "D",
+      "input": "D",
+      "identity": "EnterEditModePress/Release",
+      "source": "hotkeys:389; runtime:20449-20460",
+      "scope": "deferred_capability",
+      "reason": "Maya custom component and independent rotate/scale pivots need transient transform-center data. Blender Object Origins Only mutates object origin and cannot stand in for the Maya pivot tool. No equivalent pivot capability is present.",
       "status": "reserved_not_implemented"
     },
     {
       "key": "X",
-      "status": "reserved_not_implemented"
+      "input": "X",
+      "identity": "SnapToGridPress/Release",
+      "source": "hotkeys:306-307; runtime:20190-20201",
+      "scope": "native_modal_input",
+      "reason": "Existing Blender GRID snapping can be held temporarily. Maya sets grid on then off; restoration of prior Blender settings is an explicit adaptation.",
+      "status": "native_modal_owned_not_global_binding"
     },
     {
       "key": "C",
+      "input": "C",
+      "identity": "SnapToCurvePress/Release",
+      "source": "hotkeys:313-314",
+      "scope": "deferred_capability",
+      "reason": "Blender EDGE snapping follows mesh edges and is not Maya closest point on arbitrary parametric curves. No equivalent curve-target solver is implemented; do not relabel EDGE as curve snap.",
       "status": "reserved_not_implemented"
     },
     {
       "key": "V",
-      "status": "reserved_not_implemented"
+      "input": "V",
+      "identity": "SnapToPointPress/Release",
+      "source": "hotkeys:315-316; runtime:20218-20229",
+      "scope": "native_modal_input",
+      "reason": "Existing Blender VERTEX snapping can be held temporarily. Target and transform behavior remain native.",
+      "status": "native_modal_owned_not_global_binding"
     },
     {
       "key": "J",
-      "status": "reserved_not_implemented"
+      "input": "J",
+      "identity": "MoveRotateScaleToolToggleSnapMode",
+      "source": "hotkeys:328-329; runtime:2518-2528",
+      "scope": "native_modal_input",
+      "reason": "Maya toggles incremental snapping on both press/release; Shift+J additionally toggles relative mode. Blender increment settings and units differ.",
+      "status": "native_modal_owned_not_global_binding"
     },
     {
       "key": "F12",
+      "input": "F12",
+      "identity": "SelectUVMask",
+      "source": "hotkeys:290",
+      "scope": "deferred_capability",
+      "reason": "UV selection domain and synchronized viewport UV editing are deferred; mapping F12 to face selection or opening UV Editor would not implement the Maya selection mask.",
       "status": "reserved_not_implemented"
     },
     {
       "key": "ONE",
+      "input": "1",
+      "identity": "LowQualityDisplaySetting",
+      "source": "hotkeys:371-373",
+      "scope": "deferred_capability",
+      "reason": "Maya base/cage/smooth mesh preview needs nondestructive per-object preview state; not equivalent to changing selection mode.",
       "status": "reserved_not_implemented"
     },
     {
       "key": "TWO",
+      "input": "2",
+      "identity": "MediumQualityDisplaySetting",
+      "source": "hotkeys:371-373",
+      "scope": "deferred_capability",
+      "reason": "Cage plus smooth preview needs managed preview state. Silently adding/changing subdivision modifiers is outside the GUI-only scope.",
       "status": "reserved_not_implemented"
     },
     {
       "key": "THREE",
+      "input": "3",
+      "identity": "HighQualityDisplaySetting",
+      "source": "hotkeys:371-373",
+      "scope": "deferred_capability",
+      "reason": "Smooth preview and restoring previous state need a preview capability, not an arbitrary Subdivision modifier command.",
       "status": "reserved_not_implemented"
+    }
+  ],
+  "native_modal_inputs": [
+    {
+      "input": "X",
+      "event_values": [
+        "PRESS",
+        "RELEASE"
+      ],
+      "invoke_modifier": "X",
+      "operation": "GRID",
+      "scope": "AxisMeld preset; Object or Mesh Edit; VIEW_3D WINDOW; Translate/Rotate/Scale; excluding camera-view, cursor and texture-space transforms",
+      "owner": "source/blender/editors/transform/transform_axismeld_snap.cc",
+      "lifecycle": "Held input changes only the active TransInfo; release, cancel, focus loss and save restore its baseline.",
+      "verification": "Source and automated events are separate from human acceptance."
+    },
+    {
+      "input": "V",
+      "event_values": [
+        "PRESS",
+        "RELEASE"
+      ],
+      "invoke_modifier": "V",
+      "operation": "VERTEX",
+      "scope": "AxisMeld preset; Object or Mesh Edit; VIEW_3D WINDOW; Translate/Rotate/Scale; excluding camera-view, cursor and texture-space transforms",
+      "owner": "source/blender/editors/transform/transform_axismeld_snap.cc",
+      "lifecycle": "Held input changes only the active TransInfo; release, cancel, focus loss and save restore its baseline.",
+      "verification": "Source and automated events are separate from human acceptance."
+    },
+    {
+      "input": "J",
+      "event_values": [
+        "PRESS",
+        "RELEASE"
+      ],
+      "invoke_modifier": "J",
+      "operation": "INCREMENT",
+      "scope": "AxisMeld preset; Object or Mesh Edit; VIEW_3D WINDOW; Translate/Rotate/Scale; excluding camera-view, cursor and texture-space transforms",
+      "owner": "source/blender/editors/transform/transform_axismeld_snap.cc",
+      "lifecycle": "Held input changes only the active TransInfo; release, cancel, focus loss and save restore its baseline.",
+      "verification": "Source and automated events are separate from human acceptance."
+    }
+  ],
+  "reference_sources": {
+    "official-hotkeys": {
+      "kind": "official_document",
+      "url": "https://help.autodesk.com/cloudhelp/2026/ENU/Maya-KeyboardShortcuts/files/GUID-30CACC9D-8FBE-4B85-8A8F-C5ADF32DDD4E.htm",
+      "checked": "2026-10-11"
+    },
+    "official-components": {
+      "kind": "official_document",
+      "url": "https://help.autodesk.com/cloudhelp/2026/ENU/Maya-Modeling/files/GUID-98B65259-DABA-4C5E-9014-4D76B2DE28B3.htm",
+      "checked": "2026-10-11"
+    },
+    "official-delete": {
+      "kind": "official_document",
+      "url": "https://help.autodesk.com/cloudhelp/2026/ENU/Maya-Modeling/files/GUID-689C75D9-88C8-4F55-91B9-02E5C60DF6AC.htm",
+      "checked": "2026-10-11"
+    },
+    "hotkeys": {
+      "kind": "installed_vendor_default",
+      "product": "Maya 2026",
+      "relative_path": "startup/hotkeySetup.mel",
+      "sha256": "98d8c0cd82b1c02f06f91b9031395cf1890ed023c561f343e20664366d15c3ba",
+      "checked": "2026-10-11",
+      "redistribution": "Identity, line references and facts only; vendor source is not copied."
+    },
+    "runtime": {
+      "kind": "installed_vendor_default",
+      "product": "Maya 2026",
+      "relative_path": "startup/defaultRunTimeCommands.mel",
+      "sha256": "4228c6f71b1a0f638a9fe5855f579ee2ddeb61193ab45031cd9b30651ea682a5",
+      "checked": "2026-10-11",
+      "redistribution": "Identity, line references and facts only; vendor source is not copied."
+    },
+    "panel": {
+      "kind": "installed_vendor_default",
+      "product": "Maya 2026",
+      "relative_path": "others/ModelEdMenu.mel",
+      "sha256": "fb0034016aad452dae3c0c612e4fea635602d6db78dafddd8d0d573117ccaac7",
+      "checked": "2026-10-11",
+      "redistribution": "Identity, line references and facts only; vendor source is not copied."
+    }
+  },
+  "native_boundaries": [
+    {
+      "id": "native-navigation-ownership",
+      "inputs": [
+        "Alt+LMB",
+        "Alt+MMB",
+        "Alt+RMB"
+      ],
+      "decision": "Native overlapping PRESS and DOUBLE_CLICK gestures are removed from owned modeling maps; keep navigation ownership.",
+      "reason": "Restoring Alt+LMB DOUBLE_CLICK edge-ring selection would conflict with Maya camera input; Shift/Ctrl variants and menu selection remain available. Actual event/feel verification remains separate."
+    },
+    {
+      "id": "measure-x",
+      "inputs": [
+        "X",
+        "Delete"
+      ],
+      "decision": "Measure X is unavailable when X belongs to Maya temporary grid snap. Native ruler Delete remains.",
+      "reason": "Same physical key cannot concurrently delete the ruler and act as a held snap modifier. This is an explicit input-ownership adaptation."
+    },
+    {
+      "id": "drawing-mode-protection",
+      "maps": [
+        "3D View Tool: Paint Grease Pencil, Line",
+        "3D View Tool: Paint Grease Pencil, Box",
+        "3D View Tool: Paint Grease Pencil, Circle",
+        "3D View Tool: Paint Grease Pencil, Arc"
+      ],
+      "decision": "Preserve native painting-tool keymaps outside the modeling input scope.",
+      "reason": "The eight Alt mouse primitive bindings are native drawing inputs, not redundant Maya modeling navigation definitions."
+    },
+    {
+      "id": "inherited-extension",
+      "decision": "Other unowned Industry Compatible entries remain native extensions, not Maya-verified shortcuts.",
+      "reason": "Includes F1-F5 view navigation versus Maya help/menu sets, editor-specific tool inputs, and global Blender menus/workspaces; do not claim every inherited key is a Maya match."
     }
   ],
   "inherited": [
@@ -6981,7 +7640,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 3,
+      "index": 5,
       "operator": "screen.frame_offset",
       "event": {
         "type": "LEFT_ARROW",
@@ -7003,7 +7662,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 4,
+      "index": 6,
       "operator": "screen.frame_offset",
       "event": {
         "type": "RIGHT_ARROW",
@@ -7025,7 +7684,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 5,
+      "index": 7,
       "operator": "screen.frame_jump",
       "event": {
         "type": "RIGHT_ARROW",
@@ -7048,7 +7707,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 6,
+      "index": 8,
       "operator": "screen.frame_jump",
       "event": {
         "type": "LEFT_ARROW",
@@ -7071,7 +7730,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 7,
+      "index": 9,
       "operator": "object.select_all",
       "event": {
         "type": "A",
@@ -7094,7 +7753,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 8,
+      "index": 10,
       "operator": "object.select_all",
       "event": {
         "type": "I",
@@ -7117,7 +7776,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 9,
+      "index": 11,
       "operator": "object.select_more",
       "event": {
         "type": "UP_ARROW",
@@ -7133,7 +7792,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 10,
+      "index": 12,
       "operator": "object.select_less",
       "event": {
         "type": "DOWN_ARROW",
@@ -7149,7 +7808,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 11,
+      "index": 13,
       "operator": "object.select_linked",
       "event": {
         "type": "L",
@@ -7165,65 +7824,10 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 12,
-      "operator": "object.select_hierarchy",
-      "event": {
-        "type": "LEFT_BRACKET",
-        "value": "PRESS",
-        "repeat": true
-      },
-      "properties": {
-        "properties": [
-          [
-            "direction",
-            "PARENT"
-          ],
-          [
-            "extend",
-            false
-          ]
-        ]
-      },
-      "status": "native_inherited_not_maya_verified"
-    },
-    {
-      "map": "Object Mode",
-      "context": {
-        "space_type": "EMPTY",
-        "region_type": "WINDOW"
-      },
-      "index": 13,
-      "operator": "object.select_hierarchy",
-      "event": {
-        "type": "LEFT_BRACKET",
-        "value": "PRESS",
-        "shift": true,
-        "repeat": true
-      },
-      "properties": {
-        "properties": [
-          [
-            "direction",
-            "PARENT"
-          ],
-          [
-            "extend",
-            true
-          ]
-        ]
-      },
-      "status": "native_inherited_not_maya_verified"
-    },
-    {
-      "map": "Object Mode",
-      "context": {
-        "space_type": "EMPTY",
-        "region_type": "WINDOW"
-      },
       "index": 14,
       "operator": "object.select_hierarchy",
       "event": {
-        "type": "RIGHT_BRACKET",
+        "type": "LEFT_BRACKET",
         "value": "PRESS",
         "repeat": true
       },
@@ -7231,7 +7835,7 @@
         "properties": [
           [
             "direction",
-            "CHILD"
+            "PARENT"
           ],
           [
             "extend",
@@ -7250,6 +7854,61 @@
       "index": 15,
       "operator": "object.select_hierarchy",
       "event": {
+        "type": "LEFT_BRACKET",
+        "value": "PRESS",
+        "shift": true,
+        "repeat": true
+      },
+      "properties": {
+        "properties": [
+          [
+            "direction",
+            "PARENT"
+          ],
+          [
+            "extend",
+            true
+          ]
+        ]
+      },
+      "status": "native_inherited_not_maya_verified"
+    },
+    {
+      "map": "Object Mode",
+      "context": {
+        "space_type": "EMPTY",
+        "region_type": "WINDOW"
+      },
+      "index": 16,
+      "operator": "object.select_hierarchy",
+      "event": {
+        "type": "RIGHT_BRACKET",
+        "value": "PRESS",
+        "repeat": true
+      },
+      "properties": {
+        "properties": [
+          [
+            "direction",
+            "CHILD"
+          ],
+          [
+            "extend",
+            false
+          ]
+        ]
+      },
+      "status": "native_inherited_not_maya_verified"
+    },
+    {
+      "map": "Object Mode",
+      "context": {
+        "space_type": "EMPTY",
+        "region_type": "WINDOW"
+      },
+      "index": 17,
+      "operator": "object.select_hierarchy",
+      "event": {
         "type": "RIGHT_BRACKET",
         "value": "PRESS",
         "shift": true,
@@ -7275,7 +7934,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 16,
+      "index": 18,
       "operator": "wm.context_toggle",
       "event": {
         "type": "B",
@@ -7297,7 +7956,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 17,
+      "index": 19,
       "operator": "object.location_clear",
       "event": {
         "type": "W",
@@ -7320,7 +7979,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 18,
+      "index": 20,
       "operator": "object.rotation_clear",
       "event": {
         "type": "E",
@@ -7343,7 +8002,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 19,
+      "index": 21,
       "operator": "object.scale_clear",
       "event": {
         "type": "R",
@@ -7366,7 +8025,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 20,
+      "index": 22,
       "operator": "object.delete",
       "event": {
         "type": "BACK_SPACE",
@@ -7392,7 +8051,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 21,
+      "index": 23,
       "operator": "object.delete",
       "event": {
         "type": "BACK_SPACE",
@@ -7419,7 +8078,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 22,
+      "index": 24,
       "operator": "object.delete",
       "event": {
         "type": "DEL",
@@ -7446,7 +8105,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 23,
+      "index": 25,
       "operator": "anim.keyframe_insert",
       "event": {
         "type": "S",
@@ -7462,7 +8121,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 24,
+      "index": 26,
       "operator": "anim.keyframe_insert_by_name",
       "event": {
         "type": "S",
@@ -7484,7 +8143,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 25,
+      "index": 27,
       "operator": "anim.keyframe_insert_by_name",
       "event": {
         "type": "W",
@@ -7507,7 +8166,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 26,
+      "index": 28,
       "operator": "anim.keyframe_insert_by_name",
       "event": {
         "type": "E",
@@ -7530,7 +8189,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 27,
+      "index": 29,
       "operator": "anim.keyframe_insert_by_name",
       "event": {
         "type": "R",
@@ -7553,7 +8212,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 28,
+      "index": 30,
       "operator": "anim.keyframe_delete_v3d",
       "event": {
         "type": "S",
@@ -7569,7 +8228,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 29,
+      "index": 31,
       "operator": "anim.keying_set_active_set",
       "event": {
         "type": "S",
@@ -7587,7 +8246,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 30,
+      "index": 32,
       "operator": "wm.call_menu",
       "event": {
         "type": "RIGHTMOUSE",
@@ -7609,7 +8268,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 31,
+      "index": 33,
       "operator": "wm.call_menu",
       "event": {
         "type": "APP",
@@ -7631,7 +8290,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 32,
+      "index": 34,
       "operator": "wm.call_menu",
       "event": {
         "type": "G",
@@ -7655,7 +8314,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 33,
+      "index": 35,
       "operator": "wm.tool_set_by_id",
       "event": {
         "type": "T",
@@ -7681,7 +8340,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 34,
+      "index": 36,
       "operator": "wm.tool_set_by_id",
       "event": {
         "type": "M",
@@ -8343,7 +9002,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 2,
+      "index": 4,
       "operator": "mesh.loop_select",
       "event": {
         "type": "LEFTMOUSE",
@@ -8373,74 +9032,11 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 3,
-      "operator": "mesh.loop_select",
-      "event": {
-        "type": "LEFTMOUSE",
-        "value": "DOUBLE_CLICK",
-        "shift": true
-      },
-      "properties": {
-        "properties": [
-          [
-            "extend",
-            true
-          ],
-          [
-            "deselect",
-            false
-          ],
-          [
-            "toggle",
-            false
-          ]
-        ]
-      },
-      "status": "native_inherited_not_maya_verified"
-    },
-    {
-      "map": "Mesh",
-      "context": {
-        "space_type": "EMPTY",
-        "region_type": "WINDOW"
-      },
-      "index": 4,
-      "operator": "mesh.loop_select",
-      "event": {
-        "type": "LEFTMOUSE",
-        "value": "DOUBLE_CLICK",
-        "ctrl": true
-      },
-      "properties": {
-        "properties": [
-          [
-            "extend",
-            false
-          ],
-          [
-            "deselect",
-            true
-          ],
-          [
-            "toggle",
-            false
-          ]
-        ]
-      },
-      "status": "native_inherited_not_maya_verified"
-    },
-    {
-      "map": "Mesh",
-      "context": {
-        "space_type": "EMPTY",
-        "region_type": "WINDOW"
-      },
       "index": 5,
-      "operator": "mesh.edgering_select",
+      "operator": "mesh.loop_select",
       "event": {
         "type": "LEFTMOUSE",
         "value": "DOUBLE_CLICK",
-        "alt": true,
         "shift": true
       },
       "properties": {
@@ -8468,6 +9064,69 @@
         "region_type": "WINDOW"
       },
       "index": 6,
+      "operator": "mesh.loop_select",
+      "event": {
+        "type": "LEFTMOUSE",
+        "value": "DOUBLE_CLICK",
+        "ctrl": true
+      },
+      "properties": {
+        "properties": [
+          [
+            "extend",
+            false
+          ],
+          [
+            "deselect",
+            true
+          ],
+          [
+            "toggle",
+            false
+          ]
+        ]
+      },
+      "status": "native_inherited_not_maya_verified"
+    },
+    {
+      "map": "Mesh",
+      "context": {
+        "space_type": "EMPTY",
+        "region_type": "WINDOW"
+      },
+      "index": 7,
+      "operator": "mesh.edgering_select",
+      "event": {
+        "type": "LEFTMOUSE",
+        "value": "DOUBLE_CLICK",
+        "alt": true,
+        "shift": true
+      },
+      "properties": {
+        "properties": [
+          [
+            "extend",
+            true
+          ],
+          [
+            "deselect",
+            false
+          ],
+          [
+            "toggle",
+            false
+          ]
+        ]
+      },
+      "status": "native_inherited_not_maya_verified"
+    },
+    {
+      "map": "Mesh",
+      "context": {
+        "space_type": "EMPTY",
+        "region_type": "WINDOW"
+      },
+      "index": 8,
       "operator": "mesh.edgering_select",
       "event": {
         "type": "LEFTMOUSE",
@@ -8499,7 +9158,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 7,
+      "index": 9,
       "operator": "mesh.shortest_path_pick",
       "event": {
         "type": "LEFTMOUSE",
@@ -8523,7 +9182,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 8,
+      "index": 10,
       "operator": "mesh.shortest_path_pick",
       "event": {
         "type": "LEFTMOUSE",
@@ -8548,7 +9207,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 9,
+      "index": 11,
       "operator": "mesh.select_all",
       "event": {
         "type": "A",
@@ -8571,7 +9230,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 10,
+      "index": 12,
       "operator": "mesh.select_all",
       "event": {
         "type": "I",
@@ -8594,7 +9253,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 11,
+      "index": 13,
       "operator": "mesh.select_more",
       "event": {
         "type": "UP_ARROW",
@@ -8610,7 +9269,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 12,
+      "index": 14,
       "operator": "mesh.select_less",
       "event": {
         "type": "DOWN_ARROW",
@@ -8626,7 +9285,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 13,
+      "index": 15,
       "operator": "mesh.select_linked",
       "event": {
         "type": "L",
@@ -8642,7 +9301,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 14,
+      "index": 16,
       "operator": "mesh.select_mode",
       "event": {
         "type": "ONE",
@@ -8658,60 +9317,6 @@
           [
             "type",
             "VERT"
-          ]
-        ]
-      },
-      "status": "native_inherited_not_maya_verified"
-    },
-    {
-      "map": "Mesh",
-      "context": {
-        "space_type": "EMPTY",
-        "region_type": "WINDOW"
-      },
-      "index": 15,
-      "operator": "mesh.select_mode",
-      "event": {
-        "type": "TWO",
-        "value": "PRESS",
-        "shift": true
-      },
-      "properties": {
-        "properties": [
-          [
-            "use_extend",
-            true
-          ],
-          [
-            "type",
-            "EDGE"
-          ]
-        ]
-      },
-      "status": "native_inherited_not_maya_verified"
-    },
-    {
-      "map": "Mesh",
-      "context": {
-        "space_type": "EMPTY",
-        "region_type": "WINDOW"
-      },
-      "index": 16,
-      "operator": "mesh.select_mode",
-      "event": {
-        "type": "THREE",
-        "value": "PRESS",
-        "shift": true
-      },
-      "properties": {
-        "properties": [
-          [
-            "use_extend",
-            true
-          ],
-          [
-            "type",
-            "FACE"
           ]
         ]
       },
@@ -8726,19 +9331,19 @@
       "index": 17,
       "operator": "mesh.select_mode",
       "event": {
-        "type": "ONE",
+        "type": "TWO",
         "value": "PRESS",
-        "ctrl": true
+        "shift": true
       },
       "properties": {
         "properties": [
           [
-            "use_expand",
+            "use_extend",
             true
           ],
           [
             "type",
-            "VERT"
+            "EDGE"
           ]
         ]
       },
@@ -8753,6 +9358,60 @@
       "index": 18,
       "operator": "mesh.select_mode",
       "event": {
+        "type": "THREE",
+        "value": "PRESS",
+        "shift": true
+      },
+      "properties": {
+        "properties": [
+          [
+            "use_extend",
+            true
+          ],
+          [
+            "type",
+            "FACE"
+          ]
+        ]
+      },
+      "status": "native_inherited_not_maya_verified"
+    },
+    {
+      "map": "Mesh",
+      "context": {
+        "space_type": "EMPTY",
+        "region_type": "WINDOW"
+      },
+      "index": 19,
+      "operator": "mesh.select_mode",
+      "event": {
+        "type": "ONE",
+        "value": "PRESS",
+        "ctrl": true
+      },
+      "properties": {
+        "properties": [
+          [
+            "use_expand",
+            true
+          ],
+          [
+            "type",
+            "VERT"
+          ]
+        ]
+      },
+      "status": "native_inherited_not_maya_verified"
+    },
+    {
+      "map": "Mesh",
+      "context": {
+        "space_type": "EMPTY",
+        "region_type": "WINDOW"
+      },
+      "index": 20,
+      "operator": "mesh.select_mode",
+      "event": {
         "type": "TWO",
         "value": "PRESS",
         "ctrl": true
@@ -8777,7 +9436,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 19,
+      "index": 21,
       "operator": "mesh.select_mode",
       "event": {
         "type": "THREE",
@@ -8804,7 +9463,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 20,
+      "index": 22,
       "operator": "mesh.select_mode",
       "event": {
         "type": "ONE",
@@ -8836,7 +9495,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 21,
+      "index": 23,
       "operator": "mesh.select_mode",
       "event": {
         "type": "TWO",
@@ -8868,7 +9527,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 22,
+      "index": 24,
       "operator": "mesh.select_mode",
       "event": {
         "type": "THREE",
@@ -8900,7 +9559,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 23,
+      "index": 25,
       "operator": "mesh.hide",
       "event": {
         "type": "H",
@@ -8923,7 +9582,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 24,
+      "index": 26,
       "operator": "mesh.hide",
       "event": {
         "type": "H",
@@ -8946,7 +9605,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 25,
+      "index": 27,
       "operator": "mesh.reveal",
       "event": {
         "type": "H",
@@ -8962,7 +9621,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 26,
+      "index": 28,
       "operator": "wm.call_menu",
       "event": {
         "type": "BACK_SPACE",
@@ -8984,7 +9643,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 27,
+      "index": 29,
       "operator": "mesh.dissolve_mode",
       "event": {
         "type": "BACK_SPACE",
@@ -9000,7 +9659,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 28,
+      "index": 30,
       "operator": "mesh.dissolve_mode",
       "event": {
         "type": "DEL",
@@ -9016,7 +9675,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 29,
+      "index": 31,
       "operator": "wm.context_toggle",
       "event": {
         "type": "B",
@@ -9038,7 +9697,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 30,
+      "index": 32,
       "operator": "wm.call_menu",
       "event": {
         "type": "RIGHTMOUSE",
@@ -9060,7 +9719,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 31,
+      "index": 33,
       "operator": "wm.call_menu",
       "event": {
         "type": "APP",
@@ -9082,7 +9741,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 32,
+      "index": 34,
       "operator": "wm.tool_set_by_id",
       "event": {
         "type": "T",
@@ -9108,7 +9767,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 33,
+      "index": 35,
       "operator": "wm.tool_set_by_id",
       "event": {
         "type": "M",
@@ -9134,7 +9793,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 34,
+      "index": 36,
       "operator": "wm.tool_set_by_id",
       "event": {
         "type": "I",
@@ -9160,7 +9819,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 35,
+      "index": 37,
       "operator": "wm.tool_set_by_id",
       "event": {
         "type": "K",
@@ -9186,7 +9845,7 @@
         "space_type": "EMPTY",
         "region_type": "WINDOW"
       },
-      "index": 36,
+      "index": 38,
       "operator": "wm.tool_set_by_id",
       "event": {
         "type": "C",
@@ -14532,8 +15191,9 @@
       "index": 2,
       "operator": "grease_pencil.primitive_line",
       "event": {
-        "type": "MIDDLEMOUSE",
-        "value": "PRESS"
+        "type": "LEFTMOUSE",
+        "value": "PRESS",
+        "alt": true
       },
       "properties": {
         "properties": []
@@ -14550,8 +15210,43 @@
       "operator": "grease_pencil.primitive_line",
       "event": {
         "type": "MIDDLEMOUSE",
+        "value": "PRESS"
+      },
+      "properties": {
+        "properties": []
+      },
+      "status": "native_inherited_not_maya_verified"
+    },
+    {
+      "map": "3D View Tool: Paint Grease Pencil, Line",
+      "context": {
+        "space_type": "VIEW_3D",
+        "region_type": "WINDOW"
+      },
+      "index": 4,
+      "operator": "grease_pencil.primitive_line",
+      "event": {
+        "type": "MIDDLEMOUSE",
         "value": "PRESS",
         "shift": true
+      },
+      "properties": {
+        "properties": []
+      },
+      "status": "native_inherited_not_maya_verified"
+    },
+    {
+      "map": "3D View Tool: Paint Grease Pencil, Line",
+      "context": {
+        "space_type": "VIEW_3D",
+        "region_type": "WINDOW"
+      },
+      "index": 5,
+      "operator": "grease_pencil.primitive_line",
+      "event": {
+        "type": "MIDDLEMOUSE",
+        "value": "PRESS",
+        "alt": true
       },
       "properties": {
         "properties": []
@@ -14672,8 +15367,9 @@
       "index": 2,
       "operator": "grease_pencil.primitive_box",
       "event": {
-        "type": "MIDDLEMOUSE",
-        "value": "PRESS"
+        "type": "LEFTMOUSE",
+        "value": "PRESS",
+        "alt": true
       },
       "properties": {
         "properties": []
@@ -14690,8 +15386,43 @@
       "operator": "grease_pencil.primitive_box",
       "event": {
         "type": "MIDDLEMOUSE",
+        "value": "PRESS"
+      },
+      "properties": {
+        "properties": []
+      },
+      "status": "native_inherited_not_maya_verified"
+    },
+    {
+      "map": "3D View Tool: Paint Grease Pencil, Box",
+      "context": {
+        "space_type": "VIEW_3D",
+        "region_type": "WINDOW"
+      },
+      "index": 4,
+      "operator": "grease_pencil.primitive_box",
+      "event": {
+        "type": "MIDDLEMOUSE",
         "value": "PRESS",
         "shift": true
+      },
+      "properties": {
+        "properties": []
+      },
+      "status": "native_inherited_not_maya_verified"
+    },
+    {
+      "map": "3D View Tool: Paint Grease Pencil, Box",
+      "context": {
+        "space_type": "VIEW_3D",
+        "region_type": "WINDOW"
+      },
+      "index": 5,
+      "operator": "grease_pencil.primitive_box",
+      "event": {
+        "type": "MIDDLEMOUSE",
+        "value": "PRESS",
+        "alt": true
       },
       "properties": {
         "properties": []
@@ -14742,8 +15473,9 @@
       "index": 2,
       "operator": "grease_pencil.primitive_circle",
       "event": {
-        "type": "MIDDLEMOUSE",
-        "value": "PRESS"
+        "type": "LEFTMOUSE",
+        "value": "PRESS",
+        "alt": true
       },
       "properties": {
         "properties": []
@@ -14760,8 +15492,43 @@
       "operator": "grease_pencil.primitive_circle",
       "event": {
         "type": "MIDDLEMOUSE",
+        "value": "PRESS"
+      },
+      "properties": {
+        "properties": []
+      },
+      "status": "native_inherited_not_maya_verified"
+    },
+    {
+      "map": "3D View Tool: Paint Grease Pencil, Circle",
+      "context": {
+        "space_type": "VIEW_3D",
+        "region_type": "WINDOW"
+      },
+      "index": 4,
+      "operator": "grease_pencil.primitive_circle",
+      "event": {
+        "type": "MIDDLEMOUSE",
         "value": "PRESS",
         "shift": true
+      },
+      "properties": {
+        "properties": []
+      },
+      "status": "native_inherited_not_maya_verified"
+    },
+    {
+      "map": "3D View Tool: Paint Grease Pencil, Circle",
+      "context": {
+        "space_type": "VIEW_3D",
+        "region_type": "WINDOW"
+      },
+      "index": 5,
+      "operator": "grease_pencil.primitive_circle",
+      "event": {
+        "type": "MIDDLEMOUSE",
+        "value": "PRESS",
+        "alt": true
       },
       "properties": {
         "properties": []
@@ -14812,8 +15579,9 @@
       "index": 2,
       "operator": "grease_pencil.primitive_arc",
       "event": {
-        "type": "MIDDLEMOUSE",
-        "value": "PRESS"
+        "type": "LEFTMOUSE",
+        "value": "PRESS",
+        "alt": true
       },
       "properties": {
         "properties": []
@@ -14830,8 +15598,43 @@
       "operator": "grease_pencil.primitive_arc",
       "event": {
         "type": "MIDDLEMOUSE",
+        "value": "PRESS"
+      },
+      "properties": {
+        "properties": []
+      },
+      "status": "native_inherited_not_maya_verified"
+    },
+    {
+      "map": "3D View Tool: Paint Grease Pencil, Arc",
+      "context": {
+        "space_type": "VIEW_3D",
+        "region_type": "WINDOW"
+      },
+      "index": 4,
+      "operator": "grease_pencil.primitive_arc",
+      "event": {
+        "type": "MIDDLEMOUSE",
         "value": "PRESS",
         "shift": true
+      },
+      "properties": {
+        "properties": []
+      },
+      "status": "native_inherited_not_maya_verified"
+    },
+    {
+      "map": "3D View Tool: Paint Grease Pencil, Arc",
+      "context": {
+        "space_type": "VIEW_3D",
+        "region_type": "WINDOW"
+      },
+      "index": 5,
+      "operator": "grease_pencil.primitive_arc",
+      "event": {
+        "type": "MIDDLEMOUSE",
+        "value": "PRESS",
+        "alt": true
       },
       "properties": {
         "properties": []
@@ -15528,6 +16331,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [],
+        "reserved": [
+          "V"
+        ],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -15543,6 +16353,13 @@
         "alt": true
       },
       "properties": null,
+      "ownership": {
+        "commands": [
+          "view.orbit"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -15558,6 +16375,13 @@
         "alt": true
       },
       "properties": null,
+      "ownership": {
+        "commands": [
+          "view.pan"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -15573,6 +16397,13 @@
         "alt": true
       },
       "properties": null,
+      "ownership": {
+        "commands": [
+          "view.dolly"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -15593,6 +16424,13 @@
             false
           ]
         ]
+      },
+      "ownership": {
+        "commands": [
+          "view.focus_selected"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
       },
       "status": "removed_by_current_preset_review_if_needed"
     },
@@ -15615,6 +16453,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [
+          "view.frame_all"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -15635,6 +16480,13 @@
             "tool_settings.use_snap"
           ]
         ]
+      },
+      "ownership": {
+        "commands": [],
+        "reserved": [
+          "X"
+        ],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
       },
       "status": "removed_by_current_preset_review_if_needed"
     },
@@ -15659,6 +16511,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [
+          "selection.select_all"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -15673,6 +16532,13 @@
         "value": "PRESS"
       },
       "properties": null,
+      "ownership": {
+        "commands": [
+          "edit.parent"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -15688,6 +16554,13 @@
         "shift": true
       },
       "properties": null,
+      "ownership": {
+        "commands": [
+          "edit.unparent"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -15713,6 +16586,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [
+          "edit.delete"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -15728,6 +16608,13 @@
         "ctrl": true
       },
       "properties": null,
+      "ownership": {
+        "commands": [
+          "edit.duplicate"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -15750,6 +16637,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [
+          "edit.group"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -15765,6 +16659,13 @@
         "alt": true
       },
       "properties": null,
+      "ownership": {
+        "commands": [
+          "display.hide_unselected"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -15787,6 +16688,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [
+          "display.hide_selected"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -15808,6 +16716,13 @@
             true
           ]
         ]
+      },
+      "ownership": {
+        "commands": [
+          "display.show_selected"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
       },
       "status": "removed_by_current_preset_review_if_needed"
     },
@@ -15834,6 +16749,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [
+          "tool.select"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -15858,6 +16780,13 @@
             true
           ]
         ]
+      },
+      "ownership": {
+        "commands": [
+          "transform.move"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
       },
       "status": "removed_by_current_preset_review_if_needed"
     },
@@ -15884,6 +16813,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [
+          "transform.rotate"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -15908,6 +16844,13 @@
             true
           ]
         ]
+      },
+      "ownership": {
+        "commands": [
+          "transform.scale"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
       },
       "status": "removed_by_current_preset_review_if_needed"
     },
@@ -15934,6 +16877,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [],
+        "reserved": [
+          "D"
+        ],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -15958,6 +16908,13 @@
             true
           ]
         ]
+      },
+      "ownership": {
+        "commands": [],
+        "reserved": [
+          "C"
+        ],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
       },
       "status": "removed_by_current_preset_review_if_needed"
     },
@@ -15986,6 +16943,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [],
+        "reserved": [
+          "ONE"
+        ],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -16012,6 +16976,13 @@
             ]
           ]
         ]
+      },
+      "ownership": {
+        "commands": [],
+        "reserved": [
+          "TWO"
+        ],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
       },
       "status": "removed_by_current_preset_review_if_needed"
     },
@@ -16040,6 +17011,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [],
+        "reserved": [
+          "THREE"
+        ],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -16055,6 +17033,13 @@
         "ctrl": true
       },
       "properties": null,
+      "ownership": {
+        "commands": [
+          "edit.duplicate"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -16075,6 +17060,13 @@
             "VIEW3D_MT_edit_curve_delete"
           ]
         ]
+      },
+      "ownership": {
+        "commands": [
+          "edit.delete"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
       },
       "status": "removed_by_current_preset_review_if_needed"
     },
@@ -16106,6 +17098,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [
+          "view.orbit"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -16129,6 +17128,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [
+          "selection.select_all"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -16149,6 +17155,13 @@
             "VERT"
           ]
         ]
+      },
+      "ownership": {
+        "commands": [],
+        "reserved": [
+          "ONE"
+        ],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
       },
       "status": "removed_by_current_preset_review_if_needed"
     },
@@ -16171,6 +17184,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [],
+        "reserved": [
+          "TWO"
+        ],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -16192,6 +17212,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [],
+        "reserved": [
+          "THREE"
+        ],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -16207,6 +17234,13 @@
         "ctrl": true
       },
       "properties": null,
+      "ownership": {
+        "commands": [
+          "edit.duplicate"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -16227,6 +17261,13 @@
             "VIEW3D_MT_edit_mesh_delete"
           ]
         ]
+      },
+      "ownership": {
+        "commands": [
+          "edit.delete"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
       },
       "status": "removed_by_current_preset_review_if_needed"
     },
@@ -16253,6 +17294,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [
+          "tool.select"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -16277,6 +17325,13 @@
             true
           ]
         ]
+      },
+      "ownership": {
+        "commands": [
+          "transform.move"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
       },
       "status": "removed_by_current_preset_review_if_needed"
     },
@@ -16303,6 +17358,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [
+          "transform.rotate"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -16327,6 +17389,13 @@
             true
           ]
         ]
+      },
+      "ownership": {
+        "commands": [
+          "transform.scale"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
       },
       "status": "removed_by_current_preset_review_if_needed"
     },
@@ -16353,6 +17422,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [],
+        "reserved": [
+          "D"
+        ],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -16377,6 +17453,13 @@
             true
           ]
         ]
+      },
+      "ownership": {
+        "commands": [],
+        "reserved": [
+          "C"
+        ],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
       },
       "status": "removed_by_current_preset_review_if_needed"
     },
@@ -16404,6 +17487,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [
+          "mesh.bevel_edges"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -16430,6 +17520,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [
+          "mesh.extrude_region"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -16450,6 +17547,13 @@
             "OBJECT"
           ]
         ]
+      },
+      "ownership": {
+        "commands": [
+          "view.wireframe"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
       },
       "status": "removed_by_current_preset_review_if_needed"
     },
@@ -16472,6 +17576,13 @@
           ]
         ]
       },
+      "ownership": {
+        "commands": [
+          "view.shaded"
+        ],
+        "reserved": [],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
+      },
       "status": "removed_by_current_preset_review_if_needed"
     },
     {
@@ -16486,141 +17597,12 @@
         "value": "PRESS"
       },
       "properties": null,
-      "status": "removed_by_current_preset_review_if_needed"
-    },
-    {
-      "map": "3D View Tool: Paint Grease Pencil, Line",
-      "context": {
-        "space_type": "VIEW_3D",
-        "region_type": "WINDOW"
-      },
-      "operator": "grease_pencil.primitive_line",
-      "event": {
-        "type": "LEFTMOUSE",
-        "value": "PRESS",
-        "alt": true
-      },
-      "properties": {
-        "properties": []
-      },
-      "status": "removed_by_current_preset_review_if_needed"
-    },
-    {
-      "map": "3D View Tool: Paint Grease Pencil, Line",
-      "context": {
-        "space_type": "VIEW_3D",
-        "region_type": "WINDOW"
-      },
-      "operator": "grease_pencil.primitive_line",
-      "event": {
-        "type": "MIDDLEMOUSE",
-        "value": "PRESS",
-        "alt": true
-      },
-      "properties": {
-        "properties": []
-      },
-      "status": "removed_by_current_preset_review_if_needed"
-    },
-    {
-      "map": "3D View Tool: Paint Grease Pencil, Box",
-      "context": {
-        "space_type": "VIEW_3D",
-        "region_type": "WINDOW"
-      },
-      "operator": "grease_pencil.primitive_box",
-      "event": {
-        "type": "LEFTMOUSE",
-        "value": "PRESS",
-        "alt": true
-      },
-      "properties": {
-        "properties": []
-      },
-      "status": "removed_by_current_preset_review_if_needed"
-    },
-    {
-      "map": "3D View Tool: Paint Grease Pencil, Box",
-      "context": {
-        "space_type": "VIEW_3D",
-        "region_type": "WINDOW"
-      },
-      "operator": "grease_pencil.primitive_box",
-      "event": {
-        "type": "MIDDLEMOUSE",
-        "value": "PRESS",
-        "alt": true
-      },
-      "properties": {
-        "properties": []
-      },
-      "status": "removed_by_current_preset_review_if_needed"
-    },
-    {
-      "map": "3D View Tool: Paint Grease Pencil, Circle",
-      "context": {
-        "space_type": "VIEW_3D",
-        "region_type": "WINDOW"
-      },
-      "operator": "grease_pencil.primitive_circle",
-      "event": {
-        "type": "LEFTMOUSE",
-        "value": "PRESS",
-        "alt": true
-      },
-      "properties": {
-        "properties": []
-      },
-      "status": "removed_by_current_preset_review_if_needed"
-    },
-    {
-      "map": "3D View Tool: Paint Grease Pencil, Circle",
-      "context": {
-        "space_type": "VIEW_3D",
-        "region_type": "WINDOW"
-      },
-      "operator": "grease_pencil.primitive_circle",
-      "event": {
-        "type": "MIDDLEMOUSE",
-        "value": "PRESS",
-        "alt": true
-      },
-      "properties": {
-        "properties": []
-      },
-      "status": "removed_by_current_preset_review_if_needed"
-    },
-    {
-      "map": "3D View Tool: Paint Grease Pencil, Arc",
-      "context": {
-        "space_type": "VIEW_3D",
-        "region_type": "WINDOW"
-      },
-      "operator": "grease_pencil.primitive_arc",
-      "event": {
-        "type": "LEFTMOUSE",
-        "value": "PRESS",
-        "alt": true
-      },
-      "properties": {
-        "properties": []
-      },
-      "status": "removed_by_current_preset_review_if_needed"
-    },
-    {
-      "map": "3D View Tool: Paint Grease Pencil, Arc",
-      "context": {
-        "space_type": "VIEW_3D",
-        "region_type": "WINDOW"
-      },
-      "operator": "grease_pencil.primitive_arc",
-      "event": {
-        "type": "MIDDLEMOUSE",
-        "value": "PRESS",
-        "alt": true
-      },
-      "properties": {
-        "properties": []
+      "ownership": {
+        "commands": [],
+        "reserved": [
+          "X"
+        ],
+        "meaning": "Physical ownership candidates; not command equivalence or GUI acceptance"
       },
       "status": "removed_by_current_preset_review_if_needed"
     }
@@ -16631,6 +17613,6 @@
     "Shared Frames Space and mode/3D View overlaps need handler order and poll; equality is not proof of a bug.",
     "Alt+LMB DOUBLE_CLICK edgering_select is removed by current PRESS ownership; requires modal event verification.",
     "Measure X ruler_remove is removed by reserved-X ownership; DEL remains. Classify before changing.",
-    "Reference same_notation compares only stored input text, not operation equivalence or release behavior."
+    "Reference same_notation/event_definition compares inputs only, not operation equivalence or release behavior."
   ]
 }

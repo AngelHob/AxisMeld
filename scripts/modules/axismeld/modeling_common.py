@@ -115,7 +115,7 @@ for mode, maya, key in (('VERT', 'ConvertSelectionToVertices', 'F9'),
     _specs.append(_entry('selection.convert_' + mode.lower(), 'Convert to ' + mode.title(), 'Select',
                         'mesh.select_mode', modes=M, kwargs={'type': mode, 'use_expand': True},
                         maya=(maya,), requires='mesh', key=key, ctrl=True, section=('Convert Selection',),
-                        difference='Uses Blender selection expansion when changing domain; contained/perimeter rules differ.'))
+                        difference="Higher domains select incident components; lower domains retain the source components' vertices or edges."))
 for kind, label, maya in (
         ('VERT_NORMAL', 'Vertex Normal', 'SelectSimilar'), ('VERT_FACES', 'Adjacent Faces', ''),
         ('VERT_GROUPS', 'Vertex Groups', ''), ('VERT_EDGES', 'Connecting Edges', ''),
@@ -455,7 +455,7 @@ _specs.append(_entry('selection.surface_cv_boundary', 'Selected Surface CV Bound
                     section=('Curve and Surface Points',),
                     difference='Selects the U/V control-grid boundary of selected NURBS points; this is not a surface isoparm domain.'))
 _specs.append(_entry('selection.face_path', 'Face Path', 'Select', 'mesh.shortest_path_select',
-                    modes=M, requires='mesh', maya=('SelectFacePath',), section=('Mesh Components',),
+                    modes=M, requires='two_faces', maya=('SelectFacePath',), section=('Mesh Components',),
                     difference='Uses two preselected Blender faces, not an interactive Maya path-picking context.'))
 _specs.append(_entry('selection.control_points', 'Edit Control Points', 'Select', 'object.mode_set',
                     kwargs={'mode': 'EDIT'}, requires='object', maya=('SelectCVsMask',),

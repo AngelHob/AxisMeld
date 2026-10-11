@@ -94,6 +94,27 @@ TEST(hotbox_model, IndependentOptionLeafHasOneExactParentAndNoGrandchildren)
   }
 }
 
+TEST(hotbox_model, OnlyReviewedFileSelectorsAreAdmittedAndCloseBeforeDispatch)
+{
+  MenuSnapshot out{};
+  std::string error;
+  const auto leaf = [](const std::string &command) {
+    return R"({"id":"file.action","kind":"command","label":"File","enabled":true,"reason":"","children":[],"command":")" +
+           command + R"("})";
+  };
+  for (const char *command : {"file.open", "file.save_as"}) {
+    ASSERT_TRUE(parse_menu_snapshot(snapshot(leaf(command)), out, error)) << command << error;
+    EXPECT_TRUE(hotbox_command_closes(command));
+  }
+  for (const char *command : {"file.new", "file.revert", "file.save", "file.import",
+                             "file.open.extra", "wm.open_mainfile", "wm.save_as_mainfile",
+                             "wm.window_new"}) {
+    out.generation = 99;
+    EXPECT_FALSE(parse_menu_snapshot(snapshot(leaf(command)), out, error)) << command;
+    EXPECT_EQ(out.generation, 99);
+  }
+}
+
 TEST(hotbox_model, ObjectCompanionIsTheOnlyOptionalFifthRootAndActionAdmissionIsExact)
 {
   const std::string companion = replace(menu("context.modeling_object_menu"),
@@ -490,8 +511,32 @@ TEST(hotbox_model, CompleteProductionCatalogActuallyParsesWithMayaHierarchyAndIn
   std::string error;
   ASSERT_TRUE(parse_menu_snapshot(json, out, error)) << error;
   EXPECT_EQ(out.generation, 73);
-  ASSERT_EQ(out.menus.size(), 20);
+  // Production adds the conversion companion immediately before the terminal
+  // internal root; preserve every earlier root's identity and relative order.
+  const std::vector<std::string> expected_roots = {
+      "common", "pane", "center", "modeling", "context.modeling_object_menu",
+      "context.create_menu", "context.component_menu", "context.modeling_vertex_menu",
+      "context.modeling_edge_menu", "context.modeling_face_menu", "tools.select_menu",
+      "tools.move_menu", "tools.rotate_menu", "tools.scale_menu", "tools.select.select_menu",
+      "tools.move.select_menu", "tools.rotate.select_menu", "tools.scale.select_menu",
+      "tools.move.snap_menu", "context.convert_menu", "internal"};
+  ASSERT_EQ(out.menus.size(), expected_roots.size());
+  for (size_t i = 0; i < expected_roots.size(); i++) {
+    EXPECT_EQ(out.menus[i].id, expected_roots[i]) << i;
+  }
   EXPECT_EQ(out.menus.back().id, "internal");
+  const MenuNode &conversion = out.menus[out.menus.size() - 2];
+  EXPECT_EQ(conversion.kind, MenuKind::Menu);
+  EXPECT_EQ(conversion.presentation, "list");
+  const std::vector<std::string> conversion_suffixes = {
+      "face_path", "uv_shell", "shell", "shell_border", "separator_border",
+      "border_tool", "separator_boundary", "boundary", "constraints"};
+  ASSERT_EQ(conversion.children.size(), conversion_suffixes.size());
+  for (size_t i = 0; i < conversion_suffixes.size(); i++) {
+    EXPECT_EQ(conversion.children[i].id, "context.convert_menu." + conversion_suffixes[i]);
+  }
+  EXPECT_EQ(conversion.children[4].kind, MenuKind::Separator);
+  EXPECT_EQ(conversion.children[6].kind, MenuKind::Separator);
   const MenuNode *display = nullptr;
   for (const auto &node : out.menus.front().children) {
     if (node.id == "common.display") {

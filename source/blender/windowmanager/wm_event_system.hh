@@ -119,6 +119,15 @@ struct wmEventHandler_Op {
   /** Workaround: special case for file-select. */
   bool is_fileselect;
 
+  /** Optional scoped handoff after this window's queued file selector gets its receiver.
+   * Initialize a new operator of the same type; return false when this selector is unrelated.
+   * Must not mutate source handlers, windows, or Main; only initialize the receiver operator.
+   * Runtime-only: neither operator properties nor a generic cross-window modal flag. */
+  bool (*fileselect_handoff)(wmOperator *owner,
+                            wmOperator *receiver,
+                            wmOperator *file_operator,
+                            wmWindow *receiver_window);
+
   /** Store context for this handler for derived/modal handlers. */
   struct {
     /**

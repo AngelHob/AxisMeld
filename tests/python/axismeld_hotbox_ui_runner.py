@@ -12,13 +12,18 @@ import tempfile
 parser = argparse.ArgumentParser()
 parser.add_argument('--blender', required=True)
 parser.add_argument('--artifacts', help='Optional directory for isolated factory-scene screenshots')
-parser.add_argument('--suite', choices=('menu-options-geometry', 'modeling-viewport', 'workspace-bar', 'menubar-alignment', 'menubar-actions', 'menubar-sets', 'menubar-layout', 'menubar', 'maya-hierarchy', 'full-menu-entry', 'full-menu-lifecycle', 'fully-expanded', 'maya-content-state', 'maya-content', 'maya-companion', 'icons', 'object-menu', 'object-modeling', 'context-modeling', 'modeling', 'create', 'components', 'tools', 'hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection', 'appearance'), default='hotbox')
+parser.add_argument('--suite', choices=('file-window', 'history-hotbox', 'workspace-menu-layout', 'context-entries', 'temporary-snap', 'menu-options-geometry', 'modeling-viewport', 'workspace-bar', 'menubar-alignment', 'menubar-actions', 'menubar-sets', 'menubar-layout', 'menubar', 'maya-hierarchy', 'full-menu-entry', 'full-menu-lifecycle', 'fully-expanded', 'maya-content-state', 'maya-content', 'maya-companion', 'icons', 'object-menu', 'object-modeling', 'context-modeling', 'modeling', 'create', 'components', 'tools', 'hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection', 'appearance'), default='hotbox')
 args = parser.parse_args()
 binary = Path(args.blender).resolve()
 with binary.open("rb") as stream:
     digest = hashlib.file_digest(stream, "sha256").hexdigest().upper()
 print("AXISMELD_TEST_BINARY", str(binary), "SHA256", digest, "SUITE", args.suite, flush=True)
 suite_script, pass_marker = {
+    'file-window': ('axismeld_file_window_events.py', b'AXISMELD_FILE_WINDOW_EVENTS_PASS'),
+    'history-hotbox': ('axismeld_history_hotbox_events.py', b'AXISMELD_HISTORY_HOTBOX_EVENTS_PASS'),
+    'workspace-menu-layout': ('axismeld_modeling_viewport_events.py', b'AXISMELD_WORKSPACE_MENU_LAYOUT_PASS'),
+    'context-entries': ('axismeld_context_entries_events.py', b'AXISMELD_CONTEXT_ENTRIES_EVENTS_PASS'),
+    'temporary-snap': ('axismeld_temporary_snap_events.py', b'AXISMELD_TEMPORARY_SNAP_EVENTS_PASS'),
     'menu-options-geometry': ('axismeld_menu_options_geometry_events.py', b'AXISMELD_MENU_OPTIONS_GEOMETRY_PASS'),
     'modeling-viewport': ('axismeld_modeling_viewport_events.py', b'AXISMELD_MODELING_VIEWPORT_PASS'),
     # Historical two-row candidate only; superseded by modeling-viewport.

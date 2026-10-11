@@ -219,6 +219,7 @@ if(WITH_GTESTS)
   )
   set(TEST_SRC
     intern/wm_dragdrop_test.cc
+    intern/wm_operator_completion_test.cc
   )
   blender_add_test_suite_lib(windowmanager "${TEST_SRC}" "${INC};${TEST_INC}" "${INC_SYS}" "${LIB}")
 endif()

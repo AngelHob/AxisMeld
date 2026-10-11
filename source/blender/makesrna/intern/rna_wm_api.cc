@@ -757,7 +757,8 @@ static wmEvent *rna_Window_event_add_simulate(wmWindow *win,
                                               bool ctrl,
                                               bool alt,
                                               bool oskey,
-                                              bool hyper)
+                                              bool hyper,
+                                              int key_modifier)
 {
   if ((G.f & G_FLAG_EVENT_SIMULATE) == 0) {
     BKE_report(reports, RPT_ERROR, "Not running with '--enable-event-simulate' enabled");
@@ -799,6 +800,9 @@ static wmEvent *rna_Window_event_add_simulate(wmWindow *win,
   wmEvent e = *win->runtime->eventstate;
   e.type = wmEventType(type);
   e.val = value;
+  /* Simulated input does not pass through GHOST's held-key tracking. Allow tests to
+   * supply the same key modifier that a real mouse/keyboard invocation receives. */
+  e.keymodifier = wmEventType(key_modifier);
   e.flag = eWM_EventFlag(0);
   e.xy[0] = x;
   e.xy[1] = y;
@@ -1006,6 +1010,12 @@ void RNA_api_window(StructRNA *srna)
   RNA_def_boolean(func, "alt", false, "Alt", "");
   RNA_def_boolean(func, "oskey", false, "OS Key", "");
   RNA_def_boolean(func, "hyper", false, "Hyper", "");
+  RNA_def_enum(func,
+               "key_modifier",
+               rna_enum_event_type_items,
+               EVENT_NONE,
+               "Key Modifier",
+               "Non-modifier key held before this simulated event");
   parm = RNA_def_pointer(func, "event", "Event", "Item", "Added key map item");
   RNA_def_parameter_flags(parm, PROP_NEVER_NULL, ParameterFlag(0));
   RNA_def_function_return(func, parm);

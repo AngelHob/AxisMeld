@@ -1,6 +1,8 @@
 # 新机器接续开发
 
-本页面向未读过聊天记录的开发者和 Codex。2026-10-11 本批开始时已核对远端基线 `19add3316c828bb9028bc55a3d3d3b4cb80e9fc3`；A1 已实现并发布。当前先完成 UI、交互和快捷键，暂停新增功能；U0 输入审计切片和模式冲突诊断修复已完成，接续剩余菜单、参考与手势核对，A2 暂缓。执行前重新核对远端和当前源码，不把本页固定 SHA 当作永远最新。
+本页面向未读过聊天记录的开发者和 Codex。2026-10-11 GUI 收敛从远端基线 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8` 继续；执行前核对远端与当前源码。新算法仍暂停，不因 UI 实施完成自动启动 A2。
+
+**本批交付状态：当前范围实现与统一候选回归已完成，发布待本批验收回执。** 已通过 40 组 354 项纯 Python、8 组 139 项原生、真实 RNA 7+4 项与 7 个实际 File 流程；统一候选的 18 组回归全部通过（17 组 GUI、1 组 profiles 后台验证，按套件计）；exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`。新包尚未发布。最终结果、构建/包指纹与边界集中于 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)。[9 月 17 日旧 Skin 包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-skin-weights-preview)仍可下载，但不包含本批 GUI/原生输入改动。
 
 ## 1. 先用正确分支
 
@@ -46,28 +48,27 @@ git log -5 --oneline
 
 1. 确认源码分支和干净程度，确认 `startup.blend` 不是 LFS 文本指针，核对依赖和工具链。
 2. 跑构建文档中的不依赖 Blender GUI 的菜单/目录/网站检查。失败先定位版本和环境，不用删断言让它通过。
-3. 下载已发布 ZIP，与侧边 SHA256 和快照比对；运行 `tools/utils/axismeld_release_audit.py` 的只读校验。它证明公开包与固定源数据相符，不证明新机器已经完成编译或 GUI 验收。
+3. 已发布 ZIP 按对应侧边 SHA256 和快照核验；`tools/utils/axismeld_release_audit.py` 只支持固定 9 月 17 日 Rigging 包。本批完整新 native 使用 `tools/utils/axismeld_native_preview_audit.py` 的 candidate/staging/extract 检查，按 BUILD_AND_DELIVERY 操作。静态核验不证明新机器已经完成编译或 GUI 验收，不混用旧包与新源码回执。
 4. 准备新机器原生构建并用隔离配置启动。若本批只改 Python 可针对性验证，但 `startup.blend` 或 C++ 有变化必须重新编译内嵌资源，不能复用旧 exe。
 5. 简短报告本机源码 SHA、运行 exe 的来源、检查结果与当前限制，然后继续选定的有界任务。没有图形环境时仍完成可做的开发/结果测试，GUI 留作明确待验收项，不能冒称已经运行。
 
-## 5. 下一任务：UI、交互与快捷键对齐
+## 5. 当前 GUI 收敛与下一步
 
-先读 [UI/输入阶段](development/2026-09-29-ui-interaction-shortcuts.md)，按 ROADMAP U0–U3 推进。[当前输入对照](compatibility/current-input-audit.md)及[完整 JSON](compatibility/current-input-audit.json)已由真实键位生成器导出，不要重做导出器。它覆盖 56 个默认命令、含别名的 58 条绑定、7 条操纵器入口、489 条原生继承、53 条移除项和 177 个受保护 keymap。先运行 `python tools/utils/axismeld_input_audit.py --check` 检查源码与快照是否漂移，再继续剩余 U0 菜单、参考与手势核对；后续按 U1 菜单/布局、U2 热盒事件、U3 快捷键冲突推进。
+先读 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md) 和最新 CHANGELOG，确认最终验证状态，再运行输入/菜单/公开目录生成器的 `--check`。不要重复开发 Ctrl+RMB 转换、Ctrl+Shift+RMB 当前工具、Edit 空选预选、A+LMB History、X/V/J 临时吸附、九个空动态目录修复或 Space → File 跨窗口释放。
 
-已存参考的 38 条文本记法一致不等于行为已对齐；18 条历史文字参考与 2 条标点记法或差异仍待核对。Maya 2026 默认参考、当前生成键位、按下/按住/松开、作用模式与区域、差异、测试编号和验证状态必须可追溯；历史 Phase 1 描述不能覆盖当前实现。本批不是完整 U0、Maya 或 GUI 验收完成。
+当前输入导出为 58 默认命令、60 条绑定、7 操纵器入口、3 原生模态持键入口、497 条继承、45 条移除、186 个受保护 keymap。原 18+2 条缺参考已闭合，参考记录的是已核实的 Maya 2026 默认事实与原文件指纹，不上传安装源码。原生继承键（含 F1–F5）不宣称 Maya 等价。
 
-- 输入入口：`scripts/modules/axismeld/commands.py`、`keymap.py`、`profiles.py` 和 `modeling_registry.py`；`tests/python/axismeld_input_test.py`、`axismeld_input_audit_test.py`、`axismeld_input_diagnostics_blender.py`。历史 `axismeld_input_blender.py` 中的上下文假设需先对照当前生成键位，不能直接作为全量验收依据。
-- 热盒入口：`hotbox_catalog.py`、`tool_hotbox.py`、原生事件处理及[四视图标杆](development/2026-09-14-hotbox-reference-contract.md)；保留 QWER 持键反复唤出、父子返回与取消。
-- 菜单入口：`workspace_menu_catalog.py`、`workspace_native_groups.py`、`rigging_workspace_catalog.py` 及原生 UI 宿主；保留 Blender 全局栏、Modeling 七根、灰项和右侧 Options。
-- 验收入口：[统一人工清单](compatibility/2026-09-14-manual-test-ledger.md)现有 G/L/VR/K/FM/MT/MB/RG/IN 编号；自动测试不替代实体键鼠和显示条件验收。
+- 当前上下文入口：`context_conversion_hotbox.py`、`edit_preselection.py`、native hotbox；确认组件后才写选择，终结回调处理独立原生模态取消，不通过 Python 定时器写回旧 BMesh。
+- 持键入口：`history_hotbox.py`、`AXM_history_hold.hh`、`transform_axismeld_snap.cc/.hh`。A 的动作延后至 A 释放，旧队列绑定原目标；临时吸附归一次 TransInfo，不持久写入用户设置或 Redo。
+- 菜单入口：`workspace_menu_catalog.py`、原生 UI 宿主及本批菜单审计；保持批准的七根/两根、灰项、右侧齿轮、真实原生 provider 和插件回调。
+- File 入口：只开放 `file.open` / `file.save_as`，无默认快捷键，保留独立 Options 灰占位。精确 token 穿过未保存场景/修改图像确认，只绑定对应文件选择器；取消、失焦和窗口销毁不能残留松键所有权。不得替换为全局拦截或绕过确认，见 [File 设计](development/2026-10-11-file-window-release-design.md)。
+- 实际事件 suites：`context-entries`、`history-hotbox`、`temporary-snap`、`workspace-menu-layout`、`file-window`、`release-cross-window`；配合既有 Modeling、Rigging、菜单和释放回归，按验收回执指定的新构建运行。9 月 17 日的旧 native 不支持本批交互。
 
-本批修复仅在 Object Mode/Mesh 互斥模式间出现的插件冲突误报，共享 3D View 和工具 map 仍保留潜在冲突提示，不改插件键位或实际事件匹配。12 项审计、18 项输入及 4 项真实 Blender RNA 检查通过；RNA 检查使用既有可运行安装加载当前源码，不代表新 native 构建或 GUI 手感验证。新 [IN-01～IN-03](compatibility/2026-10-11-input-diagnostics-acceptance.md) 全部待测，须用包含本批修复的开发构建；9 月 17 日 Skin 包不含此修复。本批未发布 ZIP，勿修改公开下载版本来冒充已发包。
+D/C/F12/1/2/3 及 Shift+J 的缺口分别涉及独立枢轴、曲线最近点、UV 选择域、可恢复预览和相对吸附，不用近似操作冒充完成。独立 Vertex Face、Isolate 动态书签提供器、Skin/Skeleton/建模/UV 新算法继续后置，Global 缩放继续搁置。
 
-当前测试目录 317 项，其中当前 305、历史 12；47 项仅有历史已测试信息，全表初始待测 270、当前待测 258。目录统计与每位访客自己的测试记录分开；新增 IN 项不改变旧 RG 项结果。
+人工目录 330 项，当前 318、历史 12；47 项只保留历史“已测试”状态，当前初始待测 271。GU-01～GU-13 新增，原 IN/RG/G 等编号和结果保留。网页勾选属于各访客浏览器，GitHub Issue 才是共享反馈。
 
-A1 的 Normalize/Prune 已交付，保持可用，见[原设计](development/2026-09-17-skin-weight-cleanup.md)；RG-15～RG-20 仍待人工测试。Influences、绑定/解绑、镜像/复制、Skeleton、建模新算法与完整 UV 能力均后置；需要这些能力的快捷键记为缺口，不解除灰显。全局缩放差异继续搁置。
-
-每批先记录审计结论和有界差异，再实施与验证；已有设计内的 UI/输入修复主动推进，无法从现有决定判断的语义分歧才提出具体问题。U0–U3 完成后报告验收边界，由用户决定恢复功能开发，不自动回到旧 A2 计划。
+后续优先处理新构建的具体 UI/输入反馈与显示/手感验收，保留已通过的实现和回归。阶段收敛后先向用户报告范围与限制，恢复功能开发须由用户决定，不自动回到旧 A2 队列。
 
 ## 6. 每批如何交付
 

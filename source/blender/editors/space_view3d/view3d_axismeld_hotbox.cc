@@ -8,6 +8,7 @@
 #include "DNA_object_types.h"
 #include "DEG_depsgraph.hh"
 #include "ED_object.hh"
+#include "ED_mesh.hh"
 #include "ED_outliner.hh"
 #include "ED_view3d.hh"
 #include "BKE_report.hh"
@@ -36,11 +37,22 @@
 #include "view3d_axismeld_hotbox_internal.hh"
 #include "wm_event_system.hh"
 #include "AXM_context_modeling.hh"
+#include "AXM_history_hold.hh"
 #include <algorithm>
+#include <bit>
+#include <memory>
+#include <unordered_set>
 
 namespace blender {
 namespace {
 using namespace axismeld;
+struct EditPreselection {
+  unsigned int object_uid = 0, mesh_uid = 0;
+  int domain = -1, index = -1;
+  int topology[3] = {0, 0, 0};
+  BMesh *mesh = nullptr;
+  BMElem *element = nullptr;
+};
 struct HotboxData : HotboxVisual {
   HotboxState state;
   wmWindow *window;
@@ -68,6 +80,11 @@ struct HotboxData : HotboxVisual {
   bool creation_session = false;
   bool modeling_session = false;
   bool object_modeling_session = false;
+  bool direct_context_session = false;
+  bool conversion_session = false;
+  bool history_session = false;
+  HistoryHoldState history;
+  EditPreselection edit_target;
   unsigned int object_target_uid = 0;
   unsigned int object_target_data_uid = 0;
   unsigned int object_active_uid = 0;
@@ -355,6 +372,210 @@ static bool selected_modeling_context(bContext *C, const std::string_view root)
   return false;
 }
 
+static bool edit_target_valid(bContext *C, const EditPreselection &target)
+{
+  Scene *scene = CTX_data_scene(C);
+  if (!target.object_uid || !scene || CTX_data_mode_enum(C) != CTX_MODE_EDIT_MESH ||
+      scene->toolsettings->selectmode != (1 << target.domain)) {
+    return false;
+  }
+  ViewLayer *layer = CTX_data_view_layer(C);
+  BKE_view_layer_synced_ensure(*CTX_data_main(C), scene, layer);
+  bool found = false;
+  for (const Base &base : *BKE_view_layer_object_bases_get(layer)) {
+    if (base.object->type != OB_MESH || !(base.object->mode & OB_MODE_EDIT)) { continue; }
+    BMEditMesh *em = BKE_editmesh_from_object(base.object);
+    if (!em || !em->bm) { return false; }
+    if (em->bm->totvertsel || em->bm->totedgesel || em->bm->totfacesel) { return false; }
+    if (base.object->id.session_uid != target.object_uid) { continue; }
+    if (static_cast<ID *>(base.object->data)->session_uid != target.mesh_uid ||
+        !ID_IS_EDITABLE(base.object) || !ID_IS_EDITABLE(base.object->data) ||
+        !BASE_VISIBLE(CTX_wm_view3d(C), &base) || em->bm != target.mesh ||
+        em->bm->totvert != target.topology[0] || em->bm->totedge != target.topology[1] ||
+        em->bm->totface != target.topology[2]) { return false; }
+    BM_mesh_elem_table_ensure(em->bm, BM_VERT | BM_EDGE | BM_FACE);
+    BMElem *element = target.domain == 0 ? reinterpret_cast<BMElem *>(BM_vert_at_index(em->bm, target.index)) :
+                      target.domain == 1 ? reinterpret_cast<BMElem *>(BM_edge_at_index(em->bm, target.index)) :
+                                           reinterpret_cast<BMElem *>(BM_face_at_index(em->bm, target.index));
+    found = element == target.element && !BM_elem_flag_test(element, BM_ELEM_HIDDEN);
+  }
+  return found;
+}
+
+static bool capture_edit_target(bContext *C, const wmEvent *event, const int domain,
+                                EditPreselection &target)
+{
+  if (domain < 0 || CTX_data_mode_enum(C) != CTX_MODE_EDIT_MESH ||
+      CTX_data_scene(C)->toolsettings->selectmode != (1 << domain)) { return false; }
+  ViewContext vc = em_setup_viewcontext(C);
+  if (!vc.em || !vc.em->bm) { return false; }
+  vc.mval[0] = event->xy[0] - vc.region->winrct.xmin;
+  vc.mval[1] = event->xy[1] - vc.region->winrct.ymin;
+  Vector<Base *> bases = BKE_view_layer_array_from_bases_in_edit_mode(*vc.bmain, vc.scene, vc.view_layer, vc.v3d);
+  BMVert *vert = nullptr;
+  BMEdge *edge = nullptr;
+  BMFace *face = nullptr;
+  int base_index = -1;
+  if (!EDBM_unified_findnearest(&vc, bases, &base_index, &vert, &edge, &face) ||
+      base_index < 0 || base_index >= bases.size()) { return false; }
+  Object *object = bases[base_index]->object;
+  BMEditMesh *em = BKE_editmesh_from_object(object);
+  BMElem *element = domain == 0 ? reinterpret_cast<BMElem *>(vert) :
+                    domain == 1 ? reinterpret_cast<BMElem *>(edge) : reinterpret_cast<BMElem *>(face);
+  if (!element || !em || !em->bm) { return false; }
+  BM_mesh_elem_index_ensure(em->bm, BM_VERT | BM_EDGE | BM_FACE);
+  target.object_uid = object->id.session_uid;
+  target.mesh_uid = static_cast<ID *>(object->data)->session_uid;
+  target.domain = domain;
+  target.index = BM_elem_index_get(element);
+  target.topology[0] = em->bm->totvert;
+  target.topology[1] = em->bm->totedge;
+  target.topology[2] = em->bm->totface;
+  target.mesh = em->bm;
+  target.element = element;
+  return edit_target_valid(C, target);
+}
+
+static wmOperatorStatus edit_target_call(bContext *C, const EditPreselection &target,
+                                         const std::string &command)
+{
+  if (!edit_target_valid(C, target) || !WM_operatortype_find("AXISMELD_OT_edit_preselection", true)) {
+    return OPERATOR_CANCELLED;
+  }
+  PointerRNA props = WM_operator_properties_create("AXISMELD_OT_edit_preselection");
+  RNA_string_set(&props, "object_uid", std::to_string(target.object_uid).c_str());
+  RNA_string_set(&props, "mesh_uid", std::to_string(target.mesh_uid).c_str());
+  RNA_int_set(&props, "domain", target.domain);
+  RNA_int_set(&props, "index", target.index);
+  RNA_int_set_array(&props, "topology", target.topology);
+  RNA_string_set(&props, "command", command.c_str());
+  const auto result = WM_operator_name_call(C, "AXISMELD_OT_edit_preselection",
+      wm::OpCallContext::ExecDefault, &props, nullptr);
+  WM_operator_properties_free(&props);
+  return result;
+}
+
+/* This is value-only state. Native cancel may replace the entire BMesh, so no captured
+ * BMesh/element/area/region pointer is ever dereferenced by the terminal callback. */
+struct EditCancelState {
+  unsigned int scene_uid, object_uid, mesh_uid;
+  ViewLayer *view_layer;
+  int domain, index, active_face;
+  std::vector<uint32_t> geometry;
+};
+
+static std::vector<uint32_t> edit_geometry_signature(BMesh *bm)
+{
+  BM_mesh_elem_index_ensure(bm, BM_VERT | BM_EDGE | BM_FACE);
+  std::vector<uint32_t> result = {uint32_t(bm->totvert), uint32_t(bm->totedge), uint32_t(bm->totface)};
+  BMIter iter;
+  BMVert *vert;
+  BMEdge *edge;
+  BMFace *face;
+  BM_ITER_MESH (vert, &iter, bm, BM_VERTS_OF_MESH) {
+    for (const float value : vert->co) { result.push_back(std::bit_cast<uint32_t>(value)); }
+    result.push_back(BM_elem_flag_test(vert, BM_ELEM_HIDDEN));
+  }
+  BM_ITER_MESH (edge, &iter, bm, BM_EDGES_OF_MESH) {
+    result.push_back(BM_elem_index_get(edge->v1));
+    result.push_back(BM_elem_index_get(edge->v2));
+    result.push_back(BM_elem_flag_test(edge, BM_ELEM_HIDDEN));
+  }
+  BM_ITER_MESH (face, &iter, bm, BM_FACES_OF_MESH) {
+    result.push_back(face->len);
+    result.push_back(BM_elem_flag_test(face, BM_ELEM_HIDDEN));
+    BMLoop *loop = BM_FACE_FIRST_LOOP(face);
+    do { result.push_back(BM_elem_index_get(loop->v)); } while ((loop = loop->next) != BM_FACE_FIRST_LOOP(face));
+  }
+  return result;
+}
+
+static void edit_preselection_complete(bContext *C, void *userdata, const bool finished)
+{
+  if (finished || !C) { return; }
+  const auto &state = *static_cast<const EditCancelState *>(userdata);
+  Scene *scene = CTX_data_scene(C);
+  if (!scene || scene->id.session_uid != state.scene_uid ||
+      CTX_data_mode_enum(C) != CTX_MODE_EDIT_MESH ||
+      CTX_data_view_layer(C) != state.view_layer ||
+      scene->toolsettings->selectmode != (1 << state.domain)) { return; }
+  BKE_view_layer_synced_ensure(*CTX_data_main(C), scene, state.view_layer);
+  for (const Base &base : *BKE_view_layer_object_bases_get(state.view_layer)) {
+    if (base.object->id.session_uid != state.object_uid || base.object->type != OB_MESH ||
+        !(base.object->mode & OB_MODE_EDIT) || !base.object->data ||
+        static_cast<ID *>(base.object->data)->session_uid != state.mesh_uid) { continue; }
+    BMEditMesh *em = BKE_editmesh_from_object(base.object);
+    if (!em || !em->bm || edit_geometry_signature(em->bm) != state.geometry) { return; }
+    BMesh *bm = em->bm;
+    BM_mesh_elem_table_ensure(bm, BM_VERT | BM_EDGE | BM_FACE);
+    std::unordered_set<BMElem *> expected;
+    const auto add = [&](auto *element) { expected.insert(reinterpret_cast<BMElem *>(element)); };
+    if (state.domain == 0) { add(BM_vert_at_index(bm, state.index)); }
+    else if (state.domain == 1) {
+      BMEdge *edge = BM_edge_at_index(bm, state.index);
+      add(edge); add(edge->v1); add(edge->v2);
+    }
+    else {
+      BMFace *face = BM_face_at_index(bm, state.index);
+      add(face);
+      BMLoop *loop = BM_FACE_FIRST_LOOP(face);
+      do { add(loop->v); add(loop->e); } while ((loop = loop->next) != BM_FACE_FIRST_LOOP(face));
+    }
+    // Only the exact committed target selection may be rolled back. A concurrent data
+    // or selection change is not overwritten to make the cancellation appear successful.
+    for (const BMIterType domain : {BM_VERTS_OF_MESH, BM_EDGES_OF_MESH, BM_FACES_OF_MESH}) {
+      BMIter iter;
+      BMElem *element;
+      BM_ITER_MESH (element, &iter, bm, domain) {
+        if (bool(BM_elem_flag_test(element, BM_ELEM_SELECT)) != expected.contains(element)) { return; }
+      }
+    }
+    BM_mesh_elem_hflag_disable_all(bm, BM_VERT | BM_EDGE | BM_FACE, BM_ELEM_SELECT, false);
+    BM_select_history_clear(bm);
+    BM_mesh_active_face_set(bm, state.active_face < 0 ? nullptr : BM_face_at_index(bm, state.active_face));
+    DEG_id_tag_update(static_cast<ID *>(base.object->data), ID_RECALC_SELECT);
+    WM_event_add_notifier(C, NC_GEOM | ND_SELECT, base.object->data);
+    return;
+  }
+}
+
+static wmOperatorStatus dispatch_edit_target(bContext *C, const EditPreselection &target,
+                                             const std::string &command)
+{
+  auto cancel = std::make_unique<EditCancelState>();
+  cancel->scene_uid = CTX_data_scene(C)->id.session_uid;
+  cancel->object_uid = target.object_uid;
+  cancel->mesh_uid = target.mesh_uid;
+  cancel->view_layer = CTX_data_view_layer(C);
+  cancel->domain = target.domain;
+  cancel->index = target.index;
+  cancel->geometry = edit_geometry_signature(target.mesh);
+  BMFace *active = BM_mesh_active_face_get(target.mesh, false, false);
+  cancel->active_face = active ? BM_elem_index_get(active) : -1;
+  wmWindow *window = CTX_wm_window(C);
+  std::unordered_set<wmOperator *> existing;
+  for (const wmEventHandler &handler : window->runtime->modalhandlers) {
+    if (handler.type == WM_HANDLER_TYPE_OP) {
+      existing.insert(reinterpret_cast<const wmEventHandler_Op &>(handler).op);
+    }
+  }
+  const auto result = edit_target_call(C, target, command);
+  if (CTX_wm_window(C) == window) {
+    for (const wmEventHandler &handler : window->runtime->modalhandlers) {
+      if (handler.type != WM_HANDLER_TYPE_OP) { continue; }
+      wmOperator *child = reinterpret_cast<const wmEventHandler_Op &>(handler).op;
+      if (child && !existing.contains(child)) {
+        if (WM_operator_completion_callback_set(child, edit_preselection_complete, cancel.get(),
+             [](void *data) { delete static_cast<EditCancelState *>(data); })) {
+          cancel.release();
+        }
+        break;
+      }
+    }
+  }
+  return result;
+}
+
 static bool modeling_tree_allowed(const MenuNode &node, const std::string_view root)
 {
   if (node.kind == MenuKind::Setting ||
@@ -390,6 +611,15 @@ static bool component_companion_tree_allowed(const MenuNode &node)
     return false;
   }
   return std::all_of(node.children.begin(), node.children.end(), component_companion_tree_allowed);
+}
+
+static bool conversion_tree_allowed(const MenuNode &node)
+{
+  if (node.kind == MenuKind::Setting ||
+      (node.kind == MenuKind::Command && !conversion_allows_command(node.id, node.command))) {
+    return false;
+  }
+  return std::all_of(node.children.begin(), node.children.end(), conversion_tree_allowed);
 }
 
 static bool modeling_companion_tree_allowed(const MenuNode &node, const std::string_view root)
@@ -464,14 +694,15 @@ static bool source_context(bContext *C, const HotboxData &data)
          (!data.modeling_session ||
           (CTX_data_view_layer(C) == data.component_view_layer &&
             (data.object_modeling_session ? object_modeling_context(C, data) :
-                                            selected_modeling_context(C, data.tool_root))));
+            (data.edit_target.object_uid ? edit_target_valid(C, data.edit_target) :
+                                           selected_modeling_context(C, data.tool_root)))));
 }
 
 static wmOperatorStatus close_guard(bContext *C, wmOperator *op, const bool trigger_down)
 {
   const auto &data = *static_cast<HotboxData *>(op->customdata);
   const int trigger = data.trigger;
-  const bool direct = data.component_session || data.creation_session || data.modeling_session;
+  const bool direct = data.component_session || data.creation_session || data.modeling_session || data.direct_context_session;
   const int mouse = direct ? 0 : data.active_mouse;
   const bool tool_session = !data.tool_root.empty() && !direct;
   cleanup(C, op);
@@ -640,6 +871,16 @@ static bool component_selected_context(bContext *C, const HotboxData &data)
          static_cast<ID *>(active->object->data)->session_uid == data.component_data_uid;
 }
 
+static HistorySelectionSignature history_context(bContext *C)
+{
+  HistorySelectionSignature signature;
+  component_selection_signature(C, signature.selected, signature.active_uid);
+  const Base *active = CTX_data_active_base(C);
+  signature.active_data_uid = active && active->object->data ?
+                                  static_cast<ID *>(active->object->data)->session_uid : 0;
+  return signature;
+}
+
 static wmOperatorStatus dispatch_object_modeling(bContext *C,
                                                 const std::string &command,
                                                 const unsigned int target_uid)
@@ -725,6 +966,16 @@ static wmOperatorStatus submit(bContext *C, wmOperator *op, const MenuNode &leaf
   // Strings must outlive cleanup and Python rebuilding its catalog/context.
   const std::string command = leaf.command, value = leaf.value;
   const bool setting = leaf.kind == MenuKind::Setting;
+  if (data.direct_context_session) {
+    if (setting || (data.conversion_session && !conversion_allows_command(leaf.id, command)) ||
+        !source_context(C, data)) {
+      cleanup(C, op);
+      return OPERATOR_CANCELLED;
+    }
+    cleanup(C, op);
+    const auto result = axismeld_hotbox_dispatch(C, command.c_str());
+    return (result & OPERATOR_RUNNING_MODAL) ? OPERATOR_FINISHED : result;
+  }
   if (data.modeling_session) {
     const bool companion = data.object_modeling_session ? object_menu_allows_command(leaf.id, command) :
         modeling_menu_allows_command(data.tool_root, leaf.id, command);
@@ -749,6 +1000,11 @@ static wmOperatorStatus submit(bContext *C, wmOperator *op, const MenuNode &leaf
       }
       cleanup(C, op);
       return dispatch_object_modeling(C, command, target_uid);
+    }
+    if (data.edit_target.object_uid) {
+      const EditPreselection target = data.edit_target;
+      cleanup(C, op);
+      return dispatch_edit_target(C, target, command);
     }
     cleanup(C, op);
     axismeld_hotbox_dispatch(C, command.c_str());
@@ -800,9 +1056,11 @@ static wmOperatorStatus submit(bContext *C, wmOperator *op, const MenuNode &leaf
     const int trigger = data.trigger, mouse = data.component_session ? 0 : data.active_mouse;
     const bool tool_session = !data.tool_root.empty();
     cleanup(C, op);
-    axismeld_hotbox_dispatch(C, command.c_str());
+    int file_release_token = 0;
+    axismeld_hotbox_dispatch(C, command.c_str(), &file_release_token);
     // No source-area/region access after dispatch: mode/quad commands can destroy them.
-    axismeld_hotbox_guard_begin(C, trigger, mouse, true, mouse != 0, tool_session);
+    axismeld_hotbox_guard_begin(C, trigger, mouse, true, mouse != 0, tool_session,
+                               file_release_token);
     return OPERATOR_FINISHED;
   }
   const wmOperatorStatus result = setting ?
@@ -858,7 +1116,7 @@ static void open_menu(HotboxData &data, const MenuRect &rect)
 /* The companion shares the original held mouse and keeps genuine submenu navigation. */
 static bool companion_navigation(HotboxData &data, const wmEvent *event)
 {
-  if ((data.modeling_session || data.creation_session || data.component_session) && event->modifier != data.required_modifiers) { return false; }
+  if ((data.modeling_session || data.creation_session || data.component_session || data.direct_context_session) && event->modifier != data.required_modifiers) { return false; }
   const bool motion = ISMOUSE_MOTION(event->type);
   if (motion) {
     data.pointer_position[0] = (event->xy[0] - data.region->winrct.xmin) / data.scale;
@@ -913,12 +1171,20 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   const bool creation = tool_root == "context.create";
   const bool object_modeling = tool_root == object_modeling_root;
   const bool modeling = object_modeling || modeling_root_domain(tool_root) >= 0;
-  const bool direct = component || creation || modeling;
+  const bool conversion = tool_root == "context.convert";
+  const bool history = tool_root == history_root;
+  const bool direct_context = RNA_boolean_get(op->ptr, "direct_context");
+  const bool direct = component || creation || modeling || direct_context;
+  if ((conversion && !direct_context) || (direct_context && !conversion &&
+      tool_root != "tools.select" && tool_root != "tools.move" &&
+      tool_root != "tools.rotate" && tool_root != "tools.scale")) {
+    return OPERATOR_CANCELLED;
+  }
   if ((!ISKEYBOARD(event->type) &&
        !(direct && ELEM(event->type, LEFTMOUSE, MIDDLEMOUSE, RIGHTMOUSE))) ||
       event->val != KM_PRESS || (event->flag & WM_EVENT_IS_REPEAT) ||
       (component && event->modifier) ||
-      ((creation || modeling) && (event->modifier & ~(KM_SHIFT | KM_CTRL)))) {
+      ((creation || modeling || direct_context) && (event->modifier & ~(KM_SHIFT | KM_CTRL)))) {
     return OPERATOR_PASS_THROUGH;
   }
   wmWindow *window = CTX_wm_window(C);
@@ -943,7 +1209,7 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   if (!tool_root.empty()) {
     const MenuNode *root = hotbox_find_node(snapshot.menus, tool_root);
     if ((tool_root != "tools.select" && tool_root != "tools.move" && tool_root != "tools.rotate" &&
-         tool_root != "tools.scale" && !direct) ||
+         tool_root != "tools.scale" && !direct && !history) ||
         !root || root->kind != MenuKind::Menu || !root->enabled || root->presentation != "radial")
     {
       return OPERATOR_CANCELLED;
@@ -956,10 +1222,17 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
     if (modeling && !modeling_tree_allowed(*root, tool_root)) {
       return OPERATOR_CANCELLED;
     }
+    if (conversion && !conversion_tree_allowed(*root)) { return OPERATOR_CANCELLED; }
+    if (history && !history_tree_allowed(*root)) { return OPERATOR_CANCELLED; }
   }
   if (component) {
     if (const auto *menu = hotbox_find_node(snapshot.menus, "context.component_menu")) {
       if (!component_companion_tree_allowed(*menu)) { return OPERATOR_CANCELLED; }
+    }
+  }
+  if (conversion) {
+    if (const auto *menu = hotbox_find_node(snapshot.menus, "context.convert_menu")) {
+      if (!conversion_tree_allowed(*menu)) { return OPERATOR_CANCELLED; }
     }
   }
   if (modeling && !object_modeling) {
@@ -967,8 +1240,17 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
       if (!modeling_companion_tree_allowed(*menu, tool_root)) { return OPERATOR_CANCELLED; }
     }
   }
+  EditPreselection edit_target;
   if (modeling && !object_modeling && !selected_modeling_context(C, tool_root)) {
-    return OPERATOR_PASS_THROUGH;
+    if (!ELEM(event->type, LEFTMOUSE, MIDDLEMOUSE, RIGHTMOUSE) ||
+        !capture_edit_target(C, event, modeling_root_domain(tool_root), edit_target) ||
+        edit_target_call(C, edit_target, "") != OPERATOR_FINISHED) {
+      return OPERATOR_PASS_THROUGH;
+    }
+    PointerRNA ptr = RNA_id_pointer_create(&CTX_wm_manager(C)->id);
+    if (!parse_menu_snapshot(RNA_string_get(&ptr, "axismeld_hotbox_snapshot"), snapshot, error)) {
+      return OPERATOR_CANCELLED;
+    }
   }
   unsigned int target_uid = 0;
   unsigned int object_target_uid = 0, object_target_data_uid = 0, object_active_uid = 0;
@@ -1101,6 +1383,10 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   data->creation_session = creation;
   data->modeling_session = modeling;
   data->object_modeling_session = object_modeling;
+  data->direct_context_session = direct_context;
+  data->conversion_session = conversion;
+  data->history_session = history;
+  data->edit_target = edit_target;
   if (const auto companion = companion_root(tool_root); !companion.empty()) {
     data->companion_path = {std::string(companion)};
   }
@@ -1108,7 +1394,7 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   data->object_target_data_uid = object_target_data_uid;
   data->object_active_uid = object_active_uid;
   data->object_selection = std::move(object_selection);
-  data->required_modifiers = creation || modeling ? event->modifier : wmEventModifierFlag(0);
+  data->required_modifiers = creation || modeling || direct_context || history ? event->modifier : wmEventModifierFlag(0);
   data->tap_eligible = tool_root.empty();
   data->snapshot = std::move(snapshot);
   data->window = window;
@@ -1237,7 +1523,7 @@ static wmOperatorStatus tool_modal(bContext *C, wmOperator *op, const wmEvent *e
   auto &data = *static_cast<HotboxData *>(op->customdata);
   const float x = (event->xy[0] - data.region->winrct.xmin) / data.scale;
   const float y = (event->xy[1] - data.region->winrct.ymin) / data.scale;
-  const bool direct = data.component_session || data.creation_session || data.modeling_session;
+  const bool direct = data.component_session || data.creation_session || data.modeling_session || data.direct_context_session;
   const int owned = direct ? data.trigger : LEFTMOUSE;
   if (event->modifier != data.required_modifiers ||
       (!ISTIMER(event->type) && !ISMOUSE_MOTION(event->type) && event->type != owned))
@@ -1251,9 +1537,13 @@ static wmOperatorStatus tool_modal(bContext *C, wmOperator *op, const wmEvent *e
   }
   if (!data.tool_shown) {
     if (event->type != LEFTMOUSE || event->val != KM_PRESS) {
+      if (data.history_session && event->type == LEFTMOUSE) {
+        return OPERATOR_RUNNING_MODAL;
+      }
       return OPERATOR_RUNNING_MODAL | OPERATOR_PASS_THROUGH;
     }
     data.tool_shown = true;
+    if (data.history_session) { data.history.post(history_context(C)); }
     data.active_mouse = LEFTMOUSE;
     data.center[0] = data.origin[0] = data.press_position[0] = x;
     data.center[1] = data.origin[1] = data.press_position[1] = y;
@@ -1290,6 +1580,13 @@ static wmOperatorStatus tool_modal(bContext *C, wmOperator *op, const wmEvent *e
     }
     if (event->type == owned && event->val == KM_RELEASE) {
       data.active_mouse = 0;
+      if (data.history_session) {
+        if (node && node->enabled && node->kind == MenuKind::Command) {
+          data.history.select(node->command, history_context(C));
+        }
+        rearm_tool(C, data);
+        return OPERATOR_RUNNING_MODAL;
+      }
       if (node && node->enabled && ELEM(node->kind, MenuKind::Command, MenuKind::Setting)) {
         return submit(C, op, *node);
       }
@@ -1320,6 +1617,11 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
     }
     return close_guard(C, op, !(event->type == data.trigger && event->val == KM_RELEASE));
   }
+  if (data.history_session) {
+    // A deferred choice is tied to the posted objects/data, not whatever happens
+    // to be selected when the trigger is released. Never restore selection here.
+    data.history.validate_context(history_context(C));
+  }
   data.state.advance(BLI_time_now_seconds());
   if (ELEM(event->type, WHEELUPMOUSE, WHEELDOWNMOUSE, WHEELINMOUSE, WHEELOUTMOUSE,
            MOUSEPAN, MOUSEZOOM)) {
@@ -1330,8 +1632,18 @@ static wmOperatorStatus modal(bContext *C, wmOperator *op, const wmEvent *event)
   }
   if (companion_navigation(data, event)) { return OPERATOR_RUNNING_MODAL; }
   if (event->type == data.trigger && !data.component_session && !data.creation_session &&
-      !data.modeling_session) {
+      !data.modeling_session && !data.direct_context_session) {
     if (event->val == KM_RELEASE) {
+      if (data.history_session) {
+        const std::string command = event->modifier == data.required_modifiers ?
+                                        data.history.release_command(history_context(C)) : "";
+        close_guard(C, op, false);
+        if (!command.empty()) {
+          const auto result = axismeld_hotbox_dispatch(C, command.c_str());
+          return (result & OPERATOR_RUNNING_MODAL) ? OPERATOR_FINISHED : result;
+        }
+        return OPERATOR_FINISHED;
+      }
       const bool tap = data.tap_eligible && data.state.release_trigger(BLI_time_now_seconds()) ==
                                                 HotboxAction::ToggleQuad;
       if (tap) {
@@ -1521,6 +1833,9 @@ void VIEW3D_OT_axismeld_hotbox(wmOperatorType *ot)
                         0,
                         "Tool Menu",
                         "Registered tool root, armed until left mouse press");
+  RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
+  prop = RNA_def_boolean(ot->srna, "direct_context", false, "Direct Context",
+                        "Open the current tool or conversion menu on its initiating mouse press");
   RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
 }
 }  // namespace blender

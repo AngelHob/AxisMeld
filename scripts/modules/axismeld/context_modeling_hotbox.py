@@ -5,7 +5,7 @@ MODEL_HOTBOX = 'context.modeling_hotbox'
 MODEL_ROOTS = ('context.modeling_vertex', 'context.modeling_edge', 'context.modeling_face')
 
 
-def modeling_root(context):
+def modeling_root(context, *, allow_empty=False):
     """Resolve the explicit selection domain, never pick or change the editing set."""
     if not (context.area and context.area.type == 'VIEW_3D' and context.region and
             context.region.type == 'WINDOW' and context.mode == 'EDIT_MESH' and
@@ -27,7 +27,7 @@ def modeling_root(context):
         bm = bmesh.from_edit_mesh(obj.data)
         if any(item.select and not item.hide for item in getattr(bm, ('verts', 'edges', 'faces')[domain])):
             return MODEL_ROOTS[domain]
-    return None
+    return MODEL_ROOTS[domain] if allow_empty else None
 
 
 def modeling_menus(node):

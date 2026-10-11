@@ -1135,6 +1135,17 @@ wmOperatorStatus WM_operator_confirm_message(bContext *C, wmOperator *op, const 
 /* Operator API. */
 
 void WM_operator_free(wmOperator *op);
+/**
+ * One runtime-only terminal observer, never stored in DNA, copied or retained for redo.
+ * The callback runs after native completion/cancel, before its undo push. Contextless
+ * operator destruction only releases userdata; it must not inspect a disappearing Main.
+ * Returns false when an observer already exists; the caller still owns userdata then.
+ */
+bool WM_operator_completion_callback_set(wmOperator *op,
+                                        void (*callback)(bContext *, void *, bool finished),
+                                        void *userdata,
+                                        void (*free_userdata)(void *));
+void WM_operator_completion_callback_call(bContext *C, wmOperator *op, bool finished);
 void WM_operator_free_all_after(wmWindowManager *wm, wmOperator *op);
 /**
  * Use with extreme care!

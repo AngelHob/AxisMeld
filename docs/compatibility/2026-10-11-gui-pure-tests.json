@@ -1,0 +1,300 @@
+{
+  "schema_version": 1,
+  "status": "PASS",
+  "suite_count": 40,
+  "unittest_count": 354,
+  "source_stable": true,
+  "verified_utc": "2026-10-11T05:34:34.320531+00:00",
+  "base_commit": "b9d0977557c6e2991810bc91f3f9d6b117a16eb8",
+  "working_tree_source_fingerprint": "007c516a7d54b4c7fbc4a4266a2fb9d1dfd515feb15f92da542eef4f804a941b",
+  "scope": "Pure Python only. No native binary execution, GUI or human acceptance is claimed. File adapter RNA ownership is covered separately by GUI tests.",
+  "count_reconciliation": {
+    "previous_suites": 39,
+    "previous_tests": 345,
+    "new_audit_suite_tests": 8,
+    "new_file_method_in_hotbox_catalog": 1,
+    "missing_previous_suites": []
+  },
+  "results": [
+    {
+      "suite": "component_companion",
+      "tests": 4,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "31ffaec987ed6b16abda03c4feeea950473f10ebd4f018c8d0d6dd785adb7096"
+    },
+    {
+      "suite": "modeling_cache",
+      "tests": 3,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "60974c4c96876991c6a84262ac69f1629df7e75f5a62658c664ab9534303c38c"
+    },
+    {
+      "suite": "menubar_ui",
+      "tests": 19,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "9d128ee365bd9700e96b8e3d94af46f3268145ca3f8bfe201565bc4f6f0ad830"
+    },
+    {
+      "suite": "menubar_runtime",
+      "tests": 12,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "c7c7180a370b55632d6e5c821678273e114c20c3963b3fd44544e75830091c4c"
+    },
+    {
+      "suite": "menubar_reference",
+      "tests": 11,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "52acc61d08d0931078e55d5a071a3bf076dff45a4d37e676f6fe5f3bfad03562"
+    },
+    {
+      "suite": "menubar_native",
+      "tests": 14,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "0d239acc4330d02cd4dad3b4339eef0658f2b72fac547da9002df37853748dba"
+    },
+    {
+      "suite": "menubar_integration",
+      "tests": 7,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "51f8320c39640f64716384e4b87053df08de20363685fc592e5acb40eb1289e4"
+    },
+    {
+      "suite": "menubar_catalog",
+      "tests": 12,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "30b96114a2ad5cc8779413efd62b417779ce08962b979d1e50de58b9c4586e00"
+    },
+    {
+      "suite": "hotbox_runtime",
+      "tests": 7,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "5794a5837b55af0565a62390429c943609234c569a4f1e699412610ebcbcd7d3"
+    },
+    {
+      "suite": "menubar_actions",
+      "tests": 10,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "5871a1d2fef716a9a4a553d9939f80ac5dd0c87f3f265c8685c537b592fe0d3d"
+    },
+    {
+      "suite": "hotbox_geometry_fixture",
+      "tests": 9,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "57e28825cb007c89dbd17973eb90a87cb69badc4a3a1ec5599e2ab372ba6343b"
+    },
+    {
+      "suite": "maya_snap_binding",
+      "tests": 4,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "ea2659b24b5f5b65b6bb818f30dcd6cc50ccc38901266b9de7800bb6418ddcd3"
+    },
+    {
+      "suite": "hotbox_catalog",
+      "tests": 22,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "197f125e802117f81a57610358dcb8eac9254e1dc6321c7c164969e0af14e7f2"
+    },
+    {
+      "suite": "maya_reference_generator",
+      "tests": 12,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "e1e3ce364dc5bfbcf3e731a460cef21e298cf311bb02f8af3ce2fe05e7b7c3c1"
+    },
+    {
+      "suite": "maya_menu_binding",
+      "tests": 15,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "70b4be51ea7e4aae65637dc9ecaeb69b7950039b77ab2c5a5ffb5604df3fe98c"
+    },
+    {
+      "suite": "hotbox_appearance",
+      "tests": 6,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "7adbe9cddb561435c4eec10135a3a530666af4eec2b908d252abac4d88180997"
+    },
+    {
+      "suite": "maya_hierarchy",
+      "tests": 6,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "7ea55a1b52395327c52c4625a47c7c307d36595a2595e03229b0451d07a8eda1"
+    },
+    {
+      "suite": "fixed_display",
+      "tests": 2,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "abf02e346ee9b950dcad49fa9d5eb15ddba3ea972034a50b7f0761852d3f7cff"
+    },
+    {
+      "suite": "rigging_ui",
+      "tests": 7,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "d9504c15d31f1cbc62c04f3900dc9280e212e2d29bed6917592d481da28b630a"
+    },
+    {
+      "suite": "maya_companion_alignment",
+      "tests": 4,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "11c5d7f5e40194afe0dcaefa8a2c6dd096b6cac0c8933ca5e607a5577677db76"
+    },
+    {
+      "suite": "creation_hotbox",
+      "tests": 10,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "5517e9f9282eef5ad5edfe517c4a963f28b4e9392b7c2530c70e63030902ad02"
+    },
+    {
+      "suite": "rigging_catalog",
+      "tests": 5,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "3b042291d7bce3ad9d7ff38545ee9f4c0cc5bf1dad60a1435c40c844d488d164"
+    },
+    {
+      "suite": "object_modeling_hotbox",
+      "tests": 11,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "e097daabc1520832e5622b604097e268c049d7bfa429bb97d4d1aaf028e3a137"
+    },
+    {
+      "suite": "native_rigging",
+      "tests": 11,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "97720b5705baa0051167845111871a11291e04278267e836422f7c51f9f25bd5"
+    },
+    {
+      "suite": "native_modeling_groups",
+      "tests": 9,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "71a97a530265258e6aa29dbf10e7a39d7ebfc9a4344c2b7fbe96b6ca22df6d08"
+    },
+    {
+      "suite": "modeling_registry",
+      "tests": 10,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "535682e7594f3d438d7400e9f145c4e266981ec2e16d29310685a111578bf1f2"
+    },
+    {
+      "suite": "modeling_content",
+      "tests": 5,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "8d932b06921e1f8144e3b81973249adc9353c3c16eba1019e7004a59a8661ae4"
+    },
+    {
+      "suite": "native_topbar_preservation",
+      "tests": 4,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "8c8057d2407329a04ceed83b239b08a64b77d9cefb31ff8892636d93fa81240a"
+    },
+    {
+      "suite": "tool_content",
+      "tests": 6,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "d441918ac58a403c56efe0795d646204f9a6de7772d7c72106b2ddb19a2676c1"
+    },
+    {
+      "suite": "object_modeling_composition",
+      "tests": 9,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "84abea035f086bc06ac76910f7230c20fe528dd8486bcaf454af9865fc961ef0"
+    },
+    {
+      "suite": "content_runtime",
+      "tests": 3,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "b89d8057406b2fcabe71b0f32d97a3deb77f689ae46282a8d10dbf95690ac32f"
+    },
+    {
+      "suite": "component_hotbox",
+      "tests": 4,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "722914015f1ca062f36fc4336946ca6477f715519a103d6b60f02e5abf0e1d6f"
+    },
+    {
+      "suite": "workspace_menu_catalog",
+      "tests": 14,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "f7da061767302b1f60d5571d03edaa5e6d6d8c257c53b588fc931ce5be0c496b"
+    },
+    {
+      "suite": "context_entries",
+      "tests": 4,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "6e52c778ca29c3aaa983325d63bed01195cbb64a9d65e90f5ece35f6585ba68f"
+    },
+    {
+      "suite": "context_modeling_hotbox",
+      "tests": 12,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "39f60efa1b1bea6f212f2b750041237d4f41e44101c13a4bf96ef59789d13d76"
+    },
+    {
+      "suite": "history_hotbox",
+      "tests": 4,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "98a4f3ef891dd9a9d66d11b354ee1752bf7310bfffcd7bdc07260743d3d82542"
+    },
+    {
+      "suite": "tool_hotbox",
+      "tests": 6,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "15c4499c10ebf2454ca8dd20a9fc2427dcc7fb12f9d6c23d37db8be247f55df4"
+    },
+    {
+      "suite": "input",
+      "tests": 18,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "e388f04a34c76505ece5f6114a9cb9401cad1fd525486a565d45fd2541a55cf6"
+    },
+    {
+      "suite": "input_audit",
+      "tests": 15,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "1cb718148a38de2fd5bb929f992fc8e1df11c18e47ae8774d112f197d9b16ca4"
+    },
+    {
+      "suite": "native_preview_audit",
+      "tests": 8,
+      "exit_code": 0,
+      "unittest_ok": true,
+      "test_sha256": "449b516a5f01c4bc7c6ba7db4c8061118dfad0a4d068f6fa3c4c861c7fb9282f"
+    }
+  ]
+}

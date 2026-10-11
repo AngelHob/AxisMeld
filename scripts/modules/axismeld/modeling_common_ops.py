@@ -1203,7 +1203,8 @@ COMMAND_POLLS = {
     'selection.hierarchy': lambda context: bool(_selected(context)),
     'selection.control_points': lambda context: context.active_object is not None and
         context.active_object.type in {'CURVE', 'SURFACE', 'LATTICE'} and context.active_object.data.is_editable,
-    'selection.face_path': lambda context: context.mode == 'EDIT_MESH' and context.tool_settings.mesh_select_mode[2],
+    'selection.face_path': lambda context: context.mode == 'EDIT_MESH' and
+        tuple(context.tool_settings.mesh_select_mode) == (False, False, True),
     'object.geometry_to_bounds': _bounds_poll,
     'object.property_edit': lambda context: bool(_custom_keys(context)),
     'object.property_delete': lambda context: bool(_custom_keys(context)),

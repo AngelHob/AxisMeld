@@ -64,7 +64,9 @@ class InputAuditTest(unittest.TestCase):
     def test_reserved_keys_and_inherited_items_remain_separate(self):
         report = self.report()
         self.assertEqual({r['key'] for r in report['reserved']}, set(self.audit.RESERVED_KEYS))
-        self.assertTrue(all(r['status'] == 'reserved_not_implemented' for r in report['reserved']))
+        self.assertTrue(all(r['status'] in {'reserved_not_implemented', 'native_modal_owned_not_global_binding'}
+                            for r in report['reserved']))
+        self.assertEqual({r['input'] for r in report['native_modal_inputs']}, {'X', 'V', 'J'})
         self.assertTrue(report['inherited'])
         self.assertTrue(all(r['status'] == 'native_inherited_not_maya_verified'
                             for r in report['inherited']))
@@ -104,6 +106,38 @@ class InputAuditTest(unittest.TestCase):
         row = next(r for r in report['bindings'] if r['command'] == 'selection.invert')
         self.assertIn('Ctrl+Shift+F12', str(row['references']))
         self.assertNotEqual(row['reference_comparison'], 'same_notation')
+
+    def test_prose_references_and_punctuation_have_structured_sources(self):
+        report = self.report()
+        self.assertFalse(any(row['reference_comparison'] in {
+            'prose_reference_review', 'review_notation_or_difference'} for row in report['bindings']))
+        grow = next(row for row in report['bindings'] if row['command'] == 'selection.grow')
+        self.assertEqual(grow['reference_comparison'], 'same_event_definition')
+        self.assertIn('hotkeys:300', str(grow['references']))
+        frame = next(row for row in report['bindings'] if row['command'] == 'view.frame_all')
+        self.assertIn('History Operations', str(frame['references']))
+        self.assertEqual(report['verification']['manual'], 'not_reassessed')
+
+    def test_structured_reference_checks_event_value_and_modifiers(self):
+        self.assertTrue(hasattr(self.audit, 'load_input_reference'))
+        reference = self.audit.load_input_reference()
+        grow = next(row for row in reference['maya_actions'] if 'selection.grow' in row['commands'])
+        grow['inputs'][0]['event']['value'] = 'RELEASE'
+        report = self.audit.build_report(base=self.base, generated=self.generated, input_reference=reference)
+        row = next(row for row in report['bindings'] if row['command'] == 'selection.grow')
+        self.assertEqual(row['reference_comparison'], 'event_definition_difference')
+        grow['inputs'][0]['event'].update(value='PRESS', ctrl=True)
+        report = self.audit.build_report(base=self.base, generated=self.generated, input_reference=reference)
+        row = next(row for row in report['bindings'] if row['command'] == 'selection.grow')
+        self.assertEqual(row['reference_comparison'], 'event_definition_difference')
+
+    def test_reserved_reasons_and_native_ownership_are_explicit(self):
+        report = self.report()
+        self.assertTrue(all(row.get('reason') and row.get('scope') for row in report['reserved']))
+        curve = next(row for row in report['reserved'] if row['key'] == 'C')
+        self.assertEqual(curve['scope'], 'deferred_capability')
+        self.assertTrue(all('ownership' in row for row in report['removed']))
+        self.assertIn('native_boundaries', report)
 
     def test_deterministic_output_and_no_fake_human_result(self):
         first, second = self.report(), self.report()

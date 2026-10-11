@@ -3,10 +3,12 @@
 """Declarative AxisMeld hotbox menu catalog without Blender dependencies."""
 from copy import deepcopy
 from .context_hotbox import component_menu, component_companion
+from .context_conversion_hotbox import conversion_menus
 from .context_modeling_hotbox import modeling_menus, modeling_companions
 from .object_modeling_hotbox import object_modeling_menu, object_modeling_companion
 from .creation_hotbox import CREATE_COMMANDS, creation_menu, creation_companion
 from .tool_hotbox import MENU_COMMANDS, tool_menus, tool_companions
+from .history_hotbox import history_menu
 
 
 _VIEW_REPLAYABLE = frozenset({
@@ -265,7 +267,12 @@ def _catalog():
     legacy = extend_catalog((common, pane, center, modeling, object_modeling_companion(_node),
                              creation_companion(_node), component_companion(_node),
                              *modeling_companions(_node), *tool_companions(_node)), _node)
-    return rebuild_maya_menus(legacy, _node)
+    result = list(rebuild_maya_menus(legacy, _node))
+    conversion, companion = conversion_menus(_node)
+    result[-1]['children'][0]['children'].append(conversion)
+    result[-1]['children'][0]['children'].append(history_menu(_node))
+    result.insert(-1, companion)
+    return tuple(result)
 
 
 _DEFAULT_CATALOG = _catalog()

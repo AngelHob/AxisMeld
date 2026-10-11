@@ -171,7 +171,7 @@ class NativeModelingGroupsTests(unittest.TestCase):
         ui_path = ROOT / 'scripts/startup/bl_ui/space_axismeld_menubar.py'
         ui_tree = ast.parse(ui_path.read_text(encoding='utf-8'))
         scope = [node for node in ui_tree.body if isinstance(node, ast.FunctionDef)
-                 and node.name in {'enabled', 'modeling_workspace'}]
+                 and node.name in {'enabled', 'modeling_workspace', 'rigging_workspace'}]
         ui = ModuleType('bl_ui.space_axismeld_menubar')
         ui.PRESET_NAME = 'AxisMeld_Maya_2026'
         exec(compile(ast.Module(body=scope, type_ignores=[]), str(ui_path), 'exec'), ui.__dict__)
@@ -186,16 +186,18 @@ class NativeModelingGroupsTests(unittest.TestCase):
         namespace = {}
         exec(compile(ast.Module(body=[draw], type_ignores=[]), str(image_path), 'exec'), namespace)
         baseline = None
-        for workspace, area, preset, decorated in (
-                ('Modeling', 'VIEW_3D', 'AxisMeld_Maya_2026', True),
-                ('Modeling', 'IMAGE_EDITOR', 'AxisMeld_Maya_2026', False),
-                ('Layout', 'VIEW_3D', 'AxisMeld_Maya_2026', False),
-                ('Modeling', 'VIEW_3D', 'Blender', False)):
-            context = SimpleNamespace(workspace=SimpleNamespace(name=workspace),
+        for workspace, area, preset, role, decorated in (
+                ('Modeling', 'VIEW_3D', 'AxisMeld_Maya_2026', None, True),
+                ('Modeling', 'IMAGE_EDITOR', 'AxisMeld_Maya_2026', None, False),
+                ('Layout', 'VIEW_3D', 'AxisMeld_Maya_2026', None, False),
+                ('Modeling', 'VIEW_3D', 'Blender', None, False),
+                ('Rigging', 'VIEW_3D', 'AxisMeld_Maya_2026', None, False),
+                ('Modeling', 'VIEW_3D', 'AxisMeld_Maya_2026', 'RIGGING', False)):
+            context = SimpleNamespace(workspace=SimpleNamespace(name=workspace, get=lambda *_: role),
                 area=SimpleNamespace(type=area), window_manager=SimpleNamespace(
                     keyconfigs=SimpleNamespace(active=SimpleNamespace(name=preset))))
             layout = Layout()
-            with self.subTest(workspace=workspace, area=area, preset=preset), patch.dict(sys.modules, {'bl_ui': package}):
+            with self.subTest(workspace=workspace, area=area, preset=preset, role=role), patch.dict(sys.modules, {'bl_ui': package}):
                 namespace['draw'](SimpleNamespace(layout=layout), context)
                 ops = [row for row in layout.log if row[0] == 'operator']
                 self.assertEqual([row[1] for row in ops], ['uv.unwrap'] * 3 + [

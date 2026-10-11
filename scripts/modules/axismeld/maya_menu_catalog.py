@@ -47,6 +47,8 @@ UNAVAILABLE_BINDINGS = {
     'SelectSimilar': 'Object/component similarity dispatch not implemented; vertex-normal filtering is only one criterion',
 }
 CORE_BINDINGS = {
+    'OpenScene': ('file.open', 'Blender native Open file selector; confirms explicitly'),
+    'SaveSceneAs': ('file.save_as', 'Blender native Save As file selector; confirms explicitly'),
     'SelectAll': ('selection.select_all', ''),
     'SelectNone': ('selection.clear', 'Deselect eligible Blender objects or mesh components in the source context'),
     'SelectToggleMode': ('selection.toggle_component', 'Toggle Blender Object and Mesh Edit modes on the active mesh'),

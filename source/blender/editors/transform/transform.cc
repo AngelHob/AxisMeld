@@ -1079,6 +1079,9 @@ static bool transform_event_modal_constraint(TransInfo *t, short modal_type)
 
 static void tool_settings_update_snap_toggle(TransInfo *t)
 {
+  if (t->axismeld_snap.active() != AxisMeldSnapKey::None) {
+    return;
+  }
   bool is_snap_enabled = (t->modifiers & MOD_SNAP) != 0;
 
   eSnapFlag *snap_flag_ptr;
@@ -1095,6 +1098,10 @@ static void tool_settings_update_snap_toggle(TransInfo *t)
 
 wmOperatorStatus transformEvent(TransInfo *t, wmOperator *op, const wmEvent *event)
 {
+  if (axismeld_transform_snap_event(t, event)) {
+    WM_window_status_area_tag_redraw(CTX_wm_window(t->context));
+    return wmOperatorStatus(0);
+  }
   bool is_navigating = t->vod ? ((static_cast<RegionView3D *>(t->region->regiondata))->rflag &
                                  RV3D_NAVIGATING) != 0 :
                                 false;
@@ -1510,6 +1517,8 @@ wmOperatorStatus transformEvent(TransInfo *t, wmOperator *op, const wmEvent *eve
     }
   }
 
+  axismeld_transform_snap_after_event(t);
+
   /* Per transform event, if present. */
   if (t->mode_info && t->mode_info->handle_event_fn) {
     t->redraw |= t->mode_info->handle_event_fn(t, event);
@@ -1787,6 +1796,8 @@ static void drawTransformPixel(const bContext * /*C*/, ARegion *region, void *ar
 
 void saveTransform(bContext *C, TransInfo *t, wmOperator *op)
 {
+  /* Confirm may precede key-up. Do not persist held inputs into preferences or Redo. */
+  axismeld_transform_snap_finish(t);
   ToolSettings *ts = CTX_data_tool_settings(C);
   PropertyRNA *prop;
 
@@ -2177,6 +2188,7 @@ bool initTransform(bContext *C, TransInfo *t, wmOperator *op, const wmEvent *eve
   }
 
   initSnapping(t, op); /* Initialize snapping data AFTER mode flags. */
+  axismeld_transform_snap_init(t, event);
 
   /* EVIL! pose-mode code can switch translation to rotate when 1 bone is selected.
    * will be removed (ton). */

@@ -31,11 +31,51 @@ class MenubarIsolationTests(unittest.TestCase):
         # Blender extensions. Application-menu construction must not mutate it.
         expected_tree = '4775a154c8a23f8f12b6fbbaedc9aa395ed2b6280aee0a77a8e154b0b18bde50'
         expected_commands = '40dc0b53a83508d66d7c31f628e5dd53a47982e7273bfec241c93f2ad3a08b72'
+        # Independently approved context menus extend the hotbox itself, not the
+        # application menu. Preserve the old complete-tree fingerprint as well
+        # as checking that application-menu construction mutates neither tree.
+        added_roots = {'context.convert', 'context.convert_menu', 'context.history'}
+        added_commands = {'context.conversion_hotbox', 'context.tool_hotbox',
+                          'file.open', 'file.save_as'}
+        file_leaves = {'maya.common.file.open_scene': 'file.open',
+                       'maya.common.file.save_scene_as': 'file.save_as'}
+        conversion_leaves = {'m3.selection.convert_' + domain for domain in ('vert', 'edge', 'face')}
+        def legacy_nodes(nodes):
+            result = []
+            for node in nodes:
+                if node['id'] in added_roots:
+                    continue
+                node = dict(node, children=legacy_nodes(node['children']))
+                if node['id'] in file_leaves:
+                    self.assertEqual(node['kind'], 'command')
+                    self.assertTrue(node['enabled'])
+                    self.assertEqual(node['command'], file_leaves[node['id']])
+                    # Normalize exactly the two approved bodies; Options, label,
+                    # identity, placement and every other old node stay pinned.
+                    node.update(kind='disabled', enabled=False, command='',
+                                reason='Maya command adapter not implemented')
+                if node['id'] in conversion_leaves:
+                    # The approved conversion behavior corrected only this
+                    # explanation on these three existing native rows. Keep
+                    # every other field and the original whole-tree golden.
+                    self.assertEqual(node['reason'],
+                                     "Higher domains select incident components; lower domains retain "
+                                     "the source components' vertices or edges.")
+                    node['reason'] = ('Uses Blender selection expansion when changing domain; '
+                                      'contained/perimeter rules differ.')
+                result.append(node)
+            return result
+        before = default_catalog()
+        command_ids = set(COMMANDS)
         for _ in range(2):
             build_menubar()
-            serialized = json.dumps(default_catalog(), sort_keys=True, separators=(',', ':')).encode()
+            self.assertEqual(default_catalog(), before)
+            self.assertEqual(set(COMMANDS), command_ids)
+            serialized = json.dumps(legacy_nodes(default_catalog()), sort_keys=True,
+                                    separators=(',', ':')).encode()
             self.assertEqual(hashlib.sha256(serialized).hexdigest(), expected_tree)
-            self.assertEqual(hashlib.sha256('\n'.join(sorted(COMMANDS)).encode()).hexdigest(), expected_commands)
+            self.assertEqual(hashlib.sha256('\n'.join(sorted(command_ids - added_commands)).encode()).hexdigest(),
+                             expected_commands)
 
     def test_authorized_maya_corrections_keep_native_actions_in_extensions(self):
         from axismeld.hotbox_catalog import default_catalog

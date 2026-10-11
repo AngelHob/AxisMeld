@@ -4,6 +4,8 @@
 from dataclasses import dataclass
 from types import MappingProxyType
 from .tool_hotbox import ORIENTATIONS
+from .tool_hotbox import CURRENT_TOOL_HOTBOX
+from .context_conversion_hotbox import CONVERSION_HOTBOX
 from .creation_hotbox import CREATE_HOTBOX, PRIMITIVES
 from .context_modeling_hotbox import MODEL_HOTBOX
 from .object_modeling_hotbox import OBJECT_TOOLS, OBJECT_ACTION_COMMANDS
@@ -28,6 +30,14 @@ class Command:
 
 
 COMMANDS = MappingProxyType({command.id: command for command in (
+    Command('file.open', 'Open Scene',
+            difference='Open Blender native file selection; no file is loaded before explicit confirmation.'),
+    Command('file.save_as', 'Save Scene As',
+            difference='Open Blender native Save As selection; no file is written before explicit confirmation.'),
+    Command(CONVERSION_HOTBOX, 'Convert Selection Hotbox', 'RIGHTMOUSE', ctrl=True,
+            difference='Maya polygon conversion menu; existing Blender adapters retain their mode restrictions.'),
+    Command(CURRENT_TOOL_HOTBOX, 'Current Tool Hotbox', 'RIGHTMOUSE', ctrl=True, shift=True,
+            difference='Open the active supported tool menu without changing the active tool.'),
     *(Command(identifier, identifier.replace('object.modeling_', '').replace('_', ' ').title(),
               difference='Active Mesh modifier adaptation; options open without scene changes, confirmation owns one undo step.')
       for identifier in sorted(OBJECT_ACTION_COMMANDS)),
@@ -79,7 +89,8 @@ COMMANDS = MappingProxyType({command.id: command for command in (
             difference=('Uses Blender native topology traversal; Maya '
                         'ShrinkPolygonSelectionRegion equivalence is not claimed.')),
     Command('view.focus_selected', 'Frame Selected', 'F'),
-    Command('view.frame_all', 'Frame All', 'A'),
+    Command('view.frame_all', 'Frame All', 'A',
+            difference='Keyboard release frames the view only when no A + LMB History Operations menu was posted; menu calls frame immediately.'),
     Command('view.orbit', 'Tumble', 'LEFTMOUSE', alt=True),
     Command('view.pan', 'Track', 'MIDDLEMOUSE', alt=True),
     Command('view.dolly', 'Dolly', 'RIGHTMOUSE', alt=True),

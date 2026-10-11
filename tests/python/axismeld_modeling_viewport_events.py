@@ -329,6 +329,44 @@ def suite():
         print('NATIVE_TOPBAR_PLUGIN_APPEND_PASS',flush=True)
         yield from switch_workspace('Modeling')
         verify_topbar('modeling-native-topbar')
+        if os.environ.get('AXISMELD_TEST_SUITE') == 'workspace-menu-layout':
+            # Pure catalog checks already cover every record. Here verify the
+            # first and last actual caption in each planned column, including
+            # long roots at two scales, without synthesizing the final geometry.
+            yield from set_mode('OBJECT')
+            original_scale = bpy.context.preferences.view.ui_scale
+            records = []
+            try:
+                for requested_scale in (1.0, 1.5):
+                    bpy.context.preferences.view.ui_scale = requested_scale
+                    yield from settle(16)
+                    for root_id in ('modeling.mesh_display', 'modeling.curves', 'modeling.surfaces'):
+                        node = ui._NODES[root_id]
+                        tag = 'complete-' + root_id + '-' + str(requested_scale)
+                        pixels, boxes = yield from open_path((node['label'],), tag)
+                        assert all(0 <= b[0] < b[2] <= win.width and
+                                   0 <= b[1] < b[3] <= win.height for b in boxes), (tag, boxes)
+                        columns = ui.menu_columns(node['children'], bpy.context)
+                        positions = []
+                        for column in columns:
+                            rows = [row for row in column if row['kind'] != 'separator']
+                            assert rows, (tag, column)
+                            points = [locate(pixels, row['label'], (0, 0, win.width, win.height),
+                                             boxes, ink_levels=(.08, .12, .18, .25))
+                                      for row in (rows[0], rows[-1])]
+                            assert points[0][1] > points[1][1], (tag, points)
+                            positions.append(points)
+                        assert all(positions[i][0][0] < positions[i + 1][0][0]
+                                   for i in range(len(positions) - 1)), (tag, positions)
+                        records.append(dict(root=root_id, scale=requested_scale,
+                                            window=[win.width, win.height], boxes=boxes,
+                                            column_ends=positions))
+                        yield from close()
+            finally:
+                bpy.context.preferences.view.ui_scale = original_scale
+            (ART / 'complete-menu-layout.json').write_text(json.dumps(records, indent=2), encoding='utf-8')
+            print('AXISMELD_WORKSPACE_MENU_LAYOUT_PASS', flush=True)
+            return
         for mode in ('OBJECT','NONE','EDIT'):
             yield from set_mode(mode)
             verify_header('modeling-header-'+mode.lower(),True,mode)

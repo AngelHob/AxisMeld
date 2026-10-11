@@ -38,7 +38,33 @@ inline constexpr std::pair<std::string_view, std::string_view> companion_roots[]
     {"tools.rotate.select", "tools.rotate.select_menu"},
     {"tools.scale.select", "tools.scale.select_menu"},
     {"tools.move.snap", "tools.move.snap_menu"},
+    {"context.convert", "context.convert_menu"},
 };
+
+inline bool conversion_allows_command(const std::string_view id, const std::string_view command)
+{
+  constexpr std::pair<std::string_view, std::string_view> entries[] = {
+      {"context.convert.vertices.vertices", "selection.convert_vert"},
+      {"context.convert.vertices.perimeter", "selection.vertex_perimeter"},
+      {"context.convert.edges.edges", "selection.convert_edge"},
+      {"context.convert.edges.contained", "selection.contained_edges"},
+      {"context.convert.edges.perimeter", "selection.region_boundary"},
+      {"context.convert.faces.faces", "selection.convert_face"},
+      {"context.convert.faces.contained", "selection.contained_faces"},
+      {"context.convert.faces.perimeter", "selection.face_perimeter"},
+      {"context.convert.loop.loop", "selection.edge_loop"},
+      {"context.convert.ring.ring", "selection.edge_ring"},
+      {"context.convert.grow.grow", "selection.grow"},
+      {"context.convert.shrink.shrink", "selection.shrink"},
+      {"context.convert_menu.face_path", "selection.face_path"},
+      {"context.convert_menu.shell", "selection.linked_mesh"},
+      {"context.convert_menu.shell_border", "selection.boundary_loop"},
+  };
+  for (const auto &[row, allowed] : entries) {
+    if (id == row && command == allowed) { return true; }
+  }
+  return false;
+}
 
 inline std::string_view companion_root(const std::string_view root)
 {

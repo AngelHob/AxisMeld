@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 
 from .context_hotbox import COMPONENT_HOTBOX
+from .context_conversion_hotbox import CONVERSION_HOTBOX
+from .tool_hotbox import CURRENT_TOOL_HOTBOX
 from .creation_hotbox import CREATE_HOTBOX
 from .context_modeling_hotbox import MODEL_HOTBOX
 from .commands import COMMANDS, baseline_bindings, binding_events
@@ -59,7 +61,7 @@ def _apply(bindings, document):
         if command == COMPONENT_HOTBOX and candidate[command] and any(
                 candidate[command][key] for key in MODIFIERS):
             raise ValueError('Component hotbox requires an unmodified PRESS event')
-        if command in {CREATE_HOTBOX, MODEL_HOTBOX} and candidate[command] and any(
+        if command in {CREATE_HOTBOX, MODEL_HOTBOX, CONVERSION_HOTBOX, CURRENT_TOOL_HOTBOX} and candidate[command] and any(
                 candidate[command][key] for key in ('alt', 'oskey')):
             raise ValueError('Context hotbox cannot capture Alt or OSKey navigation')
     seen = {}

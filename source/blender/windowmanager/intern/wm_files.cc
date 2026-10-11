@@ -3397,6 +3397,15 @@ static void wm_open_mainfile_def_property_use_scripts(wmOperatorType *ot)
                   "system preferences");
 }
 
+static void wm_file_axismeld_release_token_property(wmOperatorType *ot)
+{
+  /* Only explicit hotbox invocations set this. Native confirmation callbacks copy
+   * properties, preserving the exact invocation chain without retaining an operator. */
+  PropertyRNA *prop = RNA_def_int(ot->srna, "axismeld_release_token", 0, 0, INT_MAX,
+                                 "File Release Token", "Transient hotbox release owner", 0, INT_MAX);
+  RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
+}
+
 void WM_OT_open_mainfile(wmOperatorType *ot)
 {
   ot->name = "Open";
@@ -3428,6 +3437,7 @@ void WM_OT_open_mainfile(wmOperatorType *ot)
   RNA_def_property_flag(prop, PROP_SKIP_SAVE);
 
   create_operator_state(ot, OPEN_MAINFILE_STATE_DISCARD_CHANGES);
+  wm_file_axismeld_release_token_property(ot);
 }
 
 /** \} */
@@ -4158,6 +4168,7 @@ void WM_OT_save_as_mainfile(wmOperatorType *ot)
   ot->get_name = wm_save_as_mainfile_get_name;
   ot->get_description = wm_save_as_mainfile_get_description;
   ot->check = wm_save_mainfile_check;
+  wm_file_axismeld_release_token_property(ot);
   /* Omit window poll so this can work in background mode. */
 
   WM_operator_properties_filesel(ot,

@@ -9,6 +9,7 @@
 
 #include "AXM_hotbox_menu.hh"
 #include "AXM_context_modeling.hh"
+#include "AXM_history_hold.hh"
 #include "testing/testing.h"
 
 namespace blender::axismeld::tests {
@@ -33,6 +34,10 @@ TEST(axismeld_hotbox_menu, MayaContentCompanionMappingsAreExact)
 
 TEST(axismeld_hotbox_menu, MayaCompanionCommandsCannotCrossTargetsOrDomains)
 {
+  EXPECT_EQ(companion_root("context.convert"), "context.convert_menu");
+  EXPECT_TRUE(conversion_allows_command("context.convert.vertices.vertices", "selection.convert_vert"));
+  EXPECT_FALSE(conversion_allows_command("context.convert.vertices.vertices", "mesh.extrude_region"));
+  EXPECT_FALSE(conversion_allows_command("context.convert.vertices.vertices.options", "selection.convert_vert"));
   EXPECT_TRUE(component_menu_allows_command("context.component_menu.select_all", "selection.select_all"));
   EXPECT_FALSE(component_menu_allows_command("context.component_menu.select", "selection.select_all"));
   EXPECT_FALSE(component_menu_allows_command("context.component_menu.select_all.options", "selection.select_all"));
@@ -178,6 +183,29 @@ static void expect_complete_native(MenuSnapshot snapshot, const std::string &id,
   for (const auto &item : layout.rects) {
     EXPECT_FALSE(item.id.starts_with("@scroll:") || item.id.starts_with("@back:"));
   }
+}
+
+TEST(axismeld_hotbox_menu, HistoryTreeKeepsEightSlotsAndRejectsCrossBoundCommands)
+{
+  const auto snapshot = default_snapshot();
+  const MenuNode *history = nullptr;
+  visit(snapshot.menus, [&](const MenuNode &node) {
+    if (node.id == history_root) { history = &node; }
+  });
+  ASSERT_NE(history, nullptr);
+  EXPECT_TRUE(history_tree_allowed(*history));
+  auto changed = *history;
+  changed.children[0].command = "selection.select_all";
+  EXPECT_FALSE(history_tree_allowed(changed));
+  changed = *history;
+  changed.children[4].command = "transform.reset_all";
+  EXPECT_FALSE(history_tree_allowed(changed));
+  changed = *history;
+  changed.children[6].children[0].enabled = true;
+  EXPECT_FALSE(history_tree_allowed(changed));
+  changed = *history;
+  changed.children.pop_back();
+  EXPECT_FALSE(history_tree_allowed(changed));
 }
 
 TEST(axismeld_hotbox_menu, DeepestSelectCompanionReplacesParentAndDropsStaleCascade)

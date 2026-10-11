@@ -35,6 +35,7 @@ class ProfilesTest(unittest.TestCase):
         self.assertEqual(bindings['hotbox.open']['type'], 'SPACE')
         self.assertEqual(bindings['hotbox.open']['value'], 'PRESS')
         self.assertEqual(set(COMMANDS) - set(bindings) - set(MODELING_SPECS), {
+            'file.open', 'file.save_as',
             'tool.object_mesh_poly_build', 'tool.object_mesh_loopcut', 'tool.object_mesh_knife',
             'tool.object_mesh_offset_loop', 'object.modeling_smooth', 'object.modeling_smooth_options',
             'object.modeling_mirror', 'object.modeling_mirror_options', 'object.modeling_reduce',

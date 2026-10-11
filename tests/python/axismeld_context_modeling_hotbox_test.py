@@ -237,7 +237,9 @@ class ModelingEntryTest(unittest.TestCase):
         cls = next(node for node in source.body if isinstance(node, ast.ClassDef) and node.name == 'AXISMELD_OT_command')
         invoke = next(node for node in cls.body if isinstance(node, ast.FunctionDef) and node.name == 'invoke')
         namespace = {'CREATE_HOTBOX': CREATE, 'MODEL_HOTBOX': MODEL, 'COMPONENT_HOTBOX': COMPONENT,
-                     'adapter': self.adapter, 'TOOL_ROOTS': {}}
+                     'CONVERSION_HOTBOX': 'context.conversion_hotbox', 'CURRENT_TOOL_HOTBOX': 'context.tool_hotbox',
+                     'modeling_root': lambda context, **kwargs: self.adapter.modeling_root(context),
+                     'adapter': self.adapter, 'TOOL_ROOTS': {}, 'HISTORY_TRIGGER': 'view.frame_all'}
         exec(compile(ast.Module(body=[invoke], type_ignores=[]), '<real dispatcher invoke>', 'exec'), namespace)
         self.invoke = namespace['invoke']
         self.owner = NS(command=MODEL, _run=lambda *args, **kwargs: self.calls.append((args, kwargs)) or {'FINISHED'})

@@ -47,11 +47,12 @@ struct bContext;
 /* Copy a fresh Python snapshot; empty on failure, never a previous response. */
 std::string axismeld_hotbox_refresh(bContext *C);
 /* Caller owns UI lifetime: close-before policy, remove visuals, dispatch, then guard. */
-wmOperatorStatus axismeld_hotbox_dispatch(bContext *C, const char *command);
+wmOperatorStatus axismeld_hotbox_dispatch(bContext *C, const char *command,
+                                        int *r_file_token = nullptr);
 wmOperatorStatus axismeld_hotbox_setting(bContext *C, const char *setting, const char *value);
 wmOperatorStatus axismeld_hotbox_guard_begin(
     bContext *C, int trigger_type, int mouse_type, bool trigger_down, bool mouse_down,
-    bool tool_session = false);
+    bool tool_session = false, int file_release_token = 0);
 /* Only a disjoint tool-key release may coexist with a newly armed tool session. */
 bool axismeld_hotbox_guard_allows_tool_session(const wmOperator *op, int trigger_type);
 }  // namespace blender
