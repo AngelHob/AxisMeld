@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 """Native Rigging draw routing, mode guards and exact operator payloads without bpy."""
 import ast
+from copy import deepcopy
 from contextlib import contextmanager
 import importlib.util
 from pathlib import Path
@@ -132,7 +133,7 @@ class NativeRiggingTests(unittest.TestCase):
         self.assertFalse(self.draw('skeleton.edit_bones', context('POSE', obj('ARMATURE')))['enabled'])
         self.assertFalse(self.draw('skin.weights', context('OBJECT', obj()))['enabled'])
 
-    def test_unavailable_entries_are_labels_without_previewable_menu_hosts(self):
+    def test_unavailable_entries_have_reason_buttons_without_previewable_menu_hosts(self):
         cases = [('skeleton.create', context('POSE', obj('ARMATURE'))),
                  ('skeleton.edit_bones', context('POSE', obj('ARMATURE'))),
                  ('skin.weights', context('OBJECT', obj()))]
@@ -141,8 +142,112 @@ class NativeRiggingTests(unittest.TestCase):
         for key, source in cases:
             with self.subTest(key=key, mode=source.mode, area=source.area.type):
                 entry = self.api.ENTRIES[key]
-                self.assertEqual(self.draw(key, source),
-                                 dict(api='label', enabled=False, text=entry['label'], icon=entry['icon']))
+                before = deepcopy(source)
+                event = self.draw(key, source)
+                self.assertEqual((event['api'], event.get('identifier'), event['enabled']),
+                                 ('operator', 'axismeld.menubar_execute', False))
+                self.assertEqual((event['text'], event['icon']), (entry['label'], entry['icon']))
+                props = event['properties']
+                self.assertEqual((props.kind, props.key, props.token), ('disabled', '', ''))
+                self.assertTrue(props.reason.strip())
+                self.assertEqual(source, before, 'Drawing a disabled entry must not change its context')
+
+    def reason(self, key, source):
+        event = self.draw(key, source)
+        self.assertFalse(event['enabled'])
+        self.assertEqual(event['api'], 'operator', 'A label cannot expose an operator tooltip')
+        return event['properties'].reason.lower()
+
+    def test_disabled_reasons_cover_viewport_and_scene_before_native_poll(self):
+        for key in self.api.ENTRIES:
+            source = context(area='OUTLINER')
+            source.scene.is_editable = False
+            with self.subTest(key=key):
+                reason = self.reason(key, source)
+                self.assertIn('3d viewport', reason)
+                self.assertIn('editable scene', reason)
+
+    def test_skeleton_reasons_cover_mode_object_data_and_edit_target(self):
+        for key, required_mode in (('skeleton.edit_bones', 'edit mode'),
+                                   ('skeleton.pose', 'pose mode'), ('skeleton.ik', 'pose mode')):
+            reason = self.reason(key, context())
+            self.assertIn('editable armature', reason)
+            self.assertIn(required_mode, reason)
+        self.assertIn('object mode', self.reason('skeleton.create', context('POSE', obj('ARMATURE'))))
+        bone = obj('ARMATURE')
+        bone.data.is_editable = False
+        self.assertIn('editable armature data', self.reason('skeleton.edit_bones', context('EDIT_ARMATURE', bone)))
+        bone.data.is_editable = True
+        source = context('EDIT_ARMATURE', bone)
+        source.edit_object = obj('ARMATURE')
+        source.edit_object.name = 'Other Armature'
+        self.assertIn('active armature', self.reason('skeleton.edit_bones', source))
+
+    def test_skin_reasons_cover_mode_and_editable_mesh_or_lattice(self):
+        for key, terms in (
+                ('skin.weight_paint', ('object mode', 'weight paint mode', 'editable mesh')),
+                ('skin.weights', ('edit mode', 'weight paint mode', 'editable mesh')),
+                ('skin.vertex_groups', ('edit mode', 'weight paint mode', 'editable mesh', 'lattice')),
+                ('skin.group_specials', ('edit mode', 'weight paint mode', 'editable mesh', 'lattice'))):
+            with self.subTest(key=key):
+                reason = self.reason(key, context('POSE', obj('ARMATURE')))
+                for term in terms:
+                    self.assertIn(term, reason)
+        mesh = obj()
+        mesh.data.is_editable = False
+        for key in ('skin.weight_paint', 'skin.weights', 'skin.vertex_groups', 'skin.group_specials'):
+            self.assertIn('editable', self.reason(key, context('PAINT_WEIGHT', mesh)))
+
+    def test_bind_reasons_cover_all_selection_guards(self):
+        bone, mesh = obj('ARMATURE'), obj()
+        cases = (
+            (context('POSE', mesh, [mesh, bone]), ('object mode', 'editable armature')),
+            (context('OBJECT', bone, [mesh]), ('active armature', 'select')),
+            (context('OBJECT', bone), ('mesh', 'select')),
+            (context('OBJECT', bone, [mesh, bone, obj('LIGHT')]), ('only', 'mesh')),
+            (context('OBJECT', bone, [obj(editable=False), bone]), ('editable mesh',)),
+        )
+        for source, terms in cases:
+            with self.subTest(source=source):
+                reason = self.reason('skin.bind', source)
+                for term in terms:
+                    self.assertIn(term, reason)
+        mesh.data.is_editable = False
+        self.assertIn('editable mesh data', self.reason('skin.bind', context('OBJECT', bone, [mesh, bone])))
+
+    def test_poll_failure_reason_does_not_claim_satisfied_object_or_mode_is_missing(self):
+        type(self).poll_value = False
+        bone, mesh = obj('ARMATURE'), obj()
+        for key, source in (('skeleton.create', context()),
+                            ('skin.weight_paint', context('OBJECT', mesh)),
+                            ('skin.bind', context('OBJECT', bone, [mesh, bone]))):
+            with self.subTest(key=key):
+                reason = self.reason(key, source)
+                self.assertIn('native', reason)
+                self.assertIn('unavailable', reason)
+                self.assertNotIn('enter', reason)
+                self.assertNotIn('select', reason)
+
+    def test_disabled_button_description_and_execution_use_safe_dispatcher(self):
+        from axismeld import menubar_runtime
+        tree = ast.parse((ROOT / 'scripts/startup/bl_ui/space_axismeld_menubar.py').read_text(encoding='utf-8'))
+        declaration = next(node for node in tree.body if getattr(node, 'name', '') == 'AXISMELD_OT_menubar_execute')
+        namespace = dict(Operator=type('Operator', (), {}), StringProperty=lambda **_kwargs: None,
+                         menubar_runtime=menubar_runtime)
+        exec(compile(ast.Module(body=[declaration], type_ignores=[]), 'menubar_executor', 'exec'), namespace)
+        operator = namespace['AXISMELD_OT_menubar_execute']
+        for key in self.api.ENTRIES:
+            source = context('POSE')
+            event = self.draw(key, source)
+            self.assertEqual(event['api'], 'operator')
+            props = event['properties']
+            self.assertEqual(operator.description(source, props), props.reason)
+            instance = operator()
+            vars(instance).update(vars(props))
+            # The actual runtime must reject the payload before source resolution,
+            # native execution, Recent insertion or an undo operation can occur.
+            with patch.dict(sys.modules, {'bpy': self.api.bpy}):
+                self.assertEqual(instance.execute(source), {'CANCELLED'})
 
     def test_other_editor_does_not_resolve_or_change_a_viewport_target(self):
         bone, mesh = obj('ARMATURE'), obj()

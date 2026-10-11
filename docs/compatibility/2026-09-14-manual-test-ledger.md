@@ -549,3 +549,13 @@ Maya菜单从Space目录进入；Blender专有名称通过键位偏好将一个�
 | GU-11 | 查看 Recent Increments、Recent Projects、Delete by Type的Sounds、Quick Select Sets、Assign Existing Set 等空动态目录；同时查看有固定灰正文的目录和真实原生资产/插件菜单 | 无数据提供器的空目录显示同名、同图标、带原因的灰占位，不再弹空菜单；有正文的灰目录仍可展开，真实原生 provider 不因当前场景为空被误禁用，打开菜单不写 Undo/Recent | 待测 |
 | GU-12 | 在隔离实例切换 Grease Pencil 绘画、UV编辑器、非3D编辑器及 Blender/Industry Compatible 键位；返回 AxisMeld，重载个人改键并重试 Ctrl 入口与持键 | 新入口与临时吸附只接管声明范围；Grease Pencil 原工具键保留，非 AxisMeld 仍有原生 X 轴约束，其他编辑器/插件/个人配置不被覆盖；D/C/F12/1/2/3 的能力缺口未错误映射到近似功能 | 待测 |
 | GU-13 | 在临时场景从 Space 热盒的 File 分别调用 Open Scene、Save Scene As，保持触发键后移到新文件窗口再松键；分别先松鼠标、先松 Space，在两个窗口之间释放，并用 Esc 取消；对未保存场景分别选择 Don't Save 继续和 Cancel 退出确认框；重新打开后测试切应用再返回及关闭文件窗口 | 打开真实 Blender 文件选择器，热盒拥有的残余释放不会在新窗口触发点击或确认；取消不加载场景或保存目标文件，普通新输入仍可用，不残留 guard 或粘键；原生全局 File 与 Ctrl+O/Ctrl+S 保持原行为，独立 Options 仍灰显 | 待测 |
+
+## P1：GUI 改键与灰项提示（2026-10-11 input preview，新增3项）
+
+使用 `axismeld-2026.10.11-gui-input-preview` 或包含本轮修复的源码构建。旧 `gui-preview` 不含这些修复。在隔离配置中选择 AxisMeld Maya 2026，不保存测试偏好；GU-01～GU-13 和既有结果保持。自动回归不代替下列人工操作。
+
+| 编号 | 前置条件与操作 | 预期 | 人工状态 |
+|---|---|---|---|
+| GU-14 | 在 Keymap 首选项将 Move 临时改为 Ctrl+W；持 Ctrl+W 后连续按住、划动和松开 LMB 三次，分别选 World/Local；再测试先松 W、先松 Ctrl、Esc 和切出应用，最后恢复 W 并重试 | 带修饰键的工具会话不提前关闭，每次 LMB 可重新打开；触发键或必需修饰键释放、Esc、失焦均安全结束，无残留或重复执行，默认 W 行为保持 | 待测 |
+| GU-15 | 在 Preferences→Keymap 使用 Name 搜索 Move、Frame All、Convert Selection 和 AxisMeld；展开结果并改键，再用 Key-Binding 搜索；切回 Blender 预设查看原生条目 | AxisMeld 各条目显示自身功能名称，并可按功能名检索；原 operator 标识符和按键搜索仍可用，改键操作仍对应正确命令；原生及未知命令保留名称回退，无错误或空白条目 | 待测 |
+| GU-16 | 在 Rigging 默认网格、无活动对象、单骨架和有效绑定选集之间切换，悬停 Skeleton 的 Edit Bones/Pose/IK 与 Skin 的 Armature Deform/Weights 等灰项；满足提示条件后重新打开菜单 | 灰项保留名称和图标，悬停说明所需对象、模式或可编辑条件；点击不执行、不切模式或选区、不展开错误上下文的原生菜单；有效上下文下原入口可用，既有原生操作保持 | 待测 |

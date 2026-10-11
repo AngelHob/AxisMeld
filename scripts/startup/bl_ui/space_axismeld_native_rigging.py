@@ -40,9 +40,13 @@ def rigging_icon_layout(layout, context, fallback):
     return _RiggingIconLayout(layout, fallback)
 
 
-def _viewport(context):
-    return (getattr(getattr(context, 'area', None), 'type', '') == 'VIEW_3D' and
-            bool(getattr(getattr(context, 'scene', None), 'is_editable', False)))
+def _viewport_errors(context):
+    errors = []
+    if getattr(getattr(context, 'area', None), 'type', '') != 'VIEW_3D':
+        errors.append('Open this menu in a 3D Viewport.')
+    if not getattr(getattr(context, 'scene', None), 'is_editable', False):
+        errors.append('Use an editable scene.')
+    return errors
 
 
 def _editable_object(obj, kinds):
@@ -63,17 +67,30 @@ def _poll(identifier):
         return False
 
 
-def _bind_context(context):
-    if not _viewport(context) or getattr(context, 'mode', '') != 'OBJECT':
-        return False
+def _bind_context_errors(context):
+    errors = _viewport_errors(context)
+    if getattr(context, 'mode', '') != 'OBJECT':
+        errors.append('Enter Object Mode.')
     active = getattr(context, 'active_object', None)
     selected = tuple(getattr(context, 'selected_objects', ()))
-    if not _editable_object(active, {'ARMATURE'}) or active not in selected:
-        return False
+    if not _editable_object(active, {'ARMATURE'}):
+        errors.append('Make an editable armature object active.')
+    if active not in selected:
+        errors.append('Include the active armature in the selection.')
     targets = [obj for obj in selected if obj != active]
     # parent_set.poll only checks for an active object. Do not allow an unrelated
     # selected object to be silently reparented along with the intended meshes.
-    return bool(targets) and all(_editable(obj, {'MESH'}) for obj in targets) and _poll('object.parent_set')
+    if not targets:
+        errors.append('Select one or more editable meshes with the active armature.')
+    elif not all(_editable(obj, {'MESH'}) for obj in targets):
+        errors.append('Select only editable mesh objects with editable mesh data, plus the active armature.')
+    if not errors and not _poll('object.parent_set'):
+        errors.append('Native Armature Deform is unavailable in the current context.')
+    return errors
+
+
+def _bind_context(context):
+    return not _bind_context_errors(context)
 
 
 class AXISMELD_MT_rigging_armature_deform(Menu):
@@ -105,40 +122,61 @@ def draw_entry(layout, context, key):
     entry = ENTRIES[key]
     active = getattr(context, 'active_object', None)
     mode = getattr(context, 'mode', '')
-    available = _viewport(context)
+    errors = _viewport_errors(context)
     host = None
     if key == 'skeleton.create':
         host = 'VIEW3D_MT_armature_add'
-        available = available and mode == 'OBJECT' and _poll('object.armature_add')
+        if mode != 'OBJECT':
+            errors.append('Enter Object Mode.')
+        if not errors and not _poll('object.armature_add'):
+            errors.append('Native Add Armature is unavailable in the current context.')
     elif key == 'skeleton.edit_bones':
         host = 'VIEW3D_MT_edit_armature'
-        available = (available and mode == 'EDIT_ARMATURE' and _editable(active, {'ARMATURE'}) and
-                     getattr(context, 'edit_object', None) == active)
+        if mode != 'EDIT_ARMATURE':
+            errors.append('Enter Armature Edit Mode.')
+        if not _editable(active, {'ARMATURE'}):
+            errors.append('Make an editable armature object with editable armature data active.')
+        if mode == 'EDIT_ARMATURE' and getattr(context, 'edit_object', None) != active:
+            errors.append('Edit the active armature; the edited object must match the active armature.')
     elif key in {'skeleton.pose', 'skeleton.ik'}:
         host = 'VIEW3D_MT_pose' if key == 'skeleton.pose' else 'VIEW3D_MT_pose_ik'
-        available = available and mode == 'POSE' and _editable_object(active, {'ARMATURE'})
+        if mode != 'POSE':
+            errors.append('Enter Pose Mode.')
+        if not _editable_object(active, {'ARMATURE'}):
+            errors.append('Make an editable armature object active.')
     elif key == 'skin.bind':
         host = AXISMELD_MT_rigging_armature_deform.__name__
-        available = _bind_context(context)
+        errors = _bind_context_errors(context)
     elif key == 'skin.weight_paint':
-        available = (available and mode in {'OBJECT', 'PAINT_WEIGHT'} and _editable(active, {'MESH'}) and
-                     _poll('paint.weight_paint_toggle'))
+        if mode not in {'OBJECT', 'PAINT_WEIGHT'}:
+            errors.append('Use Object Mode or Weight Paint Mode.')
+        if not _editable(active, {'MESH'}):
+            errors.append('Make an editable mesh object with editable mesh data active.')
+        if not errors and not _poll('paint.weight_paint_toggle'):
+            errors.append('Native Weight Paint Mode is unavailable in the current context.')
     elif key == 'skin.weights':
         host = 'VIEW3D_MT_edit_mesh_weights' if mode == 'EDIT_MESH' else 'VIEW3D_MT_paint_weight'
-        available = available and mode in {'EDIT_MESH', 'PAINT_WEIGHT'} and _editable(active, {'MESH'})
+        if mode not in {'EDIT_MESH', 'PAINT_WEIGHT'}:
+            errors.append('Enter Mesh Edit Mode or Weight Paint Mode.')
+        if not _editable(active, {'MESH'}):
+            errors.append('Make an editable mesh object with editable mesh data active.')
     elif key in {'skin.vertex_groups', 'skin.group_specials'}:
         host = 'VIEW3D_MT_vertex_group' if key == 'skin.vertex_groups' else 'MESH_MT_vertex_group_context_menu'
-        available = (available and mode in {'OBJECT', 'EDIT_MESH', 'EDIT_LATTICE', 'PAINT_WEIGHT'} and
-                     _editable(active, {'MESH', 'LATTICE'}))
+        if mode not in {'OBJECT', 'EDIT_MESH', 'EDIT_LATTICE', 'PAINT_WEIGHT'}:
+            errors.append('Use Object Mode, Mesh or Lattice Edit Mode, or Weight Paint Mode.')
+        if not _editable(active, {'MESH', 'LATTICE'}):
+            errors.append('Make an editable mesh or lattice object with editable data active.')
     else:
         raise ValueError('Unknown native Rigging entry: ' + key)
 
     row = layout.row()
-    row.enabled = available
-    if not available:
+    row.enabled = not errors
+    if errors:
         # Disabled menu rows may still preview their subtree. Native menu draws
         # expect their mode/object context, so do not create an unavailable host.
-        row.label(text=entry['label'], icon=entry['icon'])
+        op = row.operator('axismeld.menubar_execute', text=entry['label'], icon=entry['icon'])
+        op.kind, op.key, op.token = 'disabled', '', ''
+        op.reason = ' '.join(errors)
     elif host:
         row.menu(host, text=entry['label'], icon=entry['icon'])
     else:

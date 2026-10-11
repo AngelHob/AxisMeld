@@ -12,7 +12,7 @@ import tempfile
 parser = argparse.ArgumentParser()
 parser.add_argument('--blender', required=True)
 parser.add_argument('--artifacts', help='Optional directory for isolated factory-scene screenshots')
-parser.add_argument('--suite', choices=('file-window', 'history-hotbox', 'workspace-menu-layout', 'context-entries', 'temporary-snap', 'menu-options-geometry', 'modeling-viewport', 'workspace-bar', 'menubar-alignment', 'menubar-actions', 'menubar-sets', 'menubar-layout', 'menubar', 'maya-hierarchy', 'full-menu-entry', 'full-menu-lifecycle', 'fully-expanded', 'maya-content-state', 'maya-content', 'maya-companion', 'icons', 'object-menu', 'object-modeling', 'context-modeling', 'modeling', 'create', 'components', 'tools', 'hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection', 'appearance'), default='hotbox')
+parser.add_argument('--suite', choices=('file-window', 'history-hotbox', 'workspace-menu-layout', 'context-entries', 'temporary-snap', 'menu-options-geometry', 'modeling-viewport', 'workspace-bar', 'menubar-alignment', 'menubar-actions', 'menubar-sets', 'menubar-layout', 'menubar', 'maya-hierarchy', 'full-menu-entry', 'full-menu-lifecycle', 'fully-expanded', 'maya-content-state', 'maya-content', 'maya-companion', 'icons', 'object-menu', 'object-modeling', 'context-modeling', 'modeling', 'create', 'components', 'tools', 'tools-modifiers', 'hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection', 'appearance'), default='hotbox')
 args = parser.parse_args()
 binary = Path(args.blender).resolve()
 with binary.open("rb") as stream:
@@ -48,6 +48,7 @@ suite_script, pass_marker = {
     'create': ('axismeld_create_hotbox_events.py', b'AXISMELD_CREATE_HOTBOX_EVENTS_PASS'),
     'components': ('axismeld_component_hotbox_events.py', b'AXISMELD_COMPONENT_HOTBOX_EVENTS_PASS'),
     'tools': ('axismeld_tool_hotbox_events.py', b'AXISMELD_TOOL_HOTBOX_EVENTS_PASS'),
+    'tools-modifiers': ('axismeld_tool_modifier_events.py', b'AXISMELD_TOOL_MODIFIER_EVENTS_PASS'),
     'hotbox': ('axismeld_hotbox_events.py', b'AXISMELD_HOTBOX_EVENTS_PASS'),
     'menus': ('axismeld_hotbox_menu_events.py', b'AXISMELD_HOTBOX_MENU_EVENTS_PASS'),
     'native-style': ('axismeld_hotbox_native_style_events.py', b'AXISMELD_HOTBOX_NATIVE_STYLE_PASS'),

@@ -21,6 +21,7 @@ import zipfile
 
 INTEGRATION = '''scripts/addons_core/bl_pkg/bl_extension_ui.py
 scripts/modules/addon_utils.py
+scripts/modules/rna_keymap_ui.py
 scripts/presets/keyconfig/AxisMeld_Maya_2026.py
 scripts/startup/bl_operators/axismeld.py
 scripts/startup/bl_ui/__init__.py

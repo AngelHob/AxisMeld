@@ -31,6 +31,20 @@ def _is_operator_available(idname):
     )
 
 
+def _keymap_item_name(kmi):
+    # The shared AxisMeld operator carries the actual action in its properties.
+    if kmi.idname == "axismeld.command":
+        from axismeld.commands import COMMANDS
+
+        try:
+            command = COMMANDS.get(kmi.properties.command)
+        except (AttributeError, ReferenceError):
+            command = None
+        if command is not None:
+            return command.label
+    return kmi.name
+
+
 def _indented_layout(layout, level):
     indentpx = 16
     if level == 0:
@@ -148,7 +162,7 @@ def draw_kmi(display_keymaps, kc, km, kmi, layout, level):
         row.prop(kmi, "propvalue", text="")
     else:
         if is_op_available:
-            row.label(text=kmi.name)
+            row.label(text=_keymap_item_name(kmi))
         # The default item when adding a new item is "none"
         # so consider this unassigned along with an empty string.
         elif kmi.idname in {"none", ""}:
@@ -399,8 +413,10 @@ def draw_filtered(display_keymaps, filter_type, filter_text, layout):
 
     if filter_type == 'NAME':
         def filter_func(kmi):
-            return (filter_text in kmi.idname.lower() or
-                    filter_text in kmi.name.lower())
+            if filter_text in kmi.idname.lower() or filter_text in kmi.name.lower():
+                return True
+            name = _keymap_item_name(kmi)
+            return filter_text in name.lower() or filter_text in iface_(name).lower()
     else:
         _init_search_tables()
 

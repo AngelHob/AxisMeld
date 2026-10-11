@@ -1394,7 +1394,9 @@ static wmOperatorStatus invoke(bContext *C, wmOperator *op, const wmEvent *event
   data->object_target_data_uid = object_target_data_uid;
   data->object_active_uid = object_active_uid;
   data->object_selection = std::move(object_selection);
-  data->required_modifiers = creation || modeling || direct_context || history ? event->modifier : wmEventModifierFlag(0);
+  // Keyboard tool bindings may be remapped with modifiers, which must survive each rearmed stroke.
+  // Primary Space keeps its independent modifier handling; component invokes are unmodified.
+  data->required_modifiers = !tool_root.empty() ? event->modifier : wmEventModifierFlag(0);
   data->tap_eligible = tool_root.empty();
   data->snapshot = std::move(snapshot);
   data->window = window;
