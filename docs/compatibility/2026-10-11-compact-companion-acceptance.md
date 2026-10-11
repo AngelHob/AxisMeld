@@ -16,9 +16,11 @@
 - 5 组既有真实 GUI 回归通过：hotbox-repost、context-entries、tools、history-hotbox、full-menu-lifecycle。W/E/R 持键重复唤出覆盖灰项、原点取消、执行共 9 组。
 - 新增截图观察器在旧公开包实际失败（249 → 249，未缩小），新包在 100%/150% 下通过：Object、Create、Move 及 Mapping 子菜单的 8 个宽度比为 89.716%～90.127%；Views、Object、Create、Move 的中心归一化方向按钮矩形最大像素差为 0。全文匹配阈值保持 >0.75，最小实际分数 0.878；Options 与状态图标检查、取消后的场景/选择检查通过。
 - 截图观察器的实际客户区为 1600×969，150% Object 已覆盖两列。该观察器未穷举任意低窗口、所有组件或 Q/E/R 内容；原生边界几何与既有 GUI 回归提供互补覆盖，实体鼠标手感及其他显示缩放保留人工验收。
-- 完整公开包：待打包与公开下载验证，完成后补齐发布指纹。
+- 完整 [Compact companion preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-compact-companion-preview) 已发布；源码/native `7ebc757ae0826bce1506174f14e639344553423e`，基于既有 Blender 5.4.0 Alpha。ZIP 303,157,268 字节，SHA256 `47b59ad6547b23eb045e52f1dbfed2f8b8f57069169caa98b6f4bd33e127d113`；EXE SHA256 `dff87613bb00e70594023312a0cd401ab8b8dd599fdd7fdf4a509f8cdfa34cdf`。6,572 个发行文件、145 项选定资源通过干净解压审计；解压包 factory 与 100%/150% 列表 GUI、匿名重下载后的校验/解压/factory 通过。[发布快照](2026-10-11-compact-companion-preview-snapshot.json)保存精确指纹；旧预览包保留。
 
 首次 GUI 回归中，旧观察器仍按原字号定位 Selection Constraints，产生文字匹配失败；原始截图与失败日志保留。观察器仅对伴随列表使用缩小后的字形，匹配阈值保持 >0.75，复验通过。新增观察器保留完整行匹配并排除 Unsmooth/顶部 Object Mode 等干扰，不通过截短标签或降低阈值放行。所有回执关联实际 EXE、观察器、基线、日志与截图指纹；构建关闭 build-info，Blender 返回的 build_hash 为 Unknown，源码对应关系由原生输入及安装指纹证明。
+
+本地网站静态与状态检查通过；Pages `01fbd41b47e6` 的 6 个公开资源逐字节核验通过。本批仅更新目录和发布配置，未重记历史浏览器检查为当前结果。
 
 ## 人工验收
 

@@ -1,6 +1,6 @@
 # 当前阶段：UI、交互与快捷键对齐
 
-当前 Blender 5.4.0 Alpha 主干同步及发布状态见[本批验收](../compatibility/2026-10-11-blender-main-acceptance.md)和[快照](../compatibility/2026-10-11-blender-main-preview-snapshot.json)；42 组 415 项纯 Python、8 组 144 项原生，另有 4 组 CLI（profiles 18 项、Blender input 11 项；profiles 与纯 Python 重合，不累加），15 组 GUI 回归、5 组 bpy 功能及 factory、5 个说明矩阵组合通过。58 默认命令、60 条含别名绑定、7 个操纵器辅助入口、3 个原生模态持键入口、499 条原生继承、45 条移除、187 个受保护 keymap；基准/生成 keymap 为 281/282。公开目录 342 项（当前 330、历史 12），47 项仅历史已测，当前初始未测 283、全表初始未测 295；最新标记 GU-22、GU-23、GU-24、GU-25。既有编号与人工结果保持，自动化不替用户勾选。下文首批数字与日期验证保留历史原文。
+**最新交付（2026-10-11 Compact companion preview）：热盒下方列表缩小预览已发布。** 仅将热盒下方伴随列表及其级联缩为原尺寸的 90%，文字、图标、行高、留白和 Options 同步；周围方向按钮、四视图间隔、主热盒栏及普通原生菜单保持原尺寸。完整条目、底部避让和说明无空间时隐藏的规则保持，不折叠、不滚动，不随窗口继续缩小。 沿用 Blender 5.4 Alpha 固定上游 `754ebe3c4b4e1402a159df6e1e58823cc93ef887`，本批未再次合并上游。6 组 42 项相关 Python、2 组 114 项原生、5 组既有 GUI 回归与 1 组新增列表几何验证通过。[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-compact-companion-preview)，源码/native `7ebc757ae0826bce1506174f14e639344553423e`；匿名下载、干净解压及工厂启动已核验。详见[本批验收](../compatibility/2026-10-11-compact-companion-acceptance.md)与[发布快照](../compatibility/2026-10-11-compact-companion-preview-snapshot.json)。本批 Pages `01fbd41b47e6` 的 6 个公开资源逐字节核验通过。公开目录 343 项（当前 331、历史 12），47 项仅历史已测，当前初始未测 284、全表初始未测 296；最新标记 GU-26。既有编号与人工结果保持，自动化不替用户勾选。新增建模、Skin/Skeleton、UV 算法继续暂停。下文首批数字与日期验证保留历史原文。
 
 2026-09-29 用户决定：“还是先别开发功能。先完成UI和交互层面，快捷键的对齐”。本决定覆盖同日早先的 A2 Influences 建议；当前先收敛已存在的工作流，保留已交付功能与缺失项占位。
 

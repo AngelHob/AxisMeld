@@ -4,8 +4,12 @@
 
 - 按用户明确选择，只将热盒下方的伴随列表及其级联子菜单缩为原尺寸的 90%。文字、图标、行高、留白和右侧 Options 同步；周围方向按钮、四视图间距、主热盒栏和其他原生菜单保持原尺寸。
 - 固定列表行高由 24 调为 21.6，绘制与点击使用同一矩形；保留全部菜单内容、底部避让、灰项保护和说明无空间时隐藏，不因窗口变小继续缩放、不折叠或滚动。
-- 新增 3 项几何回归先 RED 后 GREEN；6 组 42 项相关 Python、2 组 114 项原生测试、5 组既有 GUI 回归及新构建工厂启动通过。新增真实截图观察器在旧版实际失败、新版 100%/150% 通过，列表宽度约 90%，周围按钮归一化像素矩形完全一致；完整预览包待打包，证据见[本批验收](compatibility/2026-10-11-compact-companion-acceptance.md)。
+- 新增 3 项几何回归先 RED 后 GREEN；6 组 42 项相关 Python、2 组 114 项原生测试、5 组既有 GUI 回归及新构建工厂启动通过。新增真实截图观察器在旧版实际失败、新版 100%/150% 通过，列表宽度约 90%，周围按钮归一化像素矩形完全一致；完整预览包已发布并完成匿名下载启动核验，证据见[本批验收](compatibility/2026-10-11-compact-companion-acceptance.md)。
 - 新增待人工 GU-26；目录 343 项（当前 331、历史 12），47 项历史已测记录和既有人工状态保持，当前初始未测 284。新增功能开发继续暂停。
+
+完整 [Compact companion preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-compact-companion-preview) 已发布；源码/native `7ebc757ae0826bce1506174f14e639344553423e`，基于既有 Blender 5.4.0 Alpha。ZIP 303,157,268 字节，SHA256 `47b59ad6547b23eb045e52f1dbfed2f8b8f57069169caa98b6f4bd33e127d113`；EXE SHA256 `dff87613bb00e70594023312a0cd401ab8b8dd599fdd7fdf4a509f8cdfa34cdf`。6,572 个发行文件、145 项选定资源通过干净解压审计；解压包 factory 与 100%/150% 列表 GUI、匿名重下载后的校验/解压/factory 通过。[发布快照](compatibility/2026-10-11-compact-companion-preview-snapshot.json)保存精确指纹；旧预览包保留。
+
+本地网站静态与状态检查通过；Pages `01fbd41b47e6` 的 6 个公开资源逐字节核验通过。本批仅更新目录和发布配置，未重记历史浏览器检查为当前结果。
 
 ## 2026-10-11 · Blender 5.4 主干同步
 

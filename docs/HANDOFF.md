@@ -2,7 +2,7 @@
 
 本页面向未读过聊天记录的开发者和 Codex。首批 GUI 收敛的历史起点为 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`；本批版本见下文，执行前核对远端与当前源码。新算法仍暂停，不因 UI 实施完成自动启动 A2。
 
-**最新交付（2026-10-11 Blender main preview）：Blender 5.4.0 Alpha 主干同步及完整原生预览包已发布。** 合入固定上游 `754ebe3c4b4e1402a159df6e1e58823cc93ef887`，保留七根 Modeling、Rigging、独立 Options、灰占位及极低窗口说明避让；新算法继续暂停。本轮 42 组 415 项纯 Python、8 组 144 项原生，另有 4 组 CLI（profiles 18 项、Blender input 11 项；profiles 与纯 Python 重合，不累加），15 组 GUI 回归、5 组 bpy 功能及 factory、5 个说明矩阵组合通过。[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-blender-main-preview)，源码/native `7beedde071ca5eaa8fce6090f01cf2ddd40b6804`；匿名下载、干净解压及工厂启动已核验。详见[本轮验收](compatibility/2026-10-11-blender-main-acceptance.md)与[发布快照](compatibility/2026-10-11-blender-main-preview-snapshot.json)。公开目录 342 项（当前 330、历史 12），47 项仅历史已测，当前初始未测 283、全表初始未测 295；最新标记 GU-22、GU-23、GU-24、GU-25。既有编号与人工结果保持，自动化不替用户勾选。
+**最新交付（2026-10-11 Compact companion preview）：热盒下方列表缩小预览已发布。** 仅将热盒下方伴随列表及其级联缩为原尺寸的 90%，文字、图标、行高、留白和 Options 同步；周围方向按钮、四视图间隔、主热盒栏及普通原生菜单保持原尺寸。完整条目、底部避让和说明无空间时隐藏的规则保持，不折叠、不滚动，不随窗口继续缩小。 沿用 Blender 5.4 Alpha 固定上游 `754ebe3c4b4e1402a159df6e1e58823cc93ef887`，本批未再次合并上游。6 组 42 项相关 Python、2 组 114 项原生、5 组既有 GUI 回归与 1 组新增列表几何验证通过。[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-compact-companion-preview)，源码/native `7ebc757ae0826bce1506174f14e639344553423e`；匿名下载、干净解压及工厂启动已核验。详见[本批验收](compatibility/2026-10-11-compact-companion-acceptance.md)与[发布快照](compatibility/2026-10-11-compact-companion-preview-snapshot.json)。本批 Pages `01fbd41b47e6` 的 6 个公开资源逐字节核验通过。公开目录 343 项（当前 331、历史 12），47 项仅历史已测，当前初始未测 284、全表初始未测 296；最新标记 GU-26。既有编号与人工结果保持，自动化不替用户勾选。新增建模、Skin/Skeleton、UV 算法继续暂停。
 
 ## 1. 先用正确分支
 
@@ -23,7 +23,7 @@ git log -5 --oneline
 
 1. 根目录 [AGENTS.md](../AGENTS.md)：热盒与交付硬约束。
 2. [ROADMAP](ROADMAP.md)、[CURRENT_ISSUES](CURRENT_ISSUES.md)、[CHANGELOG](CHANGELOG.md)：现状、下一批和已修复事项。
-3. [构建与交付](BUILD_AND_DELIVERY.md)、[当前发布快照](compatibility/2026-10-11-gui-short-window-preview-snapshot.json)：命令、源码与发布版本关系；9 月 17 日及旧 GUI/menu/interaction 快照仅用于对应历史包。
+3. [构建与交付](BUILD_AND_DELIVERY.md)、[当前快照](compatibility/2026-10-11-compact-companion-preview-snapshot.json)：命令、源码与发布版本关系；早期发布验收仅用于对应历史包。
 4. 当前模块设计；例如 [Rigging](development/2026-09-17-rigging-workspace.md)、[Rigify](development/2026-09-15-rigify-builtin.md)、[紧凑建模栏](development/2026-09-15-compact-modeling-public-testing.md)。
 5. 当前模块源码、测试和[人工总清单](compatibility/2026-09-14-manual-test-ledger.md)。历史架构、旧 plans 用作背景；冲突时遵循用户后续决定及当前总览。
 
@@ -54,7 +54,7 @@ git log -5 --oneline
 
 ## 5. 当前 GUI 收敛与下一步
 
-先读 [主干 验收](compatibility/2026-10-11-blender-main-acceptance.md) 和最新 CHANGELOG，核对固定 upstream `754ebe3c4b4e1402a159df6e1e58823cc93ef887` 及最终源码/包指纹，再运行输入与菜单导出的 `--check`。保留已交付 UI/输入行为，不重复实现，也不恢复新算法。
+先读 [本批验收](compatibility/2026-10-11-compact-companion-acceptance.md) 和最新 CHANGELOG，核对固定 upstream `754ebe3c4b4e1402a159df6e1e58823cc93ef887` 及源码/native `7ebc757ae0826bce1506174f14e639344553423e` 的包指纹，再运行输入与菜单导出的 `--check`。本批只缩小 companion 列表及级联，保留方向按钮、Views、普通菜单和已交付 UI/输入行为，不重复实现，也不恢复新算法。
 
 当前输入导出为 58 默认命令、60 条含别名绑定、7 个操纵器辅助入口、3 个原生模态持键入口、499 条原生继承、45 条移除、187 个受保护 keymap；基准/生成 keymap 为 281/282。原 18+2 输入参考已闭合；原生继承不宣称 Maya 等价。
 
@@ -62,11 +62,11 @@ git log -5 --oneline
 - 持键入口：`history_hotbox.py`、`AXM_history_hold.hh`、`transform_axismeld_snap.cc/.hh`。A 的动作延后至 A 释放，旧队列绑定原目标；临时吸附归一次 TransInfo，不持久写入用户设置或 Redo。
 - 菜单入口：`workspace_menu_catalog.py`、原生 UI 宿主及本批菜单审计；保持批准的七根/两根、灰项、右侧齿轮、真实原生 provider 和插件回调。
 - File 入口：只开放 `file.open` / `file.save_as`，无默认快捷键，保留独立 Options 灰占位。精确 token 穿过未保存场景/修改图像确认，只绑定对应文件选择器；取消、失焦和窗口销毁不能残留松键所有权。不得替换为全局拦截或绕过确认，见 [File 设计](development/2026-10-11-file-window-release-design.md)。
-- 实际事件 suites：modeling-viewport、menu-shortcuts、menu-options-navigation、menu-options-access、menu-options-geometry、modeling-disabled-reason、hotbox-repost、context-entries、temporary-snap、history-hotbox、tools-modifiers、tools、full-menu-lifecycle、file-window、release-cross-window；另有 5 个说明矩阵组合，具体窗口/缩放与结果见本批验收。用新 5.4 包验证，不混用旧包回执。
+- 本批实际事件 suites：hotbox-repost、context-entries、tools、history-hotbox、full-menu-lifecycle；另有 1 组新增 compact-companion 新旧像素比较，覆盖 100%/150% 与 Mapping 级联。既有主干批次更广矩阵保留在历史验收，不转记为本批重跑；当前完整范围见本批验收。
 
 D/C/F12/1/2/3 及 Shift+J 的缺口分别涉及独立枢轴、曲线最近点、UV 选择域、可恢复预览和相对吸附，不用近似操作冒充完成。独立 Vertex Face、Isolate 动态书签提供器、Skin/Skeleton/建模/UV 新算法继续后置，Global 缩放继续搁置。
 
-公开目录 342 项（当前 330、历史 12），47 项仅历史已测，当前初始未测 283、全表初始未测 295；最新标记 GU-22、GU-23、GU-24、GU-25。既有编号与人工结果保持，自动化不替用户勾选。网页勾选属于各访客浏览器，GitHub Issue 才是共享反馈。
+公开目录 343 项（当前 331、历史 12），47 项仅历史已测，当前初始未测 284、全表初始未测 296；最新标记 GU-26。既有编号与人工结果保持，自动化不替用户勾选。网页勾选属于各访客浏览器，GitHub Issue 才是共享反馈。
 
 后续优先处理新构建的具体 UI/输入反馈与显示/手感验收，保留已通过的实现和回归。阶段收敛后先向用户报告范围与限制，恢复功能开发须由用户决定，不自动回到旧 A2 队列。
 
@@ -74,7 +74,7 @@ D/C/F12/1/2/3 及 Shift+J 的缺口分别涉及独立枢轴、曲线最近点、
 
 按 [AGENTS](../AGENTS.md) 更新设计、CHANGELOG 和有变化的测试条目，执行相称验证，再 commit/push 并核验远端 SHA；用户已授权每批开发完成上传 GitHub，不需要重复确认。未通过的必要检查不得用“已完成”掩盖。
 
-Pages 只同步前端运行资源；先验证源码/包/解压启动，再发布新版并核对匿名下载和线上字节。完整 [Blender main preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-blender-main-preview) 已发布；源码/native `7beedde071ca5eaa8fce6090f01cf2ddd40b6804`，基于 Blender 5.4.0 Alpha。ZIP 303,157,226 字节，SHA256 `f3692f9813cb6c7d144a371e42768229591b89ca5944671a8c886e62d4ae0a52`；EXE SHA256 `0a4de344f93bafcea9414668746fe1fa0d2fec5dd1bc0b62d86ae3a9acbd56a9`。6,572 个发行文件、145 项选定资源通过干净解压审计；解压包 factory 和实际说明 GUI、匿名重下载后的校验/解压/factory 已通过。本地网站 12 项浏览器检查通过，Pages `9fc6257e35e4` 的 6 个公开资源逐字节核对通过。[发布快照](compatibility/2026-10-11-blender-main-preview-snapshot.json)保存精确指纹。旧预览包保留。
+Pages 只同步前端运行资源；先验证源码/包/解压启动，再发布新版并核对匿名下载和线上字节。完整 [Compact companion preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-compact-companion-preview) 已发布；源码/native `7ebc757ae0826bce1506174f14e639344553423e`，基于 Blender 5.4 Alpha。ZIP 303,157,268 字节，SHA256 `47b59ad6547b23eb045e52f1dbfed2f8b8f57069169caa98b6f4bd33e127d113`；EXE SHA256 `dff87613bb00e70594023312a0cd401ab8b8dd599fdd7fdf4a509f8cdfa34cdf`。候选、本地解压包及匿名下载解压包工厂启动通过；本地解压包的列表 GUI 也已通过。[发布快照](compatibility/2026-10-11-compact-companion-preview-snapshot.json)保存精确指纹。旧预览包保留。本批 Pages `01fbd41b47e6` 的 6 个公开资源逐字节核验通过。
 
 历史 A1 另发的 Skin weights 预览包（Python 源码 bf35ab393b7c）复用 Rigging native，旧 tag 和历史测试结果保持；对应记录为 compatibility/2026-09-17-skin-weights-snapshot.json。
 

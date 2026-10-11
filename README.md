@@ -13,19 +13,19 @@ AxisMeld 与 Blender Foundation、Autodesk 及其产品均无隶属、合作、�
 ## 当前开发与接续（2026-10-11）
 
 最新开发位于 **`axismeld/phase-2a`**；GitHub 默认 `axismeld/integration` 尚未集成最新功能。
-**最新交付（2026-10-11 Blender main preview）：Blender 5.4.0 Alpha 主干同步及完整原生预览包已发布。** 合入固定上游 `754ebe3c4b4e1402a159df6e1e58823cc93ef887`，保留七根 Modeling、Rigging、独立 Options、灰占位及极低窗口说明避让；新算法继续暂停。本轮 42 组 415 项纯 Python、8 组 144 项原生，另有 4 组 CLI（profiles 18 项、Blender input 11 项；profiles 与纯 Python 重合，不累加），15 组 GUI 回归、5 组 bpy 功能及 factory、5 个说明矩阵组合通过。[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-blender-main-preview)，源码/native `7beedde071ca5eaa8fce6090f01cf2ddd40b6804`；匿名下载、干净解压及工厂启动已核验。详见[本轮验收](docs/compatibility/2026-10-11-blender-main-acceptance.md)与[发布快照](docs/compatibility/2026-10-11-blender-main-preview-snapshot.json)。公开目录 342 项（当前 330、历史 12），47 项仅历史已测，当前初始未测 283、全表初始未测 295；最新标记 GU-22、GU-23、GU-24、GU-25。既有编号与人工结果保持，自动化不替用户勾选。
+**最新交付（2026-10-11 Compact companion preview）：热盒下方列表缩小预览已发布。** 仅将热盒下方伴随列表及其级联缩为原尺寸的 90%，文字、图标、行高、留白和 Options 同步；周围方向按钮、四视图间隔、主热盒栏及普通原生菜单保持原尺寸。完整条目、底部避让和说明无空间时隐藏的规则保持，不折叠、不滚动，不随窗口继续缩小。 沿用 Blender 5.4 Alpha 固定上游 `754ebe3c4b4e1402a159df6e1e58823cc93ef887`，本批未再次合并上游。6 组 42 项相关 Python、2 组 114 项原生、5 组既有 GUI 回归与 1 组新增列表几何验证通过。[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-compact-companion-preview)，源码/native `7ebc757ae0826bce1506174f14e639344553423e`；匿名下载、干净解压及工厂启动已核验。详见[本批验收](docs/compatibility/2026-10-11-compact-companion-acceptance.md)与[发布快照](docs/compatibility/2026-10-11-compact-companion-preview-snapshot.json)。本批 Pages `01fbd41b47e6` 的 6 个公开资源逐字节核验通过。公开目录 343 项（当前 331、历史 12），47 项仅历史已测，当前初始未测 284、全表初始未测 296；最新标记 GU-26。既有编号与人工结果保持，自动化不替用户勾选。新增建模、Skin/Skeleton、UV 算法继续暂停。
 
-本批同步固定 Blender 主干；已有上下文、History、临时吸附、文件窗口及短窗口说明行为继续保留。缺失 Maya 能力保持灰显，实体鼠标和生产场景仍需人工验收。
+本批仅调整热盒下方伴随列表及其级联的固定尺寸。已有上下文、History、临时吸附、文件窗口及短窗口说明行为继续保留；缺失 Maya 能力保持灰显，实体鼠标和生产场景仍需人工验收。
 
 - [整体规划与路线图](docs/ROADMAP.md) · [当前问题](docs/CURRENT_ISSUES.md) · [修改日志](docs/CHANGELOG.md)。
 - [新机器接续开发](docs/HANDOFF.md) · [直接复制给 Codex 的提示词](docs/CODEX_HANDOFF_PROMPT.md) · [构建与交付](docs/BUILD_AND_DELIVERY.md)。
-- [公开测试页](https://angelhob.github.io/AxisMeld/) · [Windows x64 Blender main 预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-blender-main-preview)（完整原生包，附 ZIP 校验文件）· [发布指纹与验证范围](docs/compatibility/2026-10-11-blender-main-preview-snapshot.json)。
+- [公开测试页](https://angelhob.github.io/AxisMeld/) · [Windows x64 热盒下方列表缩小预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-compact-companion-preview)（完整原生包，附 ZIP 校验文件）· [发布指纹与验证范围](docs/compatibility/2026-10-11-compact-companion-preview-snapshot.json)。
 
 Modeling 视窗保留 Mesh、Edit Mesh、Mesh Tools、Mesh Display、Curves、Surfaces、UV；Vertex/Edge/Face 收于 Edit Mesh。Rigging 的 Skeleton/Skin 保留 Maya 82 条正文和 33 个 Options，并收纳已有 Blender 骨架、绑定、权重、姿态及 Rigify 入口。
 
 仓库新完整便携包采用干净工厂配置，初次为 Blender 键位与 Layout。试用 Maya 流程时，在 Edit → Preferences → Keymap 选择 **AxisMeld Maya 2026**，再切 Modeling 或 Rigging；需要保留时主动保存偏好。
 
-公开目录 342 项（当前 330、历史 12），47 项仅历史已测，当前初始未测 283、全表初始未测 295；最新标记 GU-22、GU-23、GU-24、GU-25。既有编号与人工结果保持，自动化不替用户勾选。网页勾选保存于各访客浏览器，通过 GitHub Issue 分享。
+公开目录 343 项（当前 331、历史 12），47 项仅历史已测，当前初始未测 284、全表初始未测 296；最新标记 GU-26。既有编号与人工结果保持，自动化不替用户勾选。网页勾选保存于各访客浏览器，通过 GitHub Issue 分享。
 
 下面的 Phase 0～2B 段落保留基础能力说明；后续完整进度以路线图和修改日志为准。原始架构见 [AxisMeld 架构设计](docs/design/2026-09-08-axismeld-architecture.md)。
 
