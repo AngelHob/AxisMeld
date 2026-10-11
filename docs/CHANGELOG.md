@@ -1,11 +1,11 @@
 # AxisMeld 修改日志
 ## 2026-10-11 · 极低窗口说明避让
 
-<!-- SHORT_WINDOW_RELEASE_PENDING -->
+完整 [GUI short-window preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-short-window-preview) 已发布；源码/native `665cb38b123d89d273d6f68e2c748a258abfff47`。ZIP 297,083,907 字节，SHA256 `d49d7fd4a11bb4cdb54e8931c4391deb0a7d07661d64ea22e3e6341c4645d766`。6,498 个发行文件、145 项资源通过干净解压审计；解压包工厂启动和实际说明 GUI 通过，匿名重下载后再次核验 ZIP、解压和工厂启动。本地网站 12 项浏览器检查通过；Pages `c2904572e2ad` 的 6 个公开资源逐字节核对通过。[发布快照](compatibility/2026-10-11-gui-short-window-preview-snapshot.json)保存精确指纹。旧预览包保留。
 
 - 热盒说明保留可用的原位置；没有完整横向空带时，按实际菜单背景、方向按钮、Options 和保留父级寻找二维空白，并重新测量完整文字。菜单布局、字号、命中与释放规则保持。
 - 按用户明确选择，完全没有空间时暂不显示说明；窗口恢复空间后应完整显示。禁止回落到覆盖菜单的位置，不折叠、滚动或删减菜单。
-- 旧版 840×480、150% 的 Duplicate Special 实际截图复现覆盖；新原生候选首个相同场景通过全文 11 行与菜单零交叠。94 项纯 Python、4 组 133 项原生通过；其余窗口矩阵与交互回归、发布状态统一记录在[本批验收](compatibility/2026-10-11-gui-short-window-acceptance.md)，未完成步骤不提前记为通过。
+- 旧版 840×480、150% 的 Duplicate Special 实际截图复现覆盖；新版本通过完整说明与菜单零交叠检查。94 项纯 Python、4 组 133 项原生、5 组 GUI 回归及 5 个说明矩阵组合通过；含无位置抑制和实际放大后的同一说明恢复。完整证据见[本批验收](compatibility/2026-10-11-gui-short-window-acceptance.md)。
 - 新增待人工 GU-22，目录 339 项、当前 327、历史 12；47 项历史已测和既有结果保持，当前初始待测 280。随后进行独立的 Blender 主干合并与新构建验证；本批说明修复不能代替主干兼容性证据。
 
 ## 2026-10-11 · 建模灰项与热盒重复唤出

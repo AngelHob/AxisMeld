@@ -2,7 +2,7 @@
 
 本页面向未读过聊天记录的开发者和 Codex。首批 GUI 收敛的历史起点为 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`；本批版本见下文，执行前核对远端与当前源码。新算法仍暂停，不因 UI 实施完成自动启动 A2。
 
-**最新交付（2026-10-11 GUI interaction polish）：两项菜单/热盒交互修复及完整原生预览包已发布。** Modeling 原生灰项显示上下文原因，并阻止无效子菜单预览；W/E/R 持键时每次 LMB 重复唤出从根目录开始。本轮通过 94 项纯 Python、42 项原生和 7 组实际 GUI。[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-interaction-preview)，源码/native 均为 `534eec00698397cc55e27f23f3575e6d4894331a`；匿名下载、干净解压及工厂启动已核验。详见[本轮验收](compatibility/2026-10-11-gui-interaction-polish-acceptance.md)与[发布快照](compatibility/2026-10-11-gui-interaction-preview-snapshot.json)。新增 GU-20～GU-21 待人工，GU-01～GU-19 及原结果保持；极低窗口无说明空带时可能覆盖菜单。新算法继续暂停。
+**最新交付（2026-10-11 GUI short-window polish）：极低窗口说明避让修复及完整原生预览包已发布。** 说明在窗口空白区域完整换行显示，必要时移到菜单侧面；全文无处容纳时暂不显示，扩大窗口后恢复。菜单文字、布局、命中及取消保持。本轮通过 94 项纯 Python、133 项原生，5 组菜单/交互 GUI 回归及 5 组窗口/缩放说明矩阵通过。[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-short-window-preview)，源码/native 均为 `665cb38b123d89d273d6f68e2c748a258abfff47`；匿名下载、干净解压及工厂启动已核验。详见[本轮验收](compatibility/2026-10-11-gui-short-window-acceptance.md)与[发布快照](compatibility/2026-10-11-gui-short-window-preview-snapshot.json)。新增 GU-22 待人工，GU-01～GU-21 及原结果保持。新算法继续暂停。
 
 ## 1. 先用正确分支
 
@@ -23,7 +23,7 @@ git log -5 --oneline
 
 1. 根目录 [AGENTS.md](../AGENTS.md)：热盒与交付硬约束。
 2. [ROADMAP](ROADMAP.md)、[CURRENT_ISSUES](CURRENT_ISSUES.md)、[CHANGELOG](CHANGELOG.md)：现状、下一批和已修复事项。
-3. [构建与交付](BUILD_AND_DELIVERY.md)、[当前发布快照](compatibility/2026-10-11-gui-interaction-preview-snapshot.json)：命令、源码与发布版本关系；9 月 17 日及旧 GUI/menu 快照仅用于对应历史包。
+3. [构建与交付](BUILD_AND_DELIVERY.md)、[当前发布快照](compatibility/2026-10-11-gui-short-window-preview-snapshot.json)：命令、源码与发布版本关系；9 月 17 日及旧 GUI/menu/interaction 快照仅用于对应历史包。
 4. 当前模块设计；例如 [Rigging](development/2026-09-17-rigging-workspace.md)、[Rigify](development/2026-09-15-rigify-builtin.md)、[紧凑建模栏](development/2026-09-15-compact-modeling-public-testing.md)。
 5. 当前模块源码、测试和[人工总清单](compatibility/2026-09-14-manual-test-ledger.md)。历史架构、旧 plans 用作背景；冲突时遵循用户后续决定及当前总览。
 
@@ -54,7 +54,7 @@ git log -5 --oneline
 
 ## 5. 当前 GUI 收敛与下一步
 
-先读 [GUI 验收](compatibility/2026-10-11-gui-interaction-polish-acceptance.md) 和最新 CHANGELOG，确认最终验证状态，再运行输入/菜单/公开目录生成器的 `--check`。不要重复开发已交付的上下文入口、History、临时吸附、File 跨窗释放、菜单快捷键/Options/长说明，以及本批 Modeling 灰项保护和工具热盒重复唤出复位。
+先读 [GUI 验收](compatibility/2026-10-11-gui-short-window-acceptance.md) 和最新 CHANGELOG，确认最终验证状态，再运行输入/菜单/公开目录生成器的 `--check`。不要重复开发已交付的上下文入口、History、临时吸附、File 跨窗释放、菜单快捷键/Options、Modeling 灰项保护和工具热盒重复唤出复位。本批极低窗口说明已能避让菜单，无完整空白时隐藏并在窗口扩大后恢复。
 
 当前输入导出为 58 默认命令、60 条绑定、7 操纵器入口、3 原生模态持键入口、497 条继承、45 条移除、186 个受保护 keymap。原 18+2 条缺参考已闭合，参考记录的是已核实的 Maya 2026 默认事实与原文件指纹，不上传安装源码。原生继承键（含 F1–F5）不宣称 Maya 等价。
 
@@ -62,11 +62,11 @@ git log -5 --oneline
 - 持键入口：`history_hotbox.py`、`AXM_history_hold.hh`、`transform_axismeld_snap.cc/.hh`。A 的动作延后至 A 释放，旧队列绑定原目标；临时吸附归一次 TransInfo，不持久写入用户设置或 Redo。
 - 菜单入口：`workspace_menu_catalog.py`、原生 UI 宿主及本批菜单审计；保持批准的七根/两根、灰项、右侧齿轮、真实原生 provider 和插件回调。
 - File 入口：只开放 `file.open` / `file.save_as`，无默认快捷键，保留独立 Options 灰占位。精确 token 穿过未保存场景/修改图像确认，只绑定对应文件选择器；取消、失焦和窗口销毁不能残留松键所有权。不得替换为全局拦截或绕过确认，见 [File 设计](development/2026-10-11-file-window-release-design.md)。
-- 实际事件 suites：本批新增 `modeling-disabled-reason`、`hotbox-repost`，并保留 `context-entries`、`history-hotbox`、`temporary-snap`、`workspace-menu-layout`、`file-window`、`release-cross-window` 等原有回归；按验收回执指定的新构建运行。旧 menu preview 不含本批两项修复，不能作为当前实现的验收包。
+- 实际事件 suites：本批使用 `hotbox-reasons` 的低窗、正常窗、四视图及无空白隐藏/扩大恢复矩阵，并保留工具、重复唤出、菜单 Options 和生命周期回归；实际组合与套件见本批验收回执。既有 `modeling-disabled-reason`、`modeling-viewport`、History 和 File 释放回归继续保留；旧 interaction preview 不含本批说明避让修复，不能作为当前实现的验收包。
 
 D/C/F12/1/2/3 及 Shift+J 的缺口分别涉及独立枢轴、曲线最近点、UV 选择域、可恢复预览和相对吸附，不用近似操作冒充完成。独立 Vertex Face、Isolate 动态书签提供器、Skin/Skeleton/建模/UV 新算法继续后置，Global 缩放继续搁置。
 
-人工目录 338 项，当前 326、历史 12；47 项只保留历史“已测试”状态，当前初始待测 279、全表初始未测 291。GU-20～GU-21 最新新增，原 GU-01～GU-19、IN/RG/G 等编号和结果保留。网页勾选属于各访客浏览器，GitHub Issue 才是共享反馈。
+人工目录 339 项，当前 327、历史 12；47 项只保留历史“已测试”状态，当前初始待测 280、全表初始未测 292。GU-22 最新新增，原 GU-01～GU-21、IN/RG/G 等编号和结果保留。网页勾选属于各访客浏览器，GitHub Issue 才是共享反馈。
 
 后续优先处理新构建的具体 UI/输入反馈与显示/手感验收，保留已通过的实现和回归。阶段收敛后先向用户报告范围与限制，恢复功能开发须由用户决定，不自动回到旧 A2 队列。
 
@@ -74,7 +74,7 @@ D/C/F12/1/2/3 及 Shift+J 的缺口分别涉及独立枢轴、曲线最近点、
 
 按 [AGENTS](../AGENTS.md) 更新设计、CHANGELOG 和有变化的测试条目，执行相称验证，再 commit/push 并核验远端 SHA；用户已授权每批开发完成上传 GitHub，不需要重复确认。未通过的必要检查不得用“已完成”掩盖。
 
-Pages 只同步前端运行资源；发布新试用包先固定源码提交，打包/解压/启动核验成功后才改页面的 `buildId` 与下载链接。本批完整原生 GUI interaction preview 已发布，匿名下载、干净解压和工厂启动核验通过；网站 12 项浏览器检查及线上 6 个资源逐字节核验通过，记录见[当前发布快照](compatibility/2026-10-11-gui-interaction-preview-snapshot.json)。
+Pages 只同步前端运行资源；发布新试用包先固定源码提交，打包/解压/启动核验成功后才改页面的 `buildId` 与下载链接。本批完整原生 GUI short-window preview 已发布，匿名下载、干净解压和工厂启动核验通过；公开网页验证状态以[当前发布快照](compatibility/2026-10-11-gui-short-window-preview-snapshot.json)为准。
 
 历史 A1 另发的 Skin weights 预览包（Python 源码 bf35ab393b7c）复用 Rigging native，旧 tag 和历史测试结果保持；对应记录为 compatibility/2026-09-17-skin-weights-snapshot.json。
 
