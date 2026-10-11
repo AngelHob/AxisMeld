@@ -5,7 +5,7 @@
 ## 公开试用
 
 - [打开公开测试清单](https://angelhob.github.io/AxisMeld/)：查看完整测试步骤，记录自己的结果，提交 GitHub 反馈。
-- [下载 Windows x64 便携预览版（GUI 改键与提示）](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-input-preview)：完整解压后运行 `AxisMeld-Preview/blender.exe`。
+- [下载 Windows x64 便携预览版（菜单 GUI 修复）](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-menu-preview)：完整解压后运行 `AxisMeld-Preview/blender.exe`。
 - [查看反馈与测试结果](https://github.com/AngelHob/AxisMeld/issues?q=is%3Aissue+label%3Atest-feedback)。
 - [当前开发源码](https://github.com/AngelHob/AxisMeld/tree/axismeld/phase-2a)。
 - [修改日志](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/CHANGELOG.md)。
@@ -14,7 +14,7 @@
 
 开发请使用 **`axismeld/phase-2a`**；默认 `axismeld/integration` 目前只同步公开入口，尚未包含最新开发功能。
 
-首次为 Blender 键位与 Layout；在 Edit → Preferences → Keymap 选择 **AxisMeld Maya 2026**，再切 Modeling 或 Rigging。本轮修复带修饰键的工具热盒、快捷键功能名称与搜索、Rigging 灰项原因提示；新增 GU-14～GU-16 待人工验收，GU-01～GU-13 等原项目和结果保留。
+首次为 Blender 键位与 Layout；在 Edit → Preferences → Keymap 选择 **AxisMeld Maya 2026**，再切 Modeling 或 Rigging。本轮修复菜单实际快捷键提示、灰齿轮键盘导航和窄窗说明；新增 GU-17～GU-19 待人工验收，原项目和结果保留。
 
 建模顶栏保留 7 项，Vertex / Edge / Face 位于 Edit Mesh 内；原生工具、插件入口和右侧参数齿轮保留。灰色项表示尚未适配，开发预览版仍需人工测试。
 
