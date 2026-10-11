@@ -2,6 +2,8 @@
 
 > 当前分支 `axismeld/integration` 尚未集成最新功能。开发请使用 [axismeld/phase-2a](https://github.com/AngelHob/AxisMeld/tree/axismeld/phase-2a)，先读[整体路线图](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/ROADMAP.md)、[换机接续说明](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/HANDOFF.md)或[复制给 Codex 的提示词](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/CODEX_HANDOFF_PROMPT.md)。下文的早期阶段状态保留历史语境；公开入口见 [.github/README.md](.github/README.md)。
 
+2026-10-11：当前 Modeling／通用视窗／Rigging GUI 批次已完成。下载 [GUI 与交互预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview)，在[公开测试页](https://angelhob.github.io/AxisMeld/)查看 GU-01～GU-13；人工状态与缺失算法灰项保持。首次运行需选择 AxisMeld Maya 2026 键位，再切 Modeling／Rigging。
+
 **Maya-style modeling workflow, built on Blender.**
 
 AxisMeld 是一个基于 Blender 开发、完全非盈利、自由开源的独立项目。它以 Maya 2026 默认交互为公开基线，在尽量保持 Blender 上游兼容性的前提下，改进快捷键、操作逻辑、热盒、视图导航、建模和 UV 编辑体验。
