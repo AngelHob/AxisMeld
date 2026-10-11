@@ -5,13 +5,16 @@
 ```text
 请接续开发我的 AxisMeld 项目。默认用中文，结论优先，主动核实并完成有界任务。
 
-本批交付状态（2026-10-11）：当前范围实现与统一候选回归已完成，发布待本批验收回执。
+本批交付状态（2026-10-11）：当前范围实现、统一候选回归与完整原生预览包发布已完成。
 已通过40组354项纯Python、8组139项原生、真实RNA7+4项及7个实际File流程；
 统一候选18组回归全部通过（17组GUI、1组profiles后台验证，按套件计）；
 exe SHA256：793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912。
-新包尚未发布。接手先读
-docs/compatibility/2026-10-11-gui-completion-acceptance.md 的最终结果/指纹，不能沿用这段中间状态。
-9月17日旧Skin包仍可下载，但不包含本批GUI/原生输入改动，不能用于本批人工验收。
+完整原生预发布tag：axismeld-2026.10.11-gui-preview；匿名ZIP/sidecar下载、全量解压及工厂启动已核验。
+功能源码与nativeSourceCommit均为41d71f26ccf12be5addd5c3453106bfa66f8de5f。
+发布入口：https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview
+接手先读docs/compatibility/2026-10-11-gui-preview-snapshot.json及
+docs/compatibility/2026-10-11-gui-completion-acceptance.md，核对发布身份与验证边界。
+9月17日旧Skin包只作历史参考，不包含本批改动，不能用于本批人工验收。
 
 仓库：https://github.com/AngelHob/AxisMeld
 最新开发分支：axismeld/phase-2a
@@ -36,7 +39,8 @@ docs/compatibility/2026-10-11-gui-completion-acceptance.md 的最终结果/指�
 - docs/compatibility/2026-09-17-handoff-snapshot.json 保存公开校验值与历史验证范围。
 - A1 历史试用 tag：axismeld-2026.09.17-skin-weights-preview，Python源码：bf35ab393b7c4d94bfdd78680a862ab76c71fc6e；native仍复用以上基线。
 - A1公开资源/ZIP指纹与验证边界见 docs/compatibility/2026-09-17-skin-weights-snapshot.json。
-- 可下载完整试用 ZIP 与 .sha256；原电脑 build/candidate/outputs/work 不是开发依赖。
+- 历史ZIP与.sha256按各自旧快照核验；当前试用采用本提示词开头的新GUI preview。
+  原电脑build/candidate/outputs/work不是开发依赖。
 
 当前产品约束：
 - 这是 Blender 原生衍生项目；Rigify 已默认内置，不再作为用户启停的插件；Rigging 是原生工作区。

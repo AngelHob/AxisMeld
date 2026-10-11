@@ -5,7 +5,7 @@
 ## 公开试用
 
 - [打开公开测试清单](https://angelhob.github.io/AxisMeld/)：查看完整测试步骤，记录自己的结果，提交 GitHub 反馈。
-- [下载 Windows x64 便携预览版（Skin 权重整理）](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-skin-weights-preview)：完整解压后运行 `AxisMeld-Preview.cmd`。
+- [下载 Windows x64 便携预览版（GUI 与交互）](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview)：完整解压后运行 `AxisMeld-Preview/blender.exe`。
 - [查看反馈与测试结果](https://github.com/AngelHob/AxisMeld/issues?q=is%3Aissue+label%3Atest-feedback)。
 - [当前开发源码](https://github.com/AngelHob/AxisMeld/tree/axismeld/phase-2a)。
 - [修改日志](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/CHANGELOG.md)。
@@ -13,6 +13,8 @@
 - [换机开发说明](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/HANDOFF.md) · [复制给 Codex 的接续提示词](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/CODEX_HANDOFF_PROMPT.md)。
 
 开发请使用 **`axismeld/phase-2a`**；默认 `axismeld/integration` 目前只同步公开入口，尚未包含最新开发功能。
+
+首次为 Blender 键位与 Layout；在 Edit → Preferences → Keymap 选择 **AxisMeld Maya 2026**，再切 Modeling 或 Rigging。当前菜单、上下文/History 热盒、组件预选、临时吸附和文件窗口交互批次已完成自动回归；新增 GU-01～GU-13 仍待人工验收。
 
 建模顶栏保留 7 项，Vertex / Edge / Face 位于 Edit Mesh 内；原生工具、插件入口和右侧参数齿轮保留。灰色项表示尚未适配，开发预览版仍需人工测试。
 

@@ -13,19 +13,19 @@ AxisMeld 与 Blender Foundation、Autodesk 及其产品均无隶属、合作、�
 ## 当前开发与接续（2026-10-11）
 
 最新开发位于 **`axismeld/phase-2a`**；GitHub 默认 `axismeld/integration` 尚未集成最新功能。
-**本批交付状态：当前范围实现与统一候选回归已完成，发布待本批验收回执。** 已通过 40 组 354 项纯 Python、8 组 139 项原生测试、真实 Blender RNA 7+4 项与 7 个实际 File 流程；统一候选的 18 组回归全部通过（17 组 GUI、1 组 profiles 后台验证，按套件计）；exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`。新包尚未发布。最终结果、构建与包指纹集中记录在 [GUI 验收](docs/compatibility/2026-10-11-gui-completion-acceptance.md)。
+**本批交付状态：当前范围实现、统一候选回归与完整原生预览包发布已完成。** 已通过 40 组 354 项纯 Python、8 组 139 项原生测试、真实 Blender RNA 7+4 项与 7 个实际 File 流程；统一候选的 18 组回归全部通过（17 组 GUI、1 组 profiles 后台验证，按套件计）；exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`。完整原生 [2026.10.11 GUI preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview) 已发布，功能与原生源码同为 `41d71f26ccf12be5addd5c3453106bfa66f8de5f`；匿名下载、全量解压及工厂启动核验通过，见[发布快照](docs/compatibility/2026-10-11-gui-preview-snapshot.json)。最终结果、构建与包指纹集中记录在 [GUI 验收](docs/compatibility/2026-10-11-gui-completion-acceptance.md)。
 
 本批补齐上下文/工具/History 热盒、Edit 空选预选、X/V/J 临时吸附，以及 Space → File 的 Open Scene / Save Scene As 和跨窗口松键保护。原生未保存场景/修改图像确认链保持；缺失 Maya 能力继续灰显，没有新增 Skin/Skeleton、建模或 UV 算法。实体鼠标、高 DPI 和生产场景仍需人工验收。
 
 - [整体规划与路线图](docs/ROADMAP.md) · [当前问题](docs/CURRENT_ISSUES.md) · [修改日志](docs/CHANGELOG.md)。
 - [新机器接续开发](docs/HANDOFF.md) · [直接复制给 Codex 的提示词](docs/CODEX_HANDOFF_PROMPT.md) · [构建与交付](docs/BUILD_AND_DELIVERY.md)。
-- [公开测试页](https://angelhob.github.io/AxisMeld/) · [旧 Windows x64 Skin 权重预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-skin-weights-preview)（2026.09.17，**不包含本批 GUI/原生输入改动**）。
+- [公开测试页](https://angelhob.github.io/AxisMeld/) · [Windows x64 GUI 预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview)（完整原生包，附 ZIP 校验文件）· [发布指纹与验证范围](docs/compatibility/2026-10-11-gui-preview-snapshot.json)。
 
 Modeling 视窗保留 Mesh、Edit Mesh、Mesh Tools、Mesh Display、Curves、Surfaces、UV；Vertex/Edge/Face 收于 Edit Mesh。Rigging 的 Skeleton/Skin 保留 Maya 82 条正文和 33 个 Options，并收纳已有 Blender 骨架、绑定、权重、姿态及 Rigify 入口。
 
 仓库新完整便携包采用干净工厂配置，初次为 Blender 键位与 Layout。试用 Maya 流程时，在 Edit → Preferences → Keymap 选择 **AxisMeld Maya 2026**，再切 Modeling 或 Rigging；需要保留时主动保存偏好。
 
-公开清单保留 330 项（当前 318、历史 12）；47 项只记录历史已测，当前初始未测 271 项。本批新增 GU-01～GU-13 共 13 项待人工测试，原 IN/RG 等编号和结果保持。网页部署与新下载版本以验收回执为准；网页勾选属于各访客本浏览器，不自动跨设备同步或提交到 GitHub。
+公开清单保留 330 项（当前 318、历史 12）；47 项只记录历史已测，当前初始未测 271 项。本批新增 GU-01～GU-13 共 13 项待人工测试，原 IN/RG 等编号和结果保持。线上目录与下载版本已核对为本次 GUI preview；网页勾选属于各访客本浏览器，不自动跨设备同步或提交到 GitHub。
 
 下面的 Phase 0～2B 段落保留基础能力说明；后续完整进度以路线图和修改日志为准。原始架构见 [AxisMeld 架构设计](docs/design/2026-09-08-axismeld-architecture.md)。
 

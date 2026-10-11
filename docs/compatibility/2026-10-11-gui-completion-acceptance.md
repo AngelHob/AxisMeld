@@ -2,7 +2,7 @@
 
 ## 当前状态与范围
 
-本批从 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8` 继续现有 UI/输入阶段。当前范围实现与最终统一候选回归已完成；便携包与发布结果在下表单独记录，不预先当作通过。
+本批从 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8` 继续现有 UI/输入阶段。当前范围实现、最终统一候选回归与公开交付已完成。源码/原生提交为 `41d71f26ccf12be5addd5c3453106bfa66f8de5f`，下载 [2026.10.11 GUI preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview)，完整指纹见[发布快照](2026-10-11-gui-preview-snapshot.json)。
 
 覆盖 Modeling、通用视窗与 Rigging 已开放菜单、热盒及输入适配。保留 Blender 全局菜单和工作区栏、Modeling 七根、Edit Mesh 内 Vertex/Edge/Face、Skeleton/Skin 两根。未增加 Skin/Skeleton/UV 等算法。
 
@@ -56,12 +56,16 @@ python tests/python/axismeld_hotbox_ui_runner.py --blender $Blender --suite menu
 | Blender RNA | 空选事务/六方向转换 7 项、真实输入诊断 4 项通过 |
 | 定向 File GUI | Build07 的 7 条实际流程通过：两热盒入口、Ctrl+O/S 零 token、脏 Open 继续/取消、图片确认后 Save As 取消 |
 | 最终 GUI 批次 | 统一使用上述候选，18 组全部通过（17 组 GUI 事件与 1 组后台 profiles）；每组前后 exe hash 保持一致，[逐组回执](2026-10-11-gui-event-tests.json) |
-| 便携包与公开下载 | 新 install 静态核验通过；ZIP、解压、启动、公开下载仍待发布步骤 |
-| 测试门户 | 330 个唯一编号、13 个新增、12 个历史、47 个历史已测；脚本校验通过，发布版本在新包上传后更新 |
+| 便携包与公开下载 | 干净 staging、ZIP/sidecar、6498文件完整解压、144资源核验、版本/portable/factory与3个关键GUI通过；匿名公开重下载的大小/SHA、完整解压与factory启动也通过 |
+| 测试门户 | 330 个唯一编号、13 个新增、12 个历史、47 个历史已测；静态/状态与12项浏览器检查通过，线上config/catalog与新buildId逐项一致，Pages提交 `476a248b506712ea416d3b4ce4a7be6a8e9cf323` |
+
+运行副本的后续严格发行审计因517个启动生成的 `.pyc` 正确拒绝；所有6497个 manifest 文件及 manifest 本身再次核对不变。干净 staging/ZIP 保持独立，运行副本不回流打包。
 
 最终 GUI 本地回执目录为 `gui-release-07/`，每组分别保存 runner stdout、退出码、exe SHA256、源脚本/日志 hash 与截图。`--artifacts` 自身只保存截图，不自动落 stdout；发布证据使用显式持久化日志。最终可公开构建、资源与 ZIP 指纹在发布快照中保存，不上传私人路径或用户配置。
 
 失败与修复保留：Build01 的头文件/trivial 初始化错误；Build02 主动停止无关测试重链；旧 native 根计数断言；实际转换参数错误；新 File 原生白名单漏接；中间确认链漏交接。预选 Bevel/Crease 取消残留、Face Path 接线/门禁、预先持 Ctrl 和 History 目标身份问题均已修复。早期 `05481ec...` 候选 15/16 组通过，历史跨窗诊断失败；该旧结果不作为新候选全绿证明。
+
+公开下载首次 urllib 读取正文在0字节超时；独立分段验证后换用 curl 新连接，完整 ZIP 297073941 字节及 sidecar 的 SHA均与GitHub资产和本地一致，公开解压与factory运行通过。此网络重试不替代或覆盖原超时记录。
 
 焦点事件边界：`--enable-event-simulate` 会屏蔽 OS 输入队列；纯 WM 模拟又不更新 GHOST 的 active 状态。跨窗失焦测试用本进程临时 OS 窗口建立真实失焦，再注入对应 WM 事件，检查双 guard 退场和后续释放正常透传。临时吸附预持键通过新增可选 RNA `key_modifier` 明确注入，生产 GHOST 输入路径不变；实体键鼠仍待人工验收。文件取消测试不加载场景、保存目标文件或图片；Blender 测试退出时仅在隔离 TEMP 写自身恢复文件。
 

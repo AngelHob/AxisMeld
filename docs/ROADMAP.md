@@ -2,7 +2,7 @@
 
 状态核对日期：2026-10-11，本批 GUI 收敛开始时已拉取并核对远端基线 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`；本批结果见[GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)，后续提交以远端为准。本文件是当前路线入口；旧日期的规格保留设计与证据，不代表当前完成度。
 
-**本批交付状态：当前范围实现与统一候选回归已完成，发布待本批验收回执。** 已通过 40 组 354 项纯 Python、8 组 139 项原生、真实 RNA 7+4 项与 7 个实际 File 流程；统一候选的 18 组回归全部通过（17 组 GUI、1 组 profiles 后台验证，按套件计）；exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`。新包尚未发布。后续只在本段和 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md) 更新最终构建/发布结果，不把已落地实现重新列为待开发。
+**本批交付状态：当前范围实现、统一候选回归与完整原生预览包发布已完成。** 已通过 40 组 354 项纯 Python、8 组 139 项原生、真实 RNA 7+4 项与 7 个实际 File 流程；统一候选的 18 组回归全部通过（17 组 GUI、1 组 profiles 后台验证，按套件计）；exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`。完整原生 [2026.10.11 GUI preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview) 已发布，功能与原生源码同为 `41d71f26ccf12be5addd5c3453106bfa66f8de5f`；匿名下载、全量解压及工厂启动核验通过，见[发布快照](compatibility/2026-10-11-gui-preview-snapshot.json)。后续只在本段和 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md) 更新最终构建/发布结果，不把已落地实现重新列为待开发。
 
 ## 1. 目标与当前基线
 
@@ -12,7 +12,7 @@ AxisMeld 是可独立拉取、构建、运行的 Blender 衍生版本，以 Maya
 |---|---|
 | 开发源码 | [AngelHob/AxisMeld 的 axismeld/phase-2a](https://github.com/AngelHob/AxisMeld/tree/axismeld/phase-2a)；本批开始时的远端基线为 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`；后续以远端为准 |
 | 默认分支 | `axismeld/integration`；目前承担仓库首页入口，**未包含最新开发实现**，不能直接用它继续功能开发 |
-| 当前公开旧试用包 | [2026.09.17 Skin weights preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-skin-weights-preview)，Python 功能源码 `bf35ab393b7c4d94bfdd78680a862ab76c71fc6e`；native 来源仍为 `617986ac1841`，**不包含本批 GUI/原生输入改动** |
+| 当前公开试用包 | [2026.10.11 GUI preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview)，完整原生包；功能与 native 源码均为 `41d71f26ccf12be5addd5c3453106bfa66f8de5f`，完整文件/资源与匿名下载核验见[发布快照](compatibility/2026-10-11-gui-preview-snapshot.json) |
 | Blender 基线 | `18d84097b4f859582afdec57eece2ae880371adc`，版本宏为 5.3.0 alpha；不等于后续上游最新版本 |
 | 测试门户 | [GitHub Pages](https://angelhob.github.io/AxisMeld/)，源码 `tools/testing_site/`，部署分支 `gh-pages` |
 | 交接与问题 | [新机器接续](HANDOFF.md) · [可复制提示词](CODEX_HANDOFF_PROMPT.md) · [当前问题](CURRENT_ISSUES.md) · [构建与交付](BUILD_AND_DELIVERY.md) |
@@ -34,7 +34,7 @@ AxisMeld 是可独立拉取、构建、运行的 Blender 衍生版本，以 Maya
 
 Rigging 已发布验证包括 57 项针对菜单测试、8 个独立 Blender 进程及布局关系检查、实际 GUI 操作/撤销和发布包独立启动。这里只引用已发布证据，**本次文档整理没有重新宣称全量功能回归通过**。公开摘要见[交接快照](compatibility/2026-09-17-handoff-snapshot.json)。
 
-后续进度已超过上述历史快照：A1 已发布一次 Normalize/Prune 及独立 Options；9 月 18 日独立 Windows 环境完成源 `33dd3a3e591b` 的原生构建、干净安装、所选五组 1,982 项 CTest、20 项 Runtime 及指定显示条件下的 GUI 验证，详见 [CHANGELOG](CHANGELOG.md) 和 [构建记录](BUILD_AND_DELIVERY.md)。新 native 尚未另发试用包，当前公开 Skin 包仍复用 `617986ac1841` 的 native；完整打包发布自动化仍待收敛。
+9 月 17–18 日的历史进度：A1 已发布一次 Normalize/Prune 及独立 Options；9 月 18 日独立 Windows 环境完成源 `33dd3a3e591b` 的原生构建、干净安装、所选五组 1,982 项 CTest、20 项 Runtime 及指定显示条件下的 GUI 验证，详见 [CHANGELOG](CHANGELOG.md) 和 [构建记录](BUILD_AND_DELIVERY.md)。当时没有另发该 native 的试用包，Skin 包复用 `617986ac1841`。本批已另发完整新 native GUI preview，当前发布以本页开头为准；跨机全链自动化仍是独立工程边界。
 
 ## 3. 开发顺序
 

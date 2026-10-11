@@ -2,7 +2,7 @@
 
 本页面向未读过聊天记录的开发者和 Codex。2026-10-11 GUI 收敛从远端基线 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8` 继续；执行前核对远端与当前源码。新算法仍暂停，不因 UI 实施完成自动启动 A2。
 
-**本批交付状态：当前范围实现与统一候选回归已完成，发布待本批验收回执。** 已通过 40 组 354 项纯 Python、8 组 139 项原生、真实 RNA 7+4 项与 7 个实际 File 流程；统一候选的 18 组回归全部通过（17 组 GUI、1 组 profiles 后台验证，按套件计）；exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`。新包尚未发布。最终结果、构建/包指纹与边界集中于 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)。[9 月 17 日旧 Skin 包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-skin-weights-preview)仍可下载，但不包含本批 GUI/原生输入改动。
+**本批交付状态：当前范围实现、统一候选回归与完整原生预览包发布已完成。** 已通过 40 组 354 项纯 Python、8 组 139 项原生、真实 RNA 7+4 项与 7 个实际 File 流程；统一候选的 18 组回归全部通过（17 组 GUI、1 组 profiles 后台验证，按套件计）；exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`。完整原生 [2026.10.11 GUI preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview) 已发布，功能与原生源码同为 `41d71f26ccf12be5addd5c3453106bfa66f8de5f`；匿名下载、全量解压及工厂启动核验通过，见[发布快照](compatibility/2026-10-11-gui-preview-snapshot.json)。最终结果、构建/包指纹与边界集中于 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)。[9 月 17 日旧 Skin 包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-skin-weights-preview)只作历史参考，不用于本批验收。
 
 ## 1. 先用正确分支
 
@@ -23,7 +23,7 @@ git log -5 --oneline
 
 1. 根目录 [AGENTS.md](../AGENTS.md)：热盒与交付硬约束。
 2. [ROADMAP](ROADMAP.md)、[CURRENT_ISSUES](CURRENT_ISSUES.md)、[CHANGELOG](CHANGELOG.md)：现状、下一批和已修复事项。
-3. [构建与交付](BUILD_AND_DELIVERY.md)、[公开快照](compatibility/2026-09-17-handoff-snapshot.json)：命令、源码与发布版本关系。
+3. [构建与交付](BUILD_AND_DELIVERY.md)、[当前发布快照](compatibility/2026-10-11-gui-preview-snapshot.json)：命令、源码与发布版本关系；9 月 17 日快照仅用于对应历史包。
 4. 当前模块设计；例如 [Rigging](development/2026-09-17-rigging-workspace.md)、[Rigify](development/2026-09-15-rigify-builtin.md)、[紧凑建模栏](development/2026-09-15-compact-modeling-public-testing.md)。
 5. 当前模块源码、测试和[人工总清单](compatibility/2026-09-14-manual-test-ledger.md)。历史架构、旧 plans 用作背景；冲突时遵循用户后续决定及当前总览。
 
@@ -74,9 +74,11 @@ D/C/F12/1/2/3 及 Shift+J 的缺口分别涉及独立枢轴、曲线最近点、
 
 按 [AGENTS](../AGENTS.md) 更新设计、CHANGELOG 和有变化的测试条目，执行相称验证，再 commit/push 并核验远端 SHA；用户已授权每批开发完成上传 GitHub，不需要重复确认。未通过的必要检查不得用“已完成”掩盖。
 
-Pages 只同步前端运行资源；发布新试用包先固定源码提交，打包/解压/启动核验成功后才改页面的 `buildId` 与下载链接。A1 已另发 Skin weights 预览包（Python 源码 bf35ab393b7c），复用已审计的 Rigging native；未移动旧 tag 或修改历史测试结果。新快照见 compatibility/2026-09-17-skin-weights-snapshot.json。
+Pages 只同步前端运行资源；发布新试用包先固定源码提交，打包/解压/启动核验成功后才改页面的 `buildId` 与下载链接。本批已发布完整原生 GUI preview，匿名下载与线上目录核验通过，记录见[当前发布快照](compatibility/2026-10-11-gui-preview-snapshot.json)。
 
-9 月 18 日新环境已从 `33dd3a3e591b` 完成原生构建和指定测试，但没有另发此 native 的 ZIP；步骤与限制见 BUILD_AND_DELIVERY。固定旧 native 的 Python 打包器不适用于包含本轮 CMake 改动的 HEAD，不能因只计划修改 Python 就绕过它的源码白名单。
+历史 A1 另发的 Skin weights 预览包（Python 源码 bf35ab393b7c）复用 Rigging native，旧 tag 和历史测试结果保持；对应记录为 compatibility/2026-09-17-skin-weights-snapshot.json。
+
+9 月 18 日新环境曾从 `33dd3a3e591b` 完成原生构建和指定测试，当时没有另发该 native 的 ZIP；这段历史不代表本批 GUI preview 未发布。步骤与限制见 BUILD_AND_DELIVERY。固定旧 native 的 Python 打包器不适用于包含本轮 CMake 改动的 HEAD，不能因只计划修改 Python 就绕过它的源码白名单。
 
 若新机器无法登录 GitHub，可先完成本机可验证工作并准确说明推送阻碍；不要向用户索取令牌粘贴进对话或文档。使用该机器已有的 Git/凭据管理器或用户自行登录。
 

@@ -11,7 +11,7 @@
 - 固定菜单逐级核对，9 个无内容/无提供器动态目录用原名、图标和原因灰显；非空灰目录与真实原生提供器保持。输入参考原 18+2 项闭合，生成审计更新为 58 默认命令、60 绑定、3 原生模态持键与 186 个受保护 keymap。
 - Space → File 仅开放 Open Scene / Save Scene As，精确临时 token 覆盖原生脏场景/图片确认链和文件窗口释放；其余 File/Window 与独立 Options 边界保持。
 - 新增完整 native 包只读审计，核对已提交源码、全文件清单、144 个资源、CRT/shared DLL、许可证、隐私文本和 ZIP 路径冲突；保留原固定 native 打包器保护。
-- 当前 40 组、354 项纯测试、8 组139项原生测试、11项 Blender RNA 与7条真实 File GUI 流程通过；统一最终候选另有18组回归全部通过（17 GUI + 1 后台 profiles），每组前后 exe hash 一致。便携包发布进行中，最终回执见 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)。代码审查发现的模态取消、Face Path、预持 Ctrl 和排队目标身份问题已修复；实际 GUI 不以纯测试代替。
+- 当前 40 组、354 项纯测试、8 组139项原生测试、11项 Blender RNA 与7条真实 File GUI 流程通过；统一最终候选另有18组回归全部通过（17 GUI + 1 后台 profiles），每组前后 exe hash 一致。新完整 [GUI preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview) 已发布，功能源码/原生同为 `41d71f26ccf12be5addd5c3453106bfa66f8de5f`；完整ZIP约297MB。干净解压、portable/factory、3组关键GUI、匿名公开重下载及启动通过；网站12项浏览器验证和线上330/13目录核对通过。完整[构建/包指纹](compatibility/2026-10-11-gui-preview-snapshot.json)与最终回执见 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)。代码审查发现的模态取消、Face Path、预持 Ctrl 和排队目标身份问题已修复；实际 GUI 不以纯测试代替。
 - 新增待人工 GU-01～GU-13：目录330项、当前318、历史12、历史已测47、当前初始待测271；旧编号和结果保留。D/C/F12/1/2/3、Shift+J、动态提供器和新算法边界明确保留，不通过近似绑定假称完成。
 
 ## 2026-10-11 · U0 当前输入清单与模式冲突提示

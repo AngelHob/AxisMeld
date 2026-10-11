@@ -360,7 +360,7 @@ python -m http.server 8765 --bind 127.0.0.1 --directory tools/testing_site
 
 ## 9. 换机仍需确认
 
-2026-09-18 的独立 Windows 环境已完成依赖获取、全量原生构建、干净安装、所选五组 CTest、后台 Runtime 和第 5 节指定显示条件下的新 native GUI 验证。尚未完成本轮新产物的打包、解压、公开下载验证，也未把历史本机打包编排变成跨机流水线。新机器必须重新安装工具、校验依赖并运行测试，记录实际工具链、LFS 访问、显卡驱动、缩放和运行时依赖；整目录复制不能替代这些步骤。
+2026-09-18 的独立 Windows 环境已完成依赖获取、全量原生构建、干净安装、所选五组 CTest、后台 Runtime 和第 5 节指定显示条件下的新 native GUI 验证。这段记录对应9月18日：当时尚未完成新产物的打包和发布；2026-10-11本批完整native已完成打包、独立解压/GUI和匿名公开下载/启动，见[GUI快照](compatibility/2026-10-11-gui-preview-snapshot.json)。历史本机打包编排尚未变成统一跨机流水线。新机器必须重新安装工具、校验依赖并运行测试，记录实际工具链、LFS 访问、显卡驱动、缩放和运行时依赖；整目录复制不能替代这些步骤。
 
 接续时让 Codex 先读 AGENTS、交接/路线图、本页和 CHANGELOG，确认分支、远端 SHA 与未提交改动，再选择本批需求的验证。以仓库文件和新 receipt 为依据，不依赖旧聊天记忆或维护者磁盘路径。
 
@@ -392,6 +392,8 @@ python -B tools/utils/axismeld_native_preview_audit.py --install $Candidate --re
 - `embeddedSourceAssets`：`release/datafiles/startup.blend` 的源码 SHA256。
 - `files`：除 manifest 自身外，安装根下所有文件的相对路径及 SHA256，可附 size；打包前补齐所有说明文档后再生成。
 
-先以 `--phase staging` 核验，再 ZIP 整个 `AxisMeld-Preview` 目录。侧边 `.zip.sha256` 使用 `<小写SHA256>  <zip文件名>`。解压到另一个新目录，以 `--phase extract --archive $Zip --archive-prefix AxisMeld-Preview` 核验每个 ZIP 条目与解压文件。之后清除继承的 `BLENDER_USER_*` 覆盖，隔离验证 portable/factory，再运行真实 GUI；所有 GUI 用例见本批 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)。测试应禁用写入字节码，避免核验后的包目录生成缓存。
+先以 `--phase staging` 核验，再 ZIP 整个 `AxisMeld-Preview` 目录。侧边 `.zip.sha256` 使用 `<小写SHA256>  <zip文件名>`。解压到另一个新目录，以 `--phase extract --archive $Zip --archive-prefix AxisMeld-Preview` 核验每个 ZIP 条目与解压文件。之后清除继承的 `BLENDER_USER_*` 覆盖，隔离验证 portable/factory，再运行真实 GUI；所有 GUI 用例见本批 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)。先核验干净解压目录，再用其独立运行副本测试；不要把运行后的目录重新打包。内嵌 Python 在本次实测中忽略了 PYTHONDONTWRITEBYTECODE，启动后新增517个 .pyc；严格发行审计正确拒绝这些额外文件。逐项重算确认6497个 manifest 文件及 manifest 自身完全不变，因此这是运行缓存而非发行 ZIP 污染；保留原失败诊断与独立完整性回执。
 
 本机配置 `WITH_BUILDINFO=OFF`、`WITH_CYCLES_NATIVE_ONLY=ON`，未提供 OptiX SDK 或可选 GPU 预编译 kernels。本包是 GUI 开发预览；渲染性能、老 CPU 和另一台机器运行仍需单独验证。源码提交与构建身份主要由发布 manifest/快照记录，不依赖本次关闭的 buildinfo。
+
+本批已发布 [2026.10.11 GUI preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview)，功能源码/native为 `41d71f26ccf12be5addd5c3453106bfa66f8de5f`。完整ZIP为297073941字节，匿名公开下载、sidecar、独立解压与factory启动均已核对；发布数据见[可公开快照](compatibility/2026-10-11-gui-preview-snapshot.json)。首次干净配置为 Blender 键位和Layout，主动选择AxisMeld Maya 2026后进入Modeling/Rigging。

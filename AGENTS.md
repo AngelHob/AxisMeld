@@ -1,6 +1,6 @@
 # AxisMeld 开发接续
 
-**本批交付状态（2026-10-11）：当前范围实现与统一候选回归已完成，发布待本批验收回执。** 已验证 40 组 354 项纯 Python、8 组 139 项原生、真实 RNA 7+4 项及 7 个实际 File 流程；统一候选的 18 组回归全部通过（17 组 GUI、1 组 profiles 后台验证，按套件计）；exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`。新包尚未发布。以 [GUI 验收](docs/compatibility/2026-10-11-gui-completion-acceptance.md) 更新最终状态；9 月 17 日旧下载不包含本批改动。
+**本批交付状态（2026-10-11）：当前范围实现、统一候选回归与完整原生预览包发布已完成。** 已验证 40 组 354 项纯 Python、8 组 139 项原生、真实 RNA 7+4 项及 7 个实际 File 流程；统一候选的 18 组回归全部通过（17 组 GUI、1 组 profiles 后台验证，按套件计）；exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`。完整原生 [2026.10.11 GUI preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview) 已发布，功能与原生源码同为 `41d71f26ccf12be5addd5c3453106bfa66f8de5f`；匿名下载、全量解压及工厂启动核验通过，见[发布快照](docs/compatibility/2026-10-11-gui-preview-snapshot.json)。验证范围见 [GUI 验收](docs/compatibility/2026-10-11-gui-completion-acceptance.md)；9 月 17 日旧下载只作历史参考。
 
 - 新接手先读 `docs/ROADMAP.md`、`docs/CURRENT_ISSUES.md`、`docs/HANDOFF.md`，再读当前模块设计与源码。旧日期文档是历史设计，不可据其状态重做已经交付的功能。
 - 当前开发分支为 `axismeld/phase-2a`；默认 `axismeld/integration` 未包含最新功能。不要自动合并到默认分支；新机拉取、LFS、构建、验证及发布说明见 `docs/BUILD_AND_DELIVERY.md`。

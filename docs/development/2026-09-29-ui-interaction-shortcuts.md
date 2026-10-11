@@ -4,7 +4,7 @@
 
 ## 2026-10-11 当前收敛状态
 
-**本批交付状态：当前范围实现与统一候选回归已完成，发布待本批验收回执。** 已通过 40 组 354 项纯 Python、8 组 139 项原生、真实 RNA 7+4 项与 7 个实际 File 流程；统一候选的 18 组回归全部通过（17 组 GUI、1 组 profiles 后台验证，按套件计）；exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`。新包尚未发布。最终结果/构建/包指纹集中于 [本批验收](../compatibility/2026-10-11-gui-completion-acceptance.md)，9 月 17 日旧 Skin 包不包含本批 GUI/原生输入改动。
+**本批交付状态：当前范围实现、统一候选回归与完整原生预览包发布已完成。** 已通过 40 组 354 项纯 Python、8 组 139 项原生、真实 RNA 7+4 项与 7 个实际 File 流程；统一候选的 18 组回归全部通过（17 组 GUI、1 组 profiles 后台验证，按套件计）；exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`。完整原生 [2026.10.11 GUI preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview) 已发布，功能与原生源码同为 `41d71f26ccf12be5addd5c3453106bfa66f8de5f`；匿名下载、全量解压及工厂启动核验通过，见[发布快照](../compatibility/2026-10-11-gui-preview-snapshot.json)。最终结果/构建/包指纹集中于 [本批验收](../compatibility/2026-10-11-gui-completion-acceptance.md)，9 月 17 日旧 Skin 包不包含本批 GUI/原生输入改动。
 
 当前已实现转换/当前工具热盒、Edit 空选只读预选与取消恢复、A+LMB History 队列目标保护、X/V/J 临时吸附、9 个空目录灰显和 Grease Pencil 输入隔离。Space → File 只新增 Open Scene / Save Scene As 两条正文；精确调用 token 穿过未保存场景/修改图像确认链，交给对应文件窗口排空热盒松键。原生确认、无默认快捷键、独立 Options 与其他灰项的边界不变，见 [File 设计](2026-10-11-file-window-release-design.md)。
 

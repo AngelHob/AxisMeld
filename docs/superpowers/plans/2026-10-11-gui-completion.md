@@ -72,8 +72,8 @@
 - [x] Verify installed resource hashes and use disposable isolated GUI runs for menus, context inputs, releases/cancel and geometry; fix real failures without deleting checks.
 - [x] Close the historical cross-window file-browser release diagnostic using bounded native ownership; preserve true focus-loss and fresh-press recovery. Add a reproducible manual GUI case.
 - [x] Fresh review of code and scope matrix; no load-bearing GUI gaps silently marked complete.
-- [ ] Add manual cases without altering old results; publish catalog and a usable verified candidate where feasible.
-- [ ] Commit/push code/logs and Pages; verify actual remote/public data. Separate implemented, automated evidence and pending manual acceptance in final report.
+- [x] Add manual cases without altering old results; publish catalog and a usable verified candidate where feasible.
+- [x] Commit/push code/logs and Pages; verify actual remote/public data. Separate implemented, automated evidence and pending manual acceptance in final report.
 
 ## Ownership/preflight
 
