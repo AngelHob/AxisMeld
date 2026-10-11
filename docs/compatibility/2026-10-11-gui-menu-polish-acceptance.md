@@ -33,4 +33,6 @@
 
 新增 GU-17～GU-19 三项待人工测试。目录 336 项，当前 324、历史 12；47 项保留历史已测试记录，当前初始待测 277。既有编号及人工结果不变。
 
-发布尚待本批最终打包与公开下载核验；计划独立标签 `axismeld-2026.10.11-gui-menu-preview`，不覆盖旧 input preview。最终发布状态将在此补记。
+完整 [GUI menu preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-menu-preview) 已发布；源码/native `74dd7159d3a2481780915e065e0bd63312cbdaa0`。ZIP 297,074,985 字节，SHA256 `3d0f7fbef0044f980654f69b0b2dc6f46dc80fee57e824484470070361519863`。6,498 个文件、145 项资源通过干净解压审计；解压包工厂启动和 Options 实际 GUI 通过；匿名重新下载后再次核验 ZIP、解压和工厂启动。网站 12 项浏览器检查通过；[发布快照](2026-10-11-gui-menu-preview-snapshot.json)保存指纹。旧包未覆盖。
+
+公开测试网页已部署，Pages 提交 `00ca645b2bf6697837ac91c2c0545a7288ea1238`。匿名读取的全部 6 个前端资源与该提交逐字节一致，线上 buildId 为 `axismeld-2026.10.11-gui-menu-preview`，336 项目录及 GU-17～GU-19 三项新增一致。

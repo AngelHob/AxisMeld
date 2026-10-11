@@ -5,16 +5,16 @@
 ```text
 请接续开发我的 AxisMeld 项目。默认用中文，结论优先，主动核实并完成有界任务。
 
-最新交付（2026-10-11）：GUI input polish 已发布。三项修复为 Ctrl 组合键工具热盒、Keymap 功能名称/搜索、Rigging 灰项原因提示。
-本轮通过80项纯Python、42项原生、16项RNA、6组GUI及1组profiles后台回归；这些不是上一批全量复测。
-预发布tag：axismeld-2026.10.11-gui-input-preview；完整ZIP匿名下载、解压和工厂启动已核验。
-功能/native源码：3a614cad8a1bd4df8d05049f6f051d47bfef62e3。
-exe SHA256：c78b71f930048ae286fed40c6d15c3c3c18de5ad7a48b82a2bbc2e186bed5c65。
-发布入口：https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-input-preview
-先读docs/compatibility/2026-10-11-gui-input-polish-acceptance.md及docs/compatibility/2026-10-11-gui-input-preview-snapshot.json。
-GU-14～GU-16三项待人工，旧GU-01～GU-13及原结果保留。目录333项，当前321，历史12，47项仅历史已测，当前初始待测274。
-下一批先实际复现并修复菜单快捷键提示、灰齿轮键盘导航、窄窗长说明和Modeling灰项一致性；不自动恢复新算法开发。
-旧gui-preview不含本轮三项修复。更早发布与自动结果仅作历史参考，不重复开发。
+最新交付（2026-10-11）：GUI menu polish 已发布。三项为菜单实际快捷键、灰 Options 键盘导航、窄窗长说明。
+本轮通过81项纯Python、42项原生、6组GUI（长说明3种窗口/缩放）；不混用旧批次全量测试数字。
+预发布tag：axismeld-2026.10.11-gui-menu-preview；完整ZIP匿名下载、解压和工厂启动已核验。
+功能/native源码：74dd7159d3a2481780915e065e0bd63312cbdaa0。
+exe SHA256：d8af26aff3b5ae2099ea2c3e3e8d4242b3cbc1354bdcd8de47a6876bee1f400a。
+发布入口：https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-menu-preview
+先读docs/compatibility/2026-10-11-gui-menu-polish-acceptance.md及docs/compatibility/2026-10-11-gui-menu-preview-snapshot.json。
+GU-17～GU-19三项待人工；原GU-01～GU-16及全部原结果保留。目录336项，当前324，历史12，47项仅历史已测，当前初始待测277。
+下一候选为Modeling原生灰项提示一致性，先真实复现。极低窗口没有完整说明空带时仍可能遮菜单；不自动恢复新算法。
+历史menubar-actions仍找已取消的topbar Create，不适用于当前布局；使用modeling-viewport。旧input preview不含本轮三项修复。
 
 仓库：https://github.com/AngelHob/AxisMeld
 最新开发分支：axismeld/phase-2a
@@ -58,7 +58,7 @@ GU-14～GU-16三项待人工，旧GU-01～GU-13及原结果保留。目录333项
   旧文件/用户startup不自动插入Rigging；startup.blend已提交且该文件单独用普通Git存储。
 - AXM-COMPAT-001（Object Global缩放差异）用户明确搁置，不自动重启。
 
-当前 GUI 批次从 b9d0977557c6e2991810bc91f3f9d6b117a16eb8 继续，后续以远端为准。
+首批 GUI 收敛的历史起点为 b9d0977557c6e2991810bc91f3f9d6b117a16eb8；当前交付见开头，后续以远端为准。
 2026-09-29 用户决定先完成 UI、交互、Maya 默认快捷键，暂停新算法；
 2026-10-11 用户进一步要求完成全部当前 GUI，当前范围实现已完成，保留以下入口和回归：
 - Ctrl+RMB 转换与伴随菜单、Ctrl+Shift+RMB 当前工具菜单。
@@ -70,7 +70,7 @@ GU-14～GU-16三项待人工，旧GU-01～GU-13及原结果保留。目录333项
   精确调用token穿过原生未保存场景/修改图像确认链，只关联对应文件选择器。
   不跳过确认、不加全局键盘拦截，独立Options和其他File/Window项保持原状态。
   设计见docs/development/2026-10-11-file-window-release-design.md。
-最终实际状态必须读取 docs/compatibility/2026-10-11-gui-completion-acceptance.md 和最新CHANGELOG，
+最终实际状态必须读取 docs/compatibility/2026-10-11-gui-menu-polish-acceptance.md 和最新CHANGELOG，
 不得只凭这段提示词宣布GUI已通过；不要重复开发已落地入口。
 
 当前审计：58默认命令、60含别名绑定、7操纵器入口、3原生模态持键、497原生继承、45移除项、186受保护keymap。
@@ -90,8 +90,8 @@ workspace-menu-layout、file-window、release-cross-window，以及相关原有M
 staging/extract核对提交源码、全部文件、受管模块集合、许可与ZIP。静态PASS不替代启动/GUI/跨机验证。
 最终候选/发布状态看GUI验收及公开config，不能把旧包当作本批新C++。
 
-人工目录330项：当前318、历史12；47项只标历史已测，当前初始未测271。
-GU-01～GU-13新增待测，原IN/RG及其他编号与结果保持；自动化不替我勾选。
+人工目录336项：当前324、历史12；47项只标历史已测，当前初始未测277。
+GU-17～GU-19新增待测，原GU-01～GU-16、IN/RG及其他编号与结果保持；自动化不替我勾选。
 公开网页数据在各访客浏览器，可导出JSON，不自动跨设备同步；GitHub Issue用于公开共享反馈。
 
 交付已授权：每批完成并验证后，更新 docs/CHANGELOG.md、相关设计和新的待人工测试内容，提交并推送GitHub，

@@ -1,0 +1,715 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-11T08:53:49.872690+00:00",
+  "buildId": "axismeld-2026.10.11-gui-menu-preview",
+  "releaseUrl": "https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-menu-preview",
+  "repository": "https://github.com/AngelHob/AxisMeld",
+  "sourceBranch": "axismeld/phase-2a",
+  "sourceCommit": "74dd7159d3a2481780915e065e0bd63312cbdaa0",
+  "nativeSourceCommit": "74dd7159d3a2481780915e065e0bd63312cbdaa0",
+  "binarySha256": "d8af26aff3b5ae2099ea2c3e3e8d4242b3cbc1354bdcd8de47a6876bee1f400a",
+  "resourceFingerprint": "28a9d759c1e3a85d14de3f9e0efb1f03d69f596db13505e48c797942642a28e5",
+  "resourceCount": 145,
+  "resources": [
+    {
+      "path": "scripts/addons_core/bl_pkg/bl_extension_ui.py",
+      "sha256": "69cb99e0f6aa1d57069800a8fd1a770eb76f2b99e7f69db1e580190479ada026"
+    },
+    {
+      "path": "scripts/modules/addon_utils.py",
+      "sha256": "e36888a72b4670094ae445a3530c72171bef1a5d5b0028a92bb9ce6c192695e5"
+    },
+    {
+      "path": "scripts/modules/axismeld/__init__.py",
+      "sha256": "aa3e954fa0871ca07f5d19a4a0065f1a993484694297704e7cd8724af481cc9c"
+    },
+    {
+      "path": "scripts/modules/axismeld/adapter.py",
+      "sha256": "03e9e003544a34a09a0d0cfb623b89e9a02df5a74e804d92e8676d212ad37b36"
+    },
+    {
+      "path": "scripts/modules/axismeld/commands.py",
+      "sha256": "2920b74e616a10c0d7f9c911311b8fccb5cb5649ea0af7e851d23d49edc916d7"
+    },
+    {
+      "path": "scripts/modules/axismeld/context_conversion_hotbox.py",
+      "sha256": "8b2d485ca80d15c16811adb8eb41d71be1643c7a0c4ea5b8b62e358f9a08d3ed"
+    },
+    {
+      "path": "scripts/modules/axismeld/context_hotbox.py",
+      "sha256": "eff09ac19b7c35383e93615d0ad461aa6c40ecde9b81f6a44f78e521a8e202cb"
+    },
+    {
+      "path": "scripts/modules/axismeld/context_modeling_hotbox.py",
+      "sha256": "0954ba6c7af5f78edfd88bc5fa1a92baab26699909b44da11d37678f7589461c"
+    },
+    {
+      "path": "scripts/modules/axismeld/creation_hotbox.py",
+      "sha256": "5e6d6ccdaa72a770d6e8788ee6315aa7c26b6e0ab2186a110ba0139363d37485"
+    },
+    {
+      "path": "scripts/modules/axismeld/edit_preselection.py",
+      "sha256": "bcef43201a8a1e5be5dc4a382fc48f6c6447a3d0f71ba99a80bc28e623fcc105"
+    },
+    {
+      "path": "scripts/modules/axismeld/history_hotbox.py",
+      "sha256": "de822adbcc48811c7d88a890830746093ff778bef05cea734fc832234c88a273"
+    },
+    {
+      "path": "scripts/modules/axismeld/hotbox_catalog.py",
+      "sha256": "a6906bb1f73943880bdd953b8d13e5642d0ea9520f83897be1a3112a25619fdc"
+    },
+    {
+      "path": "scripts/modules/axismeld/hotbox_profiles.py",
+      "sha256": "68f447d4670e4f27ea03389bc1c4f943bbc1ee0ff320684d7ebc42d9ec27e0d4"
+    },
+    {
+      "path": "scripts/modules/axismeld/hotbox_runtime.py",
+      "sha256": "01dbe467b582846c2ce49eaa9158e0fdc12cd3d8fc285519cfcbc1b46d6e78c6"
+    },
+    {
+      "path": "scripts/modules/axismeld/keymap.py",
+      "sha256": "ccbbb4745ea38eb56507514c6f0cfaf53bb1d3c2f4a6232adbc323b21be21f6a"
+    },
+    {
+      "path": "scripts/modules/axismeld/maya_menu_catalog.py",
+      "sha256": "c92c59e919f80785a381d75c7fb35c8fee6f71f1e4201a120f53d51defe7cb79"
+    },
+    {
+      "path": "scripts/modules/axismeld/maya_menu_reference.py",
+      "sha256": "b05bd093fb7fc4789b962bbd34177d7168ba36ebc1025a6f4432a05378c567cc"
+    },
+    {
+      "path": "scripts/modules/axismeld/menubar_actions.py",
+      "sha256": "075e0e47415f9b0b5e73273893100b2a386523b872e44f7a719aaaa7900e17d0"
+    },
+    {
+      "path": "scripts/modules/axismeld/menubar_catalog.py",
+      "sha256": "6072d88b20ea90116f9cbdc5b337c32685274010be4f164560dfd632d8c3eb8a"
+    },
+    {
+      "path": "scripts/modules/axismeld/menubar_native.py",
+      "sha256": "9cb6b9afea60f23f7f41dc7c769c2331b226c79ef99691933a583cf03759492a"
+    },
+    {
+      "path": "scripts/modules/axismeld/menubar_reference.py",
+      "sha256": "6c47aba8e47901242e79fa3ed18c6e837a6a95391de12b539ae87432ea281dbd"
+    },
+    {
+      "path": "scripts/modules/axismeld/menubar_runtime.py",
+      "sha256": "95edfd5050eb3d69342c89e754d3e5fc6530d7f8df96cfdddbed11e11dfda184"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_adapter.py",
+      "sha256": "9e7951dd9d8a8aef1aa8d03e386212135c4ef5ad5076f6d186a53a80c152c3a0"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_catalog.py",
+      "sha256": "e65408c7d826dd32489def163d6556920d33cd7886882d098eb2ec7c81276205"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_common.py",
+      "sha256": "49c6e9a99594461a12362358d0316b5d932372b72077b1cef3e9d4fec33df582"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_common_ops.py",
+      "sha256": "b74ee65c43d051490c010c06ce569eee8c8b73836df2ce70c8e4b87240a56e42"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_gaps.py",
+      "sha256": "d6d7aac7f8045bed57fbbb964f30786bee3ac02481c3746433c6a380681e08d2"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_mesh.py",
+      "sha256": "c6e2b922085e00fe5b357f44ad4c2e59f4f7ea1d2f723b83e76285d0e91038ab"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_mesh_ops.py",
+      "sha256": "d1d38e008d1449aedece2e119332fecf14f87df2638f018cfa51faf6a2b9940d"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_registry.py",
+      "sha256": "bb092dc076b2cb72574f101e0598d7b38ddd9f5fce487b398bf31fe2e91fde3e"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_schema.py",
+      "sha256": "837bbd0879c2098c979aca875accec7450c4714512de639adc0ef2af9d063423"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_shapes.py",
+      "sha256": "e18bd73fb87b60be724f7f64aae8c7168c044a9887a76047cd6f961055cf889e"
+    },
+    {
+      "path": "scripts/modules/axismeld/modeling_shapes_ops.py",
+      "sha256": "f4968b77b86d097a99d46350eb70623e5718f72d885f8c49258219e51bc30019"
+    },
+    {
+      "path": "scripts/modules/axismeld/object_modeling_hotbox.py",
+      "sha256": "b01d9a78c8690f45e529377d2be74857f82543ffc64d7c4c86cc5c3f0eb0f4dc"
+    },
+    {
+      "path": "scripts/modules/axismeld/object_modeling_ops.py",
+      "sha256": "8785978a390bc014d9f0f6deec110370a02b048ec7f4843c4b004678549e3daf"
+    },
+    {
+      "path": "scripts/modules/axismeld/profiles.py",
+      "sha256": "4984010339dce13170c9c1cf9a73172771bc31f37b7b2f08ec0670e7cbdeafae"
+    },
+    {
+      "path": "scripts/modules/axismeld/rigging_workspace_catalog.py",
+      "sha256": "4392b990a010ca0b6622995164b3605f44c1dc06729a9b84464286cfab9371bb"
+    },
+    {
+      "path": "scripts/modules/axismeld/runtime.py",
+      "sha256": "eb0b9ed7622ff119f5534b64ba7c92d032d9cc358f4f808dbe44c411b3cb5964"
+    },
+    {
+      "path": "scripts/modules/axismeld/skin_weight_ops.py",
+      "sha256": "a6509f107632b4a6089f89ce349095c3fcff384cfccdbc0dbd5ca9c8ba8f6bea"
+    },
+    {
+      "path": "scripts/modules/axismeld/skin_weight_plan.py",
+      "sha256": "bbdb9aeb2f0590dca50b067ade9a83f6f88b900ea6dd37dc0dd89aadd18ca6ed"
+    },
+    {
+      "path": "scripts/modules/axismeld/tool_hotbox.py",
+      "sha256": "c4b942b17d00b17cfbbc6a3808f30f2ef11040a28cec50725688707f9fd002c3"
+    },
+    {
+      "path": "scripts/modules/axismeld/workspace_menu_catalog.py",
+      "sha256": "fbcdde64417e8f364324cf98dcc10b3406a8329340add372cac98dc119da14a6"
+    },
+    {
+      "path": "scripts/modules/axismeld/workspace_native_catalog.py",
+      "sha256": "4ebf7c6f5d093d41943ce572b903a0581ec8d67f77bd012fa694b3263c1e7ff5"
+    },
+    {
+      "path": "scripts/modules/axismeld/workspace_native_groups.py",
+      "sha256": "084d6dc15be2ca4cd16cb9c563b0e6fb8f971e0444dd7adcf7259d75ba477933"
+    },
+    {
+      "path": "scripts/modules/rigify/__init__.py",
+      "sha256": "ec7b55296d9db6a2b49cbe57b896080250ae34cf5705a4b7101fb6d36099baf7"
+    },
+    {
+      "path": "scripts/modules/rigify/base_generate.py",
+      "sha256": "e304e886ac32ec952c2a9f0b0b5f89649971011dfe0d4153e130ef6f706736bb"
+    },
+    {
+      "path": "scripts/modules/rigify/base_rig.py",
+      "sha256": "02f4bed5494bee98e729972bf4e3d075ed52c824e8ba8706521198fc526391fc"
+    },
+    {
+      "path": "scripts/modules/rigify/feature_set_list.py",
+      "sha256": "44a5b0cd0afb62b6714e90056465d46ac23e1ffbce669aae590c4c5631ecf15e"
+    },
+    {
+      "path": "scripts/modules/rigify/feature_sets/__init__.py",
+      "sha256": "83bc0ea2d94d4c9bb8ec1d74cf31cf66a5127827e1d7afb25340e958d80bf0a5"
+    },
+    {
+      "path": "scripts/modules/rigify/generate.py",
+      "sha256": "8cf571ce6bc526516369ea67283ff4e2447c4de5b2221e36e7845cb4527a419d"
+    },
+    {
+      "path": "scripts/modules/rigify/metarig_menu.py",
+      "sha256": "2ebf5ae48204833147b5128ad39bbd9483950b5e029e514dfdd558bd5d4b76be"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/Animals/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/Animals/bird.py",
+      "sha256": "ddaa7f073dd51ca67e03f0391c0cded9c526726018c36e481003137ca4bb743b"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/Animals/cat.py",
+      "sha256": "5b78331ad20cf3ec9ea08c07f2e5ef04769276c52242b76297a1ef51607ac4a0"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/Animals/horse.py",
+      "sha256": "21efab0960ac5f5dfccbe6bf794f55aa3e102cb3403034b32a4605315371a030"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/Animals/shark.py",
+      "sha256": "0ad1c29d9fcb20e651f9f675ccfd53298cc06dab799c0b4de899d48b0433ee0b"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/Animals/wolf.py",
+      "sha256": "156b08279a93ad951f626ea10029c41fb1cfd16d3777544b4288ee729c96ee69"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/Basic/basic_human.py",
+      "sha256": "72abfc5baf5ef577ba3a95bc0fc6c4d53f1b83b4fdf9741cce39c57aee92d007"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/Basic/basic_quadruped.py",
+      "sha256": "8e1feb4f47a01fa49c0e4c5baeae42db168fed3d437d3e8cc63d2342b93230e9"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scripts/modules/rigify/metarigs/human.py",
+      "sha256": "5a73068517140a179750be019b2821e6570d98daa0a1409584cacda012ad1958"
+    },
+    {
+      "path": "scripts/modules/rigify/operators/__init__.py",
+      "sha256": "4f389bb2c366559839691beae0d886fbd0f77b11eab732d64452c96a3eac091b"
+    },
+    {
+      "path": "scripts/modules/rigify/operators/action_layers.py",
+      "sha256": "aaba2516ccf750ba5d6d5ca254b42297c422cc06fca9f119030345496981670e"
+    },
+    {
+      "path": "scripts/modules/rigify/operators/copy_mirror_parameters.py",
+      "sha256": "fb041fb22e9a7bcc1ca51a722d724b11ec53322dafef007bd08ed7e828e50945"
+    },
+    {
+      "path": "scripts/modules/rigify/operators/generic_ui_list.py",
+      "sha256": "1249b4c0b3d705663c0a2a89234f58452bc9888ca0a247129091c7271b1d63ee"
+    },
+    {
+      "path": "scripts/modules/rigify/operators/upgrade_face.py",
+      "sha256": "9d9aedea2b2880d8432dfa4973811e36c855a04f4b9bc20c541a3e83e1dce58e"
+    },
+    {
+      "path": "scripts/modules/rigify/rig_lists.py",
+      "sha256": "bc33c05c71b46119c4f5cbcb6aa7906c2d8608d52acfc0f13bc6dcc1bd13a384"
+    },
+    {
+      "path": "scripts/modules/rigify/rig_ui_template.py",
+      "sha256": "d2a484343c7136c616f0584be40e0519f1c6dc6b8b1f7cedde8ec7baf09656ae"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/basic/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/basic/copy_chain.py",
+      "sha256": "1c993fc2c183f07f4d4a997afc22538ae8c2232610f53dea61579b420c185baf"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/basic/pivot.py",
+      "sha256": "00f4f49142e186b20f5e3a66331ae9d434c36d4bee86c584f620f37d6b096221"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/basic/raw_copy.py",
+      "sha256": "269cfe6d940ae3d5b4702d0a2957db5b8d7c62a1cb8dfdec956b681bdabc22d3"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/basic/super_copy.py",
+      "sha256": "0202d86d7b75b447b313187a4b20f546a82976903109254283da52015991d414"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/chain_rigs.py",
+      "sha256": "7eb945b912f7dc810d40bfa0eff38f6440369fe209eb5c6f96f7e675ebb98c52"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/experimental/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/experimental/super_chain.py",
+      "sha256": "51c99ece881ee8ce425c249fded39f7b5c54fda425b9300aa4e213fac3bb65cd"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/face/basic_tongue.py",
+      "sha256": "da4fc57ec61e18439b02909ab789a890feb7f2a7b1b5645306942a6a663d8a5c"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/face/skin_eye.py",
+      "sha256": "e608c33576e056cc218aa30e5fedbd0abd28a419fc87f2536f33a141619d14a0"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/face/skin_jaw.py",
+      "sha256": "501e861bc466dde2cd6fca2fa1eb1a0c338a8f7face3bd715531b37d64a22bc0"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/faces/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/faces/super_face.py",
+      "sha256": "2f7555093ad04cf544f351891e40b1d23caddbcd1bb458c1ab01fd5568521eb2"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/arm.py",
+      "sha256": "73f2bc324b4ac88b11935de2b85fb04b8b6e0b0ffbd252878510c54ec09e3571"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/front_paw.py",
+      "sha256": "bf4d5b7b27be9b33341980f3cd186c99c865786089dc55cf97b200631f56e1ad"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/leg.py",
+      "sha256": "9debc2341574817f117e0970166f79d20eecbf2b01d1ac0f11cfcb48f550a581"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/limb_rigs.py",
+      "sha256": "0ebc6e4d2ee3c915d87e3b65830036b8caac8005a1bca09e47bbba20097bf681"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/limb_utils.py",
+      "sha256": "158290ab57f0bdbee3fe024acbd18767de4e2ca11a7f12aa7fb74bc0fc1381cc"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/paw.py",
+      "sha256": "ec25b2e9b288977bc40229b74eb3149c6e6c1be5748019ff1f3547347d4fb6af"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/rear_paw.py",
+      "sha256": "5c70f8f0c189733b073b151c6028495a496e9c552f3f3502864fdfbc0022c67c"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/simple_tentacle.py",
+      "sha256": "4e75286cf2b2b55a3f32a625dcd7bf53efe9503f77fe6d9f93b6cb3cdc90fa82"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/spline_tentacle.py",
+      "sha256": "603ae274010b56df31bd82c07a00dbf4782dcf3464e0fdca6498a1ebdead6902"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/super_finger.py",
+      "sha256": "44ddb145d6c13a4503e226fdd256f9fa06b294bd4c8ea56711992930991efc10"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/super_limb.py",
+      "sha256": "cc6a0d8a34512eb207d175bd6448b25394ec175a6ec4d520a903c87fe3a07625"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/limbs/super_palm.py",
+      "sha256": "35da2d8bd61affd5e8a027340b1523cfcff6026b840a22d91498f03961dbe34f"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/skin/anchor.py",
+      "sha256": "f53e0103b969d65565378b20b70fe49c47200025ae10d984f2482325d3ca4445"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/skin/basic_chain.py",
+      "sha256": "4327d5dbf955311373fe637ac97ee00143c58b1b7f3e7cfdf7877947c7b09c10"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/skin/glue.py",
+      "sha256": "d8d2d209dd699c4fe316b346f61858133148dcfbdb50d623328d5f6481770172"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/skin/skin_nodes.py",
+      "sha256": "bd9b6d6dc90602192e3136db77fe74d7d2b8fe70357770702e008ca75bed5ec9"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/skin/skin_parents.py",
+      "sha256": "c7b55bf62c9b341e25dd24b784ef85cc93fa577e2ab6e15105b57c279868d1fc"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/skin/skin_rigs.py",
+      "sha256": "b9b7ed134809b4383d9eb49d92d6aa8529916f718a0f95194f0adeaf070d43bd"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/skin/stretchy_chain.py",
+      "sha256": "023e03843c0d55250d7ccd7ce36f378f18a5ca51c870d9678546541822cbda08"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/skin/transform/basic.py",
+      "sha256": "cbad8556a33ca2daff64da457dc06295052c4ca7cee50845659479c29438ca40"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/spines/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/spines/basic_spine.py",
+      "sha256": "22d542315922f46f0be551be52293aaf714e906d7fa6d7a82ebadbf493f31f1a"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/spines/basic_tail.py",
+      "sha256": "946069d2fdb7b6ddaa9c0761ca7f71b48c47bf645f9bede11d8bfd625e52b2d4"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/spines/spine_rigs.py",
+      "sha256": "783c6a2ffe0d946b099ace2b8d5d40c7200ebf6324742b2ad526ce987229ae12"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/spines/super_head.py",
+      "sha256": "72cde4bf38f6cecc6b7a01f8abace8f32aa49a3829ef1bf8cbb76985aa110e0f"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/spines/super_spine.py",
+      "sha256": "fd2cf4fe674e4b79c32f52dd6c6a4252e24fd01ec8531e7b14275dcd840dcf57"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/utils.py",
+      "sha256": "01ce147039b4daa7ef5de53803a8e514499e77b356399ce5d08b8a2eecb0433a"
+    },
+    {
+      "path": "scripts/modules/rigify/rigs/widgets.py",
+      "sha256": "9adda4b2060ca56183410977f003aae0efb08b6366f2806daa6c23cdd2635e50"
+    },
+    {
+      "path": "scripts/modules/rigify/rot_mode.py",
+      "sha256": "43f727345245a613b9fa59bff6e8aed41c1a1f3a48b1605ac0cc60e44e83f619"
+    },
+    {
+      "path": "scripts/modules/rigify/ui.py",
+      "sha256": "36d83d4fb290b7b76a0a8e07994467ae57ff3b036085e1a7518473ca83d4c95b"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/__init__.py",
+      "sha256": "52c2327b136f8b033bf8e604499d2af83bec9ebe7dbf19dba0cf8ff36c8b971a"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/action_layers.py",
+      "sha256": "d1524f5aaf74da7379a1bfaa336908d5bf5b82d95fd9bc29e59b1c921001adf6"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/animation.py",
+      "sha256": "995ab2e058206c11bfe246e3060e0d107aa78a556c8907c52e84ad332f3f1a43"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/bones.py",
+      "sha256": "9e34a0cbeccfc645c83df333978e4cdd6dfd6983f712c65422524dad81de6c4b"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/collections.py",
+      "sha256": "50ea59c5e6d1425f2c20e13a27e14a766a5e85f6a60a348bfdc0b4f31efccaf1"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/components.py",
+      "sha256": "cf5030db47c281c63ee46bed229cd9c5d557459aed849188dcd22a72139f7532"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/errors.py",
+      "sha256": "83a61bfe2dcfcf961e87df8c6df36ffdfb5cfc245f63be95ddb94a9e313e2e40"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/layers.py",
+      "sha256": "012e6b5ca958bb967b807e5321ffc9ead1a22accf1258e6e8a7c13ad9f1b39eb"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/mechanism.py",
+      "sha256": "335678472356b5126b236b9fa42ccd1c6099862795c63ac494a5db41b83354cb"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/metaclass.py",
+      "sha256": "76424ead0644e017fe682865c4a3fa579329f64512a2c02fab8185371f0d517c"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/misc.py",
+      "sha256": "5da4afa21ab24d4aaeff543a47ac5dc8e643668e34ad02c2cacb6121de3e2c20"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/naming.py",
+      "sha256": "8164513f6820d2836d9c92643898babb72ec45fb2a71c52ea0679ccc52ee51ca"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/node_merger.py",
+      "sha256": "4c4460510c2b1e0db967eb132047a992e29b1ac130f3d10431049b171dbee37e"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/objects.py",
+      "sha256": "210f72444a089373ae9282034701538deea48cb4b3cf9796a85e323c003483ed"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/rig.py",
+      "sha256": "46e8a5df89040789be22a5deea4a2c2abd2915beadc113002eb0cc60d45fa3ef"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/switch_parent.py",
+      "sha256": "7b0d2e8ccedf3a3449a5043572e6d341a1d8c532cd9d68ea0a114c9019a3115e"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/widgets.py",
+      "sha256": "a8d0c368490b063ea1ac5ee1efdfe2516d079f914827961b711aba5504f40592"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/widgets_basic.py",
+      "sha256": "b29b83813ec00b26a245e64eb7c480f0c64c7e167536c98d776af734b384ec73"
+    },
+    {
+      "path": "scripts/modules/rigify/utils/widgets_special.py",
+      "sha256": "9d0199c94da181ccbc4b16a77af4fd03c370c563fa8232e970431cd13e60ac5f"
+    },
+    {
+      "path": "scripts/modules/rna_keymap_ui.py",
+      "sha256": "f1ce18396ff0585ce19d43d082cc1879fdc1085daabc027aea217fe70639f54c"
+    },
+    {
+      "path": "scripts/presets/keyconfig/AxisMeld_Maya_2026.py",
+      "sha256": "0c3085e44b550429056eaa8259f2ef332e2f51efb0b6ff080281cea3892015d1"
+    },
+    {
+      "path": "scripts/startup/bl_operators/axismeld.py",
+      "sha256": "f09d9a612a6a1106c1b1d5d4787e41efb79a303d3179c9b33493d50e03384b95"
+    },
+    {
+      "path": "scripts/startup/bl_ui/__init__.py",
+      "sha256": "b7bf6e6678f9bf580fc9436ff2d411138ffdd03e8422ec155ce02c7f931bd218"
+    },
+    {
+      "path": "scripts/startup/bl_ui/properties_data_mesh.py",
+      "sha256": "8a5874d58da85b118c0fbe5f8d93fb083039f1bfe337fcf7653621365c36dc70"
+    },
+    {
+      "path": "scripts/startup/bl_ui/space_axismeld_menubar.py",
+      "sha256": "b10e60c40505c2e690b9bb83658aa4e42d293d96834b06b7f46bcdb7319d2ac7"
+    },
+    {
+      "path": "scripts/startup/bl_ui/space_axismeld_native_modeling.py",
+      "sha256": "0da1aec7446d556ec67f61a9ccee8c2f4111fcf66eaba6a450b1cf33eb31480f"
+    },
+    {
+      "path": "scripts/startup/bl_ui/space_axismeld_native_rigging.py",
+      "sha256": "4355bdd8cd7ac716c004e0cb4e7bb67c007d4dd87c3e783dec7a5794f674385e"
+    },
+    {
+      "path": "scripts/startup/bl_ui/space_image.py",
+      "sha256": "62275053abae0e0733ee0bf2b3de18418069b33edce52c1ce821cef8353b552f"
+    },
+    {
+      "path": "scripts/startup/bl_ui/space_topbar.py",
+      "sha256": "4f89643885499f39d706d23b85e7231d228bd4f0aeccaa9d6ffcab9bda49181b"
+    },
+    {
+      "path": "scripts/startup/bl_ui/space_userpref.py",
+      "sha256": "0afdb85177aaccb7c92e0c50f944c1c62dfdc94ec856d8f87b061377b54dcb7d"
+    },
+    {
+      "path": "scripts/startup/bl_ui/space_view3d.py",
+      "sha256": "47bd6fcc4b453ad009cf085c981b47ad0d1c4b244841ac93777640852f19cae3"
+    },
+    {
+      "path": "scripts/startup/rigify_builtin.py",
+      "sha256": "fc86411b606ed844aceea990de1bbe0c9b0792064b51a99a1cf939691909bcbe"
+    }
+  ],
+  "distributionFiles": 6498,
+  "build": {
+    "compiler": "MSVC 14.51.36231",
+    "cmake": "4.3.1-msvc1",
+    "windowsSdk": "10.0.26100.0",
+    "WITH_BUILDINFO": false,
+    "WITH_WINDOWS_BUNDLE_CRT": true,
+    "WITH_CYCLES_NATIVE_ONLY": true,
+    "gpuPrecompiledKernels": false
+  },
+  "assets": [
+    {
+      "name": "AxisMeld-2026.10.11-gui-menu-preview-windows-x64.zip",
+      "size": 297074985,
+      "digest": "sha256:3d0f7fbef0044f980654f69b0b2dc6f46dc80fee57e824484470070361519863",
+      "url": "https://github.com/AngelHob/AxisMeld/releases/download/axismeld-2026.10.11-gui-menu-preview/AxisMeld-2026.10.11-gui-menu-preview-windows-x64.zip"
+    },
+    {
+      "name": "AxisMeld-2026.10.11-gui-menu-preview-windows-x64.zip.sha256",
+      "size": 120,
+      "digest": "sha256:569d6396cc6811de078e00bbb96351c363f7ed8d256fbe084ee581a84b229437",
+      "url": "https://github.com/AngelHob/AxisMeld/releases/download/axismeld-2026.10.11-gui-menu-preview/AxisMeld-2026.10.11-gui-menu-preview-windows-x64.zip.sha256"
+    }
+  ],
+  "anonymousDownload": {
+    "status": "passed",
+    "assets": [
+      {
+        "name": "AxisMeld-2026.10.11-gui-menu-preview-windows-x64.zip",
+        "url": "https://github.com/AngelHob/AxisMeld/releases/download/axismeld-2026.10.11-gui-menu-preview/AxisMeld-2026.10.11-gui-menu-preview-windows-x64.zip",
+        "size": 297074985,
+        "sha256": "3d0f7fbef0044f980654f69b0b2dc6f46dc80fee57e824484470070361519863",
+        "status": "verified"
+      },
+      {
+        "name": "AxisMeld-2026.10.11-gui-menu-preview-windows-x64.zip.sha256",
+        "url": "https://github.com/AngelHob/AxisMeld/releases/download/axismeld-2026.10.11-gui-menu-preview/AxisMeld-2026.10.11-gui-menu-preview-windows-x64.zip.sha256",
+        "size": 120,
+        "sha256": "569d6396cc6811de078e00bbb96351c363f7ed8d256fbe084ee581a84b229437",
+        "status": "verified"
+      }
+    ],
+    "factoryExitCode": 0
+  },
+  "verification": {
+    "purePythonGroups": 6,
+    "purePythonTests": 81,
+    "nativeGroups": 2,
+    "nativeTests": 42,
+    "guiSuites": 6,
+    "guiRuns": 8,
+    "shortcutCaptionChecks": 24,
+    "shortcutSourceExecutions": 8,
+    "keyboardNavigationCases": 34,
+    "optionsAccessCases": 2,
+    "reasonSentences": 12,
+    "reasonWindowConfigurations": 3,
+    "cleanExtractAudit": true,
+    "extractedFactoryAndOptionsGui": true,
+    "publicSiteBrowserChecks": 12
+  },
+  "manualCatalog": {
+    "total": 336,
+    "current": 324,
+    "superseded": 12,
+    "historicallyTested": 47,
+    "currentInitiallyPending": 277,
+    "newIds": [
+      "GU-17",
+      "GU-18",
+      "GU-19"
+    ]
+  },
+  "limits": [
+    "Manual acceptance remains pending. Browser marks are local until shared through GitHub Issue.",
+    "Extremely short windows with no free full-text band may show explanations over menus.",
+    "Historical menubar-actions expects a removed topbar Create menu and fails on both old and new builds; current modeling-viewport passed.",
+    "Other machines, arbitrary plugins and all possible display scales were not tested."
+  ],
+  "publicSite": {
+    "status": "passed",
+    "url": "https://angelhob.github.io/AxisMeld/",
+    "verifiedAt": "2026-10-11T08:55:02.880005+00:00",
+    "buildId": "axismeld-2026.10.11-gui-menu-preview",
+    "catalog": 336,
+    "new": 3,
+    "assets": [
+      {
+        "name": "index.html",
+        "sha256": "34ffe5a577addc9486bac53cf538ba7369ae11bf7e6c043da25f58acacd7cb71",
+        "bytes": 7191
+      },
+      {
+        "name": "app.mjs",
+        "sha256": "9abe691148a1cde8db22e889d006b2018e45e7501baeeb83ea2a09fc5f6cf97a",
+        "bytes": 22736
+      },
+      {
+        "name": "styles.css",
+        "sha256": "6fe8a8755641ba9af0aa862fd62d55b2d7be2f02aaebd79ef1b5a4eb161079fe",
+        "bytes": 15219
+      },
+      {
+        "name": "config.json",
+        "sha256": "e88c2d71ca287c6499d17173d3f50b0435307cc5bde76ba5ee60300ef4a1b142",
+        "bytes": 499
+      },
+      {
+        "name": "catalog.json",
+        "sha256": "c5ca9db7f1f577b5fe96ac10b6e6553a000bc4a7bc58496a2e9fe2a949dcccc0",
+        "bytes": 225451
+      },
+      {
+        "name": "favicon.svg",
+        "sha256": "2cca7741a0dede35653d222677e15559e566c8dbab6882229ec6ab7b8f410737",
+        "bytes": 246
+      }
+    ],
+    "pagesCommit": "00ca645b2bf6697837ac91c2c0545a7288ea1238"
+  }
+}

@@ -1,5 +1,8 @@
 # Windows 构建、验证与交付
 
+**当前完整预览包：GUI menu preview。** [下载](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-menu-preview)；源码/native `74dd7159d3a2481780915e065e0bd63312cbdaa0`，exe SHA256 `d8af26aff3b5ae2099ea2c3e3e8d4242b3cbc1354bdcd8de47a6876bee1f400a`，145 项选定资源、6,498 个发行文件。ZIP 297,074,985 字节；SHA256 `3d0f7fbef0044f980654f69b0b2dc6f46dc80fee57e824484470070361519863`。匿名下载、干净解压、工厂启动及解压包 Options GUI 已验证；本批 81 项纯 Python、42 项原生和 6 组 GUI 通过。完整记录见[菜单 GUI 验收](compatibility/2026-10-11-gui-menu-polish-acceptance.md)与[当前快照](compatibility/2026-10-11-gui-menu-preview-snapshot.json)。下方旧 exe、139 项测试和 144 项资源属于首批历史构建，不能当作当前包数据。
+
+
 更新：2026-09-18。本页用于新 Windows 机器和新的 Codex 会话，从源码接续工作；不要求复制维护者的旧磁盘、候选安装、偏好或临时审计目录。开发方向另见项目路线图与交接文档，本页不扩大功能范围。
 
 ## 1. 正确分支、Git LFS 与依赖
@@ -360,12 +363,12 @@ python -m http.server 8765 --bind 127.0.0.1 --directory tools/testing_site
 
 ## 9. 换机仍需确认
 
-2026-09-18 的独立 Windows 环境已完成依赖获取、全量原生构建、干净安装、所选五组 CTest、后台 Runtime 和第 5 节指定显示条件下的新 native GUI 验证。这段记录对应9月18日：当时尚未完成新产物的打包和发布；2026-10-11本批完整native已完成打包、独立解压/GUI和匿名公开下载/启动，见[GUI快照](compatibility/2026-10-11-gui-preview-snapshot.json)。历史本机打包编排尚未变成统一跨机流水线。新机器必须重新安装工具、校验依赖并运行测试，记录实际工具链、LFS 访问、显卡驱动、缩放和运行时依赖；整目录复制不能替代这些步骤。
+2026-09-18 的独立 Windows 环境已完成依赖获取、全量原生构建、干净安装、所选五组 CTest、后台 Runtime 和第 5 节指定显示条件下的新 native GUI 验证。这段记录对应9月18日：当时尚未完成新产物的打包和发布；2026-10-11首批完整native已完成打包、独立解压/GUI和匿名公开下载/启动，见[GUI快照](compatibility/2026-10-11-gui-preview-snapshot.json)。历史本机打包编排尚未变成统一跨机流水线。新机器必须重新安装工具、校验依赖并运行测试，记录实际工具链、LFS 访问、显卡驱动、缩放和运行时依赖；整目录复制不能替代这些步骤。
 
 接续时让 Codex 先读 AGENTS、交接/路线图、本页和 CHANGELOG，确认分支、远端 SHA 与未提交改动，再选择本批需求的验证。以仓库文件和新 receipt 为依据，不依赖旧聊天记忆或维护者磁盘路径。
 
 
-## 2026-10-11 GUI 原生构建与完整包核验
+## 2026-10-11 首批 GUI 原生构建与完整包核验（历史记录）
 
 本批包含新的原生热盒/变换/终结回调，必须重编；9 月 17 日固定 native 的 Python overlay 打包器不适用。工具链为 VS 2026 BuildTools / MSVC 14.51.36231、CMake/CTest 4.3.1-msvc1、Windows SDK 10.0.26100.0。当前 exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`，版本输出 `AxisMeld 0.1.0-dev (based on Blender 5.3.0 Alpha)`；最终发布源与 ZIP 指纹由本批 GUI 快照记录。
 
@@ -396,4 +399,4 @@ python -B tools/utils/axismeld_native_preview_audit.py --install $Candidate --re
 
 本机配置 `WITH_BUILDINFO=OFF`、`WITH_CYCLES_NATIVE_ONLY=ON`，未提供 OptiX SDK 或可选 GPU 预编译 kernels。本包是 GUI 开发预览；渲染性能、老 CPU 和另一台机器运行仍需单独验证。源码提交与构建身份主要由发布 manifest/快照记录，不依赖本次关闭的 buildinfo。
 
-本批已发布 [2026.10.11 GUI preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview)，功能源码/native为 `41d71f26ccf12be5addd5c3453106bfa66f8de5f`。完整ZIP为297073941字节，匿名公开下载、sidecar、独立解压与factory启动均已核对；发布数据见[可公开快照](compatibility/2026-10-11-gui-preview-snapshot.json)。首次干净配置为 Blender 键位和Layout，主动选择AxisMeld Maya 2026后进入Modeling/Rigging。
+首批历史发布 [2026.10.11 GUI preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview)，功能源码/native为 `41d71f26ccf12be5addd5c3453106bfa66f8de5f`。完整ZIP为297073941字节，匿名公开下载、sidecar、独立解压与factory启动均已核对；发布数据见[可公开快照](compatibility/2026-10-11-gui-preview-snapshot.json)。首次干净配置为 Blender 键位和Layout，主动选择AxisMeld Maya 2026后进入Modeling/Rigging。

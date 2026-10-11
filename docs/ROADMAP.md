@@ -1,8 +1,8 @@
 # AxisMeld 整体规划与路线图
 
-状态核对日期：2026-10-11，本批 GUI 收敛开始时已拉取并核对远端基线 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`；本批结果见[GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)，后续提交以远端为准。本文件是当前路线入口；旧日期的规格保留设计与证据，不代表当前完成度。
+状态核对日期：2026-10-11，首批 GUI 收敛开始时已拉取并核对远端基线 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`；首批历史结果见[GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)，后续提交以远端为准。本文件是当前路线入口；旧日期的规格保留设计与证据，不代表当前完成度。
 
-**最新交付（2026-10-11 GUI input polish）：三项 GUI 修复及完整原生预览包已发布。** 修复 Ctrl 组合键工具热盒提前取消、Keymap 功能名称/搜索，以及 Rigging 灰项原因提示。本轮通过 80 项纯 Python、42 项原生、16 项 RNA、6 组 GUI 和 1 组 profiles 后台回归；[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-input-preview)，源码/native 均为 `3a614cad8a1bd4df8d05049f6f051d47bfef62e3`。匿名下载、完整解压及启动已核验；旧 GUI preview 不含本轮三项修复。详见[本轮验收](compatibility/2026-10-11-gui-input-polish-acceptance.md)与[发布快照](compatibility/2026-10-11-gui-input-preview-snapshot.json)。人工新增 GU-14～GU-16，原结果保持；下一批继续处理已记录的具体 GUI 问题，新算法仍暂停。
+**最新交付（2026-10-11 GUI menu polish）：三项菜单 GUI 修复及完整原生预览包已发布。** 菜单显示实际快捷键；灰 Options 不再增加键盘停点；窄窗长说明完整换行并避让菜单。本轮通过 81 项纯 Python、42 项原生和 6 组实际 GUI（长说明覆盖三个窗口/缩放组合）。[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-menu-preview)，源码/native 均为 `74dd7159d3a2481780915e065e0bd63312cbdaa0`；匿名下载、完整解压及启动已核验。详见[本轮验收](compatibility/2026-10-11-gui-menu-polish-acceptance.md)与[发布快照](compatibility/2026-10-11-gui-menu-preview-snapshot.json)。新增 GU-17～GU-19 待人工，原结果保持；极低窗口无说明空带时可能覆盖菜单。新算法继续暂停。
 
 ## 1. 目标与当前基线
 
@@ -10,9 +10,9 @@ AxisMeld 是可独立拉取、构建、运行的 Blender 衍生版本，以 Maya
 
 | 入口 | 当前内容 |
 |---|---|
-| 开发源码 | [AngelHob/AxisMeld 的 axismeld/phase-2a](https://github.com/AngelHob/AxisMeld/tree/axismeld/phase-2a)；本批开始时的远端基线为 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`；后续以远端为准 |
+| 开发源码 | [AngelHob/AxisMeld 的 axismeld/phase-2a](https://github.com/AngelHob/AxisMeld/tree/axismeld/phase-2a)；首批 GUI 收敛的历史起点为 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`；当前交付见下行，后续以远端为准 |
 | 默认分支 | `axismeld/integration`；目前承担仓库首页入口，**未包含最新开发实现**，不能直接用它继续功能开发 |
-| 当前公开试用包 | [2026.10.11 GUI input preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-input-preview)，完整原生包；功能/native 源码均为 `3a614cad8a1bd4df8d05049f6f051d47bfef62e3`，见[发布快照](compatibility/2026-10-11-gui-input-preview-snapshot.json) |
+| 当前公开试用包 | [2026.10.11 GUI menu preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-menu-preview)，完整原生包；功能/native 源码均为 `74dd7159d3a2481780915e065e0bd63312cbdaa0`，见[发布快照](compatibility/2026-10-11-gui-menu-preview-snapshot.json) |
 | Blender 基线 | `18d84097b4f859582afdec57eece2ae880371adc`，版本宏为 5.3.0 alpha；不等于后续上游最新版本 |
 | 测试门户 | [GitHub Pages](https://angelhob.github.io/AxisMeld/)，源码 `tools/testing_site/`，部署分支 `gh-pages` |
 | 交接与问题 | [新机器接续](HANDOFF.md) · [可复制提示词](CODEX_HANDOFF_PROMPT.md) · [当前问题](CURRENT_ISSUES.md) · [构建与交付](BUILD_AND_DELIVERY.md) |
@@ -51,7 +51,7 @@ Rigging 已发布验证包括 57 项针对菜单测试、8 个独立 Blender 进
 
 实现完成、自动回归、人工手感验收和包发布分别记录；当前范围的实现完成不等于人工验收完成或所有 Maya 算法已实现。完成本批交付后先报告边界，由用户决定恢复哪批功能，不自动跳回 A2。
 
-2026-10-11 本批补齐 Ctrl+RMB 转换、Ctrl+Shift+RMB 当前工具、Edit 空选择只读预选与原生取消恢复、A+LMB History 操作及 X/V/J 临时吸附；修复九个空动态目录与 Grease Pencil 误过滤。Space → File 的 Open Scene / Save Scene As 复用原生确认链，用精确调用 token 将仍归热盒所有的松键交给对应文件窗口，不扩大到其他 File/Window 入口或继承快捷键。所有当前固定目录逐级核对，原 18+2 条输入参考已闭合。见 [File 设计](development/2026-10-11-file-window-release-design.md)及 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)。
+2026-10-11 首批补齐 Ctrl+RMB 转换、Ctrl+Shift+RMB 当前工具、Edit 空选择只读预选与原生取消恢复、A+LMB History 操作及 X/V/J 临时吸附；修复九个空动态目录与 Grease Pencil 误过滤。Space → File 的 Open Scene / Save Scene As 复用原生确认链，用精确调用 token 将仍归热盒所有的松键交给对应文件窗口，不扩大到其他 File/Window 入口或继承快捷键。所有当前固定目录逐级核对，原 18+2 条输入参考已闭合。见 [File 设计](development/2026-10-11-file-window-release-design.md)及 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)。
 
 当前生成输入表为 58 个默认命令、60 条含别名绑定、7 个操纵器入口、3 个原生模态持键入口、497 条原生继承、45 条移除项、186 个受保护 keymap。原生继承不是 Maya 等价声明；D/C/F12/1/2/3 及 Shift+J 的后置能力明确保留，不能用近似功能消灭灰项。
 
@@ -88,7 +88,7 @@ A2 的后置设计线索保留：Remove Unused Influences 需明确全网格没�
 
 ## 5. 验收与每批交付
 
-人工清单共 **330 项**，其中当前 318、历史 12。47 项仅有历史“已测试”信息，不等于全通过；全表初始未测 283，当前初始未测 271。最近新增 GU-01～GU-13，原 IN 与 RG 等编号和状态保持。新 GUI/输入必须使用包含本批 C++ 的新构建，9 月 17 日 Skin 包不适用。访客自己的记录仍独立保存，不能据自动化或维护者历史替他勾选。
+人工清单共 **336 项**，其中当前 324、历史 12。47 项仅有历史“已测试”信息，不等于全通过；全表初始未测 289，当前初始未测 277。最近新增 GU-17～GU-19，原 GU-01～GU-16、IN 与 RG 等编号和状态保持。新 GUI/输入必须使用包含本批 C++ 的新构建，9 月 17 日 Skin 包不适用。访客自己的记录仍独立保存，不能据自动化或维护者历史替他勾选。
 
 每批完成顺序：更新设计 → 实现 → 与改动相称的静态/结果/真实事件或 GUI 验证 → 记录未覆盖人工项 → 更新 [CHANGELOG](CHANGELOG.md) → 提交推送并核验远端。验收变化时同步 Markdown 清单与公开 catalog；发布新版时绑定确切源码 SHA、校验包内资源、重新解压启动，再更新 Pages 构建版本。自动测试不改变人的测试结果。
 
