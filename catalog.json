@@ -4717,7 +4717,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "GU-21",
@@ -4728,6 +4728,20 @@
       ],
       "expected": [
         "每次新的 LMB 唤出从根目录开始，不残留上次展开的子菜单；同一划选内的子菜单导航保持，灰项和原点取消不改场景，World 只执行一次；无需重新按 W/E/R，松开工具键后无残留拦截"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": false
+    },
+    {
+      "id": "GU-22",
+      "title": "使用包含本批说明修复的新构建，将窗口缩到低高度，分别在 100% 与 150% 界面缩放下悬停 Space→Edit→Duplicate Special、A+LMB 的灰 History 项；再切四视图、换边缘位置，逐步缩窄后恢复窗口",
+      "group": "极低窗口说明与主干同步（2026-10-11）",
+      "steps": [
+        "使用包含本批说明修复的新构建，将窗口缩到低高度，分别在 100% 与 150% 界面缩放下悬停 Space→Edit→Duplicate Special、A+LMB 的灰 History 项；再切四视图、换边缘位置，逐步缩窄后恢复窗口"
+      ],
+      "expected": [
+        "有足够空白时说明自动移动并完整换行，不覆盖菜单正文、齿轮或父级按钮；完全无空白时暂不显示说明，恢复空间后重新完整显示。菜单不折叠、不滚动、不缩小，原菜单仍可操作，Escape/释放后无残留拦截且取消不改场景"
       ],
       "superseded": false,
       "maintainerStatus": "pending",

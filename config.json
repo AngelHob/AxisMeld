@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "projectName": "AxisMeld",
-  "buildId": "axismeld-2026.10.11-gui-interaction-preview",
+  "buildId": "axismeld-2026.10.11-gui-short-window-preview",
   "repoUrl": "https://github.com/AngelHob/AxisMeld",
-  "releaseUrl": "https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-interaction-preview",
+  "releaseUrl": "https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-short-window-preview",
   "sourceBranch": "axismeld/phase-2a",
   "feedback": {
     "mode": "github",
