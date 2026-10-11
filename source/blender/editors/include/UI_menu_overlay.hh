@@ -26,7 +26,11 @@ struct MenuOverlayItem {
 /** Draw native menu components without registering blocks or input handlers.
  * The caller owns hit testing, input and lifetime. Rows must form a contiguous menu.
  * force_opaque only overrides this block's backdrop alpha, not the global theme.
+ * content_scale scales native text, icons and their padding inside caller-scaled rectangles.
  */
-void menu_overlay_draw(const bContext *C, Span<MenuOverlayItem> items, bool force_opaque = false);
+void menu_overlay_draw(const bContext *C,
+                       Span<MenuOverlayItem> items,
+                       bool force_opaque = false,
+                       float content_scale = 1.0f);
 }  // namespace ui
 }  // namespace blender

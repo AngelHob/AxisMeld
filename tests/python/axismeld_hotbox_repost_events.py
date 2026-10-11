@@ -91,7 +91,9 @@ def suite():
 
     def glyph(text):
         if text not in templates:
-            blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale)
+            # Both observed captions belong to the compact companion list/cascade.
+            # Keep this expected font size independent of native layout geometry.
+            blf.size(0, bpy.context.preferences.ui_styles[0].widget.points * scale * .9)
             blf.disable(0, blf.WORD_WRAP)
             blf.color(0, 1, 1, 1, 1)
             blf.position(0, 4, 10 * scale, 0)

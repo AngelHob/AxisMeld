@@ -41,7 +41,7 @@
 
 | 编号 | 前置条件与操作 | 预期 | 人工状态 |
 |---|---|---|---|
-| K-01 | Object无选择，鼠标位于空白；按住Shift并按住RMB，中心松RMB，反复重开 | 立即显示Polygon Primitives八向环及下方16项Maya伴随列表；保留全部占位和3条6逻辑像素分隔；每次中心释放关闭，不改变场景 | 待测 |
+| K-01 | Object无选择，鼠标位于空白；按住Shift并按住RMB，中心松RMB，反复重开 | 立即显示Polygon Primitives八向环及下方16项Maya伴随列表；保留全部占位和3条5.4逻辑像素分隔（原6的90%）；每次中心释放关闭，不改变场景 | 待测 |
 | K-02 | 将3D Cursor移到可辨位置，分别创建NE Disc、E Sphere、SE Torus、S Cube、SW Cone、W Cylinder、NW Plane；每次先清空选择并移到空白 | 每次只创建一个对应网格、选中新物体、位于Cursor；Disc有填充面；不移动Cursor，默认尺寸/细分沿用Blender | 待测 |
 | K-03 | 对K-02七种创建分别只撤销一次，再重做一次 | 一次撤销完整移除本次新物体并恢复原场景；重做仅恢复一个，无额外热盒撤销步骤 | 待测 |
 | K-04 | 经过七个有效方向按钮后，在未被伴随菜单遮挡的外延区域松RMB；S Cube另在主按钮释放，再向下进入列表及连接间隔释放 | 未遮挡外延保持对应方向；Cube主按钮创建一次；新增列表优先命中列表项、连接间隔取消，不穿透菜单继续执行Cube或误选邻项 | 待测 |
@@ -245,7 +245,7 @@ Maya菜单从Space目录进入；Blender专有名称通过键位偏好将一个�
 
 | 编号 | 前置条件与操作 | 预期 | 人工状态 |
 |---|---|---|---|
-| OM-01 | Object选中Cube，Shift+RMB唤出；与提供的Maya截图对照 | 八向热盒和下方列表同时显示；下方22个主条目按Maya顺序排列，不精简删除缺口；保留7条6逻辑像素分隔、Mapping/Booleans/Polygon Display三个目录；不必另进Space | 待测 |
+| OM-01 | Object选中Cube，Shift+RMB唤出；与提供的Maya截图对照 | 八向热盒和下方列表同时显示；下方22个主条目按Maya顺序排列，不精简删除缺口；保留7条5.4逻辑像素分隔（原6的90%）、Mapping/Booleans/Polygon Display三个目录；不必另进Space | 待测 |
 | OM-02 | 持住RMB检查完整长列表并滚动滚轮，再展开三个目录，移回父项和主环 | 全部当前层条目同时可达；滚轮不翻页、不执行建模、不关闭父热盒或缩放视图；真实子目录展开后父环与主列表保留 | 待测 |
 | OM-03 | 分别在Smooth/Mirror/Reduce/Remesh主文字与右侧方框释放RMB | 主按钮执行默认操作，方框独立打开参数；两块命中无重叠，不会打开参数同时执行主按钮 | 待测 |
 | OM-04 | 对四种参数框分别点取消或Esc；无选择鼠标预选对象时也重复 | 打开与取消不改变模式、对象选择、活动对象、修改器或几何；不新增撤销步骤 | 待测 |
@@ -308,7 +308,7 @@ Maya菜单从Space目录进入；Blender专有名称通过键位偏好将一个�
 |---|---|---|---|
 | MC-01 | 选中Object Mesh，Shift+RMB，与Maya建模截图逐行对照完整列表；1x/2x检查右侧目录箭头 | 22个主项全部保留且顺序一致，Mapping/Booleans/Polygon Display目录及所有未实现占位同时可见；目录箭头不被相邻参数列背景遮住，未擅自精简占位 | 待测 |
 | MC-02 | Object无选择且鼠标为空白，Shift+RMB，逐组检查完整创建下拉 | 依次为Platonic Solid、Pyramid、Prism、Pipe、Helix、Gear、Soccer Ball；Super Ellipse、Spherical Harmonics、Ultra Shape、Type、SVG、Quad Draw Tool；Interactive Creation、Exit On Completion；Polygon Display All，共16主项、3分隔 | 待测 |
-| MC-03 | 单视图1x/2x对照普通行和每个分隔，慢移鼠标跨过所有分隔 | 功能行24逻辑像素、细分隔6逻辑像素；分组清楚，布局/点击/高亮使用同一实际高度，分隔不占完整功能行 | 待测 |
+| MC-03 | 单视图1x/2x对照普通行和每个分隔，慢移鼠标跨过所有分隔 | 伴随列表功能行21.6逻辑像素、细分隔5.4逻辑像素（原24/6的90%）；分组清楚，布局/点击/高亮使用同一实际高度，分隔不占完整功能行 | 待测 |
 | MC-04 | 持住RMB在Object及创建的分隔线上释放，再在其左右列表背景释放 | 不穿透执行径向按钮、不执行上下邻行，不新增物体/修改器、Recent或Undo；新手势可重开 | 待测 |
 | MC-05 | 检查Object N Target Weld、NW Sculpt、W Multi-Cut、E Append、SW Insert Edge Loop的参数格，各在格内释放 | 五个径向参数格独立可见，本轮新增Options全部禁用；参数格不误执行主工具，也不改变原方向命中与Views内缘 | 待测 |
 | MC-06 | 在创建八个方向的文字、图标、右侧参数格分别悬停/释放 | 八方向均有独立参数格，图标与文字完整；本轮新增Options全部禁用；主动作仍只创建对应对象一次 | 待测 |
@@ -399,7 +399,7 @@ Maya菜单从Space目录进入；Blender专有名称通过键位偏好将一个�
 | MT-28 | 尝试Select→Use Constraints/Similar、Modify→Prefix Hierarchy Names/Search and Replace Names、Deform→Edit Membership Tool、Curves→Duplicate Surface Curves | 六条原Maya入口保留灰显，说明缺少对应工具、窗口或输入适配；不误执行非流形/顶点法线选择、通用Batch Rename、直接权重赋值或复制曲线控制点 | 待测 |
 | MT-29 | 中心按钮映射Blender Extensions后浏览各原生分组和原有改名/选择/显示操作 | 旧564个注册命令ID保留；按功能分组进入，Modify/Select不出现新造的68/61项平铺列表；原生能力与Maya目录分开 | 待测 |
 | MT-30 | 核对File最近记录、Windows工作区、相机/材质/UV集以及Show→Isolate Select→Bookmarks | 动态目录有准确边界；不把一次捕获的实例当固定菜单。无法构建的Maya原生Bookmark动态分支明确未验证，不补造节点 | 待测 |
-| MT-31 | 在单/四视图中下部打开各层；1x/2x检查带字标题、普通分隔和末项 | 当前层完整显示；带字标题24、细分隔6逻辑像素，标题不可点击且不孤悬列尾；下方不足整体底部对齐 | 待测 |
+| MT-31 | 在单/四视图中下部打开各层；1x/2x检查带字标题、普通分隔和末项 | 当前层完整显示；普通原生列表带字标题24、细分隔6逻辑像素，伴随列表对应21.6/5.4；标题不可点击且不孤悬列尾；下方不足整体底部对齐 | 待测 |
 | MT-32 | 重复RMB、Shift+RMB、QWER、Views/Controls/Recent，交替进入22主菜单后取消 | 菜单内容不串根；未适配项仍存在；真实原点、Space/拥有鼠标释放、连续唤出、Recent和Undo边界保持，自动验证不替代手感测试 | 待测 |
 
 ## P0：Maya逻辑的顶部Menu Bar（MB新增20项，全部待人工测试）
@@ -587,3 +587,11 @@ Maya菜单从Space目录进入；Blender专有名称通过键位偏好将一个�
 | GU-23 | 使用 Blender 5.4 主干合并预览包和临时场景，选择 AxisMeld Maya 2026；检查 Modeling 七根菜单、Edit Mesh 的 Vertex/Edge/Face 子目录及 Transform 内新增的原生 Loop Tools 入口；在 Object、Mesh Edit、Curve Edit 和无活动对象时分别打开相关目录 | 原有分类、灰占位、独立 Options 与右侧对齐保持；原生新增入口归入既有分类，不增加 Deform/Generate 根菜单；无效上下文有原因且不会执行或改选区，可用入口遵循 Blender 原生语义 | 待测 |
 | GU-24 | 在 5.4 合并构建中重试 QWER 持键重复 LMB、组件与建模 Shift+RMB、X/V/J 临时吸附及一次 Undo；从 Space→File 打开和另存临时文件，跨文件窗口释放触发键并取消，再正常保存、关闭和重开临时场景 | 热盒间距和释放规则保持，无重复执行、残留拦截或永久吸附设置污染；文件窗口确认、取消及普通输入正常，场景保存重开一致，窗口标题保留 AxisMeld 与 5.4 版本 | 待测 |
 | GU-25 | 用 5.4 合并包的隔离配置从工厂启动，检查 Layout、Modeling、Rigging；使用临时副本打开以前的 AxisMeld 场景，切换工作区后保存重开；在 Rigging 创建 metarig、生成测试 rig，查看 Skeleton/Skin 与灰项说明，再切 Blender 键位 | 工厂默认 Layout 与 Blender 键位保持，Rigging 作为原生工作区存在；Rigify 无需启用插件，旧文件和工作区布局不丢失；已实现入口和 Maya 灰占位保持，两套键位各自正常，测试不覆盖原场景或个人偏好 | 待测 |
+
+## P1：热盒伴随列表尺寸（2026-10-11，新增1项）
+
+使用包含本轮改动的新构建；旧 Blender main preview 仍是原列表尺寸。固定 90% 仅针对伴随列表，不是随低窗口自动缩小；GU-22 的说明避让和原有人工状态保持。
+
+| 编号 | 前置条件与操作 | 预期 | 人工状态 |
+|---|---|---|---|
+| GU-26 | 分别唤出 Shift+RMB 创建/建模热盒、RMB 组件热盒和 Q/W/E/R 的伴随列表，打开一层子菜单；在 100% 与 150% 界面缩放、正常窗口和低窗口下检查正文、状态图标及右侧齿轮，再测试点击、划选、灰项取消及持键重复 LMB | 只有下方列表及其级联约为原尺寸的 90%，文字、图标、行高、留白和齿轮同步；周围方向按钮、四视图间隔和滑动选择范围保持。所有条目完整可读，不折叠、不滚动；窗口空间不足时仍按既定边界避让，不额外自动缩小。鼠标和键盘定位对应可见条目，灰项/灰齿轮不误执行，右侧齿轮保持对齐，关闭后无残留拦截 | 待测 |

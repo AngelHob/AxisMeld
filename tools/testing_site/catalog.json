@@ -149,7 +149,7 @@
         "Object无选择，鼠标位于空白；按住Shift并按住RMB，中心松RMB，反复重开"
       ],
       "expected": [
-        "立即显示Polygon Primitives八向环及下方16项Maya伴随列表；保留全部占位和3条6逻辑像素分隔；每次中心释放关闭，不改变场景"
+        "立即显示Polygon Primitives八向环及下方16项Maya伴随列表；保留全部占位和3条5.4逻辑像素分隔（原6的90%）；每次中心释放关闭，不改变场景"
       ],
       "superseded": false,
       "maintainerStatus": "pending",
@@ -2067,7 +2067,7 @@
         "Object选中Cube，Shift+RMB唤出；与提供的Maya截图对照"
       ],
       "expected": [
-        "八向热盒和下方列表同时显示；下方22个主条目按Maya顺序排列，不精简删除缺口；保留7条6逻辑像素分隔、Mapping/Booleans/Polygon Display三个目录；不必另进Space"
+        "八向热盒和下方列表同时显示；下方22个主条目按Maya顺序排列，不精简删除缺口；保留7条5.4逻辑像素分隔（原6的90%）、Mapping/Booleans/Polygon Display三个目录；不必另进Space"
       ],
       "superseded": false,
       "maintainerStatus": "pending",
@@ -2515,7 +2515,7 @@
         "单视图1x/2x对照普通行和每个分隔，慢移鼠标跨过所有分隔"
       ],
       "expected": [
-        "功能行24逻辑像素、细分隔6逻辑像素；分组清楚，布局/点击/高亮使用同一实际高度，分隔不占完整功能行"
+        "伴随列表功能行21.6逻辑像素、细分隔5.4逻辑像素（原24/6的90%）；分组清楚，布局/点击/高亮使用同一实际高度，分隔不占完整功能行"
       ],
       "superseded": false,
       "maintainerStatus": "pending",
@@ -3523,7 +3523,7 @@
         "在单/四视图中下部打开各层；1x/2x检查带字标题、普通分隔和末项"
       ],
       "expected": [
-        "当前层完整显示；带字标题24、细分隔6逻辑像素，标题不可点击且不孤悬列尾；下方不足整体底部对齐"
+        "当前层完整显示；普通原生列表带字标题24、细分隔6逻辑像素，伴随列表对应21.6/5.4；标题不可点击且不孤悬列尾；下方不足整体底部对齐"
       ],
       "superseded": false,
       "maintainerStatus": "pending",
@@ -4745,7 +4745,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "GU-23",
@@ -4759,7 +4759,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "GU-24",
@@ -4773,7 +4773,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "GU-25",
@@ -4784,6 +4784,20 @@
       ],
       "expected": [
         "工厂默认 Layout 与 Blender 键位保持，Rigging 作为原生工作区存在；Rigify 无需启用插件，旧文件和工作区布局不丢失；已实现入口和 Maya 灰占位保持，两套键位各自正常，测试不覆盖原场景或个人偏好"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": false
+    },
+    {
+      "id": "GU-26",
+      "title": "热盒下方列表缩至 90%，周围按钮保持原样",
+      "group": "P1：热盒伴随列表尺寸（2026-10-11，新增1项）",
+      "steps": [
+        "分别唤出 Shift+RMB 创建/建模热盒、RMB 组件热盒和 Q/W/E/R 的伴随列表，打开一层子菜单；在 100% 与 150% 界面缩放、正常窗口和低窗口下检查正文、状态图标及右侧齿轮，再测试点击、划选、灰项取消及持键重复 LMB"
+      ],
+      "expected": [
+        "只有下方列表及其级联约为原尺寸的 90%，文字、图标、行高、留白和齿轮同步；周围方向按钮、四视图间隔和滑动选择范围保持。所有条目完整可读，不折叠、不滚动；窗口空间不足时仍按既定边界避让，不额外自动缩小。鼠标和键盘定位对应可见条目，灰项/灰齿轮不误执行，右侧齿轮保持对齐，关闭后无残留拦截"
       ],
       "superseded": false,
       "maintainerStatus": "pending",

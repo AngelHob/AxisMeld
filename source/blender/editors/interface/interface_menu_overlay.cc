@@ -12,7 +12,8 @@
 namespace blender::ui {
 void menu_overlay_draw(const bContext *C,
                        const Span<MenuOverlayItem> items,
-                       const bool force_opaque)
+                       const bool force_opaque,
+                       const float content_scale)
 {
   if (items.is_empty()) {
     return;
@@ -26,6 +27,9 @@ void menu_overlay_draw(const bContext *C,
   Block *block = block_begin(C, nullptr, "AxisMeld Menu Overlay", EmbossType::Pulldown);
   GPU_matrix_projection_get(block->winmat);
   block->aspect = 2.0f / std::abs(region->winx * block->winmat[0][0]);
+  // Geometry is already scaled by the caller. Native widgets use inverse zoom for
+  // text, icons, arrows and internal padding; keep it local to this temporary block.
+  block->aspect /= content_scale;
   block_theme_style_set(block, BLOCK_THEME_STYLE_POPUP);
   Vector<Button *> centered_buttons;
   for (const MenuOverlayItem &item : items) {
@@ -44,7 +48,7 @@ void menu_overlay_draw(const bContext *C,
     // both the status and semantic icon, including empty status cells between pages.
     const int state_width = !item.icon_only && !item.separator &&
                                     (item.state_column || item.state_icon) ?
-                                int(20 * UI_SCALE_FAC) :
+                                int(20 * UI_SCALE_FAC * content_scale) :
                                 0;
     if (state_width) {
       Button *state = uiDefIconBut(block,

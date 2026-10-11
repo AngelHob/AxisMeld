@@ -10,6 +10,9 @@
 #include <vector>
 
 namespace blender::axismeld {
+/* Only the independent below-ring lists and their cascades use compact metrics.
+ * Drawing and layout share this factor; marking rings and ordinary menus stay full size. */
+inline constexpr float companion_menu_scale = 0.9f;
 enum class MenuKind { Menu, Command, Separator, Disabled, Setting };
 struct MenuNode {
   std::string id, label, command, reason, value;

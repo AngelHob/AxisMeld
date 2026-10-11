@@ -325,6 +325,7 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data, const int *draw_of
   // Native submenu and leaf rows stay in one block so their backgrounds remain continuous.
   struct NativeBlock {
     bool standalone;
+    bool companion;
     std::string owner;
     int column;
     std::vector<ui::MenuOverlayItem> items;
@@ -345,8 +346,9 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data, const int *draw_of
       auto &blocks = menu_levels[r.depth];
       const bool standalone = r.option_box || r.native_menu_standalone || !r.native_menu;
       if (standalone || blocks.empty() || blocks.back().standalone ||
+          blocks.back().companion != r.companion ||
           blocks.back().owner != r.owner || blocks.back().column != r.column) {
-        blocks.push_back({standalone, r.owner, r.column, {}});
+        blocks.push_back({standalone, r.companion, r.owner, r.column, {}});
       }
       blocks.back().items.push_back({entry.text,
                                      {int(r.x * scale),
@@ -366,7 +368,7 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data, const int *draw_of
   }
   for (const auto &[depth, blocks] : menu_levels) {
     for (const NativeBlock &block : blocks) {
-      ui::menu_overlay_draw(C, block.items, true);
+      ui::menu_overlay_draw(C, block.items, true, block.companion ? companion_menu_scale : 1.0f);
     }
   }
   if (!data.marking) {

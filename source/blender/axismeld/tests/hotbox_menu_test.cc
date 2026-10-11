@@ -350,7 +350,7 @@ TEST(axismeld_hotbox_menu, CreationCompanionUsesThinSeparatorsAndIndependentPath
   const auto *a = rect(layout, "fixture.create.a"), *separator = rect(layout, "fixture.create.sep"),
              *b = rect(layout, "fixture.create.b");
   ASSERT_NE(a, nullptr); ASSERT_NE(separator, nullptr); ASSERT_NE(b, nullptr);
-  EXPECT_TRUE(a->companion); EXPECT_EQ(separator->height, 6);
+  EXPECT_TRUE(a->companion); EXPECT_FLOAT_EQ(separator->height, 5.4f);
   EXPECT_EQ(a->y, separator->y + separator->height);
   EXPECT_EQ(separator->y, b->y + b->height);
   EXPECT_EQ(hit_marking_menu_rect(layout, "context.create", separator->x + 5, separator->y + 3), nullptr);
@@ -378,7 +378,7 @@ TEST(axismeld_hotbox_menu, ObjectCompanionIsVisibleWithoutStealingRadialAndOptio
   const MenuRect *main = rect(layout, action.id), *cell = rect(layout, option.id);
   ASSERT_NE(main, nullptr);
   ASSERT_NE(cell, nullptr);
-  EXPECT_EQ(cell->width, 24);
+  EXPECT_FLOAT_EQ(cell->width, 21.6f);
   EXPECT_FALSE(main->interactive);
   EXPECT_TRUE(cell->interactive);
   EXPECT_EQ(main->x + main->width, cell->x);
@@ -913,17 +913,34 @@ TEST(axismeld_hotbox_menu, NarrowRadialsRejectAtomicallyInsteadOfReducingViewsCl
   const auto snapshot = default_snapshot();
   const auto widths = measured(snapshot);
   for (const std::string owner : {"tools.select", "tools.move", "tools.rotate", "tools.scale"}) {
+    const auto roomy = layout_menu(snapshot, 960, 540, 480, 270,
+                                   {owner}, {}, widths, nullptr, owner);
+    ASSERT_TRUE(roomy.supported) << owner;
     for (const auto origin : {std::array<float, 2>{0, 0}, {196, 105}, {392, 210}}) {
       const auto narrow = layout_menu(snapshot, 392, 210, origin[0], origin[1],
                                       {owner}, {}, widths, nullptr, owner);
+      if (owner == "tools.select") {
+        // The smaller companion now fits here; its ring must retain the actual
+        // roomy geometry, including every inner edge relative to its center.
+        ASSERT_TRUE(narrow.supported);
+        ASSERT_FALSE(narrow.return_regions.empty());
+        ASSERT_FALSE(roomy.return_regions.empty());
+        const auto &center = narrow.return_regions.back(), &reference = roomy.return_regions.back();
+        for (const auto &item : narrow.rects) {
+          if (item.companion) { continue; }
+          const auto *same = rect(roomy, item.id);
+          ASSERT_NE(same, nullptr);
+          EXPECT_FLOAT_EQ(item.width, same->width); EXPECT_FLOAT_EQ(item.height, same->height);
+          EXPECT_FLOAT_EQ(item.x - center.x, same->x - reference.x);
+          EXPECT_FLOAT_EQ(item.y - center.y, same->y - reference.y);
+        }
+        continue;
+      }
       EXPECT_FALSE(narrow.supported) << owner;
       EXPECT_TRUE(narrow.rects.empty());
       EXPECT_TRUE(narrow.return_regions.empty());
       EXPECT_TRUE(narrow.marking_gaps.empty());
     }
-    const auto roomy = layout_menu(snapshot, 960, 540, 480, 270,
-                                   {owner}, {}, widths, nullptr, owner);
-    ASSERT_TRUE(roomy.supported) << owner;
   }
   for (const std::string owner : {"tools.move.axis"}) {
     const auto narrow = layout_menu(snapshot, 392, 210, 196, 105,
@@ -2088,7 +2105,7 @@ TEST(axismeld_hotbox_menu, RealDefaultTreeHasClickablePathsAtCornersAndCenter)
               const auto *cell = rect(layout, option.id);
               ASSERT_NE(cell, nullptr) << option.id;
               EXPECT_TRUE(cell->option_box);
-              EXPECT_EQ(cell->width, 24);
+              EXPECT_FLOAT_EQ(cell->width, companion ? 21.6f : 24.0f);
               EXPECT_EQ(cell->x, item->x + item->width);
               const auto option_hit = hit_menu(layout, cell->x + 12, cell->y + cell->height / 2);
               EXPECT_EQ(option_hit, option.enabled ? option.id : "") << option.id;
@@ -2494,7 +2511,8 @@ TEST(axismeld_hotbox_menu, FullCompanionBottomAlignmentPreservesEveryRow)
     const auto *item = rect(layout, node.id);
     ASSERT_NE(item, nullptr) << node.id;
     bottom = std::min(bottom, item->y);
-    EXPECT_FLOAT_EQ(item->height, node.kind == MenuKind::Separator && node.label.empty() ? 6 : 24);
+    EXPECT_FLOAT_EQ(item->height,
+                    node.kind == MenuKind::Separator && node.label.empty() ? 5.4f : 21.6f);
   }
   float list_top = 0, ring_bottom = 1080;
   for (const auto &item : layout.rects) {
@@ -2506,10 +2524,151 @@ TEST(axismeld_hotbox_menu, FullCompanionBottomAlignmentPreservesEveryRow)
   const auto &center = layout.return_regions.back();
   EXPECT_EQ(menu_return_target(layout, center.x+center.width/2, center.y+center.height/2),
             "context.modeling_object");
-  EXPECT_FLOAT_EQ(bottom, 12);
+  EXPECT_NEAR(bottom, 12, .001f);
   for (const auto &item : layout.rects) {
     EXPECT_FALSE(item.id.starts_with("@scroll:") || item.id.starts_with("@back:")) << item.id;
   }
+}
+
+static MenuSnapshot compact_companion_snapshot()
+{
+  auto snapshot = default_snapshot();
+  MenuNode action{"fixture.compact.action", "Action", "", "Unavailable", "",
+                  MenuKind::Disabled, false,
+                  {{"fixture.compact.action.options", "Options", "selection.clear", "", "",
+                    MenuKind::Command, true}}};
+  MenuNode cascade{"fixture.compact.cascade", "Cascade", "", "", "", MenuKind::Menu, true};
+  cascade.presentation = "list";
+  auto child = action;
+  child.id = "fixture.compact.child";
+  child.children[0].id = child.id + ".options";
+  cascade.children = {child, {"fixture.compact.child.last", "Last child", "selection.clear",
+                               "", "", MenuKind::Command, true}};
+  MenuNode list{"context.create_menu", "Create menu", "", "", "", MenuKind::Menu, true};
+  list.presentation = "list";
+  list.children = {{"fixture.compact.heading", "Section", "", "", "", MenuKind::Separator, false},
+                   action,
+                   {"fixture.compact.separator", "", "", "", "", MenuKind::Separator, false},
+                   cascade,
+                   {"fixture.compact.last", "Last", "selection.clear", "", "", MenuKind::Command, true}};
+  std::erase_if(snapshot.menus, [&](const auto &node) { return node.id == list.id; });
+  snapshot.menus.push_back(list);
+  snapshot.center_buttons[0] = list.id;
+  return snapshot;
+}
+
+TEST(axismeld_hotbox_menu, CompanionUsesNinetyPercentMetricsWithoutChangingOrdinaryListsOrRing)
+{
+  const auto snapshot = compact_companion_snapshot();
+  const auto widths = measured(snapshot);
+  const auto companion = layout_menu(snapshot, 1600, 1200, 800, 800, {"context.create"}, {},
+                                      widths, nullptr, "context.create");
+  const auto ordinary = layout_menu(snapshot, 1600, 1200, 800, 800,
+                                     {"center", "context.create_menu"}, {}, widths);
+  ASSERT_TRUE(companion.supported); ASSERT_TRUE(ordinary.supported);
+  // Independent 80-pixel labels: the widest row needs 40 padding + 24 Options.
+  for (const auto *layout : {&companion, &ordinary}) {
+    const bool compact = layout == &companion;
+    const auto *heading = rect(*layout, "fixture.compact.heading");
+    const auto *separator = rect(*layout, "fixture.compact.separator");
+    const auto *body = rect(*layout, "fixture.compact.action");
+    const auto *options = rect(*layout, "fixture.compact.action.options");
+    ASSERT_NE(heading, nullptr); ASSERT_NE(separator, nullptr);
+    ASSERT_NE(body, nullptr); ASSERT_NE(options, nullptr);
+    EXPECT_EQ(heading->companion, compact);
+    EXPECT_FLOAT_EQ(heading->width, compact ? 129.6f : 144.0f);
+    EXPECT_FLOAT_EQ(heading->height, compact ? 21.6f : 24.0f);
+    EXPECT_FLOAT_EQ(separator->height, compact ? 5.4f : 6.0f);
+    EXPECT_FLOAT_EQ(options->width, compact ? 21.6f : 24.0f);
+    EXPECT_FLOAT_EQ(body->width, compact ? 108.0f : 120.0f);
+    EXPECT_FLOAT_EQ(options->x, body->x + body->width);
+    EXPECT_FLOAT_EQ(options->x + options->width, heading->x + heading->width);
+    EXPECT_FLOAT_EQ(options->height, heading->height);
+    EXPECT_TRUE(hit_menu(*layout, body->x + 1, body->y + body->height / 2).empty());
+    EXPECT_EQ(hit_menu(*layout, options->x + options->width - .1f,
+                       options->y + options->height / 2), options->id);
+    EXPECT_NE(hit_menu(*layout, options->x + options->width + .1f,
+                       options->y + options->height / 2), options->id);
+  }
+  auto ring_snapshot = snapshot;
+  std::erase_if(ring_snapshot.menus, [](const auto &node) { return node.id == "context.create_menu"; });
+  const auto ring = layout_menu(ring_snapshot, 1600, 1200, 800, 800, {"context.create"}, {},
+                                 measured(ring_snapshot), nullptr, "context.create");
+  ASSERT_TRUE(ring.supported);
+  for (const auto &item : ring.rects) {
+    const auto *same = rect(companion, item.id);
+    ASSERT_NE(same, nullptr);
+    EXPECT_FALSE(same->companion);
+    EXPECT_FLOAT_EQ(same->x, item.x); EXPECT_FLOAT_EQ(same->y, item.y);
+    EXPECT_FLOAT_EQ(same->width, item.width); EXPECT_FLOAT_EQ(same->height, item.height);
+  }
+}
+
+TEST(axismeld_hotbox_menu, CompanionCascadeUsesSameCompactMetricsAndSeparateOptionsHits)
+{
+  const auto snapshot = compact_companion_snapshot();
+  const auto layout = layout_menu(snapshot, 1600, 1200, 800, 800, {"context.create"}, {},
+                                   measured(snapshot), nullptr, "context.create",
+                                   {"context.create_menu", "fixture.compact.cascade"});
+  ASSERT_TRUE(layout.supported);
+  const auto *parent = rect(layout, "fixture.compact.cascade");
+  const auto *child = rect(layout, "fixture.compact.child");
+  const auto *options = rect(layout, "fixture.compact.child.options");
+  const auto *last = rect(layout, "fixture.compact.child.last");
+  ASSERT_NE(parent, nullptr); ASSERT_NE(child, nullptr);
+  ASSERT_NE(options, nullptr); ASSERT_NE(last, nullptr);
+  EXPECT_TRUE(child->companion); EXPECT_TRUE(options->companion);
+  EXPECT_FLOAT_EQ(parent->height, 21.6f); EXPECT_FLOAT_EQ(child->height, 21.6f);
+  EXPECT_FLOAT_EQ(last->width, 129.6f); EXPECT_FLOAT_EQ(options->width, 21.6f);
+  EXPECT_FLOAT_EQ(options->x, child->x + child->width);
+  EXPECT_FLOAT_EQ(options->x + options->width, last->x + last->width);
+  EXPECT_FLOAT_EQ(child->y, last->y + last->height);
+  EXPECT_EQ(hit_menu(layout, options->x + 10.8f, options->y + 10.8f), options->id);
+  EXPECT_TRUE(hit_menu(layout, child->x + 1, child->y + 10.8f).empty());
+  EXPECT_EQ(hit_marking_menu_rect(layout, "context.create", last->x + 1, last->y + 10.8f), nullptr);
+  const auto column = std::find_if(layout.native_columns.begin(), layout.native_columns.end(),
+                                    [&](const auto &item) { return item.owner == parent->id; });
+  ASSERT_NE(column, layout.native_columns.end());
+  EXPECT_FLOAT_EQ(column->width, 129.6f); EXPECT_NEAR(column->height, 43.2f, .001f);
+  EXPECT_TRUE(layout.native_scroll_bounds.empty());
+}
+
+TEST(axismeld_hotbox_menu, CompactCompanionKeepsEveryRowAcrossColumnsAtWindowBottom)
+{
+  auto snapshot = compact_companion_snapshot();
+  auto &list = snapshot.menus.back();
+  list.children.clear();
+  for (int index = 0; index < 60; index++) {
+    list.children.push_back({"fixture.compact.row." + std::to_string(index), "Row",
+                              "selection.clear", "", "", MenuKind::Command, true});
+  }
+  const auto layout = layout_menu(snapshot, 1600, 480, 800, 120, {"context.create"},
+                                   {{list.id, 999}}, measured(snapshot), nullptr, "context.create");
+  ASSERT_TRUE(layout.supported);
+  ASSERT_GT(layout.native_columns.size(), 1);
+  float bottom = 480, list_top = 0, ring_bottom = 480;
+  for (const auto &node : list.children) {
+    const auto *item = rect(layout, node.id);
+    ASSERT_NE(item, nullptr) << node.id;
+    EXPECT_FLOAT_EQ(item->height, 21.6f); EXPECT_FLOAT_EQ(item->width, 108.0f);
+    EXPECT_EQ(hit_menu(layout, item->x + 54, item->y + 10.8f), item->id);
+    EXPECT_GE(item->x, 12); EXPECT_GE(item->y, 12 - .001f);
+    EXPECT_LE(item->x + item->width, 1588); EXPECT_LE(item->y + item->height, 468);
+    bottom = std::min(bottom, item->y); list_top = std::max(list_top, item->y + item->height);
+  }
+  for (const auto &item : layout.rects) {
+    if (!item.companion && (item.direction_label || item.option_box)) {
+      ring_bottom = std::min(ring_bottom, item.y);
+    }
+    EXPECT_FALSE(item.id.starts_with("@scroll:") || item.id.starts_with("@back:"));
+  }
+  EXPECT_NEAR(bottom, 12, .001f); EXPECT_NEAR(ring_bottom - list_top, 12, .001f);
+  for (size_t index = 1; index < layout.native_columns.size(); index++) {
+    const auto &a = layout.native_columns[index - 1], &b = layout.native_columns[index];
+    EXPECT_NEAR(b.x - a.x - a.width, 3.6f, .001f);
+    EXPECT_TRUE(hit_menu(layout, a.x + a.width + 1.8f, a.y + 10.8f).empty());
+  }
+  EXPECT_TRUE(layout.native_scroll_bounds.empty());
 }
 
 TEST(axismeld_hotbox_menu, NativeColumnGapsOccludeWithoutBlockingTheirRealRows)

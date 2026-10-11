@@ -255,7 +255,7 @@ class LayoutBuilder {
         {node.id, x, y, w, depth ? secondary_height : row_height, depth, interactive(node)});
   }
 
-  float native_width(const MenuNode &owner) const
+  float native_width(const MenuNode &owner, const float scale = 1.0f) const
   {
     float w = 0;
     for (const auto &node : owner.children) {
@@ -263,13 +263,13 @@ class LayoutBuilder {
                          (node.kind == MenuKind::Menu ? native_entry_padding : native_menu_padding) +
                          (node.kind != MenuKind::Menu && !node.children.empty() ? 24.0f : 0.0f));
     }
-    return w;
+    return w * scale;
   }
 
-  static float native_row_height(const MenuNode &node)
+  static float native_row_height(const MenuNode &node, const float scale = 1.0f)
   {
     // Maya divider labels are native noninteractive headings, not thin rules.
-    return node.kind == MenuKind::Separator && node.label.empty() ? 6.0f : secondary_height;
+    return (node.kind == MenuKind::Separator && node.label.empty() ? 6.0f : secondary_height) * scale;
   }
 
   struct NativeColumn {
@@ -279,13 +279,16 @@ class LayoutBuilder {
   struct NativeColumns {
     std::vector<NativeColumn> columns;
     float width = 0, height = 0, row_width = 0;
+    float scale = 1.0f;
   };
 
-  NativeColumns native_columns(const MenuNode &owner, const float room) const
+  NativeColumns native_columns(const MenuNode &owner, const float room,
+                               const float scale = 1.0f) const
   {
     NativeColumns result;
-    if (room < secondary_height) { return result; }
-    result.row_width = native_width(owner);
+    result.scale = scale;
+    if (room < secondary_height * scale) { return result; }
+    result.row_width = native_width(owner, scale);
     const int count = int(owner.children.size());
     for (const bool prefer_separator : {true, false}) {
       result.columns.clear();
@@ -293,15 +296,15 @@ class LayoutBuilder {
       for (int first = 0; first < count;) {
         int end = first, separator = -1;
         float used = 0, separator_height = 0;
-        while (end < count && used + native_row_height(owner.children[end]) <= room) {
+        while (end < count && used + native_row_height(owner.children[end], scale) <= room) {
           const MenuNode &node = owner.children[end];
           const bool heading = node.kind == MenuKind::Separator && !node.label.empty();
           if (heading) {
             // A heading belongs with the first following action. Include intervening
             // headings/rules so a column never strands a section title at its foot.
-            float group_height = native_row_height(node);
+            float group_height = native_row_height(node, scale);
             for (int next = end + 1; next < count; next++) {
-              group_height += native_row_height(owner.children[next]);
+              group_height += native_row_height(owner.children[next], scale);
               if (owner.children[next].kind != MenuKind::Separator) { break; }
             }
             if (used + group_height > room) { break; }
@@ -310,7 +313,7 @@ class LayoutBuilder {
               separator_height = used;
             }
           }
-          used += native_row_height(node);
+          used += native_row_height(node, scale);
           if (node.kind == MenuKind::Separator && !heading && used >= room / 2) {
             separator = end + 1;
             separator_height = used;
@@ -326,7 +329,8 @@ class LayoutBuilder {
         result.height = std::max(result.height, used);
         first = end;
       }
-      result.width = result.columns.size() * (result.row_width + secondary_gap) - secondary_gap;
+      const float column_gap = secondary_gap * scale;
+      result.width = result.columns.size() * (result.row_width + column_gap) - column_gap;
       if (result.width <= width - 2 * margin) { return result; }
     }
     return {};
@@ -337,11 +341,11 @@ class LayoutBuilder {
   {
     for (int column = 0; column < int(columns.columns.size()); column++) {
       const auto &range = columns.columns[column];
-      const float left = x + column * (columns.row_width + secondary_gap);
+      const float left = x + column * (columns.row_width + secondary_gap * columns.scale);
       float y = top;
       for (int index = range.first; index < range.end; index++) {
         const MenuNode &node = owner.children[index];
-        const float h = native_row_height(node);
+        const float h = native_row_height(node, columns.scale);
         y -= h;
         MenuRect item{node.id, left, y, columns.row_width, h, depth, interactive(node)};
         item.native_menu = true;
@@ -391,7 +395,8 @@ class LayoutBuilder {
     }
     if (left > right) { result.supported = false; return; }
     // Reserve the unmodified marking ring first, then fit the complete list below.
-    const auto columns = native_columns(owner, height - 2 * margin - (top - bottom) - margin);
+    const auto columns = native_columns(owner, height - 2 * margin - (top - bottom) - margin,
+                                        companion_menu_scale);
     if (columns.columns.empty()) { result.supported = false; return; }
     const float dy = std::max(0.0f, margin + columns.height + margin - bottom);
     if (top + dy > height - margin) { result.supported = false; return; }
@@ -410,7 +415,7 @@ class LayoutBuilder {
       const MenuRect *anchor_ptr = rect(companion_path[index]);
       if (!child || child->kind != MenuKind::Menu || !interactive(*child) || !anchor_ptr) { break; }
       const MenuRect anchor = *anchor_ptr;
-      const auto child_columns = native_columns(*child, height - 2 * margin);
+      const auto child_columns = native_columns(*child, height - 2 * margin, companion_menu_scale);
       if (child_columns.columns.empty()) { result.supported = false; return; }
       const float h = child_columns.height;
       float child_x, child_y;
@@ -440,12 +445,13 @@ class LayoutBuilder {
       const MenuNode *node = find_node(snapshot.menus, item.id);
       if (!node || node->kind == MenuKind::Menu || node->children.size() != 1) { continue; }
       const MenuNode &option = node->children[0];
-      if (option.id != node->id + ".options" || item.width <= 24) { continue; }
+      const float option_width = 24 * (item.companion ? companion_menu_scale : 1.0f);
+      if (option.id != node->id + ".options" || item.width <= option_width) { continue; }
       MenuRect cell = item;
-      item.width -= 24;
+      item.width -= option_width;
       cell.id = option.id;
       cell.x = item.x + item.width;
-      cell.width = 24;
+      cell.width = option_width;
       cell.interactive = interactive(option);
       cell.direction_label = false;
       cell.option_box = true;
