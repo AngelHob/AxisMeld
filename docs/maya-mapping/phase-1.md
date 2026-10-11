@@ -1,5 +1,7 @@
 # Maya 2026 建模输入：Phase 1
 
+**当前默认键位请先看[自动生成的输入对照表](../compatibility/current-input-audit.md)。** 下表是早期阶段说明；QWER 持键菜单、鼠标下组件目标和 Space 主菜单已有后续实现，不能据此表中的“未实现”判断当前版本。
+
 本文保留 Phase 1 输入适配与 Phase 2A 热盒的历史范围说明。当前 Phase 2B 的 Space
 先打开主菜单，中央 LMB/MMB/RMB 默认再打开七视图，并可逐键改映射或禁用；当前操作、
 样式与边界以 [Phase 2B 人工验收表](../compatibility/phase-2b-manual-test.md) 为准。

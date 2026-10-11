@@ -1,6 +1,6 @@
 # 新机器接续开发
 
-本页面向未读过聊天记录的开发者和 Codex。2026-09-29 已同步远端 `f9d388a6bb35`；A1 已实现并发布。用户随后更正：先完成 UI、交互和快捷键，暂停新增功能，下一批为 U0，A2 暂缓。执行前重新核对远端和当前源码，不把本页固定 SHA 当作永远最新。
+本页面向未读过聊天记录的开发者和 Codex。2026-10-11 本批开始时已核对远端基线 `19add3316c828bb9028bc55a3d3d3b4cb80e9fc3`；A1 已实现并发布。当前先完成 UI、交互和快捷键，暂停新增功能；U0 输入审计切片和模式冲突诊断修复已完成，接续剩余菜单、参考与手势核对，A2 暂缓。执行前重新核对远端和当前源码，不把本页固定 SHA 当作永远最新。
 
 ## 1. 先用正确分支
 
@@ -52,12 +52,18 @@ git log -5 --oneline
 
 ## 5. 下一任务：UI、交互与快捷键对齐
 
-先读 [UI/输入阶段](development/2026-09-29-ui-interaction-shortcuts.md)，按 ROADMAP U0–U3 推进。首批建立当前默认键位和交互对照表，再逐项修菜单/布局、热盒事件及快捷键冲突。Maya 2026 默认参考、当前生成键位、按下/按住/松开、作用模式与区域、差异、测试编号和验证状态必须可追溯；历史 Phase 1 描述不能覆盖当前实现。
+先读 [UI/输入阶段](development/2026-09-29-ui-interaction-shortcuts.md)，按 ROADMAP U0–U3 推进。[当前输入对照](compatibility/current-input-audit.md)及[完整 JSON](compatibility/current-input-audit.json)已由真实键位生成器导出，不要重做导出器。它覆盖 56 个默认命令、含别名的 58 条绑定、7 条操纵器入口、489 条原生继承、53 条移除项和 177 个受保护 keymap。先运行 `python tools/utils/axismeld_input_audit.py --check` 检查源码与快照是否漂移，再继续剩余 U0 菜单、参考与手势核对；后续按 U1 菜单/布局、U2 热盒事件、U3 快捷键冲突推进。
 
-- 输入入口：`scripts/modules/axismeld/commands.py`、`keymap.py`、`profiles.py` 和 `modeling_registry.py`；`tests/python/axismeld_input_test.py` / `axismeld_input_blender.py`。
+已存参考的 38 条文本记法一致不等于行为已对齐；18 条历史文字参考与 2 条标点记法或差异仍待核对。Maya 2026 默认参考、当前生成键位、按下/按住/松开、作用模式与区域、差异、测试编号和验证状态必须可追溯；历史 Phase 1 描述不能覆盖当前实现。本批不是完整 U0、Maya 或 GUI 验收完成。
+
+- 输入入口：`scripts/modules/axismeld/commands.py`、`keymap.py`、`profiles.py` 和 `modeling_registry.py`；`tests/python/axismeld_input_test.py`、`axismeld_input_audit_test.py`、`axismeld_input_diagnostics_blender.py`。历史 `axismeld_input_blender.py` 中的上下文假设需先对照当前生成键位，不能直接作为全量验收依据。
 - 热盒入口：`hotbox_catalog.py`、`tool_hotbox.py`、原生事件处理及[四视图标杆](development/2026-09-14-hotbox-reference-contract.md)；保留 QWER 持键反复唤出、父子返回与取消。
 - 菜单入口：`workspace_menu_catalog.py`、`workspace_native_groups.py`、`rigging_workspace_catalog.py` 及原生 UI 宿主；保留 Blender 全局栏、Modeling 七根、灰项和右侧 Options。
-- 验收入口：[统一人工清单](compatibility/2026-09-14-manual-test-ledger.md)现有 G/L/VR/K/FM/MT/MB/RG 编号；自动测试不替代实体键鼠和显示条件验收。
+- 验收入口：[统一人工清单](compatibility/2026-09-14-manual-test-ledger.md)现有 G/L/VR/K/FM/MT/MB/RG/IN 编号；自动测试不替代实体键鼠和显示条件验收。
+
+本批修复仅在 Object Mode/Mesh 互斥模式间出现的插件冲突误报，共享 3D View 和工具 map 仍保留潜在冲突提示，不改插件键位或实际事件匹配。12 项审计、18 项输入及 4 项真实 Blender RNA 检查通过；RNA 检查使用既有可运行安装加载当前源码，不代表新 native 构建或 GUI 手感验证。新 [IN-01～IN-03](compatibility/2026-10-11-input-diagnostics-acceptance.md) 全部待测，须用包含本批修复的开发构建；9 月 17 日 Skin 包不含此修复。本批未发布 ZIP，勿修改公开下载版本来冒充已发包。
+
+当前测试目录 317 项，其中当前 305、历史 12；47 项仅有历史已测试信息，全表初始待测 270、当前待测 258。目录统计与每位访客自己的测试记录分开；新增 IN 项不改变旧 RG 项结果。
 
 A1 的 Normalize/Prune 已交付，保持可用，见[原设计](development/2026-09-17-skin-weight-cleanup.md)；RG-15～RG-20 仍待人工测试。Influences、绑定/解绑、镜像/复制、Skeleton、建模新算法与完整 UV 能力均后置；需要这些能力的快捷键记为缺口，不解除灰显。全局缩放差异继续搁置。
 

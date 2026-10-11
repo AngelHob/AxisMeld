@@ -24,7 +24,7 @@ class Command:
     shift: bool = False
     oskey: bool = False
     status: str = 'adapted'
-    difference: str = 'Uses Blender semantics; Maya hold menus are not implemented.'
+    difference: str = 'Uses Blender semantics; input lifecycle and context are verified separately.'
 
 
 COMMANDS = MappingProxyType({command.id: command for command in (
@@ -62,7 +62,7 @@ COMMANDS = MappingProxyType({command.id: command for command in (
     Command('transform.rotate', 'Rotate Tool', 'E', difference='Native Rotate tool with classic held-LMB menu; same-tool tap does not reset the active axis.'),
     Command('transform.scale', 'Scale Tool', 'R', difference='Native Scale tool with classic held-LMB menu; global object-scale difference remains deferred.'),
     Command('context.component_hotbox', 'Active Mesh Component Hotbox', 'RIGHTMOUSE',
-            difference='Hold and release on the active selected editable mesh; target-under-pointer picking deferred to M2b.'),
+            difference='Context component menu with Object-mode pointer targeting; unsupported entries remain disabled.'),
     Command('mode.object', 'Object Mode',
             difference='Idempotently exits mesh Edit Mode on the active selected editable mesh.'),
     Command('selection.toggle_component', 'Object / Component', 'F8'),
@@ -86,7 +86,7 @@ COMMANDS = MappingProxyType({command.id: command for command in (
     Command('view.wireframe', 'Wireframe', 'FOUR'),
     Command('view.shaded', 'Shaded', 'FIVE'),
     Command('hotbox.open', 'View Hotbox', 'SPACE',
-            difference='Adapted four-direction view menu and tap quad toggle; not the full Maya hotbox.'),
+            difference='Hold opens the main hotbox with configurable center mouse menus (Views by default); tap toggles single/quad view.'),
     Command('view.toggle_quad', 'Toggle Single / Quad View',
             difference='Uses AxisMeld session view slots; hidden slots are not saved across restart.'),
     Command('view.perspective', 'Perspective View',

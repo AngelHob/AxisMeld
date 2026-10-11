@@ -24,7 +24,21 @@
 | 模式、编辑器、用户覆盖与插件 | 生成器限制在声明区域/模式；Curve/Lattice 仅获得声明的 M3 键；非建模编辑器保留；profile 的直接绑定 schema 只收 PRESS，持键释放在专用交互中处理；插件冲突只报告。以上保护不等于所有继承键已对齐。 | `keymap.py`、`profiles.py`、`tests/python/axismeld_input_test.py` |
 | 热盒与组件交互 | 四视图几何契约和 G-01～G-10 已有验收步骤；Edit 空选择预选、Ctrl+RMB 转换、Ctrl+Shift+RMB 工具上下文仍有后续审计范围。区分入口/事件适配与新增选择算法。 | [标杆约束](2026-09-14-hotbox-reference-contract.md)、[问题清单](../CURRENT_ISSUES.md)、[人工总表](../compatibility/2026-09-14-manual-test-ledger.md) |
 
-首个可执行任务：从 `baseline_bindings()` / `binding_events()` 和 `modeling_registry.py` 导出当前输入项，以已存 Maya 参考逐项比对；同时列出预留键与继承键。对待修项先保留原始事件序列，再做有界修复。源码元数据中的旧描述也需对照当前实现，不能当作行为真相。
+首个输入导出切片已于 2026-10-11 完成，见下节。接下来核对表中 18 条正文参考与 2 条符号差异，并补齐菜单/热盒对照；对待修项先保留原始事件序列，再做有界修复。源码元数据中的旧描述也需对照当前实现，不能当作行为真相。
+
+### 2026-10-11 · U0 当前键位审计实施
+
+在既有源码内新增维护工具，直接运行 Industry Compatible 与 AxisMeld 的真实键位生成函数，输出可重复生成的 Markdown/JSON 对照；`--check` 用于检测文档与源码漂移。普通 Python 下仅适配 `bpy.utils.execfile` 的文件加载，不伪造键位或操作结果；Blender 内使用真实加载器。工具不加载个人配置、不改变键位或场景。
+
+每条默认绑定及别名记录实际目标 keymap、已存 Maya 参考身份/默认输入、事件入口、限制和人工记录入口；原生继承项与预留裸键另列。缺失/重复/落入错误 keymap 的 AxisMeld 绑定及被改动的非目标编辑器必须报错；原生 fallback、共享 Space 和条件式 Shift+RMB 并存单独标注，不按字符串相同误报为事件已冲突。此表证明静态生成配置，仍需后续真实事件与人工验收。
+
+审计发现并在本批处理一个有界诊断错误：Object Mode 插件的 Ctrl+F9 被提示与仅在 Mesh 生效的 `selection.convert_vert` 冲突，原因是插件诊断未像生成器一样考虑模式。复用命令的目标声明，仅排除互斥模式；共享 3D View 和工具 map 仍需保守报告潜在重叠，不能直接以目标名称不同隐藏父/子 keymap 冲突。此修复只改变提示，不修改插件、用户键位、事件值匹配或命令执行。Alt+LMB 双击被导航 PRESS 所有权移除、Measure 的 X 被预留键移除，先保留证据待真实事件和范围核对，不在本批猜测性改键。
+
+实施结果见[生成表](../compatibility/current-input-audit.md)及[完整 JSON](../compatibility/current-input-audit.json)：56 个默认命令、58 条输入（含别名），另列 7 个 AxisMeld 操纵器入口、489 条原生继承、53 条移除项；177 个受保护 map 未改变。38 条 `same_notation` 只代表已存文本相同，18 条需读正文，Grow/Shrink 的两条标点需继续核对。字段保留区域、项顺序和操作属性；原生 enum flags 集合按稳定顺序保存为 JSON 数组。
+
+验证回执（2026-10-11）：审计 12、输入 18、工具热盒 6、组件热盒 4、建模目录 10，共 50 项纯 Python 通过；真实 Blender RNA 另 4 项通过。默认、Move 重绑 F20、禁用 Redo 三组生成配置与修改前一致。审计遗漏与模式误报均先重现失败再修复；`--check` 已通过。未改变实际默认键位或热盒事件，未运行 GUI；新增 IN-01～IN-03 的人工状态保持待测。
+
+本机 `bin/Release/blender.exe` 启动遇到 Windows 并行配置错误，改用已有独立 `install/blender.exe` 运行隔离工厂配置测试，载入本 checkout 的隔离审计包。使用的 exe SHA256 为 `72db65ede53c3e5c724d5acf33586ff04eec9c123b5004aae9d3d365df481408`；这不是本轮重新编译或已发布新版的证据。可移植命令：`<blender> --background --factory-startup --python-exit-code 1 --python tests/python/axismeld_input_diagnostics_blender.py`，并将 `BLENDER_USER_CONFIG` / `BLENDER_USER_SCRIPTS` 指向临时隔离目录。
 
 ## U1–U3：按证据收敛
 

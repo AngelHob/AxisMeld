@@ -30,6 +30,19 @@ def modeling_keymap(name, args):
         name.startswith('3D View Tool:'))
 
 
+def command_targets(command):
+    """The declared maps are shared by generation and conflict diagnostics."""
+    if command == 'hotbox.open':
+        return ('AxisMeld Hotbox',)
+    if command in MODELING_SPECS:
+        return keymap_targets(command)
+    if command in OBJECT_BOUND_COMMANDS:
+        return ('Object Mode',)
+    if command in CONTEXT_TARGETS:
+        return CONTEXT_TARGETS[command]
+    return ('3D View',) if command.startswith('view.') else ('Object Mode', 'Mesh')
+
+
 def _original_frames_space_play(name, args, operator, event, data, command, owned):
     return (command == 'hotbox.open' and name == 'Frames' and
             args == {'space_type': 'EMPTY', 'region_type': 'WINDOW'} and
@@ -97,10 +110,7 @@ def generate_keymaps(base, bindings):
         for command, event in binding_events(bindings):
             if command == 'hotbox.open':
                 continue
-            target = (keymap_targets(command) if command in MODELING_SPECS else
-                      ('Object Mode',) if command in OBJECT_BOUND_COMMANDS else
-                      CONTEXT_TARGETS[command] if command in CONTEXT_TARGETS else
-                      ('3D View',) if command.startswith('view.') else ('Object Mode', 'Mesh'))
+            target = command_targets(command)
             if name in target and event is not None:
                 item = ('axismeld.command', dict(event),
                         {'properties': [('command', command)]})
@@ -145,6 +155,12 @@ def addon_conflicts(keyconfig, bindings):
                      **{key: getattr(item, key) for key in MODIFIERS}}
             for command, owned in binding_events(bindings):
                 if extra_map and (command not in MODELING_SPECS or keymap.name not in keymap_targets(command)):
+                    continue
+                targets = command_targets(command)
+                # Mode maps cannot run together. Shared view/tool maps can still
+                # overlap mode bindings, so do not filter all maps by exact name.
+                if (keymap.name in {'Object Mode', 'Mesh'} and keymap.name not in targets and
+                        not {'3D View', 'AxisMeld Hotbox'}.intersection(targets)):
                     continue
                 if owned is not None and overlaps(event, owned):
                     conflicts.append(f'Addon {keymap.name}: {item.idname} overlaps {command}')

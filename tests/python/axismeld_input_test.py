@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts' / 'modules'))
@@ -12,6 +13,7 @@ from axismeld.commands import baseline_bindings, COMMANDS
 from axismeld.profiles import resolve_profiles, load_profiles
 from axismeld.keymap import generate_keymaps
 from axismeld.keymap import validate_global_bindings
+from axismeld.keymap import addon_conflicts
 from axismeld.modeling_registry import SPECS as MODELING_SPECS
 
 
@@ -220,6 +222,41 @@ class KeymapTest(unittest.TestCase):
         once = generate_keymaps(base, baseline_bindings())
         twice = generate_keymaps(once, baseline_bindings())
         self.assertEqual(sum(name == 'AxisMeld Hotbox' for name, _args, _content in twice), 1)
+
+
+class AddonConflictTest(unittest.TestCase):
+    def addon(self, name, event):
+        item = SimpleNamespace(idname='addon.example', active=True, any=False,
+                               **{'ctrl': False, 'shift': False, 'alt': False, 'oskey': False,
+                                  'value': 'PRESS', **event})
+        return SimpleNamespace(keymaps=[SimpleNamespace(name=name, is_modal=False,
+                                                       keymap_items=[item])])
+
+    def test_component_conversion_does_not_conflict_in_object_mode(self):
+        event = {'type': 'F9', 'ctrl': True}
+        self.assertEqual(addon_conflicts(self.addon('Object Mode', event), baseline_bindings()), [])
+        self.assertEqual(len(addon_conflicts(self.addon('Mesh', event), baseline_bindings())), 1)
+
+    def test_object_parent_does_not_conflict_in_mesh_edit(self):
+        event = {'type': 'P'}
+        self.assertEqual(addon_conflicts(self.addon('Mesh', event), baseline_bindings()), [])
+        self.assertEqual(len(addon_conflicts(self.addon('Object Mode', event), baseline_bindings())), 1)
+
+    def test_shared_view_and_tool_maps_still_report_potential_overlap(self):
+        for name in ('3D View', '3D View Generic', '3D View Tool: Select Box'):
+            with self.subTest(name=name):
+                self.assertTrue(addon_conflicts(self.addon(name, {'type': 'F9', 'ctrl': True}),
+                                                baseline_bindings()))
+        self.assertTrue(addon_conflicts(self.addon('Object Mode', {'type': 'F'}), baseline_bindings()))
+        self.assertTrue(addon_conflicts(self.addon('Mesh', {'type': 'SPACE'}), baseline_bindings()))
+
+    def test_alias_rebinding_and_addon_state_stay_intact(self):
+        addon = self.addon('Mesh', {'type': 'Y', 'ctrl': True})
+        before = copy.deepcopy(addon)
+        self.assertTrue(addon_conflicts(addon, baseline_bindings()))
+        bindings = dict(baseline_bindings(), **{'edit.redo': {'type': 'F20', 'value': 'PRESS'}})
+        self.assertEqual(addon_conflicts(addon, bindings), [])
+        self.assertEqual(addon, before)
 
 
 if __name__ == '__main__':
