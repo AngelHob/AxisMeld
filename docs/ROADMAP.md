@@ -2,7 +2,7 @@
 
 状态核对日期：2026-10-11，首批 GUI 收敛开始时已拉取并核对远端基线 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`；首批历史结果见[GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)，后续提交以远端为准。本文件是当前路线入口；旧日期的规格保留设计与证据，不代表当前完成度。
 
-**最新交付（2026-10-11 16px companion preview）：热盒下方列表 16 像素预览已发布。** 仅将热盒下方伴随列表及其级联普通行高设为 16 逻辑像素（100% 界面缩放），Options 宽 16、细分隔 4；文字、图标、列宽和留白沿 16/24 的局部比例同步，高 DPI 保持 Blender 界面缩放规则；周围方向按钮、四视图间隔、主热盒栏及普通原生菜单保持原尺寸。完整条目、底部避让和说明无空间时隐藏的规则保持，不折叠、不滚动，不随窗口继续缩小。 沿用 Blender 5.4 Alpha 固定上游 `754ebe3c4b4e1402a159df6e1e58823cc93ef887`，本批未再次合并上游。6 组 42 项相关 Python、2 组 114 项原生、3 组既有 GUI 回归与 1 组本批列表几何验证通过。[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-16px-companion-preview)，源码/native `89fec688b9dd2f0c95f6a814488cd70733b29893`；匿名下载、干净解压及工厂启动已核验。详见[本批验收](compatibility/2026-10-11-16px-companion-acceptance.md)与[发布快照](compatibility/2026-10-11-16px-companion-preview-snapshot.json)。本批 Pages `43d73f2bff6c` 的 6 个公开资源逐字节核验通过。公开目录 344 项（当前 331、历史 13），47 项仅历史已测，当前初始未测 284、全表初始未测 297；最新标记 GU-27。既有编号与人工结果保持，自动化不替用户勾选。新增建模、Skin/Skeleton、UV 算法继续暂停。
+**最新交付（2026-10-11 18px companion preview）：热盒下方列表 18 像素预览已发布。** 仅将热盒下方伴随列表及其级联普通行高设为 18 逻辑像素（100% 界面缩放），Options 宽 18、细分隔 4.5；文字、图标、列宽和留白沿 18/24 的局部比例同步，高 DPI 保持 Blender 界面缩放规则；周围方向按钮、四视图间隔、主热盒栏及普通原生菜单保持原尺寸。完整条目、底部避让和说明无空间时隐藏的规则保持，不折叠、不滚动，不随窗口继续缩小。 沿用 Blender 5.4 Alpha 固定上游 `754ebe3c4b4e1402a159df6e1e58823cc93ef887`，本批未再次合并上游。6 组 42 项相关 Python、2 组 114 项原生、3 组既有 GUI 回归与 1 组本批列表几何验证通过。[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview)，源码/native `f72fb413ba9c16f41c453dde98469ef1933285c1`；匿名下载、干净解压及工厂启动已核验。详见[本批验收](compatibility/2026-10-11-18px-companion-acceptance.md)与[发布快照](compatibility/2026-10-11-18px-companion-preview-snapshot.json)。本批 Pages `b448822d223e` 的 6 个公开资源逐字节核验通过。公开目录 345 项（当前 331、历史 14），47 项仅历史已测，当前初始未测 284、全表初始未测 298；最新标记 GU-28。既有编号与人工结果保持，自动化不替用户勾选。新增建模、Skin/Skeleton、UV 算法继续暂停。
 
 ## 1. 目标与当前基线
 
@@ -12,7 +12,7 @@ AxisMeld 是可独立拉取、构建、运行的 Blender 衍生版本，以 Maya
 |---|---|
 | 开发源码 | [AngelHob/AxisMeld 的 axismeld/phase-2a](https://github.com/AngelHob/AxisMeld/tree/axismeld/phase-2a)；首批 GUI 收敛的历史起点为 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`；当前交付见下行，后续以远端为准 |
 | 默认分支 | `axismeld/integration`；目前承担仓库首页入口，**未包含最新开发实现**，不能直接用它继续功能开发 |
-| 当前公开试用包 | [2026.10.11 16px companion preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-16px-companion-preview)，完整原生包；功能/native 源码 `89fec688b9dd2f0c95f6a814488cd70733b29893`，见[发布快照](compatibility/2026-10-11-16px-companion-preview-snapshot.json) |
+| 当前公开试用包 | [2026.10.11 18px companion preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview)，完整原生包；功能/native 源码 `f72fb413ba9c16f41c453dde98469ef1933285c1`，见[发布快照](compatibility/2026-10-11-18px-companion-preview-snapshot.json) |
 | Blender 基线 | `754ebe3c4b4e1402a159df6e1e58823cc93ef887`，Blender 5.4.0 Alpha；Windows 库固定 `aa0c5db72fa9488bb685bdddbede780d19f483f5`，不代表未来浮动 main |
 | 测试门户 | [GitHub Pages](https://angelhob.github.io/AxisMeld/)，源码 `tools/testing_site/`，部署分支 `gh-pages` |
 | 交接与问题 | [新机器接续](HANDOFF.md) · [可复制提示词](CODEX_HANDOFF_PROMPT.md) · [当前问题](CURRENT_ISSUES.md) · [构建与交付](BUILD_AND_DELIVERY.md) |
@@ -88,7 +88,7 @@ A2 的后置设计线索保留：Remove Unused Influences 需明确全网格没�
 
 ## 5. 验收与每批交付
 
-公开目录 344 项（当前 331、历史 13），47 项仅历史已测，当前初始未测 284、全表初始未测 297；最新标记 GU-27。既有编号与人工结果保持，自动化不替用户勾选。访客记录独立保存，不据自动化代替人工验收。
+公开目录 345 项（当前 331、历史 14），47 项仅历史已测，当前初始未测 284、全表初始未测 298；最新标记 GU-28。既有编号与人工结果保持，自动化不替用户勾选。访客记录独立保存，不据自动化代替人工验收。
 
 每批完成顺序：更新设计 → 实现 → 与改动相称的静态/结果/真实事件或 GUI 验证 → 记录未覆盖人工项 → 更新 [CHANGELOG](CHANGELOG.md) → 提交推送并核验远端。验收变化时同步 Markdown 清单与公开 catalog；发布新版时绑定确切源码 SHA、校验包内资源、重新解压启动，再更新 Pages 构建版本。自动测试不改变人的测试结果。
 

@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "projectName": "AxisMeld",
-  "buildId": "axismeld-2026.10.11-16px-companion-preview",
+  "buildId": "axismeld-2026.10.11-18px-companion-preview",
   "repoUrl": "https://github.com/AngelHob/AxisMeld",
-  "releaseUrl": "https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-16px-companion-preview",
+  "releaseUrl": "https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview",
   "sourceBranch": "axismeld/phase-2a",
   "feedback": {
     "mode": "github",

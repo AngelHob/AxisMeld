@@ -1,6 +1,6 @@
 # Windows 构建、验证与交付
 
-**当前完整预览包：16px companion preview。** 完整 [16px companion preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-16px-companion-preview) 已发布；源码/native `89fec688b9dd2f0c95f6a814488cd70733b29893`，基于 Blender 5.4 Alpha。ZIP 303,157,273 字节，SHA256 `b52299370b7a1e2d41e2f528323868042ae0cea376bba01bc19851fe11120e40`；EXE SHA256 `4878173623cef3b3485e088c2b1b909a0a57107f7193ffe3fca7de3cf8573240`。候选、本地解压包及匿名下载解压包工厂启动通过；本地解压包的列表 GUI 也已通过。[发布快照](compatibility/2026-10-11-16px-companion-preview-snapshot.json)保存精确指纹。旧预览包保留。本批 Pages `43d73f2bff6c` 的 6 个公开资源逐字节核验通过。6 组 42 项相关 Python、2 组 114 项原生、3 组既有 GUI 回归与 1 组本批列表几何验证通过。本批 16 逻辑像素行高仅作用于 companion 下方列表及级联，100% 为 16px，高 DPI 沿用界面缩放。下方注明日期的历史构建与计数保持原口径。
+**当前完整预览包：18px companion preview。** 完整 [18px companion preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview) 已发布；源码/native `f72fb413ba9c16f41c453dde98469ef1933285c1`，基于 Blender 5.4 Alpha。ZIP 303,157,284 字节，SHA256 `c7937d5fa1b29c723db91ffbbcf64b600983f3a9ba3b67566d4b343a516771f6`；EXE SHA256 `1771b999626225aaeecf2e911f7cd8d06149d466485679bc136cd1fe961324fc`。候选、本地解压包及匿名下载解压包工厂启动通过；本地解压包的列表 GUI 也已通过。[发布快照](compatibility/2026-10-11-18px-companion-preview-snapshot.json)保存精确指纹。旧预览包保留。本批 Pages `b448822d223e` 的 6 个公开资源逐字节核验通过。6 组 42 项相关 Python、2 组 114 项原生、3 组既有 GUI 回归与 1 组本批列表几何验证通过。本批 18 逻辑像素行高仅作用于 companion 下方列表及级联，100% 为 18px，高 DPI 沿用界面缩放。下方注明日期的历史构建与计数保持原口径。
 
 
 更新：2026-09-18。本页用于新 Windows 机器和新的 Codex 会话，从源码接续工作；不要求复制维护者的旧磁盘、候选安装、偏好或临时审计目录。开发方向另见项目路线图与交接文档，本页不扩大功能范围。

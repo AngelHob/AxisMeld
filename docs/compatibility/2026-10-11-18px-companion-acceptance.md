@@ -12,7 +12,13 @@
 - 首次150%几何检查曾失败：诊断配色把工具栏和上移后相邻的North按钮染成同色，连通区域合并使识别漏掉按钮。仅将工具栏恢复原配色后，用同一最终脚本重新采集旧包基线、验证旧16px包确实不能满足18px契约，再验证新包通过；未修改产品布局、矩形算法或放宽断言。首次失败证据保留。
 - 测试网页的静态校验与状态隔离检查通过。以上自动检查不替代GU-28的人工可读性与操作手感验收。
 
-发布证据待实际流程完成后补齐。
+完整 [18px companion preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview) 已发布；源码/native `f72fb413ba9c16f41c453dde98469ef1933285c1`，基于既有 Blender 5.4 Alpha。ZIP 303,157,284 字节，SHA256 `c7937d5fa1b29c723db91ffbbcf64b600983f3a9ba3b67566d4b343a516771f6`；EXE SHA256 `1771b999626225aaeecf2e911f7cd8d06149d466485679bc136cd1fe961324fc`。6,572 个发行文件、145 项选定资源通过干净解压审计；解压包 factory 与 100%/150% 列表 GUI、匿名重下载后的校验/解压/factory 通过。[发布快照](2026-10-11-18px-companion-preview-snapshot.json)保存精确指纹；旧预览包保留。
+
+最终发布回执：6 组 42 项相关 Python、2 组 114 项原生、3 组既有 GUI 回归与 1 组本批列表几何验证通过；GUI suites：hotbox-repost、context-entries、tools。实际验证及诊断段按上文保留。
+
+本批 Pages `b448822d223e` 的6个公开资源已与提交内容逐字节核验一致；网页新增GU-28，旧人工结果保持。
+
+公开下载曾在校验文件请求时中断；已保留完整ZIP及失败回执，仅补下载缺失校验文件，并重新核对完整哈希、解压内容及实际启动。
 
 ## 人工记录
 

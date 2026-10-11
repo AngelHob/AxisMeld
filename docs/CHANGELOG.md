@@ -4,8 +4,12 @@
 
 - 按试用反馈，将伴随列表及级联普通行高由16改为18逻辑像素，分隔4.5、Options宽18；字体、图标、列宽与留白同步放大12.5%。150%界面缩放对应27像素行高。
 - 周围方向按钮、四视图间隔、普通菜单及现有全部条目、独立齿轮、取消和底部避让保持。
-- 本批验证与对应预览包进行中，实际结果见[本批验收](compatibility/2026-10-11-18px-companion-acceptance.md)。
+- 6 组 42 项相关 Python、2 组 114 项原生、3 组既有 GUI 回归与 1 组本批列表几何验证通过；候选、解压包与公开下载工厂启动通过。实际范围见[本批验收](compatibility/2026-10-11-18px-companion-acceptance.md)。
 - 新增GU-28待人工；GU-27转为历史，原编号及人工结果保持。目录345项（当前331、历史14），当前初始未测284。
+
+完整 [18px companion preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview) 已发布；源码/native `f72fb413ba9c16f41c453dde98469ef1933285c1`，基于既有 Blender 5.4 Alpha。ZIP 303,157,284 字节，SHA256 `c7937d5fa1b29c723db91ffbbcf64b600983f3a9ba3b67566d4b343a516771f6`；EXE SHA256 `1771b999626225aaeecf2e911f7cd8d06149d466485679bc136cd1fe961324fc`。6,572 个发行文件、145 项选定资源通过干净解压审计；解压包 factory 与 100%/150% 列表 GUI、匿名重下载后的校验/解压/factory 通过。[发布快照](compatibility/2026-10-11-18px-companion-preview-snapshot.json)保存精确指纹；旧预览包保留。
+
+本批 Pages `b448822d223e` 的6个公开资源已与提交内容逐字节核验一致；网页新增GU-28，旧人工结果保持。
 
 ## 2026-10-11 · 热盒下方列表16像素
 

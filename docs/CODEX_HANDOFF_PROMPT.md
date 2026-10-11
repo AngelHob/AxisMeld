@@ -5,14 +5,14 @@
 ```text
 请接续开发我的 AxisMeld 项目。默认用中文，结论优先，主动核实并完成有界任务。
 
-最新交付（2026-10-11）：热盒下方列表 16 像素预览已发布；基于 Blender 5.4 Alpha，固定 upstream 754ebe3c4b4e1402a159df6e1e58823cc93ef887。
-本轮6 组 42 项相关 Python、2 组 114 项原生、3 组既有 GUI 回归与 1 组本批列表几何验证通过。预发布tag：axismeld-2026.10.11-16px-companion-preview；匿名下载、干净解压与factory已核验。本批 Pages `43d73f2bff6c` 的 6 个公开资源逐字节核验通过。
-功能/native源码：89fec688b9dd2f0c95f6a814488cd70733b29893。
-exe SHA256：4878173623cef3b3485e088c2b1b909a0a57107f7193ffe3fca7de3cf8573240。
-发布入口：https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-16px-companion-preview
-先读docs/compatibility/2026-10-11-16px-companion-acceptance.md及docs/compatibility/2026-10-11-16px-companion-preview-snapshot.json。
-人工状态：公开目录 344 项（当前 331、历史 13），47 项仅历史已测，当前初始未测 284、全表初始未测 297；最新标记 GU-27。既有编号与人工结果保持，自动化不替用户勾选。
-仅将热盒下方伴随列表及其级联普通行高设为 16 逻辑像素（100% 界面缩放），Options 宽 16、细分隔 4；文字、图标、列宽和留白沿 16/24 的局部比例同步，高 DPI 保持 Blender 界面缩放规则；周围方向按钮、四视图间隔、主热盒栏及普通原生菜单保持原尺寸。完整条目、底部避让和说明无空间时隐藏的规则保持，不折叠、不滚动，不随窗口继续缩小。保留极低窗口完整说明避让、七根菜单、独立Options与占位、取消恢复；新算法暂停。
+最新交付（2026-10-11）：热盒下方列表 18 像素预览已发布；基于 Blender 5.4 Alpha，固定 upstream 754ebe3c4b4e1402a159df6e1e58823cc93ef887。
+本轮6 组 42 项相关 Python、2 组 114 项原生、3 组既有 GUI 回归与 1 组本批列表几何验证通过。预发布tag：axismeld-2026.10.11-18px-companion-preview；匿名下载、干净解压与factory已核验。本批 Pages `b448822d223e` 的 6 个公开资源逐字节核验通过。
+功能/native源码：f72fb413ba9c16f41c453dde98469ef1933285c1。
+exe SHA256：1771b999626225aaeecf2e911f7cd8d06149d466485679bc136cd1fe961324fc。
+发布入口：https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview
+先读docs/compatibility/2026-10-11-18px-companion-acceptance.md及docs/compatibility/2026-10-11-18px-companion-preview-snapshot.json。
+人工状态：公开目录 345 项（当前 331、历史 14），47 项仅历史已测，当前初始未测 284、全表初始未测 298；最新标记 GU-28。既有编号与人工结果保持，自动化不替用户勾选。
+仅将热盒下方伴随列表及其级联普通行高设为 18 逻辑像素（100% 界面缩放），Options 宽 18、细分隔 4.5；文字、图标、列宽和留白沿 18/24 的局部比例同步，高 DPI 保持 Blender 界面缩放规则；周围方向按钮、四视图间隔、主热盒栏及普通原生菜单保持原尺寸。完整条目、底部避让和说明无空间时隐藏的规则保持，不折叠、不滚动，不随窗口继续缩小。保留极低窗口完整说明避让、七根菜单、独立Options与占位、取消恢复；新算法暂停。
 
 仓库：https://github.com/AngelHob/AxisMeld
 最新开发分支：axismeld/phase-2a
@@ -71,7 +71,7 @@ exe SHA256：4878173623cef3b3485e088c2b1b909a0a57107f7193ffe3fca7de3cf8573240。
   精确调用token穿过原生未保存场景/修改图像确认链，只关联对应文件选择器。
   不跳过确认、不加全局键盘拦截，独立Options和其他File/Window项保持原状态。
   设计见docs/development/2026-10-11-file-window-release-design.md。
-最终实际状态必须读取 docs/compatibility/2026-10-11-16px-companion-acceptance.md 和最新CHANGELOG，
+最终实际状态必须读取 docs/compatibility/2026-10-11-18px-companion-acceptance.md 和最新CHANGELOG，
 不得只凭这段提示词宣布GUI已通过；不要重复开发已落地入口。
 
 当前审计：58 默认命令、60 条含别名绑定、7 个操纵器辅助入口、3 个原生模态持键入口、499 条原生继承、45 条移除、187 个受保护 keymap；基准/生成 keymap 为 281/282。
@@ -91,8 +91,8 @@ workspace-menu-layout、file-window、release-cross-window，以及相关原有M
 staging/extract核对提交源码、全部文件、受管模块集合、许可与ZIP。静态PASS不替代启动/GUI/跨机验证。
 最终候选/发布状态看GUI验收及公开config，不能把旧包当作本批新C++。
 
-公开目录 344 项（当前 331、历史 13），47 项仅历史已测，当前初始未测 284、全表初始未测 297；最新标记 GU-27。既有编号与人工结果保持，自动化不替用户勾选。
-本轮人工范围：GU-27；原 GU/IN/RG 等编号和状态保持，自动化不替我勾选。
+公开目录 345 项（当前 331、历史 14），47 项仅历史已测，当前初始未测 284、全表初始未测 298；最新标记 GU-28。既有编号与人工结果保持，自动化不替用户勾选。
+本轮人工范围：GU-28；原 GU/IN/RG 等编号和状态保持，自动化不替我勾选。
 公开网页数据在各访客浏览器，可导出JSON，不自动跨设备同步；GitHub Issue用于公开共享反馈。
 
 交付已授权：每批完成并验证后，更新 docs/CHANGELOG.md、相关设计和新的待人工测试内容，提交并推送GitHub，
