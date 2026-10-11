@@ -550,12 +550,46 @@ Button *view_item_find_search_highlight(const ARegion *region)
 /** \name Button (#Button) Relations
  * \{ */
 
+static bool button_is_keyboard_navigable(const Button *but)
+{
+  if (!button_is_editable(but)) {
+    return false;
+  }
+
+  /* An unavailable AxisMeld Options cell must not add a second keyboard stop
+   * to its body row. Keep unavailable body rows inspectable and leave enabled
+   * Options, mouse tooltips, and native Blender controls unchanged. */
+  if (!block_is_menu(but->block) || !(but->flag & BUT_DISABLED) ||
+      but->type != ButtonType::But || but->icon != ICON_PREFERENCES || !but->str.empty() ||
+      !but->optype ||
+      !STR_ELEM(but->optype->idname,
+                "AXISMELD_OT_menubar_execute",
+                "AXISMELD_OT_skin_normalize_weights",
+                "AXISMELD_OT_skin_prune_weights"))
+  {
+    return true;
+  }
+
+  /* Match the trailing Options pattern used by block_bounds_calc_text(): an
+   * aligned row ends with an empty gear after its text body. Check the real
+   * row geometry as well, so a neighboring column or pure icon group cannot
+   * turn an unrelated unavailable control into an auxiliary cell. */
+  const Button *body = but->block->prev_but(but);
+  const Button *next = but->block->next_but(but);
+  const bool is_options_cell = body && but->alignnr && body->alignnr == but->alignnr &&
+                               (!next || next->alignnr != but->alignnr) && !body->str.empty() &&
+                               body->rect.xmin < but->rect.xmin &&
+                               body->rect.ymin == but->rect.ymin &&
+                               body->rect.ymax == but->rect.ymax;
+  return !is_options_cell;
+}
+
 Button *button_prev(Button *but)
 {
   for (Button &button :
        but->block->buttons() | std::views::take(but->block->but_index(but)) | std::views::reverse)
   {
-    if (button_is_editable(&button)) {
+    if (button_is_keyboard_navigable(&button)) {
       return &button;
     }
   }
@@ -565,7 +599,7 @@ Button *button_prev(Button *but)
 Button *button_next(Button *but)
 {
   for (Button &button : but->block->buttons() | std::views::drop(but->block->but_index(but) + 1)) {
-    if (button_is_editable(&button)) {
+    if (button_is_keyboard_navigable(&button)) {
       return &button;
     }
   }
@@ -575,7 +609,7 @@ Button *button_next(Button *but)
 Button *button_first(Block *block)
 {
   for (Button &but : block->buttons()) {
-    if (button_is_editable(&but)) {
+    if (button_is_keyboard_navigable(&but)) {
       return &but;
     }
   }
@@ -585,7 +619,7 @@ Button *button_first(Block *block)
 Button *button_last(Block *block)
 {
   for (Button &but : block->buttons() | std::views::reverse) {
-    if (button_is_editable(&but)) {
+    if (button_is_keyboard_navigable(&but)) {
       return &but;
     }
   }

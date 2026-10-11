@@ -5,7 +5,9 @@
 #include <map>
 #include <unordered_set>
 
+#include "BKE_context.hh"
 #include "BLF_api.hh"
+#include "DNA_screen_types.h"
 #include "DNA_theme_types.h"
 #include "GPU_immediate.hh"
 #include "GPU_state.hh"
@@ -369,9 +371,67 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data, const int *draw_of
   if (!data.marking) {
     const MenuNode *hover = hotbox_find_node(data.snapshot.menus, data.hover_id);
     if (hover && !hover->reason.empty()) {
+      // The draw context owns the real window surface, not the source pane.
+      // Measure with the same font and wrap width used below; BLF wraps downwards,
+      // so lift the first baseline to keep the entire last line above the margin.
+      ui::fontstyle_set(&style);
+      const float margin = 12 * scale;
+      const float padding = 6 * scale;
+      const int wrap_width = std::max(1, int(CTX_wm_region(C)->winx - 2 * margin));
+      BLF_wordwrap(font, wrap_width, BLFWrapMode::Typographical | BLFWrapMode::HardLimit);
+      BLF_enable(font, BLF_WORD_WRAP);
+      rcti text_bounds;
+      BLF_boundbox(font, hover->reason.c_str(), hover->reason.size(), &text_bounds);
+      const float text_x = margin - text_bounds.xmin;
+      float text_y = margin - text_bounds.ymin;
+      rctf backdrop_bounds = {margin - padding,
+                               margin + text_bounds.xmax - text_bounds.xmin + padding,
+                               margin - padding,
+                               margin + text_bounds.ymax - text_bounds.ymin + padding};
+      // Complete native columns may reach the window bottom. Move only the
+      // explanation above intersecting targets, retaining every menu rectangle.
+      const float backdrop_height = backdrop_bounds.ymax - backdrop_bounds.ymin;
+      std::vector<float> reason_bottoms = {backdrop_bounds.ymin};
+      for (const Entry &entry : entries) {
+        const MenuRect &r = entry.rect;
+        if (r.x * scale < backdrop_bounds.xmax &&
+            (r.x + r.width) * scale > backdrop_bounds.xmin)
+        {
+          reason_bottoms.push_back((r.y + r.height) * scale + padding);
+        }
+      }
+      std::sort(reason_bottoms.begin(), reason_bottoms.end());
+      for (const float bottom : reason_bottoms) {
+        if (bottom + backdrop_height > CTX_wm_region(C)->winy - padding) {
+          continue;
+        }
+        const bool overlaps = std::any_of(entries.begin(), entries.end(), [&](const Entry &entry) {
+          const MenuRect &r = entry.rect;
+          return r.x * scale < backdrop_bounds.xmax &&
+                 (r.x + r.width) * scale > backdrop_bounds.xmin &&
+                 r.y * scale < bottom + backdrop_height &&
+                 (r.y + r.height) * scale > bottom;
+        });
+        if (!overlaps) {
+          text_y += bottom - backdrop_bounds.ymin;
+          backdrop_bounds.ymin = bottom;
+          backdrop_bounds.ymax = bottom + backdrop_height;
+          break;
+        }
+      }
+      float background[4];
+      for (int i = 0; i < 3; i++) {
+        background[i] = theme.wcol_menu_back.inner[i] / 255.0f;
+      }
+      // A small opaque text backdrop keeps the explanation readable over grids.
+      // It is drawing only: menu layout, targets, and input ownership stay intact.
+      background[3] = 1.0f;
+      ui::draw_roundbox_4fv(&backdrop_bounds, true, 4 * scale, background);
       BLF_color4ubv(font, theme.wcol_menu_back.text);
-      BLF_position(font, 12 * scale, 12 * scale, 0);
+      BLF_position(font, text_x, text_y, 0);
       BLF_draw(font, hover->reason.c_str(), hover->reason.size());
+      BLF_disable(font, BLF_WORD_WRAP);
+      BLF_wordwrap(font, 0);
     }
   }
   GPU_blend(GPU_BLEND_NONE);

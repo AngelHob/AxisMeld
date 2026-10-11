@@ -83,6 +83,27 @@ class RuntimeTest(unittest.TestCase):
         self.assertIs(self.ctx.area,self.topbar)
         self.assertIs(self.ctx.region,old_region)
         self.assertEqual(self.ctx.mode,'OBJECT')
+    def test_shortcut_source_uses_capture_without_polling_or_mutating_context(self):
+        token=self.token();old_region=self.ctx.region
+        self.screen.areas.append(area(width=2000,height=1000))
+        source=self.runtime.shortcut_source(self.ctx,'command','mesh.test',token)
+        self.assertIs(source.area,self.viewport)
+        self.assertIs(source.region,self.viewport.regions[0])
+        self.assertIs(self.ctx.area,self.topbar)
+        self.assertIs(self.ctx.region,old_region)
+        self.assertEqual((self.polls,self.runs),([],[]))
+    def test_shortcut_source_rejects_missing_removed_and_foreign_capture(self):
+        for kind,key,token in [('action','create.camera',self.token()),
+                               ('disabled','',self.token()),
+                               ('command','wm.delete',self.token()),
+                               ('command','mesh.test','')]:
+            self.assertIsNone(self.runtime.shortcut_source(self.ctx,kind,key,token))
+        token=self.token();self.screen.areas.remove(self.viewport)
+        self.assertIsNone(self.runtime.shortcut_source(self.ctx,'command','mesh.test',token))
+        self.screen.areas.append(self.viewport)
+        other=Item(screen=self.screen,scene=self.scene,view_layer=self.layer)
+        self.ctx.window_manager.windows.append(other);self.ctx.window=other
+        self.assertIsNone(self.runtime.shortcut_source(self.ctx,'command','mesh.test',token))
     def test_empty_malformed_unknown_tokens_and_kind_reject_atomically(self):
         for token in ['', 'not json','{}',json.dumps([1,True,2,3,4,5,6]),'x'*3000]:
             self.assertEqual(self.runtime.run(self.ctx,'command','mesh.test',token),{'CANCELLED'})

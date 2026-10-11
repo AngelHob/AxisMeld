@@ -267,6 +267,12 @@ def _draw_item(layout, context, node):
             state_cell.label(text='', icon=('RADIOBUT_ON' if checked else 'RADIOBUT_OFF') if indicator == 'radio' else ('CHECKBOX_HLT' if checked else 'CHECKBOX_DEHLT'))
         body = row.row(align=True)
         body.enabled = available
+        source = menubar_runtime.shortcut_source(context, kind, key, token)
+        if source is not None:
+            # Keep lookup identities separate from operator execution. Native
+            # UI validates all owners and list membership before using them.
+            for name in ('window', 'screen', 'scene', 'view_layer', 'area', 'region'):
+                body.context_pointer_set('axismeld_shortcut_' + name, getattr(source, name))
         op = body.operator(AXISMELD_OT_menubar_execute.bl_idname, text=node['label'], icon=_icon(node))
         op.kind, op.key, op.token, op.reason = kind, key, token, reason or node.get('reason', '')
     # Options are distinct UI cells, never aliases of the main action.
@@ -292,10 +298,10 @@ def draw_menu(layout, context, identifier):
         widths = [blf.dimensions(0, node.get('label', ''))[0] / scale + 48 +
                   (24 if node.get('options') else 0) +
                   (20 if node.get('indicator') else 0) for node in nodes]
-        # Native rows also contain live shortcut text and dynamic menus. Their
+        # Command and native rows also contain live shortcut text. Their
         # native width estimate includes those cells; a caption-only override
         # would shrink them (for example Save As + Shift Ctrl S).
-        if not any(node['kind'] in {'native', 'native_group', 'rigging_native'} for node in nodes):
+        if not any(node['kind'] in {'command', 'native', 'native_group', 'rigging_native'} for node in nodes):
             column.ui_units_x = max(widths, default=100) / 20
         for node in nodes:
             _draw_item(column, context, node)

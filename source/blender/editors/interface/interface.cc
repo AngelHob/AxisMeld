@@ -62,6 +62,7 @@
 
 #include "RNA_access.hh"
 #include "RNA_enum_types.hh"
+#include "RNA_prototypes.hh"
 
 #ifdef WITH_PYTHON
 #  include "BPY_extern_run.hh"
@@ -1523,9 +1524,71 @@ static std::optional<std::string> but_event_operator_string_from_panel(const bCo
   return std::nullopt;
 }
 
+static std::optional<std::string> but_event_operator_string_from_axismeld_menu(const bContext *C,
+                                                                              Button *but)
+{
+  if (!but->opptr || !but->context || RNA_string_get(but->opptr, "kind") != "command") {
+    return std::nullopt;
+  }
+  const std::string command = RNA_string_get(but->opptr, "key");
+  if (command.empty()) {
+    return std::nullopt;
+  }
+
+  /* The wrapper keeps its original operator and token for execution. Only the
+   * shortcut query uses the semantic command and its captured source context.
+   * A popup can outlive its source: compare identities and live list membership
+   * before dereferencing any stored pointer. Never fall back to another area. */
+  const auto matches = [&](const char *name, const void *value) {
+    const PointerRNA *ptr = CTX_store_ptr_lookup(but->context, name);
+    return ptr && value && ptr->data == value;
+  };
+  bScreen *screen = CTX_wm_screen(C);
+  if (!matches("axismeld_shortcut_window", CTX_wm_window(C)) ||
+      !matches("axismeld_shortcut_screen", screen) ||
+      !matches("axismeld_shortcut_scene", CTX_data_scene(C)) ||
+      !matches("axismeld_shortcut_view_layer", CTX_data_view_layer(C)))
+  {
+    return std::nullopt;
+  }
+  const PointerRNA *area_ptr = CTX_store_ptr_lookup(
+      but->context, "axismeld_shortcut_area", RNA_Area);
+  const PointerRNA *region_ptr = CTX_store_ptr_lookup(
+      but->context, "axismeld_shortcut_region", RNA_Region);
+  ScrArea *area = area_ptr ? static_cast<ScrArea *>(area_ptr->data) : nullptr;
+  ARegion *region = region_ptr ? static_cast<ARegion *>(region_ptr->data) : nullptr;
+  if (!area || !region || BLI_findindex(&screen->areabase, area) == -1 ||
+      area->spacetype != SPACE_VIEW3D || BLI_findindex(&area->regionbase, region) == -1 ||
+      region->regiontype != RGN_TYPE_WINDOW || region->winx <= 1 || region->winy <= 1)
+  {
+    return std::nullopt;
+  }
+
+  bContext *source_context = CTX_copy(C);
+  BLI_SCOPED_DEFER([&]() { CTX_free(source_context); });
+  /* CTX_copy shares the Python override dictionary. Source-area lookup must
+   * neither mutate that dictionary nor inherit an unrelated editor override. */
+  bContext_PyState py_state;
+  CTX_py_state_push(source_context, &py_state, nullptr);
+  BLI_SCOPED_DEFER([&]() { CTX_py_state_pop(source_context, &py_state); });
+  CTX_wm_area_set(source_context, area);
+  CTX_wm_region_set(source_context, region);
+  IDProperty *properties = bke::idprop::create_group(__func__).release();
+  BLI_SCOPED_DEFER([&]() { IDP_FreeProperty(properties); });
+  IDP_AddToGroup(properties, bke::idprop::create("command", command.c_str()).release());
+  return WM_key_event_operator_string(source_context,
+                                      "AXISMELD_OT_command",
+                                      wm::OpCallContext::InvokeRegionWin,
+                                      properties,
+                                      true);
+}
+
 static std::optional<std::string> but_event_operator_string(const bContext *C, Button *but)
 {
   if (but->optype != nullptr) {
+    if (STREQ(but->optype->idname, "AXISMELD_OT_menubar_execute")) {
+      return but_event_operator_string_from_axismeld_menu(C, but);
+    }
     wmOperatorCallParams params = {};
     params.optype = but->optype;
     params.opptr = but->opptr;

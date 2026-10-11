@@ -26,6 +26,7 @@ class Layout:
     def label(self, **kw): self.log.append(('label', kw, self.enabled))
     def separator(self, **kw): self.log.append(('separator', kw))
     def prop(self, *args, **kw): self.log.append(('prop', args, kw))
+    def context_pointer_set(self, name, value): self.log.append(('context_pointer', name, value))
 
 def load_ui():
     bpy = types.ModuleType('bpy')
@@ -46,6 +47,7 @@ def load_ui():
     runtime.available = lambda *args: (True, '')
     runtime.state = lambda *args: None
     runtime.run = lambda *args: args
+    runtime.shortcut_source = lambda *args: None
     native = types.ModuleType('axismeld.menubar_native')
     native.draw_native = lambda layout, context, key, **kw: layout.log.append(('native', context, key, kw))
     blf = types.ModuleType('blf'); blf.size = lambda *args: None
@@ -81,6 +83,19 @@ class MenuBarUIContract(unittest.TestCase):
         self.assertTrue(all(r[2].get('icon') for r in ops))
         option=next(r for r in ops if r[2]['icon']=='PREFERENCES'); self.assertFalse(option[4])
         command=next(r for r in ops if getattr(r[3],'key','')=='new'); self.assertEqual(command[3].token,'captured')
+    def test_semantic_shortcut_context_comes_from_same_execution_token(self):
+        source=types.SimpleNamespace(window=object(),screen=object(),scene=object(),
+                                     view_layer=object(),area=object(),region=object())
+        layout=Layout()
+        with patch.object(self.ui.menubar_runtime,'shortcut_source',return_value=source) as resolve:
+            self.ui._draw_item(layout,self.context,{'kind':'command','label':'Move Tool',
+                                                   'command':'transform.move','options':{}})
+        resolve.assert_called_once_with(self.context,'command','transform.move','captured')
+        pointers={r[1]:r[2] for r in layout.log if r[0]=='context_pointer'}
+        for name in ('window','screen','scene','view_layer','area','region'):
+            self.assertIs(pointers['axismeld_shortcut_'+name],getattr(source,name))
+        op=next(r[3] for r in layout.log if r[0]=='operator')
+        self.assertEqual((op.kind,op.key,op.token),('command','transform.move','captured'))
     def test_empty_dynamic_directory_is_visible_gray_with_reason_and_no_empty_popup(self):
         for children in ([], [{'id':'heading','kind':'separator','label':'Scene items'},
                               {'id':'gap','kind':'separator','label':''}]):
@@ -194,13 +209,19 @@ class MenuBarUIContract(unittest.TestCase):
         self.ui.unregister_props(); self.assertFalse(hasattr(self.ui.bpy.types.WindowManager,'axismeld_menubar_set'))
     def test_column_uses_measured_glyph_width_and_option_cell(self):
         layout=Layout()
-        self.ui._NODES['common.file']['children']=[n for n in self.ui._NODES['common.file']['children'] if n['kind']!='native']
+        self.ui._NODES['common.file']['children']=[n for n in self.ui._NODES['common.file']['children'] if n['kind']=='disabled']
         with patch.object(self.ui.blf,'dimensions',return_value=(800,20)):
             self.ui.draw_menu(layout,self.context,'common.file')
         column=next(r[1] for r in layout.log if r[0]=='column')
         self.assertGreaterEqual(column.ui_units_x*20,800/2+48+24)
     def test_native_shortcut_width_is_not_overridden_by_caption_measure(self):
         layout=Layout();self.ui.draw_menu(layout,self.context,'common.file')
+        column=next(r[1] for r in layout.log if r[0]=='column')
+        self.assertFalse(hasattr(column,'ui_units_x'))
+    def test_semantic_shortcut_width_uses_native_estimate(self):
+        layout=Layout()
+        self.ui._NODES['common.file']['children']=[n for n in self.ui._NODES['common.file']['children'] if n['kind']!='native']
+        self.ui.draw_menu(layout,self.context,'common.file')
         column=next(r[1] for r in layout.log if r[0]=='column')
         self.assertFalse(hasattr(column,'ui_units_x'))
     def test_modeling_host_keeps_native_modes_and_avoids_duplicate_roots(self):

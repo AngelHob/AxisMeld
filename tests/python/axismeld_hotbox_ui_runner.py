@@ -12,13 +12,17 @@ import tempfile
 parser = argparse.ArgumentParser()
 parser.add_argument('--blender', required=True)
 parser.add_argument('--artifacts', help='Optional directory for isolated factory-scene screenshots')
-parser.add_argument('--suite', choices=('file-window', 'history-hotbox', 'workspace-menu-layout', 'context-entries', 'temporary-snap', 'menu-options-geometry', 'modeling-viewport', 'workspace-bar', 'menubar-alignment', 'menubar-actions', 'menubar-sets', 'menubar-layout', 'menubar', 'maya-hierarchy', 'full-menu-entry', 'full-menu-lifecycle', 'fully-expanded', 'maya-content-state', 'maya-content', 'maya-companion', 'icons', 'object-menu', 'object-modeling', 'context-modeling', 'modeling', 'create', 'components', 'tools', 'tools-modifiers', 'hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection', 'appearance'), default='hotbox')
+parser.add_argument('--suite', choices=('menu-shortcuts', 'menu-options-navigation', 'menu-options-access', 'hotbox-reasons', 'file-window', 'history-hotbox', 'workspace-menu-layout', 'context-entries', 'temporary-snap', 'menu-options-geometry', 'modeling-viewport', 'workspace-bar', 'menubar-alignment', 'menubar-actions', 'menubar-sets', 'menubar-layout', 'menubar', 'maya-hierarchy', 'full-menu-entry', 'full-menu-lifecycle', 'fully-expanded', 'maya-content-state', 'maya-content', 'maya-companion', 'icons', 'object-menu', 'object-modeling', 'context-modeling', 'modeling', 'create', 'components', 'tools', 'tools-modifiers', 'hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection', 'appearance'), default='hotbox')
 args = parser.parse_args()
 binary = Path(args.blender).resolve()
 with binary.open("rb") as stream:
     digest = hashlib.file_digest(stream, "sha256").hexdigest().upper()
 print("AXISMELD_TEST_BINARY", str(binary), "SHA256", digest, "SUITE", args.suite, flush=True)
 suite_script, pass_marker = {
+    'menu-shortcuts': ('axismeld_menu_shortcut_events.py', b'AXISMELD_MENU_SHORTCUT_EVENTS_PASS'),
+    'menu-options-navigation': ('axismeld_menu_options_navigation_events.py', b'AXISMELD_MENU_OPTIONS_NAVIGATION_PASS'),
+    'menu-options-access': ('axismeld_menu_options_access_events.py', b'AXISMELD_MENU_OPTIONS_ACCESS_PASS'),
+    'hotbox-reasons': ('axismeld_hotbox_reason_events.py', b'AXISMELD_HOTBOX_REASON_EVENTS_PASS'),
     'file-window': ('axismeld_file_window_events.py', b'AXISMELD_FILE_WINDOW_EVENTS_PASS'),
     'history-hotbox': ('axismeld_history_hotbox_events.py', b'AXISMELD_HISTORY_HOTBOX_EVENTS_PASS'),
     'workspace-menu-layout': ('axismeld_modeling_viewport_events.py', b'AXISMELD_WORKSPACE_MENU_LAYOUT_PASS'),
@@ -29,6 +33,7 @@ suite_script, pass_marker = {
     # Historical two-row candidate only; superseded by modeling-viewport.
     'workspace-bar': ('axismeld_workspace_bar_events.py', b'AXISMELD_WORKSPACE_BAR_PASS'),
     'menubar-alignment': ('axismeld_menubar_alignment_events.py', b'AXISMELD_MENUBAR_ALIGNMENT_PASS'),
+    # Historical application-bar suites; current workspace menus use modeling-viewport.
     'menubar-actions': ('axismeld_menubar_events.py', b'AXISMELD_MENUBAR_ACTIONS_PASS'),
     'menubar-sets': ('axismeld_menubar_events.py', b'AXISMELD_MENUBAR_SETS_PASS'),
     'menubar-layout': ('axismeld_menubar_events.py', b'AXISMELD_MENUBAR_LAYOUT_PASS'),
@@ -75,7 +80,7 @@ with tempfile.TemporaryDirectory(prefix='axismeld-hotbox-') as directory:
         artifacts.mkdir(parents=True, exist_ok=True)
         env['AXISMELD_TEST_ARTIFACTS'] = str(artifacts)
     blender_args = [args.blender, '--factory-startup']
-    if args.suite == 'workspace-bar' and os.environ.get('AXISMELD_TEST_WINDOW_SIZE'):
+    if args.suite in {'workspace-bar', 'hotbox-reasons'} and os.environ.get('AXISMELD_TEST_WINDOW_SIZE'):
         width, height = map(int, os.environ['AXISMELD_TEST_WINDOW_SIZE'].split('x'))
         blender_args += ['--window-border', '--window-geometry', '100', '100', str(width), str(height)]
     if args.suite == 'profiles':

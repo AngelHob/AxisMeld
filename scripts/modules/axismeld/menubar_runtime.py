@@ -165,6 +165,18 @@ def _override(source):
     return bpy.context.temp_override(**kwargs)
 
 
+def shortcut_source(context, kind, key, token):
+    """Read the same captured source used by execution; never choose a new one.
+
+    The menu stores these identities only for native shortcut lookup. The UI
+    lookup must check them against the current window before dereferencing.
+    """
+    if kind != 'command' or not token:
+        return None
+    _backend, source = _prepare(context, kind, key, token)
+    return source
+
+
 def available(context, kind, key, token=''):
     """Read current eligibility under the captured source; native keys reject."""
     import bpy
