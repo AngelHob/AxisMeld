@@ -667,5 +667,47 @@
     "Targeted checks only; previous release full-suite counts were not rerun.",
     "Manual results remain pending; browser marks are local until submitted via GitHub Issue.",
     "Other physical machines, arbitrary plugins and display scales remain unverified."
-  ]
+  ],
+  "publicSite": {
+    "status": "passed",
+    "url": "https://angelhob.github.io/AxisMeld/",
+    "verifiedAt": "2026-10-11T07:49:41.253226+00:00",
+    "buildId": "axismeld-2026.10.11-gui-input-preview",
+    "catalog": 333,
+    "new": 3,
+    "assets": [
+      {
+        "name": "index.html",
+        "sha256": "34ffe5a577addc9486bac53cf538ba7369ae11bf7e6c043da25f58acacd7cb71",
+        "bytes": 7191
+      },
+      {
+        "name": "app.mjs",
+        "sha256": "9abe691148a1cde8db22e889d006b2018e45e7501baeeb83ea2a09fc5f6cf97a",
+        "bytes": 22736
+      },
+      {
+        "name": "styles.css",
+        "sha256": "6fe8a8755641ba9af0aa862fd62d55b2d7be2f02aaebd79ef1b5a4eb161079fe",
+        "bytes": 15219
+      },
+      {
+        "name": "config.json",
+        "sha256": "2b6d060c431833a0755c191481ea354253928abca4664b082926af23c85c5b23",
+        "bytes": 501
+      },
+      {
+        "name": "catalog.json",
+        "sha256": "d1e7d37f77272793b1dc6e572ee78acb403109ae4860eb4ee44de12c4c009194",
+        "bytes": 222554
+      },
+      {
+        "name": "favicon.svg",
+        "sha256": "2cca7741a0dede35653d222677e15559e566c8dbab6882229ec6ab7b8f410737",
+        "bytes": 246
+      }
+    ],
+    "deploymentCommit": "7e547ddb7efe5865f76569d2e436a55d503d76b8",
+    "deploymentRun": "https://github.com/AngelHob/AxisMeld/actions/runs/38122540299"
+  }
 }
