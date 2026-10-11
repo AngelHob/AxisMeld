@@ -1,4 +1,19 @@
 # AxisMeld 修改日志
+## 2026-10-11 · Blender 5.4 主干同步
+
+- 将官方 main `754ebe3c4b4e1402a159df6e1e58823cc93ef887` 合入开发分支，保留非变基合并历史；原基线 `18d84097b4f859582afdec57eece2ae880371adc`，982 个上游提交。Windows 库同步到精确 `aa0c5db72fa9488bb685bdddbede780d19f483f5`，默认分支只同步首页。
+- 窗口标题冲突适配上游 `fmt::memory_buffer` 接口，同时保留 AxisMeld 产品名与版本。原生 Project 设置跟随上游；Loop Tools 的新增原生入口通过既有 Edit Mesh → Transform 分类继承，不增加 Deform/Generate 根菜单。
+- 原生键位继承 497 → 499、受保护 keymap 186 → 187；两条增量来自 Grease Pencil Carver。AxisMeld 58 个默认命令、60 条含别名绑定、七根 Modeling 菜单和冻结 Maya 参考保持。顶栏测试增加真实 Project 上下文分支。
+- 新增 GU-23～GU-25 主干回归，与 GU-22 一起待人工；目录 342 项、当前 330、历史 12，47 项历史已测保持，当前初始待测 283。详情见[主干验收](compatibility/2026-10-11-blender-main-acceptance.md)。
+
+### 最终自动验证
+
+全新 5.4 构建与候选安装通过：42 组 415 项纯 Python、八组 144 项原生、四组 CLI、15 组当前 GUI、五组 bpy 功能与 factory、五组合 18 条低窗口说明观察均通过；网页通过 12 项浏览器检查。CLI profiles 18 项已包含在纯测试，installed-input 11 项单列，不重复累加。历史双排工作区栏测试误纳入的失败已保留，适用范围修正为当前单原生顶栏与视窗菜单；旧输入测试补齐既有别名和原生 fallback 的严格断言，生产键位保持。
+
+### 发布与交付
+
+本次主干预览包尚未发布，公开下载保持已核验的 short-window preview；完整包与公开下载通过后在此更新精确源码、哈希和发布快照。
+
 ## 2026-10-11 · 极低窗口说明避让
 
 完整 [GUI short-window preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-short-window-preview) 已发布；源码/native `665cb38b123d89d273d6f68e2c748a258abfff47`。ZIP 297,083,907 字节，SHA256 `d49d7fd4a11bb4cdb54e8931c4391deb0a7d07661d64ea22e3e6341c4645d766`。6,498 个发行文件、145 项资源通过干净解压审计；解压包工厂启动和实际说明 GUI 通过，匿名重下载后再次核验 ZIP、解压和工厂启动。本地网站 12 项浏览器检查通过；Pages `c2904572e2ad` 的 6 个公开资源逐字节核对通过。[发布快照](compatibility/2026-10-11-gui-short-window-preview-snapshot.json)保存精确指纹。旧预览包保留。

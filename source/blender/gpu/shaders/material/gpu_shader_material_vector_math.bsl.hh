@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "gpu_shader_math_vector_safe_lib.glsl"
+#include "gpu_shader_math_vector_safe.bsl.hh"
 
 float3 vector_math_safe_normalize(float3 a)
 {
@@ -39,6 +39,14 @@ void vector_math_divide(
     float3 a, float3 b, float3 /*c*/, float /*scale*/, float3 &outVector, float & /*outValue*/)
 {
   outVector = safe_divide(a, b);
+}
+
+/* `a / a` folded to 1 (see #162948). */
+[[node]]
+void vector_math_divide_self(
+    float3 a, float3 /*b*/, float3 /*c*/, float /*scale*/, float3 &outVector, float & /*outValue*/)
+{
+  outVector = float3(notEqual(a, float3(0.0f)));
 }
 
 [[node]]
@@ -108,6 +116,14 @@ void vector_math_snap(
     float3 a, float3 b, float3 /*c*/, float /*scale*/, float3 &outVector, float & /*outValue*/)
 {
   outVector = floor(safe_divide(a, b)) * b;
+}
+
+/* `floor(a / a) * a` folded to `a` (see #162948). */
+[[node]]
+void vector_math_snap_self(
+    float3 a, float3 /*b*/, float3 /*c*/, float /*scale*/, float3 &outVector, float & /*outValue*/)
+{
+  outVector = a;
 }
 
 [[node]]

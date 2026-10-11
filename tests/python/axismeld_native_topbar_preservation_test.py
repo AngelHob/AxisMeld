@@ -98,22 +98,33 @@ def extensions(enabled=True):
 
 class NativeTopbarPreservationTests(unittest.TestCase):
     def test_maya_configuration_keeps_native_menu_class_dispatch_and_workspace_tabs(self):
-        native = source_draw('TOPBAR_MT_editor_menus')
-        def dispatch(ctx, layout):
-            native(SimpleNamespace(layout=layout), ctx)
-        draw = source_draw('TOPBAR_HT_upper_bar', 'draw_left',
-                           TOPBAR_MT_editor_menus=SimpleNamespace(draw_collapsible=dispatch))
         for maya_enabled in (False, True):
-            with self.subTest(maya_enabled=maya_enabled), extensions(maya_enabled):
-                layout, ctx = Layout(), context()
-                draw(SimpleNamespace(layout=layout), ctx)
-                self.assertEqual([event[1] for event in layout.events if event[0] == 'menu'], [
-                    'TOPBAR_MT_blender', 'TOPBAR_MT_file', 'TOPBAR_MT_edit',
-                    'TOPBAR_MT_render', 'TOPBAR_MT_window', 'TOPBAR_MT_help',
-                ])
-                self.assertEqual(layout.events[-2], ('separator', {'type': 'LINE'}))
-                self.assertEqual(layout.events[-1], ('workspace', ctx.window, 'workspace',
-                    {'new': 'workspace.add', 'menu': 'TOPBAR_MT_workspace_menu'}))
+            for project in (None, SimpleNamespace()):
+                with self.subTest(maya_enabled=maya_enabled, has_project=project is not None), extensions(maya_enabled):
+                    native = source_draw('TOPBAR_MT_editor_menus',
+                                         bpy=SimpleNamespace(data=SimpleNamespace(project=project)))
+
+                    def dispatch(ctx, layout):
+                        native(SimpleNamespace(layout=layout), ctx)
+
+                    draw = source_draw('TOPBAR_HT_upper_bar', 'draw_left',
+                                       TOPBAR_MT_editor_menus=SimpleNamespace(draw_collapsible=dispatch))
+                    layout, ctx = Layout(), context()
+                    draw(SimpleNamespace(layout=layout), ctx)
+                    expected = ['TOPBAR_MT_blender', 'TOPBAR_MT_file', 'TOPBAR_MT_edit', 'TOPBAR_MT_render']
+                    if project is not None:
+                        expected.append('TOPBAR_MT_project')
+                    expected.extend(['TOPBAR_MT_window', 'TOPBAR_MT_help'])
+                    self.assertEqual([event[1] for event in layout.events if event[0] == 'menu'], expected)
+                    self.assertEqual(layout.events[-2], ('separator', {'type': 'LINE'}))
+                    self.assertEqual(layout.events[-1], ('workspace', ctx.window, 'workspace',
+                        {'new': 'workspace.add', 'menu': 'TOPBAR_MT_workspace_menu'}))
+
+    def test_native_project_menu_uses_current_settings_operator(self):
+        layout = Layout()
+        source_draw('TOPBAR_MT_project')(SimpleNamespace(layout=layout), context())
+        self.assertEqual([event[1] for event in layout.events if event[0] == 'operator'],
+                         ['screen.project_settings_show'])
 
     def test_fullscreen_return_and_scene_view_layer_controls_remain_native(self):
         left = source_draw('TOPBAR_HT_upper_bar', 'draw_left',

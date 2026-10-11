@@ -10,10 +10,10 @@
   "counts": {
     "commands_with_default": 58,
     "bindings_including_aliases": 60,
-    "base_maps": 280,
-    "generated_maps": 281,
-    "protected_maps_checked": 186,
-    "inherited_items": 497,
+    "base_maps": 281,
+    "generated_maps": 282,
+    "protected_maps_checked": 187,
+    "inherited_items": 499,
     "removed_items": 45,
     "owned_auxiliary_items": 7
   },
@@ -16201,6 +16201,36 @@
           ]
         ]
       },
+      "status": "native_inherited_not_maya_verified"
+    },
+    {
+      "map": "3D View Tool: Paint Grease Pencil, Carver",
+      "context": {
+        "space_type": "VIEW_3D",
+        "region_type": "WINDOW"
+      },
+      "index": 0,
+      "operator": "grease_pencil.stroke_carver",
+      "event": {
+        "type": "LEFTMOUSE",
+        "value": "PRESS"
+      },
+      "properties": null,
+      "status": "native_inherited_not_maya_verified"
+    },
+    {
+      "map": "3D View Tool: Paint Grease Pencil, Carver",
+      "context": {
+        "space_type": "VIEW_3D",
+        "region_type": "WINDOW"
+      },
+      "index": 1,
+      "operator": "grease_pencil.stroke_carver",
+      "event": {
+        "type": "MIDDLEMOUSE",
+        "value": "PRESS"
+      },
+      "properties": null,
       "status": "native_inherited_not_maya_verified"
     }
   ],

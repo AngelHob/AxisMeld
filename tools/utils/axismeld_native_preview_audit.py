@@ -35,7 +35,8 @@ scripts/startup/bl_ui/space_userpref.py
 scripts/startup/bl_ui/space_view3d.py
 scripts/startup/rigify_builtin.py'''.splitlines()
 MODULES = ('scripts/modules/axismeld/', 'scripts/modules/rigify/')
-# Exact upstream bytes already reviewed by the fixed 2026.09.17 release audit.
+# Exact upstream bytes reviewed for 5.3 and re-reviewed for 5.4 on 2026.10.11.
+# Library pin aa0c5db72fa9488bb685bdddbede780d19f483f5; CRLF install bytes.
 EXAMPLES = {
     '5.3/python/lib/site-packages/Cython/Debugger/libpython.py': 'b5747b0de5dac5d15c12af53365db5269cae7393b3bff0c91ee4a020ae737263',
     '5.3/python/lib/site-packages/mesonbuild/dependencies/pkgconfig.py': '6af545b0dd5619cf0994af6d83ac6e1986556a09eafa707d0ce9d0207e13f2b6',
@@ -43,6 +44,12 @@ EXAMPLES = {
     '5.3/python/lib/site-packages/pip/_internal/utils/urls.py': '8d46659f0ca5d0ba7db3b60cc98e8be97e0dc55a4cd079f49fe3236ab2d497e8',
     '5.3/python/lib/site-packages/setuptools/_distutils/tests/test_dir_util.py': '618e30600c36f444a1255e9d17a9065ee86f23dc229f14f8a9ac77245e4aaa18',
     '5.3/python/lib/site-packages/setuptools/_distutils/tests/test_util.py': 'a91b897ef3eaa97274c29eb60968ef623ac30a55e4728cbab00fbef85869d760',
+    '5.4/python/lib/site-packages/Cython/Debugger/libpython.py': 'b5747b0de5dac5d15c12af53365db5269cae7393b3bff0c91ee4a020ae737263',
+    '5.4/python/lib/site-packages/mesonbuild/dependencies/pkgconfig.py': '6af545b0dd5619cf0994af6d83ac6e1986556a09eafa707d0ce9d0207e13f2b6',
+    '5.4/python/lib/site-packages/numpy/lib/_datasource.py': '72c15f3952f4d15efa28cfbecfdc113802261c33c1e65e5bfbc875009962e777',
+    '5.4/python/lib/site-packages/pip/_internal/utils/urls.py': '8d46659f0ca5d0ba7db3b60cc98e8be97e0dc55a4cd079f49fe3236ab2d497e8',
+    '5.4/python/lib/site-packages/setuptools/_distutils/tests/test_dir_util.py': '618e30600c36f444a1255e9d17a9065ee86f23dc229f14f8a9ac77245e4aaa18',
+    '5.4/python/lib/site-packages/setuptools/_distutils/tests/test_util.py': 'a91b897ef3eaa97274c29eb60968ef623ac30a55e4728cbab00fbef85869d760',
 }
 
 

@@ -4746,6 +4746,48 @@
       "superseded": false,
       "maintainerStatus": "pending",
       "isNew": true
+    },
+    {
+      "id": "GU-23",
+      "title": "使用 Blender 5.4 主干合并预览包和临时场景，选择 AxisMeld Maya 2026；检查 Modeling 七根菜单、Edit Mesh 的 Vertex/Edge/Face 子目录及 Transform 内新增的原生 Loop Tools 入口；在 Object、Mesh Edit、Curve Edit 和无活动对象时分别打开相关目录",
+      "group": "极低窗口说明与主干同步（2026-10-11）",
+      "steps": [
+        "使用 Blender 5.4 主干合并预览包和临时场景，选择 AxisMeld Maya 2026；检查 Modeling 七根菜单、Edit Mesh 的 Vertex/Edge/Face 子目录及 Transform 内新增的原生 Loop Tools 入口；在 Object、Mesh Edit、Curve Edit 和无活动对象时分别打开相关目录"
+      ],
+      "expected": [
+        "原有分类、灰占位、独立 Options 与右侧对齐保持；原生新增入口归入既有分类，不增加 Deform/Generate 根菜单；无效上下文有原因且不会执行或改选区，可用入口遵循 Blender 原生语义"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "GU-24",
+      "title": "在 5.4 合并构建中重试 QWER 持键重复 LMB、组件与建模 Shift+RMB、X/V/J 临时吸附及一次 Undo；从 Space→File 打开和另存临时文件，跨文件窗口释放触发键并取消，再正常保存、关闭和重开临时场景",
+      "group": "极低窗口说明与主干同步（2026-10-11）",
+      "steps": [
+        "在 5.4 合并构建中重试 QWER 持键重复 LMB、组件与建模 Shift+RMB、X/V/J 临时吸附及一次 Undo；从 Space→File 打开和另存临时文件，跨文件窗口释放触发键并取消，再正常保存、关闭和重开临时场景"
+      ],
+      "expected": [
+        "热盒间距和释放规则保持，无重复执行、残留拦截或永久吸附设置污染；文件窗口确认、取消及普通输入正常，场景保存重开一致，窗口标题保留 AxisMeld 与 5.4 版本"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "GU-25",
+      "title": "用 5.4 合并包的隔离配置从工厂启动，检查 Layout、Modeling、Rigging；使用临时副本打开以前的 AxisMeld 场景，切换工作区后保存重开；在 Rigging 创建 metarig、生成测试 rig，查看 Skeleton/Skin 与灰项说明，再切 Blender 键位",
+      "group": "极低窗口说明与主干同步（2026-10-11）",
+      "steps": [
+        "用 5.4 合并包的隔离配置从工厂启动，检查 Layout、Modeling、Rigging；使用临时副本打开以前的 AxisMeld 场景，切换工作区后保存重开；在 Rigging 创建 metarig、生成测试 rig，查看 Skeleton/Skin 与灰项说明，再切 Blender 键位"
+      ],
+      "expected": [
+        "工厂默认 Layout 与 Blender 键位保持，Rigging 作为原生工作区存在；Rigify 无需启用插件，旧文件和工作区布局不丢失；已实现入口和 Maya 灰占位保持，两套键位各自正常，测试不覆盖原场景或个人偏好"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
     }
   ]
 }

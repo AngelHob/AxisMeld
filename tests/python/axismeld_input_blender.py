@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 """Installed Blender integration tests; intentionally no source module path injection."""
 from pathlib import Path
+from collections import Counter
 import copy
 import json
 import sys
@@ -10,7 +11,15 @@ import unittest
 
 import bpy
 from axismeld import adapter, runtime
-from axismeld.commands import PRESET_NAME, baseline_bindings
+from axismeld.commands import PRESET_NAME, baseline_bindings, binding_events
+
+
+def event_signature(event):
+    """Compare actual RNA events with declarations, including every modifier."""
+    defaults = {'type': None, 'value': 'PRESS', 'ctrl': False, 'shift': False,
+                'alt': False, 'oskey': False, 'any': False, 'key_modifier': 'NONE'}
+    return tuple(event.get(key, default) if isinstance(event, dict) else getattr(event, key)
+                 for key, default in defaults.items())
 
 
 class InstalledInputTest(unittest.TestCase):
@@ -63,8 +72,11 @@ class InstalledInputTest(unittest.TestCase):
         base = industry.generate_keymaps(industry.Params())
         original = copy.deepcopy(base)
         bindings = baseline_bindings()
-        from axismeld.keymap import modeling_keymap, overlaps, generate_keymaps, validate_global_bindings
+        from axismeld.keymap import (CONTEXT_HOTBOXES, command_targets, modeling_keymap,
+                                    overlaps, generate_keymaps, validate_global_bindings)
         from axismeld.commands import RESERVED_KEYS
+        from axismeld.modeling_registry import SPECS as MODELING_SPECS
+        from axismeld.object_modeling_hotbox import OBJECT_BOUND_COMMANDS
         validate_global_bindings(base, bindings)
         result = generate_keymaps(base, bindings)
         self.assertEqual(original, base)
@@ -79,14 +91,36 @@ class InstalledInputTest(unittest.TestCase):
             after = generated_by_name[before[0]]
             if before[0] == 'Generic Gizmo Maybe Drag':
                 self.assertEqual(after[2]['items'][1:], before[2]['items'])
-                self.assertEqual(after[2]['items'][0][0], 'axismeld.axis_select')
-            elif not modeling_keymap(before[0], before[1]):
+                self.assertEqual(after[2]['items'][0],
+                                 ('axismeld.axis_select', {'type': 'LEFTMOUSE', 'value': 'CLICK'}, None))
+            elif not modeling_keymap(before[0], before[1]) and before[0] not in {'Curve', 'Lattice'}:
                 self.assertEqual(before, after, before[0])
             else:
-                for op, event, props in after[2]['items']:
-                    self.assertFalse(any(overlaps(event, {'type': key}) for key in RESERVED_KEYS))
-                    if op != 'axismeld.command':
-                        self.assertFalse(any(overlaps(event, value) for value in bindings.values()), before[0])
+                name, args, content = before
+                legacy_map = modeling_keymap(name, args)
+                scoped = set(MODELING_SPECS) | set(OBJECT_BOUND_COMMANDS)
+                owned = [event for command, event in binding_events(bindings)
+                         if (command in scoped and name in command_targets(command)) or
+                         (legacy_map and command not in scoped and command not in CONTEXT_HOTBOXES)]
+                if legacy_map:
+                    owned.extend({'type': key} for key in RESERVED_KEYS)
+                # Only declared ownership removes a native event. Context sessions retain
+                # their exact fallback; mode-scoped shortcuts preserve other contexts.
+                native_expected = [item for item in content['items']
+                                   if not any(overlaps(item[1], event) for event in owned)]
+                native_actual = [item for item in after[2]['items']
+                                 if not item[0].startswith('axismeld.')]
+                self.assertEqual(native_actual, native_expected, name)
+                for item in native_expected:
+                    for command, event in binding_events(bindings):
+                        if (command not in CONTEXT_HOTBOXES or name not in command_targets(command)
+                                or not overlaps(item[1], event)):
+                            continue
+                        hotbox = ('axismeld.command', dict(event),
+                                  {'properties': [('command', command)]})
+                        self.assertIn(hotbox, after[2]['items'], (name, command))
+                        self.assertLess(after[2]['items'].index(hotbox),
+                                        after[2]['items'].index(item), (name, command))
 
     def test_view_adapter_and_wrong_context(self):
         for command, expected in [('view.wireframe', 'WIREFRAME'), ('view.shaded', 'SOLID')]:
@@ -121,13 +155,27 @@ class InstalledInputTest(unittest.TestCase):
             for repeat in range(2):
                 self.assertEqual(bpy.ops.axismeld.reload_profile(), {'FINISHED'})
                 self.assertEqual(sum(len(km.keymap_items) for km in config.keymaps), first_count)
-            for command, event in baseline_bindings().items():
-                target = ('AxisMeld Hotbox' if command == 'hotbox.open' else
-                          '3D View' if command.startswith('view.') else 'Mesh')
-                matches = [item for item in config.keymaps[target].keymap_items
-                           if item.idname == 'axismeld.command' and item.properties.command == command]
-                self.assertEqual(len(matches), 1, command)
-                self.assertEqual(matches[0].type, event['type'])
+            from axismeld.keymap import command_targets
+            expected = {}
+            for command, event in binding_events(baseline_bindings()):
+                expected.setdefault(command, []).append(event_signature(event))
+            # These are frozen Maya default aliases, not accidental duplicate entries.
+            self.assertCountEqual(expected['edit.redo'], [
+                event_signature({'type': 'Z', 'shift': True}),
+                event_signature({'type': 'Y', 'ctrl': True}),
+            ])
+            self.assertCountEqual(expected['display.frame_selected_all'], [
+                event_signature({'type': 'F', 'shift': True}),
+                event_signature({'type': 'F', 'ctrl': True, 'shift': True}),
+            ])
+            for command, events in expected.items():
+                actual = {keymap.name: Counter(event_signature(item) for item in keymap.keymap_items
+                                              if item.idname == 'axismeld.command' and
+                                              item.properties.command == command)
+                          for keymap in config.keymaps}
+                actual = {name: events for name, events in actual.items() if events}
+                self.assertEqual(actual, {target: Counter(events)
+                                          for target in set(command_targets(command))}, command)
             self.assertAlmostEqual(config.preferences.hotbox_tap_seconds, 0.4, places=6)
             prop = config.preferences.bl_rna.properties['hotbox_tap_seconds']
             self.assertAlmostEqual(prop.hard_min, 0.1, places=6)

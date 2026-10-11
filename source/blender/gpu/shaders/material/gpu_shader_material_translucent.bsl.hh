@@ -5,10 +5,11 @@
 #pragma once
 
 #include "gpu_shader_material_interface.bsl.hh"
-#include "gpu_shader_math_vector_safe_lib.glsl"
+#include "gpu_shader_math_vector_safe.bsl.hh"
 
 [[node]]
-void node_bsdf_translucent(float4 color, float3 N, float weight, Closure &result)
+void node_bsdf_translucent(
+    float4 color, float3 N, float weight, KernelGlobals &kg, ShadingData &sd, Closure &result)
 {
   color = max(color, float4(0.0f));
   N = safe_normalize(N);
@@ -17,5 +18,5 @@ void node_bsdf_translucent(float4 color, float3 N, float weight, Closure &result
   translucent_data.color = color.rgb * weight;
   translucent_data.N = N;
 
-  result = closure_eval(translucent_data);
+  result = closure_eval(kg, sd, translucent_data);
 }

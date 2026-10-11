@@ -584,7 +584,9 @@ void PathTrace::set_denoiser_params(const DenoiseParams &params)
 
     const bool is_cpu_denoising = old_denoiser_params.type == DENOISER_OPENIMAGEDENOISE &&
                                   old_denoiser_params.use_gpu == false;
-    const bool requested_gpu_denoising = effective_denoise_params.type == DENOISER_OPTIX ||
+    const bool always_gpu_denoising = effective_denoise_params.type == DENOISER_DLSS ||
+                                      effective_denoise_params.type == DENOISER_OPTIX;
+    const bool requested_gpu_denoising = always_gpu_denoising ||
                                          (effective_denoise_params.type ==
                                               DENOISER_OPENIMAGEDENOISE &&
                                           effective_denoise_params.use_gpu == true);
@@ -602,7 +604,7 @@ void PathTrace::set_denoiser_params(const DenoiseParams &params)
     /* Optix Denoiser is not supporting CPU devices, so use_gpu option is not
      * shown in the UI and changes in the option value should not be checked. */
     if (old_denoiser_params.type == effective_denoise_params.type &&
-        (is_same_denoising_device_type || effective_denoise_params.type == DENOISER_OPTIX))
+        (is_same_denoising_device_type || always_gpu_denoising))
     {
       denoiser_->set_params(effective_denoise_params);
     }
@@ -949,13 +951,22 @@ void PathTrace::cancel()
 {
   thread_scoped_lock lock(render_cancel_.mutex);
 
-  render_cancel_.is_requested = true;
+  /* With interactive denoisers like DLSS always render 1 complete sample,
+   * otherwise interactivity becomes bad. Otherwise cancel immediately so
+   * the main thread isn't blocked. */
+  if (!render_scheduler_.is_denoiser_interactive() || get_num_samples_in_buffer() > 1) {
+    render_cancel_.is_requested = true;
+  }
 
   while (render_cancel_.is_rendering) {
     render_cancel_.condition.wait(lock);
   }
 
   render_cancel_.is_requested = false;
+
+  if (display_) {
+    display_->reset();
+  }
 }
 
 int PathTrace::get_num_samples_in_buffer()
@@ -1051,9 +1062,7 @@ void PathTrace::progress_update_if_needed(const RenderWork &render_work)
     const int2 tile_size = get_render_tile_size();
     const uint64_t num_samples_added = uint64_t(tile_size.x) * tile_size.y *
                                        render_work.path_trace.num_samples;
-    const int current_sample = render_work.path_trace.start_sample +
-                               render_work.path_trace.num_samples -
-                               render_work.path_trace.sample_offset;
+    const int current_sample = render_scheduler_.get_total_rendered_samples();
     progress_->add_samples(num_samples_added, current_sample);
   }
 
