@@ -5,16 +5,16 @@
 ```text
 请接续开发我的 AxisMeld 项目。默认用中文，结论优先，主动核实并完成有界任务。
 
-本批交付状态（2026-10-11）：当前范围实现、统一候选回归与完整原生预览包发布已完成。
-已通过40组354项纯Python、8组139项原生、真实RNA7+4项及7个实际File流程；
-统一候选18组回归全部通过（17组GUI、1组profiles后台验证，按套件计）；
-exe SHA256：793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912。
-完整原生预发布tag：axismeld-2026.10.11-gui-preview；匿名ZIP/sidecar下载、全量解压及工厂启动已核验。
-功能源码与nativeSourceCommit均为41d71f26ccf12be5addd5c3453106bfa66f8de5f。
-发布入口：https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview
-接手先读docs/compatibility/2026-10-11-gui-preview-snapshot.json及
-docs/compatibility/2026-10-11-gui-completion-acceptance.md，核对发布身份与验证边界。
-9月17日旧Skin包只作历史参考，不包含本批改动，不能用于本批人工验收。
+最新交付（2026-10-11）：GUI input polish 已发布。三项修复为 Ctrl 组合键工具热盒、Keymap 功能名称/搜索、Rigging 灰项原因提示。
+本轮通过80项纯Python、42项原生、16项RNA、6组GUI及1组profiles后台回归；这些不是上一批全量复测。
+预发布tag：axismeld-2026.10.11-gui-input-preview；完整ZIP匿名下载、解压和工厂启动已核验。
+功能/native源码：3a614cad8a1bd4df8d05049f6f051d47bfef62e3。
+exe SHA256：c78b71f930048ae286fed40c6d15c3c3c18de5ad7a48b82a2bbc2e186bed5c65。
+发布入口：https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-input-preview
+先读docs/compatibility/2026-10-11-gui-input-polish-acceptance.md及docs/compatibility/2026-10-11-gui-input-preview-snapshot.json。
+GU-14～GU-16三项待人工，旧GU-01～GU-13及原结果保留。目录333项，当前321，历史12，47项仅历史已测，当前初始待测274。
+下一批先实际复现并修复菜单快捷键提示、灰齿轮键盘导航、窄窗长说明和Modeling灰项一致性；不自动恢复新算法开发。
+旧gui-preview不含本轮三项修复。更早发布与自动结果仅作历史参考，不重复开发。
 
 仓库：https://github.com/AngelHob/AxisMeld
 最新开发分支：axismeld/phase-2a

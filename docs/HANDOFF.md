@@ -2,7 +2,7 @@
 
 本页面向未读过聊天记录的开发者和 Codex。2026-10-11 GUI 收敛从远端基线 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8` 继续；执行前核对远端与当前源码。新算法仍暂停，不因 UI 实施完成自动启动 A2。
 
-**本批交付状态：当前范围实现、统一候选回归与完整原生预览包发布已完成。** 已通过 40 组 354 项纯 Python、8 组 139 项原生、真实 RNA 7+4 项与 7 个实际 File 流程；统一候选的 18 组回归全部通过（17 组 GUI、1 组 profiles 后台验证，按套件计）；exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`。完整原生 [2026.10.11 GUI preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview) 已发布，功能与原生源码同为 `41d71f26ccf12be5addd5c3453106bfa66f8de5f`；匿名下载、全量解压及工厂启动核验通过，见[发布快照](compatibility/2026-10-11-gui-preview-snapshot.json)。最终结果、构建/包指纹与边界集中于 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)。[9 月 17 日旧 Skin 包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.09.17-skin-weights-preview)只作历史参考，不用于本批验收。
+**最新交付（2026-10-11 GUI input polish）：三项 GUI 修复及完整原生预览包已发布。** 修复 Ctrl 组合键工具热盒提前取消、Keymap 功能名称/搜索，以及 Rigging 灰项原因提示。本轮通过 80 项纯 Python、42 项原生、16 项 RNA、6 组 GUI 和 1 组 profiles 后台回归；[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-input-preview)，源码/native 均为 `3a614cad8a1bd4df8d05049f6f051d47bfef62e3`。匿名下载、完整解压及启动已核验；旧 GUI preview 不含本轮三项修复。详见[本轮验收](compatibility/2026-10-11-gui-input-polish-acceptance.md)与[发布快照](compatibility/2026-10-11-gui-input-preview-snapshot.json)。人工新增 GU-14～GU-16，原结果保持；下一批继续处理已记录的具体 GUI 问题，新算法仍暂停。
 
 ## 1. 先用正确分支
 

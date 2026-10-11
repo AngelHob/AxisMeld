@@ -9,7 +9,7 @@
 - Rigging 原生灰项增加实际上下文原因 tooltip；仍是不可执行按钮，错误上下文不展开原生子菜单，不修改模式或选区。链接骨架数据的已有例外保持。
 - 新候选验证通过：8 组 80 项纯 Python、2 组 42 项原生、16 项真实 RNA；6 组 GUI 和 1 组 profiles 后台回归通过，含实际快捷键展开/搜索和灰项悬停截图。旧版 Ctrl 改键失败→新版通过；两项 Python 修复也保留红→绿记录。145 项运行资源与源码一致，独立审查未发现可操作缺陷。
 - 新增待人工 GU-14～GU-16；目录 333 项、当前 321、历史 12，47 项历史已测及原记录保留，当前初始待测 274。菜单快捷键提示、灰齿轮键盘导航、窄窗长原因说明和 Modeling 灰项一致性留作下一批 GUI 候选问题。
-- 发布与验证边界见 [本轮验收](compatibility/2026-10-11-gui-input-polish-acceptance.md)。本条记录的是已验证源码；预览包及网页的最终发布状态另行核验后补记。
+- 发布与验证边界见 [本轮验收](compatibility/2026-10-11-gui-input-polish-acceptance.md)。完整 [GUI input preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-input-preview) 已发布；源码/native `3a614cad8a1bd4df8d05049f6f051d47bfef62e3`，ZIP 297,074,164 字节，匿名重下载/解压/启动一致。公开页同步 333 项目录和新版本，12 项浏览器检查通过；[发布快照](compatibility/2026-10-11-gui-input-preview-snapshot.json)记录指纹。
 
 ## 2026-10-11 · 当前 GUI、热盒与临时输入收敛
 

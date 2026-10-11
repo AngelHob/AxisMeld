@@ -2,7 +2,7 @@
 
 状态核对日期：2026-10-11，本批 GUI 收敛开始时已拉取并核对远端基线 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`；本批结果见[GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)，后续提交以远端为准。本文件是当前路线入口；旧日期的规格保留设计与证据，不代表当前完成度。
 
-**本批交付状态：当前范围实现、统一候选回归与完整原生预览包发布已完成。** 已通过 40 组 354 项纯 Python、8 组 139 项原生、真实 RNA 7+4 项与 7 个实际 File 流程；统一候选的 18 组回归全部通过（17 组 GUI、1 组 profiles 后台验证，按套件计）；exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`。完整原生 [2026.10.11 GUI preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview) 已发布，功能与原生源码同为 `41d71f26ccf12be5addd5c3453106bfa66f8de5f`；匿名下载、全量解压及工厂启动核验通过，见[发布快照](compatibility/2026-10-11-gui-preview-snapshot.json)。后续只在本段和 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md) 更新最终构建/发布结果，不把已落地实现重新列为待开发。
+**最新交付（2026-10-11 GUI input polish）：三项 GUI 修复及完整原生预览包已发布。** 修复 Ctrl 组合键工具热盒提前取消、Keymap 功能名称/搜索，以及 Rigging 灰项原因提示。本轮通过 80 项纯 Python、42 项原生、16 项 RNA、6 组 GUI 和 1 组 profiles 后台回归；[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-input-preview)，源码/native 均为 `3a614cad8a1bd4df8d05049f6f051d47bfef62e3`。匿名下载、完整解压及启动已核验；旧 GUI preview 不含本轮三项修复。详见[本轮验收](compatibility/2026-10-11-gui-input-polish-acceptance.md)与[发布快照](compatibility/2026-10-11-gui-input-preview-snapshot.json)。人工新增 GU-14～GU-16，原结果保持；下一批继续处理已记录的具体 GUI 问题，新算法仍暂停。
 
 ## 1. 目标与当前基线
 
@@ -12,7 +12,7 @@ AxisMeld 是可独立拉取、构建、运行的 Blender 衍生版本，以 Maya
 |---|---|
 | 开发源码 | [AngelHob/AxisMeld 的 axismeld/phase-2a](https://github.com/AngelHob/AxisMeld/tree/axismeld/phase-2a)；本批开始时的远端基线为 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`；后续以远端为准 |
 | 默认分支 | `axismeld/integration`；目前承担仓库首页入口，**未包含最新开发实现**，不能直接用它继续功能开发 |
-| 当前公开试用包 | [2026.10.11 GUI preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview)，完整原生包；功能与 native 源码均为 `41d71f26ccf12be5addd5c3453106bfa66f8de5f`，完整文件/资源与匿名下载核验见[发布快照](compatibility/2026-10-11-gui-preview-snapshot.json) |
+| 当前公开试用包 | [2026.10.11 GUI input preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-input-preview)，完整原生包；功能/native 源码均为 `3a614cad8a1bd4df8d05049f6f051d47bfef62e3`，见[发布快照](compatibility/2026-10-11-gui-input-preview-snapshot.json) |
 | Blender 基线 | `18d84097b4f859582afdec57eece2ae880371adc`，版本宏为 5.3.0 alpha；不等于后续上游最新版本 |
 | 测试门户 | [GitHub Pages](https://angelhob.github.io/AxisMeld/)，源码 `tools/testing_site/`，部署分支 `gh-pages` |
 | 交接与问题 | [新机器接续](HANDOFF.md) · [可复制提示词](CODEX_HANDOFF_PROMPT.md) · [当前问题](CURRENT_ISSUES.md) · [构建与交付](BUILD_AND_DELIVERY.md) |

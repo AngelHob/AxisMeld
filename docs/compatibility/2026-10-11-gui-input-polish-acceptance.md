@@ -32,4 +32,4 @@ Keymap RNA 使用 `--background --factory-startup --python-exit-code 1 --python 
 
 GU-14 带修饰键改键、GU-15 首选项名称/搜索、GU-16 灰项原因，均待人工；旧项目及状态保留。目录共 333 项，其中当前 321、历史 12；47 项仅历史已测，当前初始待测 274。网页本浏览器勾选和 GitHub Issue 提交保持原机制。
 
-候选验证已完成；发布包与公开页面尚待本轮最终核验。计划使用独立标签 `axismeld-2026.10.11-gui-input-preview`，不覆盖旧版。
+已发布完整 [GUI input preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-input-preview)，源码/native `3a614cad8a1bd4df8d05049f6f051d47bfef62e3`。ZIP 297,074,164 字节；SHA256 `d11d5973a473a7a9b4f307c4959e284fd8d632850014d6a0abefd56c05214c5e`。6,498 个文件与 145 项资源通过干净解压审计、工厂/portable 启动及改键 GUI 复测；匿名重下载后再次核验 ZIP、解压和启动。公开目录更新为 333 项、新增 3 项，网站 12 项浏览器检查通过。[发布快照](2026-10-11-gui-input-preview-snapshot.json)保留完整指纹；旧版未覆盖。

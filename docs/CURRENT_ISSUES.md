@@ -2,13 +2,15 @@
 
 更新：2026-10-11，本批 GUI 收敛开始时已核对远端基线 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`。本文件区分已确认未关闭的问题、尚未开发的能力和待人工验收，不把灰色占位、自动测试通过或历史用户反馈互相替代。
 
-**本批交付状态：当前范围实现、统一候选回归与完整原生预览包发布已完成。** 已通过 40 组 354 项纯 Python、8 组 139 项原生、真实 RNA 7+4 项与 7 个实际 File 流程；统一候选的 18 组回归全部通过（17 组 GUI、1 组 profiles 后台验证，按套件计）；exe SHA256 为 `793731a1ee5b4d510065ab6564d06c03c07711b65a037433f75e24f49f593912`。完整原生 [2026.10.11 GUI preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-preview) 已发布，功能与原生源码同为 `41d71f26ccf12be5addd5c3453106bfa66f8de5f`；匿名下载、全量解压及工厂启动核验通过，见[发布快照](compatibility/2026-10-11-gui-preview-snapshot.json)。最终结果与包指纹见 [GUI 验收](compatibility/2026-10-11-gui-completion-acceptance.md)。9 月 17 日 Skin 包（Python 源码 `bf35ab393b7c`、native `617986ac1841`）只保留为历史发布，不包含本批修复。
+**最新交付（2026-10-11 GUI input polish）：三项 GUI 修复及完整原生预览包已发布。** 修复 Ctrl 组合键工具热盒提前取消、Keymap 功能名称/搜索，以及 Rigging 灰项原因提示。本轮通过 80 项纯 Python、42 项原生、16 项 RNA、6 组 GUI 和 1 组 profiles 后台回归；[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-gui-input-preview)，源码/native 均为 `3a614cad8a1bd4df8d05049f6f051d47bfef62e3`。匿名下载、完整解压及启动已核验；旧 GUI preview 不含本轮三项修复。详见[本轮验收](compatibility/2026-10-11-gui-input-polish-acceptance.md)与[发布快照](compatibility/2026-10-11-gui-input-preview-snapshot.json)。人工新增 GU-14～GU-16，原结果保持；下一批继续处理已记录的具体 GUI 问题，新算法仍暂停。
 
 当前优先级（2026-09-29 用户更正）：**先完成 UI、交互和快捷键对齐，暂停新增功能**。P1 为当前 UI/输入阶段应优先处理的对齐和验收；P2 为支撑交付或后续验证；P3 为已明确后置的新增功能。下述后置建议不是当前实施授权；进入实现前先核实源码和对应设计。
 
 状态依据：[修改日志](CHANGELOG.md)、[统一人工清单](compatibility/2026-09-14-manual-test-ledger.md)、[Rigging 设计及交付记录](development/2026-09-17-rigging-workspace.md)、[公开目录](../tools/testing_site/catalog.json)。A1 已实现一次 Normalize Weights / Prune Small Weights 与独立 Options；[审计与验证](development/2026-09-17-skin-weight-cleanup.md)记录其有界行为。U0–U3 当前范围的实现已完成；Influences 等新算法继续暂缓，整批验证与发布状态见本页开头。
 
 ## 当前 GUI 收敛与验收（P1）
+
+本轮三项修复已交付，见开头。下一批候选：菜单正文的实际快捷键提示、灰色 Options 齿轮的上下键导航、窄窗口长原因文字、Modeling 原生灰项提示一致性。目前为代码/探针证据，仍需实际 GUI 复现；不标为已修复。设计入口：[GUI 输入修整](development/2026-10-11-gui-input-polish.md)。
 
 - **目录与输入**：固定目录已逐级审计；当前 58 默认命令、60 绑定、7 操纵器、3 原生持键入口，497 原生继承、45 移除、186 受保护 keymap。原 18+2 输入参考已核对。文本/事件定义一致不能直接推导行为等价。
 - **已实施修复**：转换/当前工具/空组件预选、A History、X/V/J 临时吸附、9 空动态目录与 Grease Pencil 键位保护。定向审查同时修复原生模态取消残留、Face Path 接线/门禁、preheld Ctrl 时序、History 队列目标变化及 File 窗口残留松键泄漏。
@@ -86,12 +88,12 @@
 
 | 口径 | 数量与含义 |
 |---|---|
-| 全部稳定编号 | 330 项 |
-| 当前有效验收 | 318 项 |
+| 全部稳定编号 | 333 项 |
+| 当前有效验收 | 321 项 |
 | 已替代的历史方案 | 12 项；保留可查询，不再要求按旧布局验收 |
 | 历史已测试 | 47 项；用户只确认“已测试”，未补造通过/失败 |
-| 目录初始未测 | 283 项，包含 12 项历史方案；剔除历史后的当前初始未测为 271 项 |
-| 最近新增 | GU-01 至 GU-13，共 13 项，全部待人工测试；原 IN-01 至 IN-03、RG-07 至 RG-20 仍待测，原结果保持 |
+| 目录初始未测 | 286 项，包含 12 项历史方案；剔除历史后的当前初始未测为 274 项 |
+| 最近新增 | GU-14 至 GU-16，共 3 项，全部待人工测试；原 GU-01～GU-13、IN-01 至 IN-03、RG-07 至 RG-20 仍待测，原结果保持 |
 
 | 优先级与范围 | 现有编号/依据 | 人工完成标准 |
 |---|---|---|
