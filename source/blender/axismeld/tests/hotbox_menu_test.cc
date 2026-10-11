@@ -2631,4 +2631,98 @@ TEST(axismeld_hotbox_menu, FullViewsStyleKeepsActualPressOriginClearAndEveryRowH
   }
 }
 
+TEST(axismeld_hotbox_menu, ReasonRegionsUseSideSpaceWhenNoFullWidthBandExists)
+{
+  const MenuBounds bounds{0, 0, 100, 80};
+  const std::vector<MenuBounds> obstacles{{40, 0, 60, 80}};
+  const auto regions = menu_reason_regions(bounds, obstacles);
+  ASSERT_EQ(regions.size(), 2);
+  EXPECT_EQ(regions[0], (MenuBounds{0, 0, 40, 80}));
+  EXPECT_EQ(regions[1], (MenuBounds{60, 0, 100, 80}));
+  EXPECT_EQ(obstacles, (std::vector<MenuBounds>{{40, 0, 60, 80}}));
+}
+
+TEST(axismeld_hotbox_menu, ReasonRegionsKeepCompleteMaximalBandsAndPreferWidth)
+{
+  const auto regions = menu_reason_regions({0, 0, 100, 80}, {{20, 20, 80, 60}});
+  const std::vector<MenuBounds> expected{{0, 0, 100, 20},
+                                         {0, 60, 100, 80},
+                                         {0, 0, 20, 80},
+                                         {80, 0, 100, 80}};
+  EXPECT_EQ(regions, expected);
+}
+
+TEST(axismeld_hotbox_menu, ReasonRegionsPreservePartialSideSpaceBesideSteppedMenus)
+{
+  const MenuBounds bounds{0, 0, 100, 100};
+  const std::vector<MenuBounds> obstacles{{20, 20, 80, 50}, {50, 50, 80, 80}};
+  const auto regions = menu_reason_regions(bounds, obstacles);
+  // A wide upper-left region exists even though neither whole-window side strip
+  // is wide enough. All boundaries are hand-derived from this stepped obstacle.
+  const std::vector<MenuBounds> expected{{0, 0, 100, 20},
+                                         {0, 80, 100, 100},
+                                         {0, 50, 50, 100},
+                                         {0, 0, 20, 100},
+                                         {80, 0, 100, 100}};
+  EXPECT_EQ(regions, expected);
+  auto reversed = obstacles;
+  std::reverse(reversed.begin(), reversed.end());
+  EXPECT_EQ(menu_reason_regions(bounds, reversed), regions);
+  for (const MenuBounds &region : regions) {
+    EXPECT_GE(region.xmin, bounds.xmin);
+    EXPECT_GE(region.ymin, bounds.ymin);
+    EXPECT_LE(region.xmax, bounds.xmax);
+    EXPECT_LE(region.ymax, bounds.ymax);
+    for (const MenuBounds &obstacle : obstacles) {
+      EXPECT_TRUE(region.xmax <= obstacle.xmin || region.xmin >= obstacle.xmax ||
+                  region.ymax <= obstacle.ymin || region.ymin >= obstacle.ymax);
+    }
+  }
+}
+
+TEST(axismeld_hotbox_menu, ReasonRegionsClipOutsideObstaclesAndMergeTheirCoverage)
+{
+  const MenuBounds bounds{10, 20, 110, 100};
+  const auto regions = menu_reason_regions(
+      bounds, {{-20, -50, 50, 65}, {30, 55, 50, 150}, {200, 200, 300, 300}});
+  EXPECT_EQ(regions, (std::vector<MenuBounds>{{50, 20, 110, 100}, {10, 65, 30, 100}}));
+  EXPECT_EQ(menu_reason_regions(bounds, {}), (std::vector<MenuBounds>{bounds}));
+  EXPECT_TRUE(menu_reason_regions(bounds, {{-20, -50, 200, 150}}).empty());
+  EXPECT_TRUE(menu_reason_regions(bounds, {{10, 20, 60, 100}, {60, 20, 110, 100}}).empty());
+  EXPECT_TRUE(menu_reason_regions({10, 20, 10, 100}, {}).empty());
+}
+
+TEST(axismeld_hotbox_menu, ReasonRegionsProtectNativeHullOptionsAndRetainedTargetsAfterOffset)
+{
+  const MenuBounds bounds{100, 200, 340, 360};
+  // Window-space obstacles include a complete column (including its separators),
+  // a separate Options block, and a retained ancestor button. The region origin
+  // is deliberately nonzero, as in the upper-right pane of a quad view.
+  const std::vector<MenuBounds> obstacles{{180, 200, 280, 340},
+                                          {280, 240, 304, 288},
+                                          {120, 310, 180, 334}};
+  const auto regions = menu_reason_regions(bounds, obstacles);
+  EXPECT_NE(std::find(regions.begin(), regions.end(), MenuBounds{304, 200, 340, 360}),
+            regions.end());
+  EXPECT_NE(std::find(regions.begin(), regions.end(), MenuBounds{100, 340, 340, 360}),
+            regions.end());
+  for (const MenuBounds &region : regions) {
+    for (const MenuBounds &obstacle : obstacles) {
+      EXPECT_TRUE(region.xmax <= obstacle.xmin || region.xmin >= obstacle.xmax ||
+                  region.ymax <= obstacle.ymin || region.ymin >= obstacle.ymax);
+    }
+  }
+  auto reordered = obstacles;
+  std::reverse(reordered.begin(), reordered.end());
+  EXPECT_EQ(menu_reason_regions(bounds, reordered), regions);
+
+  const auto translate = [](const MenuBounds &rect) {
+    return MenuBounds{rect.xmin - 100, rect.ymin - 200, rect.xmax - 100, rect.ymax - 200};
+  };
+  std::vector<MenuBounds> local_obstacles, local_expected;
+  for (const MenuBounds &rect : obstacles) { local_obstacles.push_back(translate(rect)); }
+  for (const MenuBounds &rect : regions) { local_expected.push_back(translate(rect)); }
+  EXPECT_EQ(menu_reason_regions(translate(bounds), local_obstacles), local_expected);
+}
+
 }  // namespace blender::axismeld::tests

@@ -80,6 +80,13 @@ struct MenuBounds {
   bool operator==(const MenuBounds &other) const = default;
 };
 
+/* Maximal empty rectangles for a drawing-only explanation. Bounds and obstacles
+ * share the caller's coordinate system; touching edges do not overlap. Candidates
+ * are stable, widest first, then tallest, then bottom/left. Full coverage returns
+ * no candidates: callers must not fall back to covering a menu. */
+std::vector<MenuBounds> menu_reason_regions(const MenuBounds &bounds,
+                                          const std::vector<MenuBounds> &obstacles);
+
 /* Logical pixel coordinates, bottom-left origin. All nodes require measured label widths.
  * open_path contains menu IDs, starting with a visible title (not a root row group).
  * {"center", mapped_menu_id, ...} explicitly anchors a configured menu at the central button;

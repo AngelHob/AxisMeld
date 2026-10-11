@@ -7,6 +7,89 @@
 #include <cmath>
 
 namespace blender::axismeld {
+std::vector<MenuBounds> menu_reason_regions(const MenuBounds &bounds,
+                                          const std::vector<MenuBounds> &obstacles)
+{
+  const auto valid = [](const MenuBounds &rect) {
+    return std::isfinite(rect.xmin) && std::isfinite(rect.ymin) &&
+           std::isfinite(rect.xmax) && std::isfinite(rect.ymax) && rect.xmin < rect.xmax &&
+           rect.ymin < rect.ymax;
+  };
+  const auto contains = [](const MenuBounds &outer, const MenuBounds &inner) {
+    return outer.xmin <= inner.xmin && outer.ymin <= inner.ymin &&
+           outer.xmax >= inner.xmax && outer.ymax >= inner.ymax;
+  };
+  if (!valid(bounds)) {
+    return {};
+  }
+  std::vector<MenuBounds> clipped;
+  for (const MenuBounds &obstacle : obstacles) {
+    if (!valid(obstacle)) {
+      return {};
+    }
+    const MenuBounds rect{std::max(bounds.xmin, obstacle.xmin),
+                          std::max(bounds.ymin, obstacle.ymin),
+                          std::min(bounds.xmax, obstacle.xmax),
+                          std::min(bounds.ymax, obstacle.ymax)};
+    if (!valid(rect) || std::any_of(clipped.begin(), clipped.end(), [&](const MenuBounds &other) {
+          return contains(other, rect);
+        })) {
+      continue;
+    }
+    // Native block hulls contain their rows. Removing contained obstacles bounds
+    // the search by visible blocks/rings instead of every individual menu entry.
+    std::erase_if(clipped, [&](const MenuBounds &other) { return contains(rect, other); });
+    clipped.push_back(rect);
+  }
+  std::vector<float> edges{bounds.xmin, bounds.xmax};
+  for (const MenuBounds &rect : clipped) {
+    edges.push_back(rect.xmin);
+    edges.push_back(rect.xmax);
+  }
+  std::sort(edges.begin(), edges.end());
+  edges.erase(std::unique(edges.begin(), edges.end()), edges.end());
+  std::vector<MenuBounds> candidates;
+  for (size_t left = 0; left + 1 < edges.size(); left++) {
+    for (size_t right = left + 1; right < edges.size(); right++) {
+      std::vector<std::pair<float, float>> occupied;
+      for (const MenuBounds &rect : clipped) {
+        if (rect.xmin < edges[right] && rect.xmax > edges[left]) {
+          occupied.emplace_back(rect.ymin, rect.ymax);
+        }
+      }
+      std::sort(occupied.begin(), occupied.end());
+      float bottom = bounds.ymin;
+      for (const auto &[ymin, ymax] : occupied) {
+        if (ymin > bottom) {
+          candidates.push_back({edges[left], bottom, edges[right], ymin});
+        }
+        bottom = std::max(bottom, ymax);
+      }
+      if (bottom < bounds.ymax) {
+        candidates.push_back({edges[left], bottom, edges[right], bounds.ymax});
+      }
+    }
+  }
+  std::sort(candidates.begin(), candidates.end(), [](const MenuBounds &a, const MenuBounds &b) {
+    const float aw = a.xmax - a.xmin, bw = b.xmax - b.xmin;
+    const float ah = a.ymax - a.ymin, bh = b.ymax - b.ymin;
+    if (aw != bw) { return aw > bw; }
+    if (ah != bh) { return ah > bh; }
+    if (a.ymin != b.ymin) { return a.ymin < b.ymin; }
+    return a.xmin < b.xmin;
+  });
+  std::vector<MenuBounds> regions;
+  for (const MenuBounds &candidate : candidates) {
+    // A containing candidate is at least as wide/tall and was sorted first.
+    if (std::none_of(regions.begin(), regions.end(), [&](const MenuBounds &region) {
+          return contains(region, candidate);
+        })) {
+      regions.push_back(candidate);
+    }
+  }
+  return regions;
+}
+
 MenuRadioState menu_radio_state(const MenuSnapshot &snapshot, const MenuNode &node)
 {
   if ((node.kind == MenuKind::Command || node.kind == MenuKind::Disabled) && node.indicator == "radio") {

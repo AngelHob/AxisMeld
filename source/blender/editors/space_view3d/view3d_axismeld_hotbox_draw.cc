@@ -6,6 +6,7 @@
 #include <unordered_set>
 
 #include "BKE_context.hh"
+#include "BLI_rect.hh"
 #include "BLF_api.hh"
 #include "DNA_screen_types.h"
 #include "DNA_theme_types.h"
@@ -377,59 +378,104 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data, const int *draw_of
       ui::fontstyle_set(&style);
       const float margin = 12 * scale;
       const float padding = 6 * scale;
-      const int wrap_width = std::max(1, int(CTX_wm_region(C)->winx - 2 * margin));
-      BLF_wordwrap(font, wrap_width, BLFWrapMode::Typographical | BLFWrapMode::HardLimit);
-      BLF_enable(font, BLF_WORD_WRAP);
-      rcti text_bounds;
-      BLF_boundbox(font, hover->reason.c_str(), hover->reason.size(), &text_bounds);
-      const float text_x = margin - text_bounds.xmin;
-      float text_y = margin - text_bounds.ymin;
-      rctf backdrop_bounds = {margin - padding,
-                               margin + text_bounds.xmax - text_bounds.xmin + padding,
-                               margin - padding,
-                               margin + text_bounds.ymax - text_bounds.ymin + padding};
-      // Complete native columns may reach the window bottom. Move only the
-      // explanation above intersecting targets, retaining every menu rectangle.
-      const float backdrop_height = backdrop_bounds.ymax - backdrop_bounds.ymin;
-      std::vector<float> reason_bottoms = {backdrop_bounds.ymin};
+      const MenuBounds window_bounds{padding, padding,
+                                      float(CTX_wm_region(C)->winx) - padding,
+                                      float(CTX_wm_region(C)->winy) - padding};
+      std::vector<MenuBounds> obstacles;
+      const auto add_obstacle = [&](const float xmin, const float ymin,
+                                    const float xmax, const float ymax) {
+        // Include the native border/shadow and leave a visible gap. Entry rects
+        // already include the original region's offset, including quad panes.
+        obstacles.push_back({xmin - padding, ymin - padding, xmax + padding, ymax + padding});
+      };
       for (const Entry &entry : entries) {
         const MenuRect &r = entry.rect;
-        if (r.x * scale < backdrop_bounds.xmax &&
-            (r.x + r.width) * scale > backdrop_bounds.xmin)
+        add_obstacle(r.x * scale, r.y * scale,
+                     (r.x + r.width) * scale, (r.y + r.height) * scale);
+      }
+      for (const auto &[depth, blocks] : menu_levels) {
+        for (const NativeBlock &block : blocks) {
+          // Match menu_overlay_draw's actual backdrop, not a separately inferred
+          // list hull. Separators and gaps between rows belong to that backdrop.
+          rcti bounds = block.items.front().rect;
+          for (const ui::MenuOverlayItem &item : block.items) {
+            BLI_rcti_union(&bounds, &item.rect);
+          }
+          add_obstacle(bounds.xmin, bounds.ymin, bounds.xmax, bounds.ymax);
+        }
+      }
+      BLF_enable(font, BLF_WORD_WRAP);
+      rcti text_bounds;
+      const auto measure = [&](const int wrap_width) {
+        BLF_wordwrap(font, std::max(1, wrap_width),
+                     BLFWrapMode::Typographical | BLFWrapMode::HardLimit);
+        BLF_boundbox(font, hover->reason.c_str(), hover->reason.size(), &text_bounds);
+      };
+      const auto fits = [&](const rctf &candidate) {
+        return candidate.xmin >= window_bounds.xmin && candidate.ymin >= window_bounds.ymin &&
+               candidate.xmax <= window_bounds.xmax && candidate.ymax <= window_bounds.ymax &&
+               std::none_of(obstacles.begin(), obstacles.end(), [&](const MenuBounds &obstacle) {
+                 return candidate.xmin < obstacle.xmax && candidate.xmax > obstacle.xmin &&
+                        candidate.ymin < obstacle.ymax && candidate.ymax > obstacle.ymin;
+               });
+      };
+      measure(int(CTX_wm_region(C)->winx - 2 * margin));
+      const float full_width = text_bounds.xmax - text_bounds.xmin + 2 * padding;
+      const float full_height = text_bounds.ymax - text_bounds.ymin + 2 * padding;
+      rctf backdrop_bounds{};
+      bool placed = false;
+      // Preserve the previous full-width explanation's bottom-to-top placement
+      // whenever it fits. Only the explanation is reflowed in a short window.
+      std::vector<float> reason_bottoms{window_bounds.ymin};
+      for (const MenuBounds &obstacle : obstacles) {
+        if (obstacle.xmin < window_bounds.xmin + full_width &&
+            obstacle.xmax > window_bounds.xmin)
         {
-          reason_bottoms.push_back((r.y + r.height) * scale + padding);
+          reason_bottoms.push_back(obstacle.ymax);
         }
       }
       std::sort(reason_bottoms.begin(), reason_bottoms.end());
       for (const float bottom : reason_bottoms) {
-        if (bottom + backdrop_height > CTX_wm_region(C)->winy - padding) {
-          continue;
-        }
-        const bool overlaps = std::any_of(entries.begin(), entries.end(), [&](const Entry &entry) {
-          const MenuRect &r = entry.rect;
-          return r.x * scale < backdrop_bounds.xmax &&
-                 (r.x + r.width) * scale > backdrop_bounds.xmin &&
-                 r.y * scale < bottom + backdrop_height &&
-                 (r.y + r.height) * scale > bottom;
-        });
-        if (!overlaps) {
-          text_y += bottom - backdrop_bounds.ymin;
-          backdrop_bounds.ymin = bottom;
-          backdrop_bounds.ymax = bottom + backdrop_height;
+        const rctf candidate{window_bounds.xmin, window_bounds.xmin + full_width,
+                              bottom, bottom + full_height};
+        if (fits(candidate)) {
+          backdrop_bounds = candidate;
+          placed = true;
           break;
         }
       }
-      float background[4];
-      for (int i = 0; i < 3; i++) {
-        background[i] = theme.wcol_menu_back.inner[i] / 255.0f;
+      if (!placed) {
+        for (const MenuBounds &region : menu_reason_regions(window_bounds, obstacles)) {
+          const int wrap_width = int(region.xmax - region.xmin - 2 * padding);
+          if (wrap_width < 1 || region.ymax - region.ymin <= 2 * padding) {
+            continue;
+          }
+          measure(wrap_width);
+          const float width = text_bounds.xmax - text_bounds.xmin + 2 * padding;
+          const float height = text_bounds.ymax - text_bounds.ymin + 2 * padding;
+          const rctf candidate{region.xmin, region.xmin + width,
+                                region.ymin, region.ymin + height};
+          if (candidate.xmax <= region.xmax && candidate.ymax <= region.ymax && fits(candidate)) {
+            backdrop_bounds = candidate;
+            placed = true;
+            break;
+          }
+        }
       }
-      // A small opaque text backdrop keeps the explanation readable over grids.
-      // It is drawing only: menu layout, targets, and input ownership stay intact.
-      background[3] = 1.0f;
-      ui::draw_roundbox_4fv(&backdrop_bounds, true, 4 * scale, background);
-      BLF_color4ubv(font, theme.wcol_menu_back.text);
-      BLF_position(font, text_x, text_y, 0);
-      BLF_draw(font, hover->reason.c_str(), hover->reason.size());
+      if (placed) {
+        float background[4];
+        for (int i = 0; i < 3; i++) {
+          background[i] = theme.wcol_menu_back.inner[i] / 255.0f;
+        }
+        // No position means no explanation until space is available again. Never
+        // draw a fallback over menus or alter their geometry/input ownership.
+        background[3] = 1.0f;
+        ui::draw_roundbox_4fv(&backdrop_bounds, true, 4 * scale, background);
+        BLF_color4ubv(font, theme.wcol_menu_back.text);
+        BLF_position(font, backdrop_bounds.xmin + padding - text_bounds.xmin,
+                     backdrop_bounds.ymin + padding - text_bounds.ymin, 0);
+        BLF_draw(font, hover->reason.c_str(), hover->reason.size());
+      }
       BLF_disable(font, BLF_WORD_WRAP);
       BLF_wordwrap(font, 0);
     }
