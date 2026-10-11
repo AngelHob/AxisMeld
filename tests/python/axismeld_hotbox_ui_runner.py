@@ -12,13 +12,15 @@ import tempfile
 parser = argparse.ArgumentParser()
 parser.add_argument('--blender', required=True)
 parser.add_argument('--artifacts', help='Optional directory for isolated factory-scene screenshots')
-parser.add_argument('--suite', choices=('menu-shortcuts', 'menu-options-navigation', 'menu-options-access', 'hotbox-reasons', 'file-window', 'history-hotbox', 'workspace-menu-layout', 'context-entries', 'temporary-snap', 'menu-options-geometry', 'modeling-viewport', 'workspace-bar', 'menubar-alignment', 'menubar-actions', 'menubar-sets', 'menubar-layout', 'menubar', 'maya-hierarchy', 'full-menu-entry', 'full-menu-lifecycle', 'fully-expanded', 'maya-content-state', 'maya-content', 'maya-companion', 'icons', 'object-menu', 'object-modeling', 'context-modeling', 'modeling', 'create', 'components', 'tools', 'tools-modifiers', 'hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection', 'appearance'), default='hotbox')
+parser.add_argument('--suite', choices=('hotbox-repost', 'modeling-disabled-reason', 'menu-shortcuts', 'menu-options-navigation', 'menu-options-access', 'hotbox-reasons', 'file-window', 'history-hotbox', 'workspace-menu-layout', 'context-entries', 'temporary-snap', 'menu-options-geometry', 'modeling-viewport', 'workspace-bar', 'menubar-alignment', 'menubar-actions', 'menubar-sets', 'menubar-layout', 'menubar', 'maya-hierarchy', 'full-menu-entry', 'full-menu-lifecycle', 'fully-expanded', 'maya-content-state', 'maya-content', 'maya-companion', 'icons', 'object-menu', 'object-modeling', 'context-modeling', 'modeling', 'create', 'components', 'tools', 'tools-modifiers', 'hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection', 'appearance'), default='hotbox')
 args = parser.parse_args()
 binary = Path(args.blender).resolve()
 with binary.open("rb") as stream:
     digest = hashlib.file_digest(stream, "sha256").hexdigest().upper()
 print("AXISMELD_TEST_BINARY", str(binary), "SHA256", digest, "SUITE", args.suite, flush=True)
 suite_script, pass_marker = {
+    'hotbox-repost': ('axismeld_hotbox_repost_events.py', b'AXISMELD_HOTBOX_REPOST_EVENTS_PASS'),
+    'modeling-disabled-reason': ('axismeld_modeling_disabled_reason_events.py', b'AXISMELD_MODELING_DISABLED_REASON_PASS'),
     'menu-shortcuts': ('axismeld_menu_shortcut_events.py', b'AXISMELD_MENU_SHORTCUT_EVENTS_PASS'),
     'menu-options-navigation': ('axismeld_menu_options_navigation_events.py', b'AXISMELD_MENU_OPTIONS_NAVIGATION_PASS'),
     'menu-options-access': ('axismeld_menu_options_access_events.py', b'AXISMELD_MENU_OPTIONS_ACCESS_PASS'),

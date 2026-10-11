@@ -4675,7 +4675,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "GU-18",
@@ -4689,7 +4689,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "GU-19",
@@ -4700,6 +4700,34 @@
       ],
       "expected": [
         "说明按实际宽度换行，句尾完整可见且背景上可读；不超出窗口边缘，不改变菜单完整展示、底部对齐、热盒间距、灰项不可执行或释放取消行为"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": false
+    },
+    {
+      "id": "GU-20",
+      "title": "在 Modeling 的 Object Mode 清空选择和活动对象，依次悬停 Curves→Control Points 下的原生灰项、Edit Mesh→底部 Extrude 目录里的灰 Extrude；检查 UV 与 Modifier 原生条目；再选网格或曲线切到对应 Edit Mode，重新打开相同菜单",
+      "group": "P1：建模灰项与热盒重复唤出（2026-10-11 interaction preview，新增2项）",
+      "steps": [
+        "在 Modeling 的 Object Mode 清空选择和活动对象，依次悬停 Curves→Control Points 下的原生灰项、Edit Mesh→底部 Extrude 目录里的灰 Extrude；检查 UV 与 Modifier 原生条目；再选网格或曲线切到对应 Edit Mode，重新打开相同菜单"
+      ],
+      "expected": [
+        "不适用的入口保留名称、图标和有用的模式/对象说明；灰项不会展开依赖缺失上下文的原生子菜单、报绘制错误或改变场景；UV 等原有逐项入口保留，满足条件后恢复真实原生菜单，参数、poll 和插件入口保持"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "GU-21",
+      "title": "分别保持 W、E、R 按下，LMB 唤出热盒并进入 Selection Constraints 子菜单；在灰 UV Edge Loop 上松 LMB，再换位置按 LMB；以原点取消、选择 World 后重复，最后松开工具键",
+      "group": "P1：建模灰项与热盒重复唤出（2026-10-11 interaction preview，新增2项）",
+      "steps": [
+        "分别保持 W、E、R 按下，LMB 唤出热盒并进入 Selection Constraints 子菜单；在灰 UV Edge Loop 上松 LMB，再换位置按 LMB；以原点取消、选择 World 后重复，最后松开工具键"
+      ],
+      "expected": [
+        "每次新的 LMB 唤出从根目录开始，不残留上次展开的子菜单；同一划选内的子菜单导航保持，灰项和原点取消不改场景，World 只执行一次；无需重新按 W/E/R，松开工具键后无残留拦截"
       ],
       "superseded": false,
       "maintainerStatus": "pending",

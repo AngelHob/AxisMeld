@@ -732,6 +732,7 @@ static void rearm_tool(bContext *C, HotboxData &data)
   data.tool_shown = false;
   data.active_mouse = 0;
   data.open_path.clear();
+  data.companion_path.clear();
   data.return_path.clear();
   data.scroll_offsets.clear();
   data.center_return_armed = false;

@@ -67,6 +67,20 @@ class Layout:
 def load():
     bpy = ModuleType('bpy')
     bpy.app = SimpleNamespace(build_options=SimpleNamespace(bullet=True, freestyle=True))
+    from axismeld.workspace_native_groups import GROUPS
+    bpy.ops = SimpleNamespace()
+    operators = {item['operator'] for group in GROUPS.values() for item in group['items'] if item['operator']}
+    operators.update(('uv.unwrap', 'uv.smart_project', 'uv.lightmap_pack', 'uv.follow_active_quads',
+                      'uv.cube_project', 'uv.cylinder_project', 'uv.sphere_project',
+                      'object.modifiers_copy_to_selected', 'object.modifiers_clear'))
+    for identifier in operators:
+        namespace, name = identifier.split('.')
+        if not hasattr(bpy.ops, namespace):
+            setattr(bpy.ops, namespace, SimpleNamespace())
+        setattr(getattr(bpy.ops, namespace), name, SimpleNamespace(
+            get_rna_type=lambda identifier=identifier: SimpleNamespace(name='RNA ' + identifier)))
+    bpy.types = SimpleNamespace(**{item['provider']: SimpleNamespace(bl_label='RNA ' + item['provider'])
+                                  for group in GROUPS.values() for item in group['items'] if item['provider']})
     translations = ModuleType('bpy.app.translations')
     translations.pgettext_iface = lambda text: text
     translations.contexts = SimpleNamespace(id_mesh='Mesh', operator_default='Operator', default='Default')
@@ -165,6 +179,97 @@ class NativeModelingGroupsTests(unittest.TestCase):
                     {'operator', 'enum', 'enum_menu', 'menu', 'menu_contents', 'asset', 'label'}))
         self.assertIsNone(context.active_object)
         self.assertEqual(context.mode, 'OBJECT')
+
+    def test_unavailable_dynamic_and_static_groups_explain_mode_without_previewable_hosts(self):
+        api = self.api()
+        context = SimpleNamespace(mode='OBJECT', area=SimpleNamespace(type='VIEW_3D'),
+                                  active_object=None, object=None, edit_object=None)
+        for key, expected in (
+                ('curve_points.edit', ['Control Points']),
+                ('surface.curve_points.edit', ['Control Points']),
+                ('mesh.duplicate_extrude', ['Duplicate', 'RNA VIEW3D_MT_edit_mesh_extrude'])):
+            with self.subTest(group=key):
+                layout = Layout()
+                api.draw_group(layout, context, key)
+                actions = [row for row in layout.log if row[0] != 'column']
+                self.assertEqual([row[0] for row in actions], ['operator'] * len(expected))
+                self.assertEqual([row[1] for row in actions], ['axismeld.menubar_execute'] * len(expected))
+                self.assertEqual([row[2]['text'] for row in actions], expected)
+                for row in actions:
+                    self.assertFalse(row[-1])
+                    self.assertEqual({key: row[3][key] for key in ('kind', 'key', 'token')},
+                                     dict(kind='disabled', key='', token=''))
+                    self.assertIn('Edit Mode', row[3]['reason'])
+        self.assertIsNone(context.active_object)
+        self.assertIsNone(context.edit_object)
+        self.assertEqual(context.mode, 'OBJECT')
+
+    def test_unavailable_static_groups_keep_subset_build_flags_labels_and_icons(self):
+        api = self.api()
+        api.bpy.app.build_options.bullet = False
+        context = SimpleNamespace(mode='OBJECT', area=SimpleNamespace(type='OUTLINER'))
+        layout = Layout()
+        api.draw_group(layout, context, 'mesh.cut', include=(
+            'mesh.cut.mesh_bisect', 'mesh.cut.mesh_convex_hull'))
+        actions = [row for row in layout.log if row[0] == 'operator']
+        self.assertEqual(len(actions), 1)
+        self.assertEqual(actions[0][2], {'text': 'RNA mesh.bisect', 'icon': 'MESH_DATA'})
+        self.assertIn('3D Viewport', actions[0][3]['reason'])
+        self.assertIn('Mesh Edit Mode', actions[0][3]['reason'])
+        api.bpy.app.build_options.freestyle = False
+        layout = Layout()
+        api.draw_group(layout, context, 'edge.sharp', include=(
+            'edge.sharp.mesh_mark_sharp', 'edge.sharp.mesh_mark_sharp_2',
+            'edge.sharp.mesh_mark_freestyle_edge'))
+        actions = [row for row in layout.log if row[0] == 'operator']
+        self.assertEqual(len(actions), 2)
+        self.assertEqual(actions[0][2], {'text': 'RNA mesh.mark_sharp', 'icon': 'EDGE_SHARP'})
+        self.assertEqual(actions[1][2], {'text': 'Clear Sharp', 'icon': 'MESH_DATA'})
+
+    def test_unavailable_inline_uv_keeps_all_nine_native_captions(self):
+        api = self.api()
+        image_path = ROOT / 'scripts/startup/bl_ui/space_image.py'
+        tree = ast.parse(image_path.read_text(encoding='utf-8'))
+        cls = next(node for node in tree.body if isinstance(node, ast.ClassDef)
+                   and node.name == 'IMAGE_MT_uvs_unwrap')
+        draw = next(node for node in cls.body if isinstance(node, ast.FunctionDef) and node.name == 'draw')
+        scope = {}
+        exec(compile(ast.Module(body=[draw], type_ignores=[]), str(image_path), 'exec'), scope)
+        context = SimpleNamespace(mode='OBJECT', area=SimpleNamespace(type='VIEW_3D'))
+        original, disabled = Layout(), Layout()
+        with patch.dict(sys.modules, {'bl_ui': host_package(api, {'menus': []})}):
+            scope['draw'](SimpleNamespace(layout=original), context)
+        expected = [row[2].get('text', 'RNA ' + row[1]) for row in original.log if row[0] == 'operator']
+        api.draw_group(disabled, context, 'uv.unwrap')
+        actions = [row for row in disabled.log if row[0] == 'operator']
+        self.assertEqual(len(actions), 9)
+        self.assertEqual([row[2]['text'] for row in actions], expected)
+        self.assertTrue(all(row[1] == 'axismeld.menubar_execute' and not row[-1] for row in actions))
+        self.assertFalse(any(row[0] in {'menu', 'menu_contents'} for row in disabled.log))
+        empty = Layout()
+        api.draw_group(empty, context, 'uv.unwrap', include=())
+        self.assertFalse(empty.log)
+
+    def test_unavailable_inline_modifiers_keep_native_conditional_top_level_captions(self):
+        api = self.api()
+        for active in (None, SimpleNamespace(type='MESH'), SimpleNamespace(type='CAMERA')):
+            with self.subTest(active=active):
+                context = SimpleNamespace(mode='POSE', area=SimpleNamespace(type='VIEW_3D'),
+                                          active_object=active, object=active)
+                api.bpy.context = context
+                original, disabled = Layout(), Layout()
+                with patch.dict(sys.modules, {'bl_ui': host_package(api, {'menus': []})}):
+                    native_source_draw('VIEW3D_MT_object_modifiers', api)(SimpleNamespace(layout=original), context)
+                expected = [row[2].get('text', 'RNA ' + row[1]) for row in original.log
+                            if row[0] in {'operator', 'menu'}]
+                api.draw_group(disabled, context, 'object.modifiers')
+                actions = [row for row in disabled.log if row[0] == 'operator']
+                self.assertEqual([row[2]['text'] for row in actions], expected)
+                self.assertTrue(all(row[1] == 'axismeld.menubar_execute' and not row[-1] for row in actions))
+                self.assertFalse(any(row[0] in {'menu', 'menu_contents'} for row in disabled.log))
+                self.assertIn('Object Mode', actions[0][3]['reason'])
+                if active is None:
+                    self.assertIn('active', actions[0][3]['reason'])
 
     def test_inline_unwrap_icons_are_scoped_and_all_nine_native_actions_are_preserved(self):
         api = self.api()

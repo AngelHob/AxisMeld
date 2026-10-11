@@ -693,18 +693,102 @@ def draw_hosted_menu(layout, context, source_menu):
     return True
 
 
+def _group_context_errors(context, metadata):
+    """Explain only the composition's existing guards; native polls stay native."""
+    errors = []
+    if getattr(getattr(context, 'area', None), 'type', '') != 'VIEW_3D':
+        errors.append('Open this menu in a 3D Viewport.')
+    if getattr(context, 'mode', '') not in metadata['modes']:
+        names = {'OBJECT': 'Object Mode', 'EDIT_MESH': 'Mesh Edit Mode',
+                 'EDIT_CURVE': 'Curve Edit Mode', 'EDIT_SURFACE': 'Surface Edit Mode',
+                 'EDIT_CURVES': 'Hair Curves Edit Mode'}
+        errors.append('Enter ' + ' or '.join(names[mode] for mode in metadata['modes']) + '.')
+    if metadata.get('requires_object') and getattr(context, 'object', None) is None:
+        errors.append('Make an object active.')
+    if metadata['dynamic_context'] and getattr(context, 'edit_object', None) is None:
+        errors.append('Use an active edit object in the required Edit Mode.')
+    return errors
+
+
+def _disabled_button(layout, label, icon, reason):
+    op = layout.operator('axismeld.menubar_execute', text=label, icon=icon)
+    op.kind, op.key, op.token = 'disabled', '', ''
+    op.reason = reason
+
+
+def _operator_label(identifier):
+    namespace, name = identifier.split('.')
+    return getattr(getattr(bpy.ops, namespace), name).get_rna_type().name
+
+
+def _draw_unavailable_inline(layout, context, provider, icon, reason):
+    """Keep the two fixed inline providers' rows without invoking unsafe hosts.
+
+    Caption/order parity with their original Menu.draw is regression-tested.
+    Available providers continue through their real hosts, including add-ons.
+    """
+    if provider == 'IMAGE_MT_uvs_unwrap':
+        for identifier, text in (
+                ('uv.unwrap', 'Unwrap Angle Based'),
+                ('uv.unwrap', 'Unwrap Conformal'),
+                ('uv.unwrap', 'Unwrap Minimum Stretch'),
+                (None, None),
+                ('uv.smart_project', 'Smart UV Project...'),
+                ('uv.lightmap_pack', 'Lightmap Pack...'),
+                ('uv.follow_active_quads', 'Follow Active Quads...'),
+                (None, None),
+                ('uv.cube_project', None), ('uv.cylinder_project', None), ('uv.sphere_project', None)):
+            if identifier is None:
+                layout.separator()
+            else:
+                _disabled_button(layout, text or _operator_label(identifier), icon, reason)
+    elif provider == 'VIEW3D_MT_object_modifiers':
+        active = getattr(context, 'active_object', None)
+        if active and active.type in {'MESH', 'CURVE', 'CURVES', 'SURFACE', 'FONT', 'VOLUME',
+                                      'GREASEPENCIL', 'LATTICE', 'POINTCLOUD'}:
+            _disabled_button(layout, 'Add Modifier', icon, reason)
+        _disabled_button(layout, 'Copy Modifiers to Selected Objects', icon, reason)
+        layout.separator()
+        _disabled_button(layout, _operator_label('object.modifiers_clear'), icon, reason)
+    else:
+        raise ValueError('Unreviewed unavailable native inline provider: ' + provider)
+
+
+def _draw_unavailable_group(layout, context, metadata, selected, reason):
+    if metadata['dynamic_context']:
+        _disabled_button(layout, metadata['label'], metadata['icon'], reason)
+        return
+    build_conditions = {'with_bullet': bpy.app.build_options.bullet,
+                        'with_freestyle': bpy.app.build_options.freestyle}
+    for item in metadata['items']:
+        if item['id'] not in selected or not all(build_conditions[name] for name in item['conditions']):
+            continue
+        icon = item['keywords'].get('icon', metadata['icon'])
+        if item['api'] == 'menu_contents':
+            _draw_unavailable_inline(layout, context, item['provider'], icon, reason)
+            continue
+        label = item['keywords'].get('text')
+        if label is None:
+            if item['operator']:
+                label = _operator_label(item['operator'])
+            elif item['provider']:
+                label = getattr(bpy.types, item['provider']).bl_label
+            else:
+                # Asset members are dynamic. Keep their provider visible without
+                # enumerating a menu in a context the provider does not support.
+                label = metadata['label']
+        _disabled_button(layout, label, icon, reason)
+
+
 def _draw_group_content(layout, context, key, selected):
     metadata = GROUPS[key]
     if not selected:
         return
     row = layout.column()
-    matches = (getattr(getattr(context, 'area', None), 'type', '') == 'VIEW_3D' and
-               getattr(context, 'mode', '') in metadata['modes'] and
-               (not metadata.get('requires_object') or getattr(context, 'object', None) is not None))
-    row.enabled = matches
-    if metadata['dynamic_context'] and (not matches or getattr(context, 'edit_object', None) is None):
-        row.enabled = False
-        row.label(text=metadata['label'], icon=metadata['icon'])
+    errors = _group_context_errors(context, metadata)
+    row.enabled = not errors
+    if errors:
+        _draw_unavailable_group(row, context, metadata, selected, ' '.join(errors))
         return
     _DRAW[metadata['draw_key']](_IconLayout(row, metadata['icon']), context, selected)
 
