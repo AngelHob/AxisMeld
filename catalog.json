@@ -4633,7 +4633,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "GU-15",
@@ -4647,7 +4647,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "GU-16",
@@ -4658,6 +4658,48 @@
       ],
       "expected": [
         "灰项保留名称和图标，悬停说明所需对象、模式或可编辑条件；点击不执行、不切模式或选区、不展开错误上下文的原生菜单；有效上下文下原入口可用，既有原生操作保持"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": false
+    },
+    {
+      "id": "GU-17",
+      "title": "在 Modeling 打开 Object→Maya Modify→Transformation Tools，查看 Move/Rotate/Scale；临时将 Move 改为 Ctrl+W，再禁用和移除该绑定，每次重新打开菜单；恢复默认后检查正文和右侧齿轮",
+      "group": "P1：菜单提示、键盘导航与窄窗说明（2026-10-11 menu preview，新增3项）",
+      "steps": [
+        "在 Modeling 打开 Object→Maya Modify→Transformation Tools，查看 Move/Rotate/Scale；临时将 Move 改为 Ctrl+W，再禁用和移除该绑定，每次重新打开菜单；恢复默认后检查正文和右侧齿轮"
+      ],
+      "expected": [
+        "提示显示当前有效键位，重绑后更新、禁用或解绑后消失；较长组合键不被裁切或挤入齿轮；正文仍在原来源视窗执行，灰 Options 不执行正文"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "GU-18",
+      "title": "在有灰 Options 的建模菜单中，用上下方向键逐行移动并检查首尾循环；鼠标悬停灰齿轮；在有效绑定网格的 Rigging→Skin 中用键盘打开 Normalize Weights 的可用 Options，再检查普通 Blender 菜单",
+      "group": "P1：菜单提示、键盘导航与窄窗说明（2026-10-11 menu preview，新增3项）",
+      "steps": [
+        "在有灰 Options 的建模菜单中，用上下方向键逐行移动并检查首尾循环；鼠标悬停灰齿轮；在有效绑定网格的 Rigging→Skin 中用键盘打开 Normalize Weights 的可用 Options，再检查普通 Blender 菜单"
+      ],
+      "expected": [
+        "上下键不在同一行的灰齿轮额外停一次，正文顺序正确；灰齿轮仍能悬停查看原因；可用 Options 可键盘访问并显示参数，普通灰正文和原生菜单导航保持原行为"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "GU-19",
+      "title": "将测试窗口缩窄至约 960 像素，分别使用 100% 和 150% UI 缩放；从 Space→Edit 悬停 Duplicate Special 等长说明，再检查 History 热盒中的适配说明，最后恢复宽窗口",
+      "group": "P1：菜单提示、键盘导航与窄窗说明（2026-10-11 menu preview，新增3项）",
+      "steps": [
+        "将测试窗口缩窄至约 960 像素，分别使用 100% 和 150% UI 缩放；从 Space→Edit 悬停 Duplicate Special 等长说明，再检查 History 热盒中的适配说明，最后恢复宽窗口"
+      ],
+      "expected": [
+        "说明按实际宽度换行，句尾完整可见且背景上可读；不超出窗口边缘，不改变菜单完整展示、底部对齐、热盒间距、灰项不可执行或释放取消行为"
       ],
       "superseded": false,
       "maintainerStatus": "pending",
