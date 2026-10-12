@@ -34,6 +34,23 @@ const consoleErrors = [];
 const requests = [];
 const record = (name, detail = {}) => { checks.push({ name, result: 'passed', ...detail }); console.log(`PASS ${name}`); };
 const ready = page => page.waitForSelector('html[data-ready="true"]');
+const assertGroupedCards = async (page, expectedItems) => {
+  const expected = [];
+  let previousGroup;
+  for (const item of expectedItems) {
+    if (item.group !== previousGroup) {
+      expected.push({ kind: 'heading', group: item.group });
+      previousGroup = item.group;
+    }
+    expected.push({ kind: 'card', id: item.id });
+  }
+  const actual = await page.locator('#test-list').evaluate(list => [...list.children].map(node => {
+    if (node.matches('h2.test-group-heading')) return { kind: 'heading', group: node.textContent };
+    if (node.matches('.test-card')) return { kind: 'card', id: node.dataset.testId };
+    return { kind: 'unexpected', tag: node.tagName };
+  }));
+  assert.deepEqual(actual, expected, 'each visible group needs one heading immediately before its cards, including page continuations');
+};
 try {
   const context = await browser.newContext({ viewport: { width: 1365, height: 900 }, acceptDownloads: true });
   const page = await context.newPage();
@@ -52,16 +69,44 @@ try {
   await page.screenshot({ path: path.join(artifacts, 'desktop-initial.png') });
   record(`${catalog.items.length}-item catalog loads under /AxisMeld/; fresh visitor has zero tested`, { catalog: catalog.items.length, active: active.length, initialDOM: await page.locator('.test-card').count() });
 
-  if (active.length > 50) {
-    const first = await page.locator('.test-card').first().getAttribute('data-test-id');
-    await page.locator('#next-page').click();
-    assert.notEqual(await page.locator('.test-card').first().getAttribute('data-test-id'), first);
-    assert.ok((await page.locator('#page-label').textContent()).startsWith('2 /'));
-    assert.ok(await page.locator('.test-card').count() <= 50);
-    await page.locator('#previous-page').click();
-    assert.equal(await page.locator('.test-card').first().getAttribute('data-test-id'), first);
+  const pageCount = Math.ceil(active.length / 50);
+  const paginatedIds = [];
+  for (let number = 1; number <= pageCount; number += 1) {
+    const visible = active.slice((number - 1) * 50, number * 50);
+    await assertGroupedCards(page, visible);
+    assert.equal(await page.locator('#page-label').textContent(), `${number} / ${pageCount} 页`);
+    assert.equal(await page.locator('#previous-page').isDisabled(), number === 1);
+    assert.equal(await page.locator('#next-page').isDisabled(), number === pageCount);
+    paginatedIds.push(...await page.locator('.test-card').evaluateAll(cards => cards.map(card => card.dataset.testId)));
+    if (number < pageCount) await page.locator('#next-page').click();
   }
-  record('pagination limits rendered records to 50');
+  assert.deepEqual(paginatedIds, active.map(item => item.id), 'pagination must not omit, duplicate or reorder IDs');
+  for (let number = pageCount; number > 1; number -= 1) await page.locator('#previous-page').click();
+  await assertGroupedCards(page, active.slice(0, 50));
+  record('pagination limits records to 50 and repeats the correct group headings on every page', { pages: pageCount, ids: paginatedIds.length });
+
+  const groupedOptions = await page.locator('#group-filter optgroup').evaluateAll(groups => groups.map(group => ({
+    label: group.label, values: [...group.children].map(option => option.value),
+    labels: [...group.children].map(option => option.textContent),
+  })));
+  assert.deepEqual(groupedOptions.map(group => group.label), ['热盒', '菜单', '通用', '其他']);
+  const catalogGroups = [...new Set(catalog.items.map(item => item.group))];
+  assert.deepEqual(groupedOptions.flatMap(group => group.values), catalogGroups);
+  for (const group of groupedOptions) {
+    assert.ok(group.values.every(value => value.startsWith(`${group.label} · `)));
+    assert.deepEqual(group.labels, group.values.map(value => value.slice(`${group.label} · `.length)));
+  }
+  const entryGroups = catalogGroups.filter(group => /^(热盒|菜单) · /.test(group));
+  for (const family of ['热盒', '菜单']) assert.ok(active.some(item => item.group.startsWith(`${family} · `)));
+  for (const group of entryGroups) {
+    await page.locator('#group-filter').selectOption(group);
+    const matching = active.filter(item => item.group === group);
+    await assertGroupedCards(page, matching.slice(0, 50));
+    assert.ok((await page.locator('#results-summary').textContent()).includes(`/ ${matching.length} 项`));
+  }
+  await page.screenshot({ path: path.join(artifacts, 'desktop-menu-category.png') });
+  await page.locator('#clear-filters').click();
+  record('hotbox and menu categories filter exact stable IDs within four optgroups', { entryGroups: entryGroups.length, groups: catalogGroups.length });
 
   await page.locator('#recent-toggle').click();
   assert.equal(await page.locator('.test-card').count(), catalog.items.filter(item => item.isNew && !item.superseded).length);
@@ -176,6 +221,59 @@ try {
   assert.equal(await freshPage.locator('#count-tested').textContent(), '0');
   await freshContext.close();
   record('separate visitor context never inherits another visitor record');
+
+  // Seed an old browser ledger in an isolated context, then change only the catalog.
+  const legacyKey = 'axismeld-public-test-ledger:v1';
+  assert.equal(STORAGE_KEY, legacyKey, 'regrouping must keep the existing browser storage key');
+  const legacyRecords = {
+    'GU-28': { status: 'failed', note: '重新分类前保存的热盒备注 & 第一行\n第二行', buildId: '18px-hotbox-before-regrouping', updatedAt: '2026-10-11T15:50:00.000Z' },
+    'MB-40': { status: 'passed', note: '菜单记录独立保留 β', buildId: '18px-menu-before-regrouping', updatedAt: '2026-10-11T15:51:00.000Z' },
+  };
+  const legacyState = { schemaVersion: 1, defaultBuildId: 'saved-before-regrouping', records: legacyRecords };
+  const legacyJSON = JSON.stringify(legacyState);
+  const oldCatalog = { ...catalog, items: [...catalog.items].reverse().map(item => ({ ...item, group: `旧开发批次：${item.id.split('-')[0]}` })) };
+  assert.notDeepEqual(oldCatalog.items.map(item => item.id), catalog.items.map(item => item.id));
+  for (const id of Object.keys(legacyRecords)) assert.ok(active.some(item => item.id === id), `missing active migration fixture ${id}`);
+  const legacyContext = await browser.newContext({ acceptDownloads: true, storageState: {
+    cookies: [], origins: [{ origin, localStorage: [{ name: legacyKey, value: legacyJSON }] }],
+  } });
+  const legacyPage = await legacyContext.newPage();
+  legacyPage.on('pageerror', error => consoleErrors.push(error.message));
+  const oldCatalogRoute = route => route.fulfill({ json: oldCatalog });
+  await legacyPage.route('**/catalog.json', oldCatalogRoute);
+  const assertLegacyRecords = async items => {
+    assert.equal(await legacyPage.locator('#count-tested').textContent(), '2');
+    assert.equal(await legacyPage.locator('#count-passed').textContent(), '1');
+    assert.equal(await legacyPage.locator('#count-failed').textContent(), '1');
+    assert.equal(await legacyPage.locator('#default-build').inputValue(), legacyState.defaultBuildId);
+    for (const [id, saved] of Object.entries(legacyRecords)) {
+      await legacyPage.locator('#search-input').fill(id);
+      const matching = items.find(item => item.id === id);
+      await assertGroupedCards(legacyPage, [matching]);
+      const savedCard = legacyPage.locator(`[data-test-id="${id}"]`);
+      assert.equal(await savedCard.locator('[data-record-status]').inputValue(), saved.status);
+      await savedCard.locator('summary').click();
+      assert.equal(await savedCard.locator('textarea').inputValue(), saved.note);
+      assert.equal(await savedCard.locator('[data-record-build]').inputValue(), saved.buildId);
+    }
+    assert.equal(await legacyPage.evaluate(key => localStorage.getItem(key), legacyKey), legacyJSON, 'loading and filtering must not rewrite old records');
+  };
+  await legacyPage.goto(url);
+  await ready(legacyPage);
+  await assertLegacyRecords(oldCatalog.items);
+  await legacyPage.unroute('**/catalog.json', oldCatalogRoute);
+  await legacyPage.reload();
+  await ready(legacyPage);
+  await assertLegacyRecords(catalog.items);
+  const [legacyDownload] = await Promise.all([legacyPage.waitForEvent('download'), legacyPage.locator('#export-button').click()]);
+  const legacyExportPath = path.join(artifacts, 'legacy-records-after-regrouping.json');
+  await legacyDownload.saveAs(legacyExportPath);
+  const legacyExport = JSON.parse(await fs.readFile(legacyExportPath, 'utf8'));
+  assert.deepEqual(legacyExport.records, legacyRecords);
+  assert.equal(legacyExport.defaultBuildId, legacyState.defaultBuildId);
+  assert.equal(legacyExport.submittedToMaintainer, false);
+  await legacyContext.close();
+  record('GU-28 and MB-40 retain old status, notes, versions and timestamps after catalog regrouping and reordering');
 
   const maliciousContext = await browser.newContext();
   const malicious = await maliciousContext.newPage();

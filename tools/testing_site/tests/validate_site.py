@@ -18,12 +18,20 @@ def main():
     items = catalog["items"]
     assert items, "The public test catalog must not be empty."
     seen = set()
+    groups = set()
+    previous_group = None
     for item in items:
         assert re.fullmatch(r"[A-Za-z0-9_.:-]{1,80}", item["id"]), item
         assert item["id"] not in seen, item["id"]
         seen.add(item["id"])
         assert isinstance(item["title"], str) and item["title"]
         assert isinstance(item["group"], str) and item["group"]
+        family, separator, name = item["group"].partition(" · ")
+        assert family in {"热盒", "菜单", "通用", "其他"} and separator and name, item["group"]
+        if item["group"] != previous_group:
+            assert item["group"] not in groups, f"Category is not contiguous: {item['group']}"
+            groups.add(item["group"])
+            previous_group = item["group"]
         for field in ("steps", "expected"):
             assert isinstance(item[field], list) and item[field], (item["id"], field)
             assert all(isinstance(value, str) and value for value in item[field])
@@ -45,7 +53,7 @@ def main():
     app = (ROOT / "app.mjs").read_text(encoding="utf-8")
     assert "innerHTML" not in app and "insertAdjacentHTML" not in app
     assert "PAGE_SIZE = 50" in app
-    print(json.dumps({"result": "passed", "items": len(items), "unique_ids": len(seen), "recent": sum(i.get("isNew", False) for i in items), "historical": sum(i.get("superseded", False) for i in items), "historically_tested": sum(i.get("maintainerStatus") == "tested" for i in items), "relative_assets": len(assets)}, ensure_ascii=False, indent=2))
+    print(json.dumps({"result": "passed", "items": len(items), "unique_ids": len(seen), "categories": len(groups), "recent": sum(i.get("isNew", False) for i in items), "historical": sum(i.get("superseded", False) for i in items), "historically_tested": sum(i.get("maintainerStatus") == "tested" for i in items), "relative_assets": len(assets)}, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":
