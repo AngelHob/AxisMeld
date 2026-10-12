@@ -9,6 +9,7 @@ from bpy.props import EnumProperty, StringProperty
 from axismeld.commands import PRESET_NAME
 from axismeld.workspace_menu_catalog import build_workspace_menubar
 from axismeld import menubar_native, menubar_runtime
+from axismeld.translations import iface, tip
 
 _CATALOG = build_workspace_menubar()
 _NODES = {}
@@ -71,7 +72,7 @@ def modeling_workspace(context):
     workspace = getattr(context, 'workspace', None)
     area = getattr(context, 'area', None)
     return (not rigging_workspace(context) and enabled(context) and getattr(area, 'type', '') == 'VIEW_3D' and
-            getattr(workspace, 'name', '').partition('.')[0] == 'Modeling')
+            getattr(workspace, 'name', '').partition('.')[0] in {'Modeling', '建模'})
 
 
 def rigging_workspace(context):
@@ -133,7 +134,9 @@ def draw_native_modeling_menu(layout, context, identifier):
 def draw_supplement(layout, context, identifier):
     if enabled(context):
         layout.separator()
-        layout.menu(_MENU_NAMES[identifier], text='Maya ' + _NODES[identifier]['label'], icon='FILE_FOLDER')
+        layout.menu(_MENU_NAMES[identifier],
+                    text=iface('Maya %s') % iface(_NODES[identifier]['label']),
+                    translate=False, icon='FILE_FOLDER')
 
 
 def draw_menu_sets_entry(layout, context):
@@ -178,7 +181,8 @@ class AXISMELD_OT_menubar_execute(Operator):
 
     @classmethod
     def description(cls, context, properties):
-        return properties.reason or 'Run this menu command in its captured source viewport'
+        return tip(properties.reason or 'Run this menu command in its captured source viewport',
+                   'Operator')
 
     def execute(self, context):
         try:
@@ -295,7 +299,7 @@ def draw_menu(layout, context, identifier):
         column = container.column()
         # Measure the widget font, including separate semantic/state/option cells;
         # character counts do not predict a proportional caption's width.
-        widths = [blf.dimensions(0, node.get('label', ''))[0] / scale + 48 +
+        widths = [blf.dimensions(0, iface(node.get('label', ''), _caption_context(node)))[0] / scale + 48 +
                   (24 if node.get('options') else 0) +
                   (20 if node.get('indicator') else 0) for node in nodes]
         # Command and native rows also contain live shortcut text. Their
@@ -305,6 +309,14 @@ def draw_menu(layout, context, identifier):
             column.ui_units_x = max(widths, default=100) / 20
         for node in nodes:
             _draw_item(column, context, node)
+
+
+def _caption_context(node):
+    """Match the concrete UI cell, including an empty directory's grey operator."""
+    if node['kind'] == 'separator' or (node['kind'] == 'menu' and
+            any(child['kind'] != 'separator' for child in node.get('children', ()))):
+        return '*'
+    return 'Operator'
 
 
 def draw_bar(layout, context):

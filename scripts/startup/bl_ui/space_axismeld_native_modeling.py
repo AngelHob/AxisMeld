@@ -7,6 +7,7 @@ Functions preserve native operators, properties, enum providers and build/mode c
 """
 import bpy
 from bpy.app.translations import pgettext_iface as iface_, contexts as i18n_contexts
+from axismeld.translations import tip
 from axismeld.workspace_native_groups import GROUPS
 
 
@@ -702,7 +703,8 @@ def _group_context_errors(context, metadata):
         names = {'OBJECT': 'Object Mode', 'EDIT_MESH': 'Mesh Edit Mode',
                  'EDIT_CURVE': 'Curve Edit Mode', 'EDIT_SURFACE': 'Surface Edit Mode',
                  'EDIT_CURVES': 'Hair Curves Edit Mode'}
-        errors.append('Enter ' + ' or '.join(names[mode] for mode in metadata['modes']) + '.')
+        mode_names = tip(' or ', 'Operator').join(tip(names[mode], 'Operator') for mode in metadata['modes'])
+        errors.append(tip('Enter %s.', 'Operator') % mode_names)
     if metadata.get('requires_object') and getattr(context, 'object', None) is None:
         errors.append('Make an object active.')
     if metadata['dynamic_context'] and getattr(context, 'edit_object', None) is None:
@@ -713,7 +715,7 @@ def _group_context_errors(context, metadata):
 def _disabled_button(layout, label, icon, reason):
     op = layout.operator('axismeld.menubar_execute', text=label, icon=icon)
     op.kind, op.key, op.token = 'disabled', '', ''
-    op.reason = reason
+    op.reason = tip(reason, 'Operator')
 
 
 def _operator_label(identifier):
@@ -788,7 +790,8 @@ def _draw_group_content(layout, context, key, selected):
     errors = _group_context_errors(context, metadata)
     row.enabled = not errors
     if errors:
-        _draw_unavailable_group(row, context, metadata, selected, ' '.join(errors))
+        _draw_unavailable_group(row, context, metadata, selected,
+                                ' '.join(tip(error, 'Operator') for error in errors))
         return
     _DRAW[metadata['draw_key']](_IconLayout(row, metadata['icon']), context, selected)
 

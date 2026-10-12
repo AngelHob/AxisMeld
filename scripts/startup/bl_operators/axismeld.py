@@ -318,6 +318,8 @@ classes = (AXISMELD_OT_command, AXISMELD_OT_reload_profile, AXISMELD_OT_hotbox_d
 
 def register():
     from bpy.utils import register_class
+    from axismeld import translations
+    translations.register()
     register_class(AXISMELD_Preferences)
     WindowManager.axismeld_hotbox_snapshot = StringProperty(
         name='AxisMeld Hotbox Snapshot', options={'HIDDEN', 'SKIP_SAVE'})
@@ -325,5 +327,7 @@ def register():
 
 def unregister():
     from bpy.utils import unregister_class
+    from axismeld import translations
     unregister_class(AXISMELD_Preferences)
     del WindowManager.axismeld_hotbox_snapshot
+    translations.unregister()

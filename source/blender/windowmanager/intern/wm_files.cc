@@ -762,13 +762,9 @@ static void wm_file_read_post(bContext *C,
     }
   }
 
-  if (is_factory_startup && BLT_translate_new_dataname()) {
-    /* Translate workspace names. */
-    for (WorkSpace &workspace : bmain->workspaces.items_mutable()) {
-      BKE_libblock_rename(
-          *bmain, workspace.id, CTX_DATA_(BLT_I18NCONTEXT_ID_WORKSPACE, workspace.id.name + 2));
-    }
-  }
+  /* AxisMeld translates built-in workspace tab captions at the UI boundary.
+   * Preserve datablock names here: workflow routing and saved references must
+   * not change when the interface language changes at factory startup. */
 
   if (use_data) {
     /* Important to do before nulling the context. */

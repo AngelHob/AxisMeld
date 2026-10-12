@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 """Original Blender Rigging menus, exposed through guarded native entry points."""
 import bpy
+from axismeld.translations import tip
 from bpy.types import Menu
 from axismeld.rigging_workspace_catalog import ENTRIES
 
@@ -176,7 +177,7 @@ def draw_entry(layout, context, key):
         # expect their mode/object context, so do not create an unavailable host.
         op = row.operator('axismeld.menubar_execute', text=entry['label'], icon=entry['icon'])
         op.kind, op.key, op.token = 'disabled', '', ''
-        op.reason = ' '.join(errors)
+        op.reason = ' '.join(tip(error, 'Operator') for error in errors)
     elif host:
         row.menu(host, text=entry['label'], icon=entry['icon'])
     else:

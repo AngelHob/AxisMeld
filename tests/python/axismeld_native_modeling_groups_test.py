@@ -84,9 +84,12 @@ def load():
     translations = ModuleType('bpy.app.translations')
     translations.pgettext_iface = lambda text: text
     translations.contexts = SimpleNamespace(id_mesh='Mesh', operator_default='Operator', default='Default')
+    axismeld_translations = ModuleType('axismeld.translations')
+    axismeld_translations.tip = lambda text, context='*': text
     spec = importlib.util.spec_from_file_location('native_modeling_under_test', SOURCE)
     module = importlib.util.module_from_spec(spec)
-    with patch.dict(sys.modules, {'bpy': bpy, 'bpy.app.translations': translations}):
+    with patch.dict(sys.modules, {'bpy': bpy, 'bpy.app.translations': translations,
+                                  'axismeld.translations': axismeld_translations}):
         spec.loader.exec_module(module)
     return module
 

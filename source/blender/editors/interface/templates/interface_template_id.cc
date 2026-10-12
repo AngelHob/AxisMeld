@@ -19,6 +19,7 @@
 #include "BKE_packedFile.hh"
 
 #include "BLI_listbase.hh"
+#include "BLI_string.hh"
 #include "BLI_string_search.hh"
 #include "BLI_string_utf8.hh"
 
@@ -1461,12 +1462,31 @@ static void template_ID_tabs(const bContext *C,
   const uiStyle *style = style_get_dpi();
 
   for (ID *id : BKE_id_ordered_list(template_id.idlb)) {
-    const int name_width = fontstyle_string_width(&style->widget, id->name + 2);
+    const char *caption = id->name + 2;
+    if (GS(id->name) == ID_WS &&
+        STR_ELEM(caption,
+                 "Layout",
+                 "Modeling",
+                 "Sculpting",
+                 "UV Editing",
+                 "Texture Paint",
+                 "Shading",
+                 "Animation",
+                 "Rendering",
+                 "Compositing",
+                 "Geometry Nodes",
+                 "Scripting",
+                 "Rigging"))
+    {
+      const char *translated = CTX_IFACE_(BLT_I18NCONTEXT_ID_WORKSPACE, caption);
+      caption = STREQ(translated, caption) ? IFACE_(caption) : translated;
+    }
+    const int name_width = fontstyle_string_width(&style->widget, caption);
     const int but_width = name_width + UI_UNIT_X;
 
     ButtonTab *tab = static_cast<ButtonTab *>(uiDefButR_prop(block,
                                                              ButtonType::Tab,
-                                                             id->name + 2,
+                                                             caption,
                                                              0,
                                                              0,
                                                              but_width,

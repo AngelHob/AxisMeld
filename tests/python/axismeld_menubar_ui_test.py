@@ -53,8 +53,10 @@ def load_ui():
     blf = types.ModuleType('blf'); blf.size = lambda *args: None
     blf.dimensions = lambda font, text: (len(text)*10, 12)
     commands = types.ModuleType('axismeld.commands'); commands.PRESET_NAME = 'AxisMeld_Maya_2026'
+    translations = types.ModuleType('axismeld.translations')
+    translations.iface = translations.tip = lambda text, context='*': text
     package = types.ModuleType('axismeld'); package.__path__ = []
-    modules = {'blf':blf,'bpy':bpy,'bpy.types':bpy.types,'bpy.props':props,'axismeld':package,'axismeld.commands':commands,'axismeld.menubar_catalog':cat,'axismeld.workspace_menu_catalog':projection,'axismeld.menubar_runtime':runtime,'axismeld.menubar_native':native}
+    modules = {'blf':blf,'bpy':bpy,'bpy.types':bpy.types,'bpy.props':props,'axismeld':package,'axismeld.commands':commands,'axismeld.menubar_catalog':cat,'axismeld.workspace_menu_catalog':projection,'axismeld.menubar_runtime':runtime,'axismeld.menubar_native':native,'axismeld.translations':translations}
     with patch.dict(sys.modules, modules):
         spec=importlib.util.spec_from_file_location('tested_menubar_ui', UI)
         mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
@@ -83,6 +85,32 @@ class MenuBarUIContract(unittest.TestCase):
         self.assertTrue(all(r[2].get('icon') for r in ops))
         option=next(r for r in ops if r[2]['icon']=='PREFERENCES'); self.assertFalse(option[4])
         command=next(r for r in ops if getattr(r[3],'key','')=='new'); self.assertEqual(command[3].token,'captured')
+    def test_localized_caption_measurement_uses_the_concrete_ui_context(self):
+        rows = [
+            {'id':'heading','kind':'separator','label':'Heading'},
+            {'id':'submenu','kind':'menu','label':'Submenu','children':[{'kind':'disabled'}]},
+            {'id':'empty','kind':'menu','label':'Empty','children':[]},
+            {'id':'action','kind':'disabled','label':'Action'},
+        ]
+        contexts = []
+        def translate(text, context='*'):
+            contexts.append((text, context))
+            return {'Heading':'分组标题','Submenu':'子菜单','Empty':'空菜单','Action':'操作'}[text]
+        with patch.object(self.ui, '_NODES', {'test':{'children':rows}}), \
+             patch.object(self.ui, 'iface', side_effect=translate), \
+             patch.object(self.ui.blf, 'dimensions', return_value=(123,12)) as measured, \
+             patch.object(self.ui, '_draw_item'):
+            self.ui.draw_menu(Layout(), self.context, 'test')
+        self.assertEqual(contexts, [('Heading','*'),('Submenu','*'),('Empty','Operator'),('Action','Operator')])
+        self.assertEqual([call.args[1] for call in measured.call_args_list], ['分组标题','子菜单','空菜单','操作'])
+    def test_old_saved_chinese_modeling_name_keeps_workspace_menus(self):
+        self.context.area = types.SimpleNamespace(type='VIEW_3D')
+        self.context.window_manager.keyconfigs.active.name = 'AxisMeld_Maya_2026'
+        for name in ('Modeling','Modeling.001','建模','建模.001'):
+            self.context.workspace = types.SimpleNamespace(name=name)
+            self.assertTrue(self.ui.modeling_workspace(self.context))
+        self.context.workspace = types.SimpleNamespace(name='My Custom Workspace')
+        self.assertFalse(self.ui.modeling_workspace(self.context))
     def test_semantic_shortcut_context_comes_from_same_execution_token(self):
         source=types.SimpleNamespace(window=object(),screen=object(),scene=object(),
                                      view_layer=object(),area=object(),region=object())

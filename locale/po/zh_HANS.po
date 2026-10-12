@@ -94002,7 +94002,7 @@ msgstr "将实例化物体导出为USD中的引用，而非真实物体"
 
 
 msgid "Xform Ops"
-msgstr "Xform Ops"
+msgstr "变换操作"
 
 
 msgid "The type of transform operators to write"
@@ -95440,7 +95440,7 @@ msgstr "glTF 动画"
 
 
 msgid "Cavity"
-msgstr "Cavity"
+msgstr "腔体"
 
 
 msgid "SSAO Settings"

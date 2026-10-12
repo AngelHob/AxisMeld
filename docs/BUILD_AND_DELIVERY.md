@@ -1,9 +1,30 @@
 # Windows 构建、验证与交付
 
-**当前完整预览包：18px companion preview。** 完整 [18px companion preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview) 已发布；源码/native `f72fb413ba9c16f41c453dde98469ef1933285c1`，基于 Blender 5.4 Alpha。ZIP 303,157,284 字节，SHA256 `c7937d5fa1b29c723db91ffbbcf64b600983f3a9ba3b67566d4b343a516771f6`；EXE SHA256 `1771b999626225aaeecf2e911f7cd8d06149d466485679bc136cd1fe961324fc`。候选、本地解压包及匿名下载解压包工厂启动通过；本地解压包的列表 GUI 也已通过。[发布快照](compatibility/2026-10-11-18px-companion-preview-snapshot.json)保存精确指纹。旧预览包保留。本批 Pages `b448822d223e` 的 6 个公开资源逐字节核验通过。6 组 42 项相关 Python、2 组 114 项原生、3 组既有 GUI 回归与 1 组本批列表几何验证通过。本批 18 逻辑像素行高仅作用于 companion 下方列表及级联，100% 为 18px，高 DPI 沿用界面缩放。下方注明日期的历史构建与计数保持原口径。
+**当前批次（2026-10-13）：双语 GUI 本地门禁通过，待公开交付。** 预览标签保留 `axismeld-2026.10.12-bilingual-ui-preview`，计划归档名 `AxisMeld-2026.10.12-bilingual-ui-preview-windows-x64.zip`。本批新原生 build-attempt-03、干净安装、翻译/迁移/GUI/几何门禁均已通过，详见[双语验收](compatibility/2026-10-13-bilingual-ui-acceptance.md)；完整包与公开交付尚待收齐，下方旧包仍是上一已核验公开版本。
+
+**上一已核验完整预览包：18px companion preview。** 完整 [18px companion preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview) 已发布；源码/native `f72fb413ba9c16f41c453dde98469ef1933285c1`，基于 Blender 5.4 Alpha。ZIP 303,157,284 字节，SHA256 `c7937d5fa1b29c723db91ffbbcf64b600983f3a9ba3b67566d4b343a516771f6`；EXE SHA256 `1771b999626225aaeecf2e911f7cd8d06149d466485679bc136cd1fe961324fc`。候选、本地解压包及匿名下载解压包工厂启动通过；本地解压包的列表 GUI 也已通过。[发布快照](compatibility/2026-10-11-18px-companion-preview-snapshot.json)保存精确指纹。旧预览包保留。本批 Pages `b448822d223e` 的 6 个公开资源逐字节核验通过。6 组 42 项相关 Python、2 组 114 项原生、3 组既有 GUI 回归与 1 组本批列表几何验证通过。本批 18 逻辑像素行高仅作用于 companion 下方列表及级联，100% 为 18px，高 DPI 沿用界面缩放。下方注明日期的历史构建与计数保持原口径。
 
 
-更新：2026-09-18。本页用于新 Windows 机器和新的 Codex 会话，从源码接续工作；不要求复制维护者的旧磁盘、候选安装、偏好或临时审计目录。开发方向另见项目路线图与交接文档，本页不扩大功能范围。
+更新：2026-10-13。下文 2026-09-18 工具链与测试记录保留历史口径。本页用于新 Windows 机器和新的 Codex 会话，从源码接续工作；不要求复制维护者的旧磁盘、候选安装、偏好或临时审计目录。开发方向另见项目路线图与交接文档，本页不扩大功能范围。
+
+## 本批双语安装与验收要求（2026-10-13）
+
+先读[双语界面设计](development/2026-10-12-bilingual-ui.md)。保留 `WITH_INTERNATIONAL`，仅编译/安装 `zh_HANS` MO；英文使用源码标签，语言清单来自 `release/datafiles/axismeld/languages`，仅 ID 1/`en_US` 与 ID 13/`zh_HANS` 两项。保留完整字体栈及中文字体，用户数据中的字符仍须可显示。验证实际安装清单和目录，不能仅检查 CMake 文本；旧安装前缀可能残留其他 locale，因此必须使用全新候选目录。
+
+固定按钮复用原生简中词库并补词，覆盖原生 RNA/Menu/Panel、热盒、菜单、Options、灰项说明和内置 Rigify；实际测宽/绘制/说明排版须使用相同译文及正确上下文。保持 18px 伴随列表与既有输入交互，不改变工作区/对象/骨骼/材质等数据名称。内置工作区仅显示标签翻译，Modeling 的真实名称及旧“建模”识别保持；首次干净启动仍为 Blender 键位、Layout 和英文。
+
+| 必须收齐的证据 | 本批状态与记录内容 |
+|---|---|
+| 原生构建与身份 | build-attempt-03 PASS、全新安装 6,529 文件及候选 153 项选定资源通过；原生 2 组 114、Python 7 组 90 通过。EXE 见双语验收，最终发布源码 SHA 由发布快照绑定，前序失败保留 |
+| 实际翻译运行时 | translation-runtime-01 的 3,737 固定源词、开关/上下文/注册重载/数据名保护通过；final-native-candidate-01 的 129/129 原生检查与英文往返通过 |
+| 真实偏好迁移 | baseline-05 五种旧偏好种子、verify-04 七次新进程全部通过；中文保存重启、重载工厂启动布局保留已保存 prefs，真实名称与 Modeling predicate 保持 |
+| 当前候选 GUI 与几何 | 既有 hotbox-repost/context-entries/tools 和最终双语 GUI 52 记录通过；中文低窗全长 3 行/无空白隐藏/真实全屏恢复通过，英文 100%/150% 为 18/27px 且方向按钮与基线一致 |
+| 完整安装与公开交付 | 本地仅简中目录/两项清单/字体及候选工厂启动通过；待公开交付：完整 ZIP/独立解压/启动、匿名下载、远端及 Pages 六资源逐字节一致尚待核验 |
+| 人工目录 | 仓库 catalog 394（当前 380、历史 14、历史已测 47、当前初始未测 333、全表初始未测 347）；新增 49 BI、50 新标记含 GU-28。本地网页 14 项检查通过，公开 buildId/下载和 Pages 仍待发布核验 |
+
+迁移测试源码为 `tests/python/axismeld_bilingual_language_migration.py`；它在 Blender 内运行，外部编排须为每个用例设置独立 `BLENDER_USER_CONFIG`、隔离标记和输出目录。先用已核验旧完整包实际保存 Automatic、`fr_FR`、`zh_HANT`、`zh_HANS`、`en_US`，冻结种子和测试身份；随后用新候选复制隔离种子验证前三种回退 `en_US`、后两种保留，并验证中文保存/重启以及重载工厂启动布局保留已保存 prefs 后的原始工作区名称和 Modeling 功能识别。该重载实际调用 `wm.read_homefile(use_factory_startup=True)`，不重置全部偏好；后台 context override 的 predicate 检查不冒称 GUI 已切换，真实工作区切换由最终 GUI 验证。旧进程种子与新候选验证分别留证，不覆盖此前尝试，也不访问用户偏好。
+
+双语 GUI 入口：`tests/python/axismeld_hotbox_ui_runner.py --blender <新候选exe> --suite bilingual --artifacts <新审计目录>`。后台覆盖与迁移不能替代图形桌面检查；验证后继续第 7/8 节的完整包与公开校验。新机器重建这些证据，不依赖维护者本机 audit/helper 路径，更不能复制其旧 PASS 文件。
 
 ## 1. 正确分支、Git LFS 与依赖
 
@@ -120,6 +141,7 @@ Build 与 Install 之间保持相同源码提交和本地改动，并记录完�
 
 - `source/creator/CMakeLists.txt` 整体安装 scripts，因此 `scripts/modules/rigify`、`scripts/startup/rigify_builtin.py` 和 AxisMeld 菜单/键位会随源码安装，不需要 `addon_enable`。
 - 源码已无 `scripts/addons_core/rigify`；**全新**安装不会有旧插件。CMake 不主动清除旧前缀遗留文件，故不能把覆盖安装当作迁移验证。
+- 双语规则只安装 `zh_HANS` MO 和 AxisMeld 两项语言清单，字体仍安装；完整包须按实际 manifest 核对，不把旧前缀的多语言残留纳入新版本。
 - Windows 规则安装 `portable/README.txt`。新候选保留标记，但不带个人 userpref、startup 或 profile。
 - startup 由 `source/blender/editors/datafiles/CMakeLists.txt` 的 `data_to_c_simple` 编入 exe。修改资产必须重编 native，仅复制 Python/磁盘 startup 无法更新内嵌工作区。
 

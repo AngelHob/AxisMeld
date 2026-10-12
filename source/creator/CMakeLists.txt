@@ -577,12 +577,13 @@ if(WITH_INTERNATIONAL)
   set(_locale_dir "${CMAKE_SOURCE_DIR}/locale")
   set(_locale_target_dir ${TARGETDIR_VER}/datafiles/locale)
 
-  file(GLOB _po_files "${_locale_dir}/po/*.po")
+  # AxisMeld offers English source text and the original Simplified Chinese translations.
+  set(_po_files "${_locale_dir}/po/zh_HANS.po")
   foreach(_po_file ${_po_files})
     msgfmt_simple(${_po_file} _all_mo_files)
   endforeach()
 
-  # Create a custom target which will compile all `*.po` to `*.mo`.
+  # Create a custom target which compiles the supported translation to `*.mo`.
   add_custom_target(
     locales
     DEPENDS ${_all_mo_files}
@@ -591,7 +592,7 @@ if(WITH_INTERNATIONAL)
 
   # Generate INSTALL rules.
   install(
-    FILES ${_locale_dir}/languages
+    FILES ${CMAKE_SOURCE_DIR}/release/datafiles/axismeld/languages
     DESTINATION ${_locale_target_dir}
   )
 

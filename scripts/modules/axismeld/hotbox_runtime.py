@@ -542,6 +542,11 @@ def _apply_runtime_capabilities(context, menus, *, preselection=None):
             if active is not None:
                 label = ''.join(' ' if ord(character) < 32 else character for character in active.name)
                 node['label'] = label[:MAX_TEXT - 3] + '...'
+            else:
+                # With no captured user name this is a fixed placeholder. The
+                # native drawing boundary protects this row as scene data.
+                from .translations import iface
+                node['label'] = iface(node['label'])
         if node['kind'] != 'command' or not node['enabled']:
             continue
         if node['command'] in MODELING_SPECS:

@@ -1,8 +1,10 @@
 # 按热盒与菜单分类的测试索引
 
-更新：2026-10-12。公开网页与本索引按同一分类组织；使用网页记录自己的结果。原[人工总清单](2026-09-14-manual-test-ledger.md)保留开发批次、完整步骤及历史初始状态。
+更新：2026-10-13。公开网页与本索引按同一分类组织；使用网页记录自己的结果。原[人工总清单](2026-09-14-manual-test-ledger.md)保留开发批次、完整步骤及历史初始状态。
 
-共345项：331项当前、14项历史；当前维护者初始待测284项。分类及排序不会修改已有浏览器记录。以下“历史已测”只表示原维护者记录，不等于通过；访客结果仍在各自浏览器。
+共394项：380项当前、14项历史；当前维护者初始待测333项。分类及排序不会修改已有浏览器记录。以下“历史已测”只表示原维护者记录，不等于通过；访客结果仍在各自浏览器。
+
+新增49项中英界面验收：14个热盒、29个菜单各一项，以及6项共用/Rigify检查，全部待人工测试。适用版本为`axismeld-2026.10.12-bilingual-ui-preview`。旧GU-28最近标记保留，“最近新增”共50项。
 
 按主要验证入口归类；没有明确主入口的跨热盒或跨菜单检查集中在“通用”，同一测试只出现一次。测试某个入口后，可继续检查对应通用类别。Space内的Deform/Generate不代表恢复Modeling视窗栏根菜单。
 
@@ -10,64 +12,64 @@
 
 | 类别 | 当前条目 | 历史条目 |
 |---|---:|---:|
-| 热盒 · Space 主热盒 | 2 | 0 |
-| 热盒 · Views 视图 | 4 | 0 |
-| 热盒 · Q 选择工具 | 3 | 0 |
-| 热盒 · W 移动工具 | 2 | 0 |
-| 热盒 · E 旋转工具 | 1 | 0 |
-| 热盒 · R 缩放工具 | 1 | 0 |
-| 热盒 · RMB 组件切换与对象上下文 | 30 | 0 |
-| 热盒 · Shift+RMB 空白创建 | 15 | 0 |
-| 热盒 · Shift+RMB Object 建模 | 33 | 0 |
-| 热盒 · Shift+RMB Vertex 建模 | 1 | 0 |
-| 热盒 · Shift+RMB Edge 建模 | 2 | 0 |
-| 热盒 · Shift+RMB Face 建模 | 3 | 0 |
-| 热盒 · Ctrl+RMB 选择转换 | 1 | 0 |
-| 热盒 · A+LMB History Operations | 2 | 0 |
-| 菜单 · Hotbox Controls 设置 | 7 | 0 |
-| 菜单 · Recent Commands 最近命令 | 1 | 0 |
-| 菜单 · File 文件 | 5 | 0 |
-| 菜单 · Edit 编辑 | 4 | 0 |
-| 菜单 · Create 创建 | 6 | 0 |
-| 菜单 · Select 选择 | 4 | 0 |
-| 菜单 · Modify 修改 | 5 | 0 |
-| 菜单 · Display 显示 | 3 | 0 |
-| 菜单 · Windows 窗口 | 4 | 0 |
-| 菜单 · Current Pane → View | 1 | 0 |
-| 菜单 · Current Pane → Shading | 1 | 0 |
-| 菜单 · Current Pane → Lighting | 1 | 0 |
-| 菜单 · Current Pane → Show | 1 | 0 |
-| 菜单 · Current Pane → Renderer | 1 | 0 |
-| 菜单 · Current Pane → Panels | 1 | 0 |
-| 菜单 · Mesh 网格 | 4 | 0 |
-| 菜单 · Edit Mesh 编辑网格 | 4 | 1 |
-| 菜单 · Mesh Tools 网格工具 | 3 | 0 |
-| 菜单 · Mesh Display 网格显示 | 4 | 0 |
-| 菜单 · Curves 曲线 | 3 | 0 |
-| 菜单 · Surfaces 曲面 | 3 | 0 |
-| 菜单 · Space → Modeling → Deform | 4 | 1 |
-| 菜单 · UV | 1 | 0 |
-| 菜单 · Space → Modeling → Generate | 1 | 0 |
-| 菜单 · Skeleton 骨架 | 2 | 0 |
-| 菜单 · Skin 蒙皮与权重 | 8 | 0 |
-| 菜单 · Help 帮助 | 1 | 0 |
-| 菜单 · Blender Extensions 原生扩展 | 1 | 0 |
-| 菜单 · Preferences → Keymap 键位设置 | 4 | 0 |
+| 热盒 · Space 主热盒 | 3 | 0 |
+| 热盒 · Views 视图 | 5 | 0 |
+| 热盒 · Q 选择工具 | 4 | 0 |
+| 热盒 · W 移动工具 | 3 | 0 |
+| 热盒 · E 旋转工具 | 2 | 0 |
+| 热盒 · R 缩放工具 | 2 | 0 |
+| 热盒 · RMB 组件切换与对象上下文 | 31 | 0 |
+| 热盒 · Shift+RMB 空白创建 | 16 | 0 |
+| 热盒 · Shift+RMB Object 建模 | 34 | 0 |
+| 热盒 · Shift+RMB Vertex 建模 | 2 | 0 |
+| 热盒 · Shift+RMB Edge 建模 | 3 | 0 |
+| 热盒 · Shift+RMB Face 建模 | 4 | 0 |
+| 热盒 · Ctrl+RMB 选择转换 | 2 | 0 |
+| 热盒 · A+LMB History Operations | 3 | 0 |
+| 菜单 · Hotbox Controls 设置 | 8 | 0 |
+| 菜单 · Recent Commands 最近命令 | 2 | 0 |
+| 菜单 · File 文件 | 6 | 0 |
+| 菜单 · Edit 编辑 | 5 | 0 |
+| 菜单 · Create 创建 | 7 | 0 |
+| 菜单 · Select 选择 | 5 | 0 |
+| 菜单 · Modify 修改 | 6 | 0 |
+| 菜单 · Display 显示 | 4 | 0 |
+| 菜单 · Windows 窗口 | 5 | 0 |
+| 菜单 · Current Pane → View | 2 | 0 |
+| 菜单 · Current Pane → Shading | 2 | 0 |
+| 菜单 · Current Pane → Lighting | 2 | 0 |
+| 菜单 · Current Pane → Show | 2 | 0 |
+| 菜单 · Current Pane → Renderer | 2 | 0 |
+| 菜单 · Current Pane → Panels | 2 | 0 |
+| 菜单 · Mesh 网格 | 5 | 0 |
+| 菜单 · Edit Mesh 编辑网格 | 5 | 1 |
+| 菜单 · Mesh Tools 网格工具 | 4 | 0 |
+| 菜单 · Mesh Display 网格显示 | 5 | 0 |
+| 菜单 · Curves 曲线 | 4 | 0 |
+| 菜单 · Surfaces 曲面 | 4 | 0 |
+| 菜单 · Space → Modeling → Deform | 5 | 1 |
+| 菜单 · UV | 2 | 0 |
+| 菜单 · Space → Modeling → Generate | 2 | 0 |
+| 菜单 · Skeleton 骨架 | 3 | 0 |
+| 菜单 · Skin 蒙皮与权重 | 9 | 0 |
+| 菜单 · Help 帮助 | 2 | 0 |
+| 菜单 · Blender Extensions 原生扩展 | 2 | 0 |
+| 菜单 · Preferences → Keymap 键位设置 | 5 | 0 |
 | 通用 · Q/W/E/R 工具热盒交互 | 19 | 0 |
 | 通用 · 点/边/面建模热盒交互 | 11 | 0 |
 | 通用 · 热盒布局、外划与取消 | 26 | 0 |
 | 通用 · 完整列表、级联与图标 | 17 | 3 |
-| 通用 · 外观设置与真实状态 | 4 | 0 |
+| 通用 · 外观设置与真实状态 | 5 | 0 |
 | 通用 · 灰项、Options 与键盘导航 | 6 | 0 |
 | 通用 · 灰项说明与窗口避让 | 2 | 0 |
 | 通用 · 跨入口操作与回归 | 18 | 0 |
-| 通用 · 改键、配置与输入隔离 | 7 | 0 |
-| 通用 · 全局栏与工作区 | 8 | 2 |
+| 通用 · 改键、配置与输入隔离 | 10 | 0 |
+| 通用 · 全局栏与工作区 | 9 | 2 |
 | 通用 · 建模菜单归类与原生扩展 | 5 | 4 |
 | 通用 · Maya 菜单集与层级 | 6 | 3 |
 | 通用 · 动态菜单与场景数据 | 2 | 0 |
 | 通用 · Rigging 菜单与灰项 | 2 | 0 |
-| 其他 · Rigify 创建、生成与偏好 | 6 | 0 |
+| 其他 · Rigify 创建、生成与偏好 | 7 | 0 |
 | 其他 · X/V/J 临时吸附 | 3 | 0 |
 | 其他 · 预览包与公开测试反馈 | 1 | 0 |
 
@@ -77,6 +79,7 @@
 |---|---|---|
 | R-02 | Space 点按切单/四视图，长按打开；移动到标准正交视图后 Alt 导航 | 历史已测 · 未判定 |
 | IC-01 | Space打开主热盒，查看File/Edit/Create/Select/Modify及中心控制等入口 | 待测试 |
+| BI-H01 | Space 主热盒：中英文按钮、说明与热盒显示 | 待测试 |
 
 ## 热盒 · Views 视图
 
@@ -86,6 +89,7 @@
 | V-02 | 对 Back/Bottom 重复外侧划动；从中心做短划和原地释放 | 历史已测 · 未判定 |
 | V-03 | 在视口四角、单视图/四视图、窄视口重复；隐藏 Camera 时划向右上空方向 | 历史已测 · 未判定 |
 | IC-02 | 打开Views，依次查看透视及六个正交视图，单/四视图重复 | 待测试 |
+| BI-H02 | Views 视图：中英文按钮、说明与热盒显示 | 待测试 |
 
 ## 热盒 · Q 选择工具
 
@@ -94,6 +98,7 @@
 | G-09 | Edit中Q Clear Selection后仍持Q再次LMB切Lasso，松Q后撤销；个人改键也重复 | 待测试 |
 | T-07 | Q 切换 Marquee/Lasso/Paint，再松 Q；Object/Edit 执行 Clear Selection 并撤销 | 历史已测 · 未判定 |
 | HC-09 | Q+LMB，核对Marquee、Drag、Camera-Based Selection和下方菜单 | 待测试 |
+| BI-H03 | Q 选择工具：中英文按钮、说明与热盒显示 | 待测试 |
 
 ## 热盒 · W 移动工具
 
@@ -101,18 +106,21 @@
 |---|---|---|
 | HC-10 | W+LMB，核对下方主项、约束和Move Options | 待测试 |
 | GU-14 | 在 Keymap 首选项将 Move 临时改为 Ctrl+W；持 Ctrl+W 后连续按住、划动和松开 LMB 三次，分别选 World/Local；再测试先松 W、先松 Ctrl、Esc 和切出应用，最后恢复 W 并重试 | 待测试 |
+| BI-H04 | W 移动工具：中英文按钮、说明与热盒显示 | 待测试 |
 
 ## 热盒 · E 旋转工具
 
 | 编号 | 测试内容 | 原始状态 |
 |---|---|---|
 | HC-11 | E+LMB，核对下方主项并展开Rotate Center | 待测试 |
+| BI-H05 | E 旋转工具：中英文按钮、说明与热盒显示 | 待测试 |
 
 ## 热盒 · R 缩放工具
 
 | 编号 | 测试内容 | 原始状态 |
 |---|---|---|
 | HC-12 | R+LMB，核对下方主项并展开Scale Center | 待测试 |
+| BI-H06 | R 缩放工具：中英文按钮、说明与热盒显示 | 待测试 |
 
 ## 热盒 · RMB 组件切换与对象上下文
 
@@ -148,6 +156,7 @@
 | HC-03 | RMB伴随列表悬停禁用项、Select Similar参数格、Metadata状态和参数格后取消 | 待测试 |
 | HC-04 | A选中指向B打开RMB，分别从列表执行Select All、Deselect All、Invert Selection | 待测试 |
 | HC-05 | 指针目标为当前已选活动Mesh时测试Select Hierarchy和Actions的Template/Untemplate/Unparent；然后改为未选目标 | 待测试 |
+| BI-H07 | RMB 组件切换与对象上下文：中英文按钮、说明与热盒显示 | 待测试 |
 
 ## 热盒 · Shift+RMB 空白创建
 
@@ -168,6 +177,7 @@
 | MC-07 | 检查创建下拉每个主项右侧，逐个尝试可用与灰显参数格 | 待测试 |
 | MC-09 | 检查创建Interactive Creation与Exit On Completion，点击后重开；记录相关偏好前后值 | 待测试 |
 | HC-17 | 创建热盒→Polygon Display All，连续执行Backface Culling on两次，再off两次 | 待测试 |
+| BI-H08 | Shift+RMB 空白创建：中英文按钮、说明与热盒显示 | 待测试 |
 
 ## 热盒 · Shift+RMB Object 建模
 
@@ -206,12 +216,14 @@
 | IC-09 | 在Smooth/Mirror/Reduce/Remesh文字与右侧Options格分别释放 | 待测试 |
 | MC-01 | 选中Object Mesh，Shift+RMB，与Maya建模截图逐行对照完整列表；1x/2x检查右侧目录箭头 | 待测试 |
 | MC-05 | 检查Object N Target Weld、NW Sculpt、W Multi-Cut、E Append、SW Insert Edge Loop的参数格，各在格内释放 | 待测试 |
+| BI-H09 | Shift+RMB Object 建模：中英文按钮、说明与热盒显示 | 待测试 |
 
 ## 热盒 · Shift+RMB Vertex 建模
 
 | 编号 | 测试内容 | 原始状态 |
 |---|---|---|
 | HC-06 | Edit Vertex有有效选择，Shift+RMB，并依次展开列表子菜单 | 待测试 |
+| BI-H10 | Shift+RMB Vertex 建模：中英文按钮、说明与热盒显示 | 待测试 |
 
 ## 热盒 · Shift+RMB Edge 建模
 
@@ -219,6 +231,7 @@
 |---|---|---|
 | HC-07 | Edit Edge有有效选择，Shift+RMB，核对Merge子菜单及下方列表 | 待测试 |
 | GU-05 | Edit Mesh 空边选择，Shift+RMB 执行 Bevel 后移动鼠标再 Esc；以 Crease 重复；另测试确认后一次 Undo | 待测试 |
+| BI-H11 | Shift+RMB Edge 建模：中英文按钮、说明与热盒显示 | 待测试 |
 
 ## 热盒 · Shift+RMB Face 建模
 
@@ -227,12 +240,14 @@
 | D-05 | 面域选择同一Mesh相邻/分离面执行N Merge at Center，再以两个Mesh不同位置重复并单Undo | 待测试 |
 | HC-08 | Edit Face有有效选择，Shift+RMB，查看Mapping和Polygon Display | 待测试 |
 | GU-04 | Edit Mesh 空选择，鼠标指向一个面，用 Shift+RMB 执行已有 Poke 等即时操作，再一次 Undo；在其他可见对象的组件上重复 | 待测试 |
+| BI-H12 | Shift+RMB Face 建模：中英文按钮、说明与热盒显示 | 待测试 |
 
 ## 热盒 · Ctrl+RMB 选择转换
 
 | 编号 | 测试内容 | 原始状态 |
 |---|---|---|
 | GU-01 | Edit Mesh 选择组件，Ctrl+RMB 查看转换方向环、下方菜单和各级子环；分别转换 Vertex、Edge、Face，再 Undo；检查空选择和取消 | 待测试 |
+| BI-H13 | Ctrl+RMB 选择转换：中英文按钮、说明与热盒显示 | 待测试 |
 
 ## 热盒 · A+LMB History Operations
 
@@ -240,6 +255,7 @@
 |---|---|---|
 | GU-09 | A 单按和仅长按后松开；再持 A+LMB 打开 History Operations，选 Freeze/Reset 后先松 LMB、再松 A；执行后一次 Undo | 待测试 |
 | GU-10 | A 持键中中心取消、灰方向取消、连续三次 LMB 重开；先松 A 后松 LMB、Esc、切应用及改变选择后再释放 | 待测试 |
+| BI-H14 | A+LMB History Operations：中英文按钮、说明与热盒显示 | 待测试 |
 
 ## 菜单 · Hotbox Controls 设置
 
@@ -252,12 +268,14 @@
 | VR-01 | 窄视口保留Tool Header，打开Controls完整列表，进入真实子目录并返回，悬停禁用项 | 待测试 |
 | VR-02 | 在VR-01禁用项上保持鼠标不动，分别先松Space、Esc及交换拥有鼠标释放顺序，再直接按W/E/R | 待测试 |
 | HC-16 | Space→Hotbox Controls，检查Show/Hide、Custom Menu Set、Hotbox Style、Window Options | 待测试 |
+| BI-M01 | Hotbox Controls 设置：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Recent Commands 最近命令
 
 | 编号 | 测试内容 | 原始状态 |
 |---|---|---|
 | M3-31 | 成功执行可重复的非modal命令后查看Recent并重放；对modal启动后取消、参数窗取消、灰显计划释放分别检查Recent；切不支持模式再看旧Recent项 | 待测试 |
+| BI-M02 | Recent Commands 最近命令：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · File 文件
 
@@ -268,6 +286,7 @@
 | MB-07 | File 展开 Recent Files、Import、Export；启用一个已安装格式后重新查看 | 待测试 |
 | MB-08 | File 查看模板、恢复、Link/Append、Project、External Data、Data Previews 和 Clean Up | 待测试 |
 | GU-13 | 在临时场景从 Space 热盒的 File 分别调用 Open Scene、Save Scene As，保持触发键后移到新文件窗口再松键；分别先松鼠标、先松 Space，在两个窗口之间释放，并用 Esc 取消；对未保存场景分别选择 Don't Save 继续和 Cancel 退出确认框；重新打开后测试切应用再返回及关闭文件窗口 | 待测试 |
+| BI-M03 | File 文件：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Edit 编辑
 
@@ -277,6 +296,7 @@
 | M3-08 | Edit→Adjust Last Operation修改参数，Mesh Object按F9，并检查Undo/Redo不可用状态；G重复上一原生动作；另在Delete by Type依次测试Bake Selected Mesh History、Bake All Mesh History及对应Non-Deformer项，每次单Undo/Redo；使用两个对象、拓扑modifier在deformer前的栈、共享Mesh实例、shape key及动画/driver/NLA/override对象作对照 | 待测试 |
 | MT-02 | 在临时场景打开 Common → Edit，逐层与Maya对照 | 待测试 |
 | MB-09 | Edit 打开 Undo/Redo、History、Repeat History、Adjust Last Operation、Search；在临时对象编辑后使用一次撤销 | 待测试 |
+| BI-M04 | Edit 编辑：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Create 创建
 
@@ -288,6 +308,7 @@
 | MT-03 | 在临时场景打开 Common → Create，逐层与Maya对照 | 待测试 |
 | MB-11 | Create 从 Polygon/NURBS Primitives、Curve Tools 创建各一个临时对象，再从 Cameras/Lights 创建相机和四类灯光 | 待测试 |
 | MB-12 | Create 检查 Armature、Metaball、Empty Volume、Empty Grease Pencil、Speaker、Force Field；在 Object 与 Edit 中分别查看 | 待测试 |
+| BI-M05 | Create 创建：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Select 选择
 
@@ -297,6 +318,7 @@
 | M3-04 | Select：在带规则四边面的网格选一圈边，测试相邻扩展/收缩、Loop/Ring以及点边面转换；从Convert Selection→Multi-Component及F7同时启用三域；在两个独立Edit对象各选一个点再看Connect/Merge | 待测试 |
 | MT-04 | 在临时场景打开 Common → Select，逐层与Maya对照 | 待测试 |
 | MT-27 | 在Object和Edit依次用Select→Deselect All、Object/Component、Grow、Shrink | 待测试 |
+| BI-M06 | Select 选择：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Modify 修改
 
@@ -307,6 +329,7 @@
 | MB-10 | Modify 检查 Transformation Tools、Snap Align Objects、Naming Tools、Convert 等补充目录 | 待测试 |
 | MB-26 | 展开 Modify→Naming Tools，在临时对象上查看并使用 Rename Active Item 和 Batch Rename | 待测试 |
 | GU-17 | 在 Modeling 打开 Object→Maya Modify→Transformation Tools，查看 Move/Rotate/Scale；临时将 Move 改为 Ctrl+W，再禁用和移除该绑定，每次重新打开菜单；恢复默认后检查正文和右侧齿轮 | 待测试 |
+| BI-M07 | Modify 修改：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Display 显示
 
@@ -315,6 +338,7 @@
 | M3-11 | Display：选择部分对象使用Hide/Show及Hide/Show by Type；对同一明确Show或Hide命令执行两次，再在Outliner或原生显示设置核对；Mesh Edit隐藏部分组件后按Ctrl+Alt+H | 待测试 |
 | MT-06 | 在临时场景打开 Common → Display，逐层与Maya对照 | 待测试 |
 | MT-23 | 逐个展开Display的Polygons、NURBS、Animation、Rendering及Heads Up Display | 待测试 |
+| BI-M08 | Display 显示：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Windows 窗口
 
@@ -324,42 +348,49 @@
 | MB-13 | Windows 打开 Outliner、UV/Graph/Dope Sheet、Shader/Geometry Node/Compositor、Text/Python Console/NLA 编辑器 | 待测试 |
 | MB-14 | Windows 查看 Settings/Preferences、Startup and Defaults、Workspaces、UI Elements、Window Management | 待测试 |
 | MB-24 | 展开 Windows→Workspaces，检查 Factory/Module 章节，再独立操作 Blender Next/Previous Workspace | 待测试 |
+| BI-M09 | Windows 窗口：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Current Pane → View
 
 | 编号 | 测试内容 | 原始状态 |
 |---|---|---|
 | MT-08 | 在临时场景打开 Current Pane → View，逐层与Maya对照 | 待测试 |
+| BI-M10 | Current Pane → View：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Current Pane → Shading
 
 | 编号 | 测试内容 | 原始状态 |
 |---|---|---|
 | MT-09 | 在临时场景打开 Current Pane → Shading，逐层与Maya对照 | 待测试 |
+| BI-M11 | Current Pane → Shading：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Current Pane → Lighting
 
 | 编号 | 测试内容 | 原始状态 |
 |---|---|---|
 | MT-10 | 在临时场景打开 Current Pane → Lighting，逐层与Maya对照 | 待测试 |
+| BI-M12 | Current Pane → Lighting：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Current Pane → Show
 
 | 编号 | 测试内容 | 原始状态 |
 |---|---|---|
 | MT-11 | 在临时场景打开 Current Pane → Show，逐层与Maya对照 | 待测试 |
+| BI-M13 | Current Pane → Show：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Current Pane → Renderer
 
 | 编号 | 测试内容 | 原始状态 |
 |---|---|---|
 | MT-12 | 在临时场景打开 Current Pane → Renderer，逐层与Maya对照 | 待测试 |
+| BI-M14 | Current Pane → Renderer：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Current Pane → Panels
 
 | 编号 | 测试内容 | 原始状态 |
 |---|---|---|
 | MT-13 | 在临时场景打开 Current Pane → Panels，逐层与Maya对照 | 待测试 |
+| BI-M15 | Current Pane → Panels：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Mesh 网格
 
@@ -369,6 +400,7 @@
 | M3-14 | Mesh：两网格Combine，再Edit Separate Loose Parts；在临时细分网格执行Triangulate、Quadrangulate、Reduce/Subdivision与Remesh代表项 | 待测试 |
 | MT-14 | 在临时场景打开 Modeling → Mesh，逐层与Maya对照 | 待测试 |
 | MB-37 | 临时Cube经Mesh中的Modifier入口添加一个修改器、查看参数并撤销；测试原生独有建模操作及撤销 | 待测试 |
+| BI-M16 | Mesh 网格：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Edit Mesh 编辑网格
 
@@ -379,6 +411,7 @@
 | M3-17 | Edit Mesh：选面Duplicate Faces和Extract Faces，再试Split、Dissolve和Delete Edge Loop；另在点/边/面域分别按Ctrl+Backspace与Ctrl+Delete，每次单Undo | 待测试 |
 | MT-15 | 在临时场景打开 Modeling → Edit Mesh，逐层与Maya对照 | 待测试 |
 | MB-32 | 从 Components、Vertex、Edge、Face、Mesh Projection 逐项对照原 Edit Mesh；在临时网格上执行 Components→Add Divisions 并 Undo，再点击灰色 Options | 历史条目 · 待测试 |
+| BI-M17 | Edit Mesh 编辑网格：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Mesh Tools 网格工具
 
@@ -387,6 +420,7 @@
 | M3-18 | Mesh Tools：通过目录激活Knife、Loop Cut、Poly Build，再在视口实际切割/添面；也试Ctrl+Shift+X与Ctrl+Shift+Q | 待测试 |
 | M3-19 | Mesh Tools：启动Immediate Knife/Loop Cut/Edge Slide，移动鼠标后Esc或确认；将有边界投影对象配合编辑中的目标面执行Knife Project | 待测试 |
 | MT-16 | 在临时场景打开 Modeling → Mesh Tools，逐层与Maya对照 | 待测试 |
+| BI-M18 | Mesh Tools 网格工具：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Mesh Display 网格显示
 
@@ -396,6 +430,7 @@
 | M3-21 | Mesh Display：Create Color Attribute，分别POINT与CORNER设不同颜色；Edit仅选部分顶点/面Set Color，空选及CORNER只选边再查看可用性 | 待测试 |
 | M3-22 | Vertex Paint入口：在临时Mesh使用菜单提供的原生Vertex Paint跳转，画一笔后Undo，再退出到Object/Edit | 待测试 |
 | MT-17 | 在临时场景打开 Modeling → Mesh Display，逐层与Maya对照 | 待测试 |
+| BI-M19 | Mesh Display 网格显示：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Curves 曲线
 
@@ -404,6 +439,7 @@
 | M3-23 | Curves：创建Bezier，Edit选择部分控制点，执行Subdivide、Smooth、Reverse、Handle Auto/Vector/Free；清空控制点选择再查看菜单 | 待测试 |
 | M3-24 | Curves：在原生属性将闭合曲线设2D后试Geometry Offset，再试Round Bevel/Resolution；激活Curve Pen实际加点/编辑后取消一次 | 待测试 |
 | MT-18 | 在临时场景打开 Modeling → Curves，逐层与Maya对照 | 待测试 |
+| BI-M20 | Curves 曲线：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Surfaces 曲面
 
@@ -412,6 +448,7 @@
 | M3-25 | Surfaces：创建NURBS Surface Curve，Edit选完整控制行执行Spin Selected NURBS Row；另在曲面选控制行测试Extrude、Subdivide、Cyclic U/V与Reverse | 待测试 |
 | M3-26 | Surfaces：Object选一条路径Curve和一个Curve截面，活动对象为路径，执行Sweep Selected Curve Profile；撤销后只选路径再查看入口 | 待测试 |
 | MT-19 | 在临时场景打开 Modeling → Surfaces，逐层与Maya对照 | 待测试 |
+| BI-M21 | Surfaces 曲面：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Space → Modeling → Deform
 
@@ -422,18 +459,21 @@
 | M3-30 | Deform：两个同索引拓扑且形状不同Mesh，活动源执行Selected Targets to Shape Keys；另在Edit选少量点Hook；分别单Undo | 待测试 |
 | MT-20 | 在临时场景打开 Modeling → Deform，逐层与Maya对照 | 待测试 |
 | MB-23 | 逐项查看 Deform 的17个补充动作，分别展开 Create、Edit、Weights 与 legacy | 历史条目 · 待测试 |
+| BI-M22 | Space → Modeling → Deform：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · UV
 
 | 编号 | 测试内容 | 原始状态 |
 |---|---|---|
 | MT-21 | 在临时场景打开 Modeling → UV，逐层与Maya对照 | 待测试 |
+| BI-M23 | UV：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Space → Modeling → Generate
 
 | 编号 | 测试内容 | 原始状态 |
 |---|---|---|
 | MT-22 | 在临时场景打开 Modeling → Generate，逐层与Maya对照 | 待测试 |
+| BI-M24 | Space → Modeling → Generate：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Skeleton 骨架
 
@@ -441,6 +481,7 @@
 |---|---|---|
 | RG-10 | 在Rigging的Skeleton原生入口添加Single Bone并执行一次骨骼Extrude，再Undo；另建Rigify metarig并从原有Rigify面板生成控制骨架 | 待测试 |
 | RG-13 | Pose下从Skeleton原生Pose目录执行Clear Transform或Copy/Paste并撤销；再用本地Object引用链接只读Armature数据，检查Pose与IK目录并执行可用的姿态清除、添加或清除IK；使用已安装兼容扩展对照原生Armature/Pose/Weights及Add Armature菜单，再检查Pose Asset入口 | 待测试 |
+| BI-M25 | Skeleton 骨架：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Skin 蒙皮与权重
 
@@ -454,18 +495,21 @@
 | RG-18 | 在常用缩放下分别点击两项正文和右对齐齿轮，打开参数后修改并取消，再确认执行；使用F9调整，再一次Undo | 待测试 |
 | RG-19 | 在无骨架、多Armature修改器、共享或链接Mesh、多对象Edit、空顶点选择和锁定和超过1的测试副本尝试两项；另用本地网格引用链接只读骨架 | 待测试 |
 | RG-20 | 在自己的生产角色副本执行有界清理后移动骨骼观察变形；保存到临时文件并用新进程重开，对照权重、组锁及原生Weights/插件菜单 | 待测试 |
+| BI-M26 | Skin 蒙皮与权重：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Help 帮助
 
 | 编号 | 测试内容 | 原始状态 |
 |---|---|---|
 | MB-16 | Help 检查 Maya 灰占位及 Blender Help、Scripting Reference、Diagnostics | 待测试 |
+| BI-M27 | Help 帮助：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Blender Extensions 原生扩展
 
 | 编号 | 测试内容 | 原始状态 |
 |---|---|---|
 | MT-29 | 中心按钮映射Blender Extensions后浏览各原生分组和原有改名/选择/显示操作 | 待测试 |
+| BI-M28 | Blender Extensions 原生扩展：中英文菜单与对应界面 | 待测试 |
 
 ## 菜单 · Preferences → Keymap 键位设置
 
@@ -475,6 +519,7 @@
 | IN-02 | 同一开发构建与隔离实例，再添加Mesh的Ctrl+F9及Object Mode的P；重载并查看提示，检查对应插件项属性 | 待测试 |
 | IN-03 | 用输入诊断验收清理代码移除本次创建的测试项，重载配置；退出隔离实例后检查正常配置 | 待测试 |
 | GU-15 | 在 Preferences→Keymap 使用 Name 搜索 Move、Frame All、Convert Selection 和 AxisMeld；展开结果并改键，再用 Key-Binding 搜索；切回 Blender 预设查看原生条目 | 待测试 |
+| BI-M29 | Preferences → Keymap 键位设置：中英文菜单与对应界面 | 待测试 |
 
 ## 通用 · Q/W/E/R 工具热盒交互
 
@@ -580,6 +625,7 @@
 | M3-12 | Display/Modify设置：分别改变X-Ray、Wire/Solid、选择/变换相关可选设置；悬停另一项但不提交，然后从原生UI改回并重开菜单 | 待测试 |
 | IC-08 | 打开含radio/checkbox的完整设置列表，切换选项并重新开盒，检查各列 | 待测试 |
 | MT-25 | Views和Controls分别打开Hotbox Style，再打开Set Transparency | 待测试 |
+| BI-C02 | 翻译开关：界面、工具提示与新建数据名称独立 | 待测试 |
 
 ## 通用 · 灰项、Options 与键盘导航
 
@@ -633,6 +679,9 @@
 | D-11 | 备份配置，分别改绑/禁用CREATE与MODEL，尝试F13、Ctrl+F13、Shift+MMB；重载两次并检查冲突提示 | 待测试 |
 | O-12 | 分别改绑/禁用CREATE和MODEL，测试Shift+RMB、Ctrl+Shift+MMB及键盘映射 | 待测试 |
 | GU-12 | 在隔离实例切换 Grease Pencil 绘画、UV编辑器、非3D编辑器及 Blender/Industry Compatible 键位；返回 AxisMeld，重载个人改键并重试 Ctrl 入口与持键 | 待测试 |
+| BI-C01 | 语言设置：仅英文与简体中文两种版本 | 待测试 |
+| BI-C03 | 保存语言后重启：中英偏好与原配置保持 | 待测试 |
+| BI-C04 | 旧语言偏好迁移：Automatic、第三语言及原中英文 | 待测试 |
 
 ## 通用 · 全局栏与工作区
 
@@ -648,6 +697,7 @@
 | RG-08 | 在临时配置用顶部+→General→Rigging添加工作区；再打开一个不含Rigging的旧测试blend，分别检查Load UI开启与关闭的行为 | 待测试 |
 | RG-14 | 在临时文件中将Rigging重命名并复制，分别检查Skeleton/Skin；保存、退出并以新进程重开；在Object、Edit Armature、Pose、Weight Paint及非骨架编辑模式间切换；分别删除含用途标记的活动与非活动工作区副本 | 待测试 |
 | GU-25 | 用 5.4 合并包的隔离配置从工厂启动，检查 Layout、Modeling、Rigging；使用临时副本打开以前的 AxisMeld 场景，切换工作区后保存重开；在 Rigging 创建 metarig、生成测试 rig，查看 Skeleton/Skin 与灰项说明，再切 Blender 键位 | 待测试 |
+| BI-C05 | 工作区与用户命名：中文按钮和真实数据名分离 | 待测试 |
 
 ## 通用 · 建模菜单归类与原生扩展
 
@@ -701,6 +751,7 @@
 | RG-04 | 准备旧Rigify偏好及Feature Set目录的临时副本，包含至少一个仍已安装但禁用的兼容Feature Set；记录其状态，用Rigify预览构建普通启动，保存临时偏好后再次启动 | 待测试 |
 | RG-05 | 在Rigify预览构建打开Preferences→Animation→Rigify，检查Feature Sets列表与选中项详情；关闭并重新打开偏好，再与RG-04记录的设置对照 | 待测试 |
 | RG-06 | 在独立临时配置和已保存的临时场景中，通过命令搜索执行Reload Scripts两次，每次检查Add→Armature和Rigify面板并创建、生成一个测试metarig；另用独立临时配置执行Load Factory Settings后重复 | 待测试 |
+| BI-C06 | 内置 Rigify：面板、生成控制 UI 与枚举中英切换 | 待测试 |
 
 ## 其他 · X/V/J 临时吸附
 

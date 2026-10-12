@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-13",
+  "status": "SOURCE_AND_CANDIDATE_TRANSLATIONS_VERIFIED",
+  "locales": [
+    "en_US",
+    "zh_HANS"
+  ],
+  "counts": {
+    "fixedUniqueLabels": 2696,
+    "commandExtraUniqueLabels": 212,
+    "fixedReasonsIncludingOptions": 404,
+    "dictionaryUnique": 3737,
+    "registeredContextEntries": 11228,
+    "exactAdditionalContexts": 17,
+    "publicUiOccurrencesChecked": 1134,
+    "publicUniqueUiSources": 944,
+    "internalSemanticIdentifiers": 60,
+    "nestedRigifyTemplates": 18,
+    "uniqueNestedRigifyUiSources": 107,
+    "generatedBundledMetarigCaptions": 18
+  },
+  "catalogMissing": {
+    "fixedLabels": [],
+    "commandExtra": [],
+    "fixedReasonsIncludingOptions": []
+  },
+  "missingUi": [],
+  "invalidDictionaryTargets": [],
+  "formatMismatches": [],
+  "normalizedTechnicalTerms": {
+    "UVs": "UV",
+    "Nurbs": "NURBS"
+  },
+  "sourceAuditSha256": "e59e6bb7512246207c80d81ff5100dc76947493dde8f614fcb725ce15a6f43a4",
+  "moduleSha256": {
+    "translations.py": "f89d506c9c7f928a575c3d1b51a7a570a43541476a85220806f46716c18d07db",
+    "translations_blender.py": "485f2aace46d4130aebbda6f48bb080139cd20a3a8ce37e43e6c1be762704d4f",
+    "translations_labels_a.py": "fd80689852d88b6357635ff4251946a3f476862b2bd2314aeebb0ec842a5b1a3",
+    "translations_labels_b.py": "c41147380c23cc90ac46d2cb203aa944ba11f79ed886a16c93eaddc7b2767183",
+    "translations_labels_c.py": "6673c06fb12d5725aa5c8c1935df48565f68107963af306d37117fec968dd15a",
+    "translations_native_labels.py": "f3aa705b9afd3bb9d897ebcbf9049bf93efeae743ef33c6968c3826e7c4670d6",
+    "translations_reasons.py": "6795fd6a61ca7cdc1c023b7e73586da7ef90251641009dd4d0f514bff22181c4",
+    "translations_ui.py": "1fad67c19e0087c7aa2f8155e56fbc765d8bb8e8d50887508ab3927511399be9"
+  },
+  "runtimeCaptions": 3737,
+  "nativeCandidateChecks": 129,
+  "guiRecords": 52,
+  "legacyProfiles": 5,
+  "candidateMigrationProcesses": 7,
+  "pythonGroups": 7,
+  "pythonTests": 90,
+  "nativeGroups": 2,
+  "nativeTests": 114,
+  "manualResultsChanged": false,
+  "nativeResidualSourcesReviewed": 106,
+  "coverageBoundary": "Fixed first-party catalogs, registered public UI captions, Rigify generated captions and reviewed native gaps. Standard formats, products, units, keys and user names are retained. RNA metadata is not a button count. Every Blender button has not been individually optically or manually tested.",
+  "viewsClearanceChecks": 88
+}

@@ -45,6 +45,23 @@ static CLG_LogRef LOG = {"translation"};
 
 #ifdef WITH_INTERNATIONAL
 
+/* Keep the original preference IDs when limiting AxisMeld to its two supported languages. */
+static constexpr int language_chinese_simplified = 13;
+static const EnumPropertyItem axismeld_language_items[] = {
+    {ULANGUAGE_ENGLISH, "en_US", 0, "English (US)", "English interface"},
+    {language_chinese_simplified,
+     "zh_HANS",
+     0,
+     "Chinese (Simplified) - 简体中文",
+     "Simplified Chinese interface"},
+    {0, nullptr, 0, nullptr, nullptr},
+};
+
+static bool language_supported(const int language)
+{
+  return ELEM(language, ULANGUAGE_ENGLISH, language_chinese_simplified);
+}
+
 /* Locale options. */
 static const char **locales = nullptr;
 static int num_locales = 0;
@@ -97,6 +114,10 @@ static void fill_locales()
       continue; /* Comment or void... */
     }
     t = atoi(str);
+    if (!language_supported(t)) {
+      line = line->next;
+      continue;
+    }
     if (t >= num_locales) {
       num_locales = t + 1;
     }
@@ -122,6 +143,10 @@ static void fill_locales()
       }
 
       const int id = atoi(str);
+      if (!language_supported(id)) {
+        line = line->next;
+        continue;
+      }
       sep1 = strchr(str, ':');
       if (sep1) {
         sep1++;
@@ -186,7 +211,8 @@ static void fill_locales()
 const EnumPropertyItem *BLT_lang_RNA_enum_properties()
 {
 #ifdef WITH_INTERNATIONAL
-  return locales_menu;
+  /* Remain usable with old or missing resource lists, including at first startup. */
+  return axismeld_language_items;
 #else
   return nullptr;
 #endif
@@ -238,23 +264,39 @@ void BLT_lang_free()
 static uint lang_from_userdef()
 {
   const uint language = uint(U.language);
-  if ((language >= ULANGUAGE_AUTO) && (language < num_locales)) {
+  if (language_supported(int(language))) {
     return language;
   }
   return uint(ULANGUAGE_ENGLISH);
+}
+
+static const char *language_locale(const uint language)
+{
+  const char *supported_locale = language == language_chinese_simplified ? "zh_HANS" : "en_US";
+  if (locales && language < uint(num_locales) && locales[language] &&
+      STREQ(locales[language], supported_locale))
+  {
+    return locales[language];
+  }
+  return supported_locale;
 }
 #endif
 
 #ifdef WITH_INTERNATIONAL
 #  define ULANGUAGE lang_from_userdef()
-#  define LOCALE(_id) (locales ? locales[(_id)] : "")
+#  define LOCALE(_id) language_locale(_id)
 #endif
 
 void BLT_lang_set(const char *str)
 {
 #ifdef WITH_INTERNATIONAL
-  int ulang = ULANGUAGE;
-  std::string locale_name = str ? str : LOCALE(ulang);
+  const uint ulang = str ?
+                         (STREQ(str, "zh_HANS") ? uint(language_chinese_simplified) :
+                                                uint(ULANGUAGE_ENGLISH)) :
+                         ULANGUAGE;
+  /* Old Automatic/other-language preferences must also display a valid enum selection. */
+  U.language = eUserpref_Language(ulang);
+  const std::string locale_name = LOCALE(ulang);
 
   /* #locale assumes UTF8, no need to put it in the name. */
   const std::optional<std::string> messagepath = BKE_appdir_folder_id(BLENDER_DATAFILES, "locale");

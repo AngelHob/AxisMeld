@@ -8,6 +8,7 @@
 #include "BKE_context.hh"
 #include "BLI_rect.hh"
 #include "BLF_api.hh"
+#include "BLT_translation.hh"
 #include "DNA_screen_types.h"
 #include "DNA_theme_types.h"
 #include "GPU_immediate.hh"
@@ -21,6 +22,18 @@
 
 namespace blender::axismeld {
 namespace {
+std::string hotbox_display_label(const MenuNode &node, const bool compact = false)
+{
+  // This row is a captured user's object name, even when it happens to match
+  // a translatable command caption. Never translate or rename scene data.
+  if (node.id == "context.component_menu.object") {
+    return node.label;
+  }
+  const std::string source = compact ? std::string(hotbox_view_short_label(node.command)) :
+                                       node.label;
+  return IFACE_(source.c_str());
+}
+
 int menu_radio_icon(const MenuSnapshot &snapshot, const MenuNode &node)
 {
   if (node.kind == MenuKind::Setting && node.command.starts_with("row.")) {
@@ -76,7 +89,7 @@ void hotbox_measure(HotboxVisual &data)
   auto measure = [&](auto &&self, const std::vector<MenuNode> &nodes, const bool state_column) -> void {
     for (const MenuNode &node : nodes) {
       const bool view_label = node.id.starts_with("views.") && node.kind == MenuKind::Command;
-      const std::string_view label = node.label;
+      const std::string label = hotbox_display_label(node);
       const float icon_width =
           node.kind == MenuKind::Separator ?
               0.0f :
@@ -85,7 +98,7 @@ void hotbox_measure(HotboxVisual &data)
       data.label_widths[node.id] = BLF_width(font, label.data(), label.size()) / data.scale +
                                    icon_width;
       if (view_label) {
-        const auto compact = hotbox_view_short_label(node.command);
+        const std::string compact = hotbox_display_label(node, true);
         data.label_widths["@compact:" + node.id] =
             BLF_width(font, compact.data(), compact.size()) / data.scale + icon_width;
       }
@@ -170,9 +183,7 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data, const int *draw_of
       const bool back = rect.id.starts_with("@back:");
       const MenuNode *node = hotbox_find_node(data.snapshot.menus,
                                               back ? rect.id.substr(6) : rect.id);
-      const std::string label = rect.compact_label ?
-                                    std::string(hotbox_view_short_label(node->command)) :
-                                node                           ? node->label :
+      const std::string label = node ? hotbox_display_label(*node, rect.compact_label) :
                                 rect.id.ends_with(":previous") ? "<" :
                                                                  ">";
       bool selected = data.hover_id == rect.id && data.hover_depth == rect.depth;
@@ -374,6 +385,7 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data, const int *draw_of
   if (!data.marking) {
     const MenuNode *hover = hotbox_find_node(data.snapshot.menus, data.hover_id);
     if (hover && !hover->reason.empty()) {
+      const std::string reason = TIP_(hover->reason.c_str());
       // The draw context owns the real window surface, not the source pane.
       // Measure with the same font and wrap width used below; BLF wraps downwards,
       // so lift the first baseline to keep the entire last line above the margin.
@@ -411,7 +423,7 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data, const int *draw_of
       const auto measure = [&](const int wrap_width) {
         BLF_wordwrap(font, std::max(1, wrap_width),
                      BLFWrapMode::Typographical | BLFWrapMode::HardLimit);
-        BLF_boundbox(font, hover->reason.c_str(), hover->reason.size(), &text_bounds);
+        BLF_boundbox(font, reason.c_str(), reason.size(), &text_bounds);
       };
       const auto fits = [&](const rctf &candidate) {
         return candidate.xmin >= window_bounds.xmin && candidate.ymin >= window_bounds.ymin &&
@@ -476,7 +488,7 @@ void hotbox_draw(const bContext *C, const HotboxVisual &data, const int *draw_of
         BLF_color4ubv(font, theme.wcol_menu_back.text);
         BLF_position(font, backdrop_bounds.xmin + padding - text_bounds.xmin,
                      backdrop_bounds.ymin + padding - text_bounds.ymin, 0);
-        BLF_draw(font, hover->reason.c_str(), hover->reason.size());
+        BLF_draw(font, reason.c_str(), reason.size());
       }
       BLF_disable(font, BLF_WORD_WRAP);
       BLF_wordwrap(font, 0);

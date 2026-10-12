@@ -12,13 +12,14 @@ import tempfile
 parser = argparse.ArgumentParser()
 parser.add_argument('--blender', required=True)
 parser.add_argument('--artifacts', help='Optional directory for isolated factory-scene screenshots')
-parser.add_argument('--suite', choices=('compact-companion', 'hotbox-repost', 'modeling-disabled-reason', 'menu-shortcuts', 'menu-options-navigation', 'menu-options-access', 'hotbox-reasons', 'file-window', 'history-hotbox', 'workspace-menu-layout', 'context-entries', 'temporary-snap', 'menu-options-geometry', 'modeling-viewport', 'workspace-bar', 'menubar-alignment', 'menubar-actions', 'menubar-sets', 'menubar-layout', 'menubar', 'maya-hierarchy', 'full-menu-entry', 'full-menu-lifecycle', 'fully-expanded', 'maya-content-state', 'maya-content', 'maya-companion', 'icons', 'object-menu', 'object-modeling', 'context-modeling', 'modeling', 'create', 'components', 'tools', 'tools-modifiers', 'hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection', 'appearance'), default='hotbox')
+parser.add_argument('--suite', choices=('bilingual', 'compact-companion', 'hotbox-repost', 'modeling-disabled-reason', 'menu-shortcuts', 'menu-options-navigation', 'menu-options-access', 'hotbox-reasons', 'file-window', 'history-hotbox', 'workspace-menu-layout', 'context-entries', 'temporary-snap', 'menu-options-geometry', 'modeling-viewport', 'workspace-bar', 'menubar-alignment', 'menubar-actions', 'menubar-sets', 'menubar-layout', 'menubar', 'maya-hierarchy', 'full-menu-entry', 'full-menu-lifecycle', 'fully-expanded', 'maya-content-state', 'maya-companion', 'icons', 'object-menu', 'object-modeling', 'context-modeling', 'modeling', 'create', 'components', 'tools', 'tools-modifiers', 'hotbox', 'menus', 'native-style', 'mappings', 'release', 'release-cross-window', 'profiles', 'selection', 'appearance'), default='hotbox')
 args = parser.parse_args()
 binary = Path(args.blender).resolve()
 with binary.open("rb") as stream:
     digest = hashlib.file_digest(stream, "sha256").hexdigest().upper()
 print("AXISMELD_TEST_BINARY", str(binary), "SHA256", digest, "SUITE", args.suite, flush=True)
 suite_script, pass_marker = {
+    'bilingual': ('axismeld_bilingual_events.py', b'AXISMELD_BILINGUAL_EVENTS_PASS'),
     'compact-companion': ('axismeld_compact_companion_events.py', b'AXISMELD_COMPACT_COMPANION_EVENTS_PASS'),
     'hotbox-repost': ('axismeld_hotbox_repost_events.py', b'AXISMELD_HOTBOX_REPOST_EVENTS_PASS'),
     'modeling-disabled-reason': ('axismeld_modeling_disabled_reason_events.py', b'AXISMELD_MODELING_DISABLED_REASON_PASS'),
@@ -83,7 +84,7 @@ with tempfile.TemporaryDirectory(prefix='axismeld-hotbox-') as directory:
         artifacts.mkdir(parents=True, exist_ok=True)
         env['AXISMELD_TEST_ARTIFACTS'] = str(artifacts)
     blender_args = [args.blender, '--factory-startup']
-    if args.suite in {'compact-companion', 'workspace-bar', 'hotbox-reasons'} and os.environ.get('AXISMELD_TEST_WINDOW_SIZE'):
+    if args.suite in {'bilingual', 'compact-companion', 'workspace-bar', 'hotbox-reasons'} and os.environ.get('AXISMELD_TEST_WINDOW_SIZE'):
         width, height = map(int, os.environ['AXISMELD_TEST_WINDOW_SIZE'].split('x'))
         blender_args += ['--window-border', '--window-geometry', '100', '100', str(width), str(height)]
     if args.suite == 'profiles':
@@ -93,7 +94,7 @@ with tempfile.TemporaryDirectory(prefix='axismeld-hotbox-') as directory:
     result = subprocess.run(
         [*blender_args, '--python-exit-code', '1',
          '--python', str(Path(__file__).with_name(suite_script))],
-        env=env, startupinfo=startup, capture_output=True, timeout=240)
+        env=env, startupinfo=startup, capture_output=True, timeout=900 if args.suite == 'bilingual' else 240)
     sys.stdout.buffer.write(result.stdout)
     sys.stderr.buffer.write(result.stderr)
     if result.returncode or pass_marker not in result.stdout:

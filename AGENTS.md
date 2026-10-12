@@ -1,15 +1,20 @@
 # AxisMeld 开发接续
 
-**最新交付（2026-10-11 18px companion preview）：热盒下方列表 18 像素预览已发布。** 仅将热盒下方伴随列表及其级联普通行高设为 18 逻辑像素（100% 界面缩放），Options 宽 18、细分隔 4.5；文字、图标、列宽和留白沿 18/24 的局部比例同步，高 DPI 保持 Blender 界面缩放规则；周围方向按钮、四视图间隔、主热盒栏及普通原生菜单保持原尺寸。完整条目、底部避让和说明无空间时隐藏的规则保持，不折叠、不滚动，不随窗口继续缩小。 沿用 Blender 5.4 Alpha 固定上游 `754ebe3c4b4e1402a159df6e1e58823cc93ef887`，本批未再次合并上游。6 组 42 项相关 Python、2 组 114 项原生、3 组既有 GUI 回归与 1 组本批列表几何验证通过。[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview)，源码/native `f72fb413ba9c16f41c453dde98469ef1933285c1`；匿名下载、干净解压及工厂启动已核验。详见[本批验收](docs/compatibility/2026-10-11-18px-companion-acceptance.md)与[发布快照](docs/compatibility/2026-10-11-18px-companion-preview-snapshot.json)。本批 Pages `b448822d223e` 的 6 个公开资源逐字节核验通过。公开目录 345 项（当前 331、历史 14），47 项仅历史已测，当前初始未测 284、全表初始未测 298；最新标记 GU-28。既有编号与人工结果保持，自动化不替用户勾选。新增建模、Skin/Skeleton、UV 算法继续暂停。
+**最新批次（2026-10-13）：双语界面本地门禁通过，待公开交付。** 标签保留 `axismeld-2026.10.12-bilingual-ui-preview`；仅 `en_US`/`zh_HANS`，默认英文。原生词库与补词覆盖热盒、菜单、Options、灰说明和内置 Rigify，测量与显示同文；真实数据名称、18px 列表、Views 间隔及既有交互保持。旧 locale 回退/保留、中文保存重启及重载工厂启动布局保留已保存 prefs 已验证，不能称作重置全部偏好仍保留中文。见[双语验收](docs/compatibility/2026-10-13-bilingual-ui-acceptance.md)。
+
+本批已通过新构建/安装（6,529 文件、153 选定资源）、2 组 114 原生、7 组 90 Python、3,737 固定源词运行时、129 原生按钮/英文往返、5 旧偏好种子/7 新进程、既有 3 套交互、最终双语 GUI 52 记录、中英文说明与 18/27px 几何、本地网站 14 浏览器检查。剩余仅公开交付：最终源码 SHA 绑定、完整 ZIP/解压/启动、匿名下载、远端和 Pages 六资源核验；不要将本地通过当作发布成功。
+
+**上一已核验交付（2026-10-11 18px companion preview）：热盒下方列表 18 像素预览已发布。** 仅将热盒下方伴随列表及其级联普通行高设为 18 逻辑像素（100% 界面缩放），Options 宽 18、细分隔 4.5；文字、图标、列宽和留白沿 18/24 的局部比例同步，高 DPI 保持 Blender 界面缩放规则；周围方向按钮、四视图间隔、主热盒栏及普通原生菜单保持原尺寸。完整条目、底部避让和说明无空间时隐藏的规则保持，不折叠、不滚动，不随窗口继续缩小。 沿用 Blender 5.4 Alpha 固定上游 `754ebe3c4b4e1402a159df6e1e58823cc93ef887`，本批未再次合并上游。6 组 42 项相关 Python、2 组 114 项原生、3 组既有 GUI 回归与 1 组本批列表几何验证通过。[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview)，源码/native `f72fb413ba9c16f41c453dde98469ef1933285c1`；匿名下载、干净解压及工厂启动已核验。详见[本批验收](docs/compatibility/2026-10-11-18px-companion-acceptance.md)与[发布快照](docs/compatibility/2026-10-11-18px-companion-preview-snapshot.json)。本批 Pages `b448822d223e` 的 6 个公开资源逐字节核验通过。公开目录 345 项（当前 331、历史 14），47 项仅历史已测，当前初始未测 284、全表初始未测 298；最新标记 GU-28。既有编号与人工结果保持，自动化不替用户勾选。新增建模、Skin/Skeleton、UV 算法继续暂停。
 
 - 新接手先读 `docs/ROADMAP.md`、`docs/CURRENT_ISSUES.md`、`docs/HANDOFF.md`，再读当前模块设计与源码。旧日期文档是历史设计，不可据其状态重做已经交付的功能。
 - 当前开发分支为 `axismeld/phase-2a`；默认 `axismeld/integration` 未包含最新功能。不要自动合并到默认分支；新机拉取、LFS、构建、验证及发布说明见 `docs/BUILD_AND_DELIVERY.md`。
 - 保留 Blender 全局菜单与工作区栏。Modeling 七根菜单保持；Vertex/Edge/Face 在 Edit Mesh 内；不恢复 Deform/Generate 根。Rigging 是原生工作区，Rigify 是内置模块。
+- 双语改动先读 `docs/development/2026-10-12-bilingual-ui.md`。保留英文源目录/稳定 ID，只在显示边界翻译；IFACE/TIP 与 Menu/Operator 上下文、测宽和绘制必须一致。内置工作区只翻译标签，不改实际名称；旧“建模”兼容保留，其他用户数据/路径不译。默认 Blender 键位、Layout 和英文不变。
 - Maya 未适配功能保留灰占位，Options 与正文独立；使用真实原生 Menu/operator 上下文，不把相似功能冒充等价，不隐式修改选区来绕过不可用条件。
 - `AXM-COMPAT-001` 全局缩放差异按用户决定搁置，不自动重启。人工验收暂缓不阻止可验证的开发，但自动化不得替代人工状态。
 - 当前优先级（2026-09-29 用户更正）：UI、交互与 Maya 2026 默认快捷键优先，暂停新增建模、Skin/Skeleton、UV 算法和功能适配。U0–U3 当前范围实现已完成；保留已实现入口和回归，接续先查本批验收与具体反馈，不重复开发。阶段交付后报告范围与待人工内容，由用户决定何时恢复功能开发；不自动回到 A2 Influences。
 - Space → File 只接入 Open Scene / Save Scene As 两个无默认快捷键的语义命令。跨窗松键依靠精确调用 token 穿过原生确认链；不得改成全局键盘拦截、跳过确认或把其他 File/Window 灰项批量启用。设计见 `docs/development/2026-10-11-file-window-release-design.md`。
-- 公开目录 345 项（当前 331、历史 14），47 项仅历史已测，当前初始未测 284、全表初始未测 298；最新标记 GU-28。既有编号与人工结果保持，自动化不替用户勾选。
+- 仓库待发布目录为 394 项（当前 380、历史 14），保留 47 项历史已测标记；当前初始未测 333、全表初始未测 347。本批新增 49 项 BI 验收，新增标记共 50 项（含保留 GU-28）。既有编号与人工结果保持，自动化不替用户勾选。 本地网站已验证，公开 Pages 与本批下载入口仍待发布核验。
 
 ## AxisMeld 热盒约束
 
