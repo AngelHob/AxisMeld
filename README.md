@@ -14,11 +14,11 @@ AxisMeld 与 Blender Foundation、Autodesk 及其产品均无隶属、合作、�
 
 最新开发位于 **`axismeld/phase-2a`**；默认 `axismeld/integration` 尚未集成最新功能。
 
-**本批双语界面本地门禁已通过，待公开交付。** 预览标签保留 `axismeld-2026.10.12-bilingual-ui-preview`；语言仅 English（`en_US`）和简体中文（`zh_HANS`），默认英文。复用 Blender 原生中文词库并补齐固定热盒、菜单、Options、灰项说明与内置 Rigify，测宽/显示采用同一译文。数据名称、18px 伴随列表、四视图间隔和既有交互保持，不新增算法。灰占位仍表示能力未适配。
+**中英文界面完整预览已发布并核验。** 预览标签保留 `axismeld-2026.10.12-bilingual-ui-preview`；语言仅 English（`en_US`）和简体中文（`zh_HANS`），默认英文。复用 Blender 原生中文词库并补齐固定热盒、菜单、Options、灰项说明与内置 Rigify，测宽/显示采用同一译文。数据名称、18px 伴随列表、四视图间隔和既有交互保持，不新增算法。灰占位仍表示能力未适配。
 
-新原生构建/安装、2 组 114 原生和 7 组 90 Python、3,737 固定源词运行时、129 项原生按钮/英文往返、真实旧偏好迁移、最终双语 GUI 52 条记录、三套既有交互及 18/27px 几何通过，详见[双语验收](docs/compatibility/2026-10-13-bilingual-ui-acceptance.md)。旧 Automatic/其他 locale 回退英文，简中/英文保留；中文保存重启及重载工厂启动布局保留已保存 prefs 已核验。
+新原生构建/安装、2 组 114 原生和 7 组 90 Python、3,737 固定源词运行时、129 项原生按钮/英文往返、真实旧偏好迁移、最终双语 GUI 52 条记录、三套既有交互、18/27px几何及88项实际Views净间隔比较通过，详见[双语验收](docs/compatibility/2026-10-13-bilingual-ui-acceptance.md)。旧 Automatic/其他 locale 回退英文，简中/英文保留；中文保存重启及重载工厂启动布局保留已保存 prefs 已核验。
 
-完整双语 ZIP、独立解压/启动、匿名下载、远端和 Pages 尚待公开交付核验。当前已核验公开下载仍为 [18px companion preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview)，该旧包不含本批双语改动；不能用它验收 BI 项。
+完整[双语预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.12-bilingual-ui-preview)已公开发布；功能/native 源码 `e0c4bd7f90ebc3a6016b1c934b1f4d15c42d556e`，运行 EXE 与本批验证相同。6,532 个发行文件、153 项选定资源、独立解压/工厂启动、匿名下载和公开包 3,737 源词运行时已核验。Pages `af31ae30e55c79781b3ff42e8d811d2f71ca7725` 的六个公开资源逐字节一致。 [下载 Windows x64 完整包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.12-bilingual-ui-preview) · [发布指纹与验证范围](docs/compatibility/2026-10-13-bilingual-ui-preview-snapshot.json)。
 
 - [整体规划与路线图](docs/ROADMAP.md) · [当前问题](docs/CURRENT_ISSUES.md) · [修改日志](docs/CHANGELOG.md)。
 - [新机器接续](docs/HANDOFF.md) · [接续提示词](docs/CODEX_HANDOFF_PROMPT.md) · [构建与交付](docs/BUILD_AND_DELIVERY.md)。
@@ -28,7 +28,7 @@ Modeling 视窗保留 Mesh、Edit Mesh、Mesh Tools、Mesh Display、Curves、Su
 
 新完整便携包默认 Blender 键位、Layout 和英文。选择简中用 Edit → Preferences → Interface → Language；选择 Maya 流程用 Preferences → Keymap → **AxisMeld Maya 2026**，再切 Modeling/Rigging。需要保留时主动保存偏好。
 
-仓库待发布目录为 394 项（当前 380、历史 14），保留 47 项历史已测标记；当前初始未测 333、全表初始未测 347。本批新增 49 项 BI 验收，新增标记共 50 项（含保留 GU-28）。既有编号与人工结果保持，自动化不替用户勾选。 本地网站 14 项浏览器检查通过，公开网页仍待本批部署核验。勾选只存访客浏览器，通过 GitHub Issue 分享结果。
+公开目录为 394 项（当前 380、历史 14），保留 47 项历史已测标记；当前初始未测 333、全表初始未测 347。本批新增 49 项 BI 验收，新增标记共 50 项（含保留 GU-28）。既有编号与人工结果保持，自动化不替用户勾选。 本地网站 14 项浏览器检查通过，公开网页六个资源已逐字节核验，下载链接与本批构建标签一致。勾选只存访客浏览器，通过 GitHub Issue 分享结果。
 
 下面 Phase 0～2B 保留基础能力说明，当前进度以路线图和日志为准；原始架构见[架构设计](docs/design/2026-09-08-axismeld-architecture.md)。
 

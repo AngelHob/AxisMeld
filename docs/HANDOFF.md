@@ -2,7 +2,7 @@
 
 本页面向未读过聊天记录的开发者和 Codex。首批 GUI 收敛的历史起点为 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`；本批版本见下文，执行前核对远端与当前源码。新算法仍暂停，不因 UI 实施完成自动启动 A2。
 
-**当前接续（2026-10-13）：双语 GUI 本地门禁通过，待公开交付。** 标签保留 `axismeld-2026.10.12-bilingual-ui-preview`。仅 English（`en_US`，ID 1）和简体中文（`zh_HANS`，ID 13），默认英文；原生词库与补词覆盖固定热盒、菜单、Options、灰说明及内置 Rigify，保留实际数据名/18px/既有交互。[本批验收](compatibility/2026-10-13-bilingual-ui-acceptance.md)记录构建、翻译、迁移、GUI 与几何结果。当前仅完整包与公开交付尚待收齐，不要据下文旧包记录宣称双语版已发布。
+**当前接续（2026-10-13）：双语 GUI 完整预览已公开交付。** 标签保留 `axismeld-2026.10.12-bilingual-ui-preview`。仅 English（`en_US`，ID 1）和简体中文（`zh_HANS`，ID 13），默认英文；原生词库与补词覆盖固定热盒、菜单、Options、灰说明及内置 Rigify，保留实际数据名/18px/既有交互。[本批验收](compatibility/2026-10-13-bilingual-ui-acceptance.md)记录构建、翻译、迁移、GUI 与几何结果。完整[双语预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.12-bilingual-ui-preview)已公开发布；功能/native 源码 `e0c4bd7f90ebc3a6016b1c934b1f4d15c42d556e`，运行 EXE 与本批验证相同。6,532 个发行文件、153 项选定资源、独立解压/工厂启动、匿名下载和公开包 3,737 源词运行时已核验。Pages `af31ae30e55c79781b3ff42e8d811d2f71ca7725` 的六个公开资源逐字节一致。 详见[发布快照](compatibility/2026-10-13-bilingual-ui-preview-snapshot.json)；按入口人工测试仍未由自动化完成。
 
 **上一已核验交付（2026-10-11 18px companion preview）：热盒下方列表 18 像素预览已发布。** 仅将热盒下方伴随列表及其级联普通行高设为 18 逻辑像素（100% 界面缩放），Options 宽 18、细分隔 4.5；文字、图标、列宽和留白沿 18/24 的局部比例同步，高 DPI 保持 Blender 界面缩放规则；周围方向按钮、四视图间隔、主热盒栏及普通原生菜单保持原尺寸。完整条目、底部避让和说明无空间时隐藏的规则保持，不折叠、不滚动，不随窗口继续缩小。 沿用 Blender 5.4 Alpha 固定上游 `754ebe3c4b4e1402a159df6e1e58823cc93ef887`，本批未再次合并上游。6 组 42 项相关 Python、2 组 114 项原生、3 组既有 GUI 回归与 1 组本批列表几何验证通过。[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview)，源码/native `f72fb413ba9c16f41c453dde98469ef1933285c1`；匿名下载、干净解压及工厂启动已核验。详见[本批验收](compatibility/2026-10-11-18px-companion-acceptance.md)与[发布快照](compatibility/2026-10-11-18px-companion-preview-snapshot.json)。本批 Pages `b448822d223e` 的 6 个公开资源逐字节核验通过。公开目录 345 项（当前 331、历史 14），47 项仅历史已测，当前初始未测 284、全表初始未测 298；最新标记 GU-28。既有编号与人工结果保持，自动化不替用户勾选。新增建模、Skin/Skeleton、UV 算法继续暂停。
 
@@ -25,7 +25,7 @@ git log -5 --oneline
 
 1. 根目录 [AGENTS.md](../AGENTS.md)：热盒与交付硬约束。
 2. [ROADMAP](ROADMAP.md)、[CURRENT_ISSUES](CURRENT_ISSUES.md)、[CHANGELOG](CHANGELOG.md)：现状、下一批和已修复事项。
-3. [构建与交付](BUILD_AND_DELIVERY.md)、[上一已核验快照](compatibility/2026-10-11-18px-companion-preview-snapshot.json)：命令、源码与发布版本关系；本批双语本地证据见[双语验收](compatibility/2026-10-13-bilingual-ui-acceptance.md)，公开快照在最终交付后绑定源码身份；旧验收仅用于对应历史包。
+3. [构建与交付](BUILD_AND_DELIVERY.md)、[上一已核验快照](compatibility/2026-10-11-18px-companion-preview-snapshot.json)：命令、源码与发布版本关系；本批双语本地证据见[双语验收](compatibility/2026-10-13-bilingual-ui-acceptance.md)，[双语发布快照](compatibility/2026-10-13-bilingual-ui-preview-snapshot.json)已绑定确切源码、包及公开核验身份；旧验收仅用于对应历史包。
 4. 当前模块设计；本批先读[双语界面](development/2026-10-12-bilingual-ui.md)，再按需读 [Rigging](development/2026-09-17-rigging-workspace.md)、[Rigify](development/2026-09-15-rigify-builtin.md)、[紧凑建模栏](development/2026-09-15-compact-modeling-public-testing.md)。
 5. 当前模块源码、测试和[人工总清单](compatibility/2026-09-14-manual-test-ledger.md)。历史架构、旧 plans 用作背景；冲突时遵循用户后续决定及当前总览。
 
@@ -60,9 +60,9 @@ git log -5 --oneline
 
 - 翻译入口：`scripts/modules/axismeld/translations.py` 与各补词文件，经 `scripts/startup/bl_operators/axismeld.py` 内置注册；原生语言在 `blt_lang.cc`，安装规则在 `source/creator/CMakeLists.txt`。英文目录和稳定 ID 保持，翻译只在显示边界发生；IFACE/TIP/菜单上下文与测宽使用一致译文。
 - 数据与布局：工作区真实名称不改写，内置标签显示中文，旧“建模”继续识别；对象/骨骼/材质等名称与路径保留。默认仍为 Blender 键位及 Layout、英文界面，主动选择 Maya 预设后再验证对应菜单。伴随列表仍 18 逻辑像素，不折叠/不滚动，方向按钮与 Views 间隔不缩小。
-- 本批新构建/安装/原生测试及实际翻译覆盖已通过：6,529 个安装文件、153 项选定资源、2 组 114 项原生与 7 组 90 项 Python；3,737 个固定源词、129 项原生按钮及英文往返通过。EXE 与具体回执见双语验收，发布源码 SHA 由最终快照绑定。
+- 本批新构建/安装/原生测试及实际翻译覆盖已通过：6,529 个安装文件、153 项选定资源、2 组 114 项原生与 7 组 90 项 Python；3,737 个固定源词、129 项原生按钮及英文往返通过。EXE 与具体回执见双语验收，功能/native 源码为 `e0c4bd7f90ebc3a6016b1c934b1f4d15c42d556e`，身份见双语发布快照。
 - 真实迁移 baseline-05 的 5 种旧偏好、verify-04 的 7 次新进程全部通过；中文保存重启及重载工厂启动布局保留已保存 prefs 已核验。测试在 `tests/python/axismeld_bilingual_language_migration.py`；后台 predicate 报告明示实际数据上下文、OBJECT 模式与未验证 GUI 切换，真实 GUI 切换另由最终 52 条记录验证。保留旧失败和隔离种子。
-- 既有三套交互、最终双语 GUI 52 条记录、中文低窗口说明及英文 100%/150% 的 18/27px 几何通过；方向按钮与既有基线一致。剩余是完整 ZIP/解压/启动、匿名下载、远端与 Pages 六资源核验，不新增算法。
+- 既有三套交互、最终双语 GUI 52 条记录、中文低窗口说明及英文 100%/150% 的 18/27px 几何通过；方向按钮与既有基线一致。88 项实际 Views 净间隔比较也通过；完整 ZIP/解压/启动、匿名下载、公开包双语运行时和 Pages 六资源均已核验。不新增算法。
 
 当前输入导出为 58 默认命令、60 条含别名绑定、7 个操纵器辅助入口、3 个原生模态持键入口、499 条原生继承、45 条移除、187 个受保护 keymap；基准/生成 keymap 为 281/282。原 18+2 输入参考已闭合；原生继承不宣称 Maya 等价。
 
@@ -74,7 +74,7 @@ git log -5 --oneline
 
 D/C/F12/1/2/3 及 Shift+J 的缺口分别涉及独立枢轴、曲线最近点、UV 选择域、可恢复预览和相对吸附，不用近似操作冒充完成。独立 Vertex Face、Isolate 动态书签提供器、Skin/Skeleton/建模/UV 新算法继续后置，Global 缩放继续搁置。
 
-仓库待发布目录为 394 项（当前 380、历史 14），保留 47 项历史已测标记；当前初始未测 333、全表初始未测 347。本批新增 49 项 BI 验收，新增标记共 50 项（含保留 GU-28）。既有编号与人工结果保持，自动化不替用户勾选。 本地网站 14 项浏览器检查通过；网页勾选属于各访客浏览器，GitHub Issue 才是共享反馈，Pages 本批部署仍待核验。
+公开目录为 394 项（当前 380、历史 14），保留 47 项历史已测标记；当前初始未测 333、全表初始未测 347。本批新增 49 项 BI 验收，新增标记共 50 项（含保留 GU-28）。既有编号与人工结果保持，自动化不替用户勾选。 本地网站 14 项浏览器检查通过；网页勾选属于各访客浏览器，GitHub Issue 才是共享反馈，Pages 本批六资源逐字节核验通过。
 
 后续优先处理新构建的具体 UI/输入反馈与显示/手感验收，保留已通过的实现和回归。阶段收敛后先向用户报告范围与限制，恢复功能开发须由用户决定，不自动回到旧 A2 队列。
 
@@ -82,7 +82,7 @@ D/C/F12/1/2/3 及 Shift+J 的缺口分别涉及独立枢轴、曲线最近点、
 
 按 [AGENTS](../AGENTS.md) 更新设计、CHANGELOG 和有变化的测试条目，执行相称验证，再 commit/push 并核验远端 SHA；用户已授权每批开发完成上传 GitHub，不需要重复确认。未通过的必要检查不得用“已完成”掩盖。
 
-Pages 只同步前端运行资源；先验证源码/包/解压启动，再发布新版并核对匿名下载和线上字节。双语批次仍待公开交付：远端提交、Release/完整包/独立启动、匿名下载及 Pages 六资源核验尚未收齐。上一已核验完整 [18px companion preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview) 已发布；源码/native `f72fb413ba9c16f41c453dde98469ef1933285c1`，基于 Blender 5.4 Alpha。ZIP 303,157,284 字节，SHA256 `c7937d5fa1b29c723db91ffbbcf64b600983f3a9ba3b67566d4b343a516771f6`；EXE SHA256 `1771b999626225aaeecf2e911f7cd8d06149d466485679bc136cd1fe961324fc`。候选、本地解压包及匿名下载解压包工厂启动通过；本地解压包的列表 GUI 也已通过。[发布快照](compatibility/2026-10-11-18px-companion-preview-snapshot.json)保存精确指纹。旧预览包保留。本批 Pages `b448822d223e` 的 6 个公开资源逐字节核验通过。
+Pages 只同步前端运行资源；先验证源码/包/解压启动，再发布新版并核对匿名下载和线上字节。完整[双语预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.12-bilingual-ui-preview)已公开发布；功能/native 源码 `e0c4bd7f90ebc3a6016b1c934b1f4d15c42d556e`，运行 EXE 与本批验证相同。6,532 个发行文件、153 项选定资源、独立解压/工厂启动、匿名下载和公开包 3,737 源词运行时已核验。Pages `af31ae30e55c79781b3ff42e8d811d2f71ca7725` 的六个公开资源逐字节一致。 具体 ZIP/EXE 校验值见[双语快照](compatibility/2026-10-13-bilingual-ui-preview-snapshot.json)。上一已核验完整 [18px companion preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview) 已发布；源码/native `f72fb413ba9c16f41c453dde98469ef1933285c1`，基于 Blender 5.4 Alpha。ZIP 303,157,284 字节，SHA256 `c7937d5fa1b29c723db91ffbbcf64b600983f3a9ba3b67566d4b343a516771f6`；EXE SHA256 `1771b999626225aaeecf2e911f7cd8d06149d466485679bc136cd1fe961324fc`。候选、本地解压包及匿名下载解压包工厂启动通过；本地解压包的列表 GUI 也已通过。[发布快照](compatibility/2026-10-11-18px-companion-preview-snapshot.json)保存精确指纹。旧预览包保留。本批 Pages `b448822d223e` 的 6 个公开资源逐字节核验通过。
 
 历史 A1 另发的 Skin weights 预览包（Python 源码 bf35ab393b7c）复用 Rigging native，旧 tag 和历史测试结果保持；对应记录为 compatibility/2026-09-17-skin-weights-snapshot.json。
 
