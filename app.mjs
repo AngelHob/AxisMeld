@@ -195,10 +195,19 @@ async function boot() {
   byId('count-history').textContent = historyCount ? `(${historyCount})` : '';
   byId('recent-toggle').disabled = newCount === 0;
   byId('history-toggle').disabled = historyCount === 0;
+  const groupFamilies = new Map();
   for (const group of [...new Set(items.map(item => item.group))]) {
-    const option = element('option', '', group);
+    const separator = group.indexOf(' · ');
+    const family = separator > 0 ? group.slice(0, separator) : '其他';
+    if (!groupFamilies.has(family)) {
+      const section = element('optgroup');
+      section.label = family;
+      groupFamilies.set(family, section);
+      byId('group-filter').append(section);
+    }
+    const option = element('option', '', separator > 0 ? group.slice(separator + 3) : group);
     option.value = group;
-    byId('group-filter').append(option);
+    groupFamilies.get(family).append(option);
   }
   byId('default-build').value = state.defaultBuildId;
   byId('default-build').addEventListener('change', event => {
@@ -371,7 +380,15 @@ async function boot() {
     const pages = Math.max(1, Math.ceil(matched.length / PAGE_SIZE));
     page = Math.max(1, Math.min(page, pages));
     const offset = (page - 1) * PAGE_SIZE;
-    const nodes = matched.slice(offset, offset + PAGE_SIZE).map(testCard);
+    const nodes = [];
+    let previousGroup = null;
+    for (const item of matched.slice(offset, offset + PAGE_SIZE)) {
+      if (item.group !== previousGroup) {
+        nodes.push(element('h2', 'test-group-heading', item.group));
+        previousGroup = item.group;
+      }
+      nodes.push(testCard(item));
+    }
     byId('test-list').replaceChildren(...nodes);
     byId('empty-state').hidden = matched.length !== 0;
     byId('pagination').hidden = matched.length === 0;
