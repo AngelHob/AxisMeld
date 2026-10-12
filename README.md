@@ -10,24 +10,27 @@ AxisMeld 官方版本永久免费，不销售软件，不设置付费功能，�
 
 AxisMeld 与 Blender Foundation、Autodesk 及其产品均无隶属、合作、赞助或官方背书关系。Blender、Autodesk 和 Maya 等名称仅用于事实性说明软件基础及兼容目标。
 
-## 当前开发与接续（2026-10-11）
+## 当前开发与接续（2026-10-13）
 
-最新开发位于 **`axismeld/phase-2a`**；GitHub 默认 `axismeld/integration` 尚未集成最新功能。
-**最新交付（2026-10-11 18px companion preview）：热盒下方列表 18 像素预览已发布。** 仅将热盒下方伴随列表及其级联普通行高设为 18 逻辑像素（100% 界面缩放），Options 宽 18、细分隔 4.5；文字、图标、列宽和留白沿 18/24 的局部比例同步，高 DPI 保持 Blender 界面缩放规则；周围方向按钮、四视图间隔、主热盒栏及普通原生菜单保持原尺寸。完整条目、底部避让和说明无空间时隐藏的规则保持，不折叠、不滚动，不随窗口继续缩小。 沿用 Blender 5.4 Alpha 固定上游 `754ebe3c4b4e1402a159df6e1e58823cc93ef887`，本批未再次合并上游。6 组 42 项相关 Python、2 组 114 项原生、3 组既有 GUI 回归与 1 组本批列表几何验证通过。[下载新版](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview)，源码/native `f72fb413ba9c16f41c453dde98469ef1933285c1`；匿名下载、干净解压及工厂启动已核验。详见[本批验收](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/compatibility/2026-10-11-18px-companion-acceptance.md)与[发布快照](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/compatibility/2026-10-11-18px-companion-preview-snapshot.json)。本批 Pages `b448822d223e` 的 6 个公开资源逐字节核验通过。公开目录 345 项（当前 331、历史 14），47 项仅历史已测，当前初始未测 284、全表初始未测 298；最新标记 GU-28。既有编号与人工结果保持，自动化不替用户勾选。新增建模、Skin/Skeleton、UV 算法继续暂停。
+最新开发位于 **`axismeld/phase-2a`**；默认 `axismeld/integration` 尚未集成最新功能。
 
-本批仅调整热盒下方伴随列表及其级联的固定尺寸。已有上下文、History、临时吸附、文件窗口及短窗口说明行为继续保留；缺失 Maya 能力保持灰显，实体鼠标和生产场景仍需人工验收。
+**中英文界面完整预览已发布并核验。** 预览标签保留 `axismeld-2026.10.12-bilingual-ui-preview`；语言仅 English（`en_US`）和简体中文（`zh_HANS`），默认英文。复用 Blender 原生中文词库并补齐固定热盒、菜单、Options、灰项说明与内置 Rigify，测宽/显示采用同一译文。数据名称、18px 伴随列表、四视图间隔和既有交互保持，不新增算法。灰占位仍表示能力未适配。
+
+新原生构建/安装、2 组 114 原生和 7 组 90 Python、3,737 固定源词运行时、129 项原生按钮/英文往返、真实旧偏好迁移、最终双语 GUI 52 条记录、三套既有交互、18/27px几何及88项实际Views净间隔比较通过，详见[双语验收](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/compatibility/2026-10-13-bilingual-ui-acceptance.md)。旧 Automatic/其他 locale 回退英文，简中/英文保留；中文保存重启及重载工厂启动布局保留已保存 prefs 已核验。
+
+完整[双语预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.12-bilingual-ui-preview)已公开发布；功能/native 源码 `e0c4bd7f90ebc3a6016b1c934b1f4d15c42d556e`，运行 EXE 与本批验证相同。6,532 个发行文件、153 项选定资源、独立解压/工厂启动、匿名下载和公开包 3,737 源词运行时已核验。Pages `af31ae30e55c79781b3ff42e8d811d2f71ca7725` 的六个公开资源逐字节一致。 [下载 Windows x64 完整包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.12-bilingual-ui-preview) · [发布指纹与验证范围](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/compatibility/2026-10-13-bilingual-ui-preview-snapshot.json)。
 
 - [整体规划与路线图](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/ROADMAP.md) · [当前问题](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/CURRENT_ISSUES.md) · [修改日志](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/CHANGELOG.md)。
-- [新机器接续开发](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/HANDOFF.md) · [直接复制给 Codex 的提示词](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/CODEX_HANDOFF_PROMPT.md) · [构建与交付](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/BUILD_AND_DELIVERY.md)。
-- [公开测试页](https://angelhob.github.io/AxisMeld/) · [Windows x64 热盒下方列表 18 像素预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview)（完整原生包，附 ZIP 校验文件）· [发布指纹与验证范围](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/compatibility/2026-10-11-18px-companion-preview-snapshot.json)。
+- [新机器接续](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/HANDOFF.md) · [接续提示词](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/CODEX_HANDOFF_PROMPT.md) · [构建与交付](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/BUILD_AND_DELIVERY.md)。
+- [公开测试页](https://angelhob.github.io/AxisMeld/) · [按热盒与菜单的测试分类](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/compatibility/2026-10-12-tests-by-entry.md)。
 
-Modeling 视窗保留 Mesh、Edit Mesh、Mesh Tools、Mesh Display、Curves、Surfaces、UV；Vertex/Edge/Face 收于 Edit Mesh。Rigging 的 Skeleton/Skin 保留 Maya 82 条正文和 33 个 Options，并收纳已有 Blender 骨架、绑定、权重、姿态及 Rigify 入口。
+Modeling 视窗保留 Mesh、Edit Mesh、Mesh Tools、Mesh Display、Curves、Surfaces、UV，Vertex/Edge/Face 收于 Edit Mesh。Rigging 的 Skeleton/Skin 收纳原生骨架、绑定、权重、姿态及内置 Rigify；未适配的 Maya 正文和 Options 保持灰显。
 
-仓库新完整便携包采用干净工厂配置，初次为 Blender 键位与 Layout。试用 Maya 流程时，在 Edit → Preferences → Keymap 选择 **AxisMeld Maya 2026**，再切 Modeling 或 Rigging；需要保留时主动保存偏好。
+新完整便携包默认 Blender 键位、Layout 和英文。选择简中用 Edit → Preferences → Interface → Language；选择 Maya 流程用 Preferences → Keymap → **AxisMeld Maya 2026**，再切 Modeling/Rigging。需要保留时主动保存偏好。
 
-公开目录 345 项（当前 331、历史 14），47 项仅历史已测，当前初始未测 284、全表初始未测 298；最新标记 GU-28。既有编号与人工结果保持，自动化不替用户勾选。网页勾选保存于各访客浏览器，通过 GitHub Issue 分享。
+公开目录为 394 项（当前 380、历史 14），保留 47 项历史已测标记；当前初始未测 333、全表初始未测 347。本批新增 49 项 BI 验收，新增标记共 50 项（含保留 GU-28）。既有编号与人工结果保持，自动化不替用户勾选。 本地网站 14 项浏览器检查通过，公开网页六个资源已逐字节核验，下载链接与本批构建标签一致。勾选只存访客浏览器，通过 GitHub Issue 分享结果。
 
-下面的 Phase 0～2B 段落保留基础能力说明；后续完整进度以路线图和修改日志为准。原始架构见 [AxisMeld 架构设计](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/design/2026-09-08-axismeld-architecture.md)。
+下面 Phase 0～2B 保留基础能力说明，当前进度以路线图和日志为准；原始架构见[架构设计](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/design/2026-09-08-axismeld-architecture.md)。
 
 ## AxisMeld project statement
 
