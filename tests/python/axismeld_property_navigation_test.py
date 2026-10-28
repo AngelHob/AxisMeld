@@ -119,6 +119,16 @@ class NavigationTest(unittest.TestCase):
                 self.assertEqual(self.api.run(self.ctx, 'OBJECT'), {'CANCELLED'})
                 self.assertEqual(space.__dict__, before)
 
+    def test_foreign_native_pin_root_is_rejected_even_with_pin_flag_off(self):
+        # Native buttons_context_path roots on pinid, independently of SB_PIN_CONTEXT.
+        space = self.props.spaces.active
+        for pin in (Item(type='MESH'), Item()):
+            space.pin_id, space.use_pin_id = pin, False
+            before = space.__dict__.copy()
+            self.assertFalse(self.api.available(self.ctx, 'OBJECT')[0])
+            self.assertEqual(self.api.run(self.ctx, 'OBJECT'), {'CANCELLED'})
+            self.assertEqual(space.__dict__, before)
+
     def test_incompatible_current_pin_uses_compatible_same_window_editor(self):
         self.props.spaces.active.use_pin_id = True
         self.props.spaces.active.pin_id = Item()

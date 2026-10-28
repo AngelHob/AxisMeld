@@ -26,6 +26,7 @@ assert not bpy.data.filepath, 'Requires unsaved factory startup'
 ART.mkdir(parents=True, exist_ok=True)
 RECORD = {'schema': 1, 'status': 'RUNNING', 'cases': [], 'binary': bpy.app.binary_path,
           'version': bpy.app.version_string, 'manualAcceptanceChanged': False,
+          'navigationModule': property_navigation.__file__,
           'boundary': 'Real Properties RNA and native operator Undo; physical field editing remains manual'}
 
 
@@ -54,11 +55,32 @@ def state(window):
                          [(m.name, m.type) for m in o.modifiers]) for o in window.scene.objects]}
 
 
+def identities():
+    """Record actual source boundaries so fixture synchronization is visible."""
+    result = []
+    for window in bpy.context.window_manager.windows:
+        item = {'window': window.as_pointer(), 'screen': window.screen.as_pointer(),
+                'scene': window.scene.name, 'layer': window.view_layer.name,
+                'active': getattr(window.view_layer.objects.active, 'name', None), 'properties': []}
+        for area in window.screen.areas:
+            if area.type != 'PROPERTIES':
+                continue
+            space = area.spaces.active
+            with override(window, area):
+                item['properties'].append({'area': area.as_pointer(), 'tab': space.context,
+                                           'pin': getattr(space.pin_id, 'name', None),
+                                           'pinFlag': space.use_pin_id,
+                                           'contextObject': getattr(bpy.context.object, 'name', None)})
+        result.append(item)
+    return result
+
+
 def main():
     prefs = bpy.context.preferences
     prefs.use_preferences_save = False
     prefs.view.show_splash = False
     source_window = bpy.context.window
+    source_scene = source_window.scene
     viewport = next(a for a in source_window.screen.areas if a.type == 'VIEW_3D')
     props = next(a for a in source_window.screen.areas if a.type == 'PROPERTIES')
     pinned = next(a for a in source_window.screen.areas if a.type == 'OUTLINER')
@@ -81,7 +103,9 @@ def main():
 
     before_windows = {w.as_pointer() for w in bpy.context.window_manager.windows}
     with override(source_window, viewport):
-        bpy.ops.wm.window_new()
+        # A child wm.window_new synchronizes scene changes with its parent.
+        # Independent main windows are required to test different source scenes.
+        bpy.ops.wm.window_new_main()
     other_window = next(w for w in bpy.context.window_manager.windows if w.as_pointer() not in before_windows)
     other_scene = bpy.data.scenes.new('PN Other Scene')
     other_window.scene = other_scene
@@ -89,13 +113,15 @@ def main():
     other_scene.collection.objects.link(other_obj)
     other_window.view_layer.objects.active = other_obj
     other_obj.select_set(True, view_layer=other_window.view_layer)
-    other_area = other_window.screen.areas[0]
-    other_area.type = 'PROPERTIES'
+    other_area = next(a for a in other_window.screen.areas if a.type == 'PROPERTIES')
     yield from settle()
     other_area.spaces.active.context = 'OBJECT'
     other_area.spaces.active.search_filter = 'other window search'
     other_state = state(other_window)
+    assert source_window.scene == source_scene and source_window.scene != other_scene, identities()
+    assert source_window.view_layer.objects.active == obj, identities()
     baseline = state(source_window)
+    record('independent-window-source-fixture', windows=identities(), expectedObject=obj.name)
     recent_before = hotbox_runtime.recent.items()
     from bl_operators import axismeld as operators
     for cls in (operators.AXISMELD_OT_object_transform_properties, operators.AXISMELD_OT_modifier_properties):
@@ -150,6 +176,15 @@ def main():
         assert property_navigation.run(bpy.context, 'OBJECT') == {'CANCELLED'}
     record('same-object-pin-and-foreign-pin-cancellation')
     props.spaces.active.use_pin_id = False
+    yield from settle()
+    with override(source_window, props):
+        assert bpy.context.object == pin_obj, identities()
+    with override(source_window, viewport):
+        assert property_navigation.run(bpy.context, 'OBJECT') == {'CANCELLED'}
+    record('native-foreign-pin-root-with-flag-off', windows=identities())
+    # Clear the native root, not just the UI flag, for later success cases.
+    props.spaces.active.pin_id = None
+    assert props.spaces.active.pin_id is None and not props.spaces.active.use_pin_id
     obj.select_set(False, view_layer=source_window.view_layer)
     with override(source_window, viewport):
         assert property_navigation.run(bpy.context, 'OBJECT') == {'CANCELLED'}
@@ -176,6 +211,10 @@ def main():
             assert property_navigation.available(bpy.context, 'MODIFIER')[0] == (kind == 'EMPTY'), kind
             if kind == 'EMPTY':
                 assert property_navigation.run(bpy.context, 'MODIFIER') == {'FINISHED'}
+        if kind == 'EMPTY':
+            yield from settle()
+            with override(source_window, props):
+                assert bpy.context.object == probe, identities()
         record('native-type-eligibility', objectType=kind, modifierAvailable=(kind == 'EMPTY'))
         probe.select_set(False, view_layer=source_window.view_layer)
     obj.select_set(True, view_layer=source_window.view_layer)
@@ -190,6 +229,8 @@ def main():
         assert bpy.ops.transform.translate('EXEC_DEFAULT', True, value=(2.0, 0.0, 0.0)) == {'FINISHED'}
         assert tuple(obj.location) != initial_location
         assert bpy.ops.axismeld.modifier_properties() == {'FINISHED'}
+        with override(source_window, props):
+            assert bpy.context.object == obj, identities()
         assert bpy.ops.ed.undo() == {'FINISHED'}
     yield from settle()
     restored = bpy.data.objects['PN Source']
@@ -214,6 +255,7 @@ def tick():
     except Exception:
         RECORD['status'] = 'FAIL'
         RECORD['error'] = traceback.format_exc()
+        RECORD['failureWindows'] = identities()
         record('failure')
         print(RECORD['error'], flush=True)
         bpy.ops.wm.quit_blender()

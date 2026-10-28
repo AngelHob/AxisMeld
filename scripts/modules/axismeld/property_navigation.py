@@ -39,7 +39,10 @@ def _plan(context, target):
                 not menubar_runtime._regions(area)):
             continue
         space = area.spaces.active
-        if not space.use_pin_id or menubar_runtime._same(space.pin_id, obj):
+        # Native buttons_context_path uses pinid as its root even if the UI
+        # SB_PIN_CONTEXT flag is off. A flag-only "unpin" is not unpinned RNA.
+        if ((space.pin_id is None and not space.use_pin_id) or
+                menubar_runtime._same(space.pin_id, obj)):
             candidates.append(area)
     current = getattr(context, 'area', None)
     area = next((item for item in candidates if menubar_runtime._same(item, current)), None)
