@@ -47,7 +47,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "V-01",
@@ -123,7 +123,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "G-09",
@@ -185,7 +185,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "HC-10",
@@ -233,7 +233,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "HC-11",
@@ -267,7 +267,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "HC-12",
@@ -301,7 +301,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "P-01",
@@ -741,7 +741,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "K-01",
@@ -971,7 +971,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "O-01",
@@ -1453,7 +1453,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "HC-06",
@@ -1487,7 +1487,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "HC-07",
@@ -1535,7 +1535,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "D-05",
@@ -1597,7 +1597,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "GU-01",
@@ -1631,7 +1631,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "GU-09",
@@ -1679,7 +1679,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "S-01",
@@ -1797,7 +1797,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "M3-31",
@@ -1831,7 +1831,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "MT-01",
@@ -1921,7 +1921,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "M3-07",
@@ -1997,7 +1997,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "K-08",
@@ -2101,7 +2101,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "M3-03",
@@ -2177,7 +2177,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "M3-05",
@@ -2267,7 +2267,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "M3-11",
@@ -2329,7 +2329,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "MT-07",
@@ -2405,6 +2405,90 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
+      "isNew": false
+    },
+    {
+      "id": "PN-01",
+      "title": "在临时场景选中网格，经 Windows 菜单及 F3 分别打开 Object Transform Properties；切换另一个已选活动对象后重复，检查对象名称和原生 Transform 数值",
+      "group": "菜单 · Windows 窗口",
+      "steps": [
+        "在临时场景选中网格，经 Windows 菜单及 F3 分别打开 Object Transform Properties；切换另一个已选活动对象后重复，检查对象名称和原生 Transform 数值"
+      ],
+      "expected": [
+        "当前窗口的合适 Properties 区域定位到 Object 页，显示当前活动对象的真实属性；原生面板折叠状态保持；打开入口本身不修改数值、选择或模式，不新增面板或窗口"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "PN-02",
+      "title": "给临时网格添加原生修改器，从菜单和 F3 打开 Modifier Properties；切换不同类型对象并重开；检查 Camera、Light 与原生支持修改器的其他对象",
+      "group": "菜单 · Windows 窗口",
+      "steps": [
+        "给临时网格添加原生修改器，从菜单和 F3 打开 Modifier Properties；切换不同类型对象并重开；检查 Camera、Light 与原生支持修改器的其他对象"
+      ],
+      "expected": [
+        "显示当前目标的原生 Modifier 页；类型门禁与当前 Blender 一致，无效类型说明原因，不显示上一网格的修改器，不新增或删除修改器"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "PN-03",
+      "title": "将 Properties 固定到另一对象，尝试两入口；再固定到当前对象及取消固定后重复；临时最大化视窗，使本窗口没有可见 Properties 后重试",
+      "group": "菜单 · Windows 窗口",
+      "steps": [
+        "将 Properties 固定到另一对象，尝试两入口；再固定到当前对象及取消固定后重复；临时最大化视窗，使本窗口没有可见 Properties 后重试"
+      ],
+      "expected": [
+        "不解除或改写固定关系；仅使用未固定或固定到同一对象的区域。没有合适区域时说明原因并取消，不借用别的窗口、不替换布局、不自动新建窗口"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "PN-04",
+      "title": "在两个窗口使用不同场景或 View Layer、不同活动对象；在单/四视图、Object/Edit/Pose 模式分别调用；取消选择并重试",
+      "group": "菜单 · Windows 窗口",
+      "steps": [
+        "在两个窗口使用不同场景或 View Layer、不同活动对象；在单/四视图、Object/Edit/Pose 模式分别调用；取消选择并重试"
+      ],
+      "expected": [
+        "始终使用发起窗口的当前选中活动对象；不跨窗口找目标，不为了打开入口切模式或改选择；无选择与失效来源安全取消"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "PN-05",
+      "title": "导航前记录对象位置、修改器、选区及历史；只打开两个入口，再用原生字段实际修改位置或修改器参数并执行 Undo；另打开含搜索文字的 Properties",
+      "group": "菜单 · Windows 窗口",
+      "steps": [
+        "导航前记录对象位置、修改器、选区及历史；只打开两个入口，再用原生字段实际修改位置或修改器参数并执行 Undo；另打开含搜索文字的 Properties"
+      ],
+      "expected": [
+        "单纯导航不产生场景 Undo 或修改几何；实际字段修改使用原生 Undo 恢复。只清空被选中属性编辑器的搜索过滤，其他编辑器、固定状态和用户数据保持"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
+      "isNew": true
+    },
+    {
+      "id": "PN-06",
+      "title": "中英文分别从 Windows 菜单和 F3 找到两入口；在100%/150%缩放和窄窗口检查标签、图标及不可用原因，随后重开 Space/QWER 热盒",
+      "group": "菜单 · Windows 窗口",
+      "steps": [
+        "中英文分别从 Windows 菜单和 F3 找到两入口；在100%/150%缩放和窄窗口检查标签、图标及不可用原因，随后重开 Space/QWER 热盒"
+      ],
+      "expected": [
+        "文案完整且随语言切换，真实对象名不翻译；原 AE/CB 仍为灰占位。全局栏、Modeling 七根菜单、Views 间隔、18px 伴随列表和持键/取消操作保持"
+      ],
+      "superseded": false,
+      "maintainerStatus": "pending",
       "isNew": true
     },
     {
@@ -2439,7 +2523,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "MT-09",
@@ -2473,7 +2557,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "MT-10",
@@ -2507,7 +2591,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "MT-11",
@@ -2541,7 +2625,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "MT-12",
@@ -2575,7 +2659,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "MT-13",
@@ -2609,7 +2693,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "M3-13",
@@ -2685,7 +2769,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "M3-15",
@@ -2775,7 +2859,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "M3-18",
@@ -2837,7 +2921,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "M3-20",
@@ -2913,7 +2997,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "M3-23",
@@ -2975,7 +3059,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "M3-25",
@@ -3037,7 +3121,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "M3-28",
@@ -3127,7 +3211,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "MT-21",
@@ -3161,7 +3245,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "MT-22",
@@ -3195,7 +3279,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "RG-10",
@@ -3243,7 +3327,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "RG-11",
@@ -3375,7 +3459,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "MB-16",
@@ -3409,7 +3493,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "MT-29",
@@ -3443,7 +3527,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "IN-01",
@@ -3519,7 +3603,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "G-02",
@@ -4583,7 +4667,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "S-04",
@@ -4657,7 +4741,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "M3-02",
@@ -5135,7 +5219,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "BI-C03",
@@ -5151,7 +5235,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "BI-C04",
@@ -5168,7 +5252,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "MB-17",
@@ -5326,7 +5410,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "MB-02",
@@ -5736,7 +5820,7 @@
       ],
       "superseded": false,
       "maintainerStatus": "pending",
-      "isNew": true
+      "isNew": false
     },
     {
       "id": "GU-06",

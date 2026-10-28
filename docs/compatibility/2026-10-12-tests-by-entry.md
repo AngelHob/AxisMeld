@@ -1,12 +1,14 @@
 # 按热盒与菜单分类的测试索引
 
-更新：2026-10-13。公开网页与本索引按同一分类组织；使用网页记录自己的结果。原[人工总清单](2026-09-14-manual-test-ledger.md)保留开发批次、完整步骤及历史初始状态。
+更新：2026-10-29。公开网页与本索引按同一分类组织；使用网页记录自己的结果。原[人工总清单](2026-09-14-manual-test-ledger.md)保留开发批次、完整步骤及历史初始状态。
 
-共394项：380项当前、14项历史；当前维护者初始待测333项。分类及排序不会修改已有浏览器记录。以下“历史已测”只表示原维护者记录，不等于通过；访客结果仍在各自浏览器。
+共400项：386项当前、14项历史；当前维护者初始待测339项。分类及排序不会修改已有浏览器记录。以下“历史已测”只表示原维护者记录，不等于通过；访客结果仍在各自浏览器。
 
-新增49项中英界面验收：14个热盒、29个菜单各一项，以及6项共用/Rigify检查，全部待人工测试。适用版本为`axismeld-2026.10.12-bilingual-ui-preview`。旧GU-28最近标记保留，“最近新增”共50项。
+本批新增PN-01～PN-06对象属性验收，全部归入“菜单 · Windows 窗口”，适用版本为`axismeld-2026.10.29-property-navigation-preview`。既有49项BI及GU-28的内容和人工状态保持；“最近新增”改为本批6项PN。
 
 按主要验证入口归类；没有明确主入口的跨热盒或跨菜单检查集中在“通用”，同一测试只出现一次。测试某个入口后，可继续检查对应通用类别。Space内的Deform/Generate不代表恢复Modeling视窗栏根菜单。
+
+完整分组目录以`tools/testing_site/catalog.json`为维护资产。旧`axismeld_public_test_catalog.py`尚未支持多段BI编号及当前入口分组，不应用它覆盖本目录。
 
 ## 分类目录
 
@@ -34,7 +36,7 @@
 | 菜单 · Select 选择 | 5 | 0 |
 | 菜单 · Modify 修改 | 6 | 0 |
 | 菜单 · Display 显示 | 4 | 0 |
-| 菜单 · Windows 窗口 | 5 | 0 |
+| 菜单 · Windows 窗口 | 11 | 0 |
 | 菜单 · Current Pane → View | 2 | 0 |
 | 菜单 · Current Pane → Shading | 2 | 0 |
 | 菜单 · Current Pane → Lighting | 2 | 0 |
@@ -349,6 +351,12 @@
 | MB-14 | Windows 查看 Settings/Preferences、Startup and Defaults、Workspaces、UI Elements、Window Management | 待测试 |
 | MB-24 | 展开 Windows→Workspaces，检查 Factory/Module 章节，再独立操作 Blender Next/Previous Workspace | 待测试 |
 | BI-M09 | Windows 窗口：中英文菜单与对应界面 | 待测试 |
+| PN-01 | 在临时场景选中网格，经 Windows 菜单及 F3 分别打开 Object Transform Properties；切换另一个已选活动对象后重复，检查对象名称和原生 Transform 数值 | 待测试 |
+| PN-02 | 给临时网格添加原生修改器，从菜单和 F3 打开 Modifier Properties；切换不同类型对象并重开；检查 Camera、Light 与原生支持修改器的其他对象 | 待测试 |
+| PN-03 | 将 Properties 固定到另一对象，尝试两入口；再固定到当前对象及取消固定后重复；临时最大化视窗，使本窗口没有可见 Properties 后重试 | 待测试 |
+| PN-04 | 在两个窗口使用不同场景或 View Layer、不同活动对象；在单/四视图、Object/Edit/Pose 模式分别调用；取消选择并重试 | 待测试 |
+| PN-05 | 导航前记录对象位置、修改器、选区及历史；只打开两个入口，再用原生字段实际修改位置或修改器参数并执行 Undo；另打开含搜索文字的 Properties | 待测试 |
+| PN-06 | 中英文分别从 Windows 菜单和 F3 找到两入口；在100%/150%缩放和窄窗口检查标签、图标及不可用原因，随后重开 Space/QWER 热盒 | 待测试 |
 
 ## 菜单 · Current Pane → View
 
