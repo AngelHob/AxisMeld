@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "status": "RELEASE_DOWNLOAD_FACTORY_VERIFIED",
+  "recordedAt": "2026-10-28T18:01:09.692705+00:00",
+  "tag": "axismeld-2026.10.29-property-navigation-preview",
+  "sourceCommit": "45a5a51a01925164f11dcf4ce1ecbb8be217dced",
+  "nativeSourceCommit": "45a5a51a01925164f11dcf4ce1ecbb8be217dced",
+  "upstreamCommit": "754ebe3c4b4e1402a159df6e1e58823cc93ef887",
+  "blenderVersion": "5.4 Alpha",
+  "binarySha256": "e85cc631490981c0a4893ffd6fe60b4bc70c2534108c21c181219c86772a74a4",
+  "package": {
+    "status": "STATIC_PACKAGE_PASS",
+    "archiveName": "AxisMeld-2026.10.29-property-navigation-preview-windows-x64.zip",
+    "archiveBytes": 280173712,
+    "archiveSha256": "88c3a3728bed8f3d83fd6229545a06493c071ffc4e458b27c482cff048027858",
+    "manifestSha256": "13f58d1a4d45ab1f14db07283e1fefee543ee39ce3fea47e9698bb86daf0f0b3",
+    "files": 6533,
+    "resources": 154
+  },
+  "verification": {
+    "focusedPythonSuites": 10,
+    "focusedPythonTests": 127,
+    "candidateGuiCases": 14,
+    "extractedRunGuiCases": 14,
+    "hotboxRepost": "CURRENT_REAL_EVENT_PASS",
+    "localSiteBrowserChecks": 14,
+    "publicFactory": "PASS",
+    "anonymousDownload": "PASS",
+    "physicalF3": "MANUAL_PENDING",
+    "physicalFieldMouseEditing": "MANUAL_PENDING",
+    "startupModalObscuresViewportScreenshot": true,
+    "historicalMenubarActionsRunner": "ATTEMPTED_NOT_ACCEPTANCE_TOP_CREATE_LOOKUP_FAILED",
+    "inheritedPassResults": false
+  },
+  "manualCatalog": {
+    "total": 400,
+    "current": 386,
+    "superseded": 14,
+    "historicallyTested": 47,
+    "currentPending": 339,
+    "allPending": 353,
+    "newIds": [
+      "PN-01",
+      "PN-02",
+      "PN-03",
+      "PN-04",
+      "PN-05",
+      "PN-06"
+    ]
+  },
+  "manualAcceptance": {
+    "status": "pending",
+    "existingResultsUnchanged": true
+  },
+  "release": {
+    "status": "PUBLISHED",
+    "url": "https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.29-property-navigation-preview",
+    "sourceCommit": "45a5a51a01925164f11dcf4ce1ecbb8be217dced",
+    "release_id": 426995549,
+    "assets": [
+      {
+        "name": "AxisMeld-2026.10.29-property-navigation-preview-windows-x64.zip",
+        "size": 280173712,
+        "digest": "sha256:88c3a3728bed8f3d83fd6229545a06493c071ffc4e458b27c482cff048027858",
+        "browser_download_url": "https://github.com/AngelHob/AxisMeld/releases/download/axismeld-2026.10.29-property-navigation-preview/AxisMeld-2026.10.29-property-navigation-preview-windows-x64.zip"
+      },
+      {
+        "name": "AxisMeld-2026.10.29-property-navigation-preview-windows-x64.zip.sha256",
+        "size": 131,
+        "digest": "sha256:9bf55b6a2d9db5f4aba45d7f86c2a50abe4fc6f1b0ff40768bfc17476acd0c18",
+        "browser_download_url": "https://github.com/AngelHob/AxisMeld/releases/download/axismeld-2026.10.29-property-navigation-preview/AxisMeld-2026.10.29-property-navigation-preview-windows-x64.zip.sha256"
+      }
+    ]
+  },
+  "siteStatus": "SIX_PUBLIC_RESOURCES_BYTE_VERIFIED",
+  "pages": {
+    "status": "PASS",
+    "byteVerified": true,
+    "commit": "22f6ad60ddac2261e44ac26e64540dc8b390f74b",
+    "files": [
+      {
+        "name": "index.html",
+        "url": "https://angelhob.github.io/AxisMeld/index.html",
+        "status": 200,
+        "bytes": 7227,
+        "sha256": "17a02e8ae5c540620de523a3dfeec4fa4198b2a57e10a3a681e363b48a509e76",
+        "expectedSha256": "17a02e8ae5c540620de523a3dfeec4fa4198b2a57e10a3a681e363b48a509e76",
+        "byteEqual": true
+      },
+      {
+        "name": "app.mjs",
+        "url": "https://angelhob.github.io/AxisMeld/app.mjs",
+        "status": 200,
+        "bytes": 23382,
+        "sha256": "fcdb4c181ab724733fd0f7583d6f2e21c2e04131091dc4f3c01b82d1a7d4e5f9",
+        "expectedSha256": "fcdb4c181ab724733fd0f7583d6f2e21c2e04131091dc4f3c01b82d1a7d4e5f9",
+        "byteEqual": true
+      },
+      {
+        "name": "styles.css",
+        "url": "https://angelhob.github.io/AxisMeld/styles.css",
+        "status": 200,
+        "bytes": 15393,
+        "sha256": "368ced53879bbd113aaf1aae63cbd68a3cf22d5aa9c3aca501d5c939f245eb8d",
+        "expectedSha256": "368ced53879bbd113aaf1aae63cbd68a3cf22d5aa9c3aca501d5c939f245eb8d",
+        "byteEqual": true
+      },
+      {
+        "name": "catalog.json",
+        "url": "https://angelhob.github.io/AxisMeld/catalog.json",
+        "status": 200,
+        "bytes": 300749,
+        "sha256": "feae329444fa478998d5cb929ed2da5f464517f3fe4f9007bb492c3649098382",
+        "expectedSha256": "feae329444fa478998d5cb929ed2da5f464517f3fe4f9007bb492c3649098382",
+        "byteEqual": true
+      },
+      {
+        "name": "config.json",
+        "url": "https://angelhob.github.io/AxisMeld/config.json",
+        "status": 200,
+        "bytes": 521,
+        "sha256": "4b5b06e900af6f67b990854755e9407c10db8f1cccbad3cb03d7034be8b50a78",
+        "expectedSha256": "4b5b06e900af6f67b990854755e9407c10db8f1cccbad3cb03d7034be8b50a78",
+        "byteEqual": true
+      },
+      {
+        "name": "favicon.svg",
+        "url": "https://angelhob.github.io/AxisMeld/favicon.svg",
+        "status": 200,
+        "bytes": 246,
+        "sha256": "2cca7741a0dede35653d222677e15559e566c8dbab6882229ec6ab7b8f410737",
+        "expectedSha256": "2cca7741a0dede35653d222677e15559e566c8dbab6882229ec6ab7b8f410737",
+        "byteEqual": true
+      }
+    ],
+    "proofSha256": "575af0ed1a27db311335e79535b65583ce49a67dca866241f8cef7ed6ed27816",
+    "finalConfigBrowserChecks": 14
+  },
+  "evidenceSha256": {
+    "package-receipt.json": "8b14e35d9bdb6af41dd4f8ca8af2a71e51e22b536e63a1e38bd900f388ebe707",
+    "github-release.json": "b6dc96a5043993d381ad73d82c0fba0720f48673ebea207f0f7e1b37cd52b6f8",
+    "anonymous-download.json": "3cc44872cbee944f83956a48d52c5231d341bda75d0fb521e499c0f7c14d7eb0",
+    "public-factory.json": "faba564aa15e7ee9b261bdfa129b084b6779b15fb15daf8e42b9837371998d20",
+    "stage-static.json": "a569937462e8942917be0a2849413400ac274901cdce2e52fdf4fc39f2681881",
+    "extract-static.json": "97e691ac0f62138956989a4115406bb59869c623cfd9e14c7d4f9e39bdd9f4ee",
+    "gui-final/gui-receipt.json": "a1c184f1948810b7a6c33972c1650504529e30b7c8f7d6e796adc3f3133a6faf",
+    "package-gui/gui-receipt.json": "7c151d0665dd41a0ce75bd6640e656dabc3f217a832b83df4d752f894447af6d",
+    "focused-final/receipt.json": "76bb2b91cf0c0e67954cfc6000f91a46f8798f599b3cfa54b1d100e6a9af2f65",
+    "pages-public-proof.json": "575af0ed1a27db311335e79535b65583ce49a67dca866241f8cef7ed6ed27816",
+    "site-final/browser-report.json": "105611e95bba169f648520a18307963d4e977100aae8dc3290f17ce8276bed4e"
+  },
+  "limits": [
+    "Python-only changes; buildinfo OFF; equal binary hash retained accurately.",
+    "No independent reproducible build claim.",
+    "No full visual-layout clearance from startup-modal screenshot.",
+    "New modeling, Skin/Skeleton and UV algorithms remain paused.",
+    "Curated catalog is authoritative; legacy exporter must not overwrite it."
+  ]
+}

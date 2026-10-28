@@ -5,14 +5,17 @@
 ```text
 请接续开发我的 AxisMeld 项目。默认用中文，结论优先，主动核实并完成有界任务。
 
-最新交付（2026-10-11）：热盒下方列表 18 像素预览已发布；基于 Blender 5.4 Alpha，固定 upstream 754ebe3c4b4e1402a159df6e1e58823cc93ef887。
-本轮6 组 42 项相关 Python、2 组 114 项原生、3 组既有 GUI 回归与 1 组本批列表几何验证通过。预发布tag：axismeld-2026.10.11-18px-companion-preview；匿名下载、干净解压与factory已核验。本批 Pages `b448822d223e` 的 6 个公开资源逐字节核验通过。
-功能/native源码：f72fb413ba9c16f41c453dde98469ef1933285c1。
-exe SHA256：1771b999626225aaeecf2e911f7cd8d06149d466485679bc136cd1fe961324fc。
-发布入口：https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview
-先读docs/compatibility/2026-10-11-18px-companion-acceptance.md及docs/compatibility/2026-10-11-18px-companion-preview-snapshot.json。
-人工状态：公开目录 345 项（当前 331、历史 14），47 项仅历史已测，当前初始未测 284、全表初始未测 298；最新标记 GU-28。既有编号与人工结果保持，自动化不替用户勾选。
-仅将热盒下方伴随列表及其级联普通行高设为 18 逻辑像素（100% 界面缩放），Options 宽 18、细分隔 4.5；文字、图标、列宽和留白沿 18/24 的局部比例同步，高 DPI 保持 Blender 界面缩放规则；周围方向按钮、四视图间隔、主热盒栏及普通原生菜单保持原尺寸。完整条目、底部避让和说明无空间时隐藏的规则保持，不折叠、不滚动，不随窗口继续缩小。保留极低窗口完整说明避让、七根菜单、独立Options与占位、取消恢复；新算法暂停。
+最新交付（2026-10-29）：属性导航预览，tag axismeld-2026.10.29-property-navigation-preview。Transform / Modifiers 接入原生属性，功能/native源码 45a5a51a01925164f11dcf4ce1ecbb8be217dced。
+发布入口：https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.29-property-navigation-preview
+ZIP SHA256：88c3a3728bed8f3d83fd6229545a06493c071ffc4e458b27c482cff048027858
+EXE SHA256：e85cc631490981c0a4893ffd6fe60b4bc70c2534108c21c181219c86772a74a4
+Python-only、buildinfo OFF，EXE hash 与前批相同，保留真实构建与安装回执。
+本批10组127项Python、真实事件hotbox-repost、候选/独立解压运行副本各14项GUI、14项网站浏览器检查通过；6,533文件/154资源、匿名下载和公开包factory通过。
+公开目录 400 项（当前 386、历史 14），47 项仅为历史已测；当前初始待测 339、全表初始待测 353。本批新增 PN-01～PN-06，六项均待人工；既有编号与人工结果保留。
+实际 GUI 验证覆盖原生 RNA 属性与 operator/Undo：最终安装候选 14 项、独立解压运行副本 14 项通过；物理 F3 键盘搜索和字段鼠标编辑未自动化，仍待人工。启动截图存在覆盖视窗的启动模态框，不能据此宣称全部视觉布局已验清。
+继续 UI、交互与 Maya 2026 默认快捷键优先；新增建模、Skin/Skeleton、UV 算法暂停。后续可按用户反馈改进既有 Options 体验，不自动开启新算法开发。
+当前人工维护且按入口分组的 tools/testing_site/catalog.json 是公开目录权威来源。不要运行旧 tools/utils/axismeld_public_test_catalog.py 导出：它遗漏多段 BI 编号和新组，会把当前目录回退；同步维护人工 ledger 与按入口索引。
+公开Pages本批六资源已逐字节核验通过，提交22f6ad60ddac2261e44ac26e64540dc8b390f74b；最终配置14项浏览器检查通过。先读 docs/compatibility/2026-10-29-property-navigation-acceptance.md 和 docs/compatibility/2026-10-29-property-navigation-preview-snapshot.json；前批双语/18px记录按日期保留。
 
 仓库：https://github.com/AngelHob/AxisMeld
 最新开发分支：axismeld/phase-2a

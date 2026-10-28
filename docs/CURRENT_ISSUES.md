@@ -1,5 +1,23 @@
 # AxisMeld 当前问题与验收边界
 
+## 2026-10-29 · 属性导航交付
+
+**当前交付（2026-10-29）：Transform / Modifiers 属性导航预览已发布并核验。** 在现有界面中打开 Blender 原生变换与修改器属性，保留中英文显示、18px 伴随列表与现有交互；不增加建模算法。 [下载完整预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.29-property-navigation-preview)；功能/native 源码 `45a5a51a01925164f11dcf4ce1ecbb8be217dced`，固定 Blender 5.4 Alpha upstream `754ebe3c4b4e1402a159df6e1e58823cc93ef887`。
+
+10 组 127 项针对性 Python、当前真实事件 hotbox-repost、最终安装和独立解压副本各 14 项 GUI、本地网站 14 项浏览器检查通过。完整包 6,533 文件、154 选定资源，stage/extract、匿名下载和公开包工厂启动通过。ZIP 280,173,712 字节，SHA256 `88c3a3728bed8f3d83fd6229545a06493c071ffc4e458b27c482cff048027858`；EXE SHA256 `e85cc631490981c0a4893ffd6fe60b4bc70c2534108c21c181219c86772a74a4`。本批为 Python 改动且 buildinfo OFF，EXE hash 与双语基线相同；如实记录，不称独立可复现重编证明。
+
+公开目录 400 项（当前 386、历史 14），47 项仅为历史已测；当前初始待测 339、全表初始待测 353。本批新增 PN-01～PN-06，六项均待人工；既有编号与人工结果保留。
+
+实际 GUI 验证覆盖原生 RNA 属性与 operator/Undo：最终安装候选 14 项、独立解压运行副本 14 项通过；物理 F3 键盘搜索和字段鼠标编辑未自动化，仍待人工。启动截图存在覆盖视窗的启动模态框，不能据此宣称全部视觉布局已验清。
+
+继续 UI、交互与 Maya 2026 默认快捷键优先；新增建模、Skin/Skeleton、UV 算法暂停。后续可按用户反馈改进既有 Options 体验，不自动开启新算法开发。
+
+公开 Pages 本批六资源已逐字节核验通过，提交 `22f6ad60ddac2261e44ac26e64540dc8b390f74b`；最终网站配置下 14 项浏览器检查通过。 详见[本批验收](compatibility/2026-10-29-property-navigation-acceptance.md)与[发布快照](compatibility/2026-10-29-property-navigation-preview-snapshot.json)。
+
+当前人工维护且按入口分组的 tools/testing_site/catalog.json 是公开目录权威来源。不要运行旧 tools/utils/axismeld_public_test_catalog.py 导出：它遗漏多段 BI 编号和新组，会把当前目录回退；同步维护人工 ledger 与按入口索引。
+
+以下原日期记录保留历史证据；当前交付与计数以上段及本批快照为准。
+
 更新：2026-10-13，首批 GUI 收敛的历史起点为 `b9d0977557c6e2991810bc91f3f9d6b117a16eb8`，本批版本见下文。本文件区分已确认未关闭的问题、尚未开发的能力和待人工验收，不把灰色占位、自动测试通过或历史用户反馈互相替代。
 
 **当前交付（2026-10-13）：双语界面完整预览已发布并核验。** 目标标签 `axismeld-2026.10.12-bilingual-ui-preview`，仅 `en_US`/`zh_HANS`，默认英文。构建、翻译运行时、真实偏好迁移、GUI 与英文几何均有本批证据；具体范围见[双语验收](compatibility/2026-10-13-bilingual-ui-acceptance.md)。公开 ZIP/匿名下载/独立启动和 Pages 六资源核验通过，身份见[发布快照](compatibility/2026-10-13-bilingual-ui-preview-snapshot.json)。

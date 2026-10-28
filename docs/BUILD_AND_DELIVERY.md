@@ -1,5 +1,23 @@
 # Windows 构建、验证与交付
 
+## 2026-10-29 · 属性导航交付
+
+**当前交付（2026-10-29）：Transform / Modifiers 属性导航预览已发布并核验。** 在现有界面中打开 Blender 原生变换与修改器属性，保留中英文显示、18px 伴随列表与现有交互；不增加建模算法。 [下载完整预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.29-property-navigation-preview)；功能/native 源码 `45a5a51a01925164f11dcf4ce1ecbb8be217dced`，固定 Blender 5.4 Alpha upstream `754ebe3c4b4e1402a159df6e1e58823cc93ef887`。
+
+10 组 127 项针对性 Python、当前真实事件 hotbox-repost、最终安装和独立解压副本各 14 项 GUI、本地网站 14 项浏览器检查通过。完整包 6,533 文件、154 选定资源，stage/extract、匿名下载和公开包工厂启动通过。ZIP 280,173,712 字节，SHA256 `88c3a3728bed8f3d83fd6229545a06493c071ffc4e458b27c482cff048027858`；EXE SHA256 `e85cc631490981c0a4893ffd6fe60b4bc70c2534108c21c181219c86772a74a4`。本批为 Python 改动且 buildinfo OFF，EXE hash 与双语基线相同；如实记录，不称独立可复现重编证明。
+
+公开目录 400 项（当前 386、历史 14），47 项仅为历史已测；当前初始待测 339、全表初始待测 353。本批新增 PN-01～PN-06，六项均待人工；既有编号与人工结果保留。
+
+实际 GUI 验证覆盖原生 RNA 属性与 operator/Undo：最终安装候选 14 项、独立解压运行副本 14 项通过；物理 F3 键盘搜索和字段鼠标编辑未自动化，仍待人工。启动截图存在覆盖视窗的启动模态框，不能据此宣称全部视觉布局已验清。
+
+继续 UI、交互与 Maya 2026 默认快捷键优先；新增建模、Skin/Skeleton、UV 算法暂停。后续可按用户反馈改进既有 Options 体验，不自动开启新算法开发。
+
+公开 Pages 本批六资源已逐字节核验通过，提交 `22f6ad60ddac2261e44ac26e64540dc8b390f74b`；最终网站配置下 14 项浏览器检查通过。 详见[本批验收](compatibility/2026-10-29-property-navigation-acceptance.md)与[发布快照](compatibility/2026-10-29-property-navigation-preview-snapshot.json)。
+
+当前人工维护且按入口分组的 tools/testing_site/catalog.json 是公开目录权威来源。不要运行旧 tools/utils/axismeld_public_test_catalog.py 导出：它遗漏多段 BI 编号和新组，会把当前目录回退；同步维护人工 ledger 与按入口索引。
+
+以下原日期记录保留历史证据；当前交付与计数以上段及本批快照为准。
+
 **当前完整预览包（2026-10-13）：双语 GUI，已公开交付并核验。** 预览标签保留 `axismeld-2026.10.12-bilingual-ui-preview`，归档名 `AxisMeld-2026.10.12-bilingual-ui-preview-windows-x64.zip`。本批新原生 build-attempt-03、干净安装、翻译/迁移/GUI/几何门禁均已通过，详见[双语验收](compatibility/2026-10-13-bilingual-ui-acceptance.md)；完整[双语预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.12-bilingual-ui-preview)已发布；功能/native 源码 `e0c4bd7f90ebc3a6016b1c934b1f4d15c42d556e`，ZIP 280,173,522 字节、SHA256 `ecac6396176d6628141239070fc786672dfe20e4c475b7f9cdc6d9103fe91367`，EXE SHA256 `e85cc631490981c0a4893ffd6fe60b4bc70c2534108c21c181219c86772a74a4`。6,532 个发行文件、153 项选定资源、独立解压/工厂启动、匿名重下载及公开包 3,737 源词运行时通过；Pages `af31ae30e55c79781b3ff42e8d811d2f71ca7725` 六个资源逐字节一致。 [发布快照](compatibility/2026-10-13-bilingual-ui-preview-snapshot.json)记录精确指纹，下方旧包段保留其历史口径。
 
 **上一已核验完整预览包：18px companion preview。** 完整 [18px companion preview](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.11-18px-companion-preview) 已发布；源码/native `f72fb413ba9c16f41c453dde98469ef1933285c1`，基于 Blender 5.4 Alpha。ZIP 303,157,284 字节，SHA256 `c7937d5fa1b29c723db91ffbbcf64b600983f3a9ba3b67566d4b343a516771f6`；EXE SHA256 `1771b999626225aaeecf2e911f7cd8d06149d466485679bc136cd1fe961324fc`。候选、本地解压包及匿名下载解压包工厂启动通过；本地解压包的列表 GUI 也已通过。[发布快照](compatibility/2026-10-11-18px-companion-preview-snapshot.json)保存精确指纹。旧预览包保留。本批 Pages `b448822d223e` 的 6 个公开资源逐字节核验通过。6 组 42 项相关 Python、2 组 114 项原生、3 组既有 GUI 回归与 1 组本批列表几何验证通过。本批 18 逻辑像素行高仅作用于 companion 下方列表及级联，100% 为 18px，高 DPI 沿用界面缩放。下方注明日期的历史构建与计数保持原口径。

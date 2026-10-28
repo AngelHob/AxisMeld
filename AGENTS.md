@@ -1,5 +1,23 @@
 # AxisMeld 开发接续
 
+## 2026-10-29 · 属性导航交付
+
+**当前交付（2026-10-29）：Transform / Modifiers 属性导航预览已发布并核验。** 在现有界面中打开 Blender 原生变换与修改器属性，保留中英文显示、18px 伴随列表与现有交互；不增加建模算法。 [下载完整预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.29-property-navigation-preview)；功能/native 源码 `45a5a51a01925164f11dcf4ce1ecbb8be217dced`，固定 Blender 5.4 Alpha upstream `754ebe3c4b4e1402a159df6e1e58823cc93ef887`。
+
+10 组 127 项针对性 Python、当前真实事件 hotbox-repost、最终安装和独立解压副本各 14 项 GUI、本地网站 14 项浏览器检查通过。完整包 6,533 文件、154 选定资源，stage/extract、匿名下载和公开包工厂启动通过。ZIP 280,173,712 字节，SHA256 `88c3a3728bed8f3d83fd6229545a06493c071ffc4e458b27c482cff048027858`；EXE SHA256 `e85cc631490981c0a4893ffd6fe60b4bc70c2534108c21c181219c86772a74a4`。本批为 Python 改动且 buildinfo OFF，EXE hash 与双语基线相同；如实记录，不称独立可复现重编证明。
+
+公开目录 400 项（当前 386、历史 14），47 项仅为历史已测；当前初始待测 339、全表初始待测 353。本批新增 PN-01～PN-06，六项均待人工；既有编号与人工结果保留。
+
+实际 GUI 验证覆盖原生 RNA 属性与 operator/Undo：最终安装候选 14 项、独立解压运行副本 14 项通过；物理 F3 键盘搜索和字段鼠标编辑未自动化，仍待人工。启动截图存在覆盖视窗的启动模态框，不能据此宣称全部视觉布局已验清。
+
+继续 UI、交互与 Maya 2026 默认快捷键优先；新增建模、Skin/Skeleton、UV 算法暂停。后续可按用户反馈改进既有 Options 体验，不自动开启新算法开发。
+
+公开 Pages 本批六资源已逐字节核验通过，提交 `22f6ad60ddac2261e44ac26e64540dc8b390f74b`；最终网站配置下 14 项浏览器检查通过。 详见[本批验收](docs/compatibility/2026-10-29-property-navigation-acceptance.md)与[发布快照](docs/compatibility/2026-10-29-property-navigation-preview-snapshot.json)。
+
+当前人工维护且按入口分组的 tools/testing_site/catalog.json 是公开目录权威来源。不要运行旧 tools/utils/axismeld_public_test_catalog.py 导出：它遗漏多段 BI 编号和新组，会把当前目录回退；同步维护人工 ledger 与按入口索引。
+
+以下原日期记录保留历史证据；当前交付与计数以上段及本批快照为准。
+
 **最新交付（2026-10-13）：双语界面完整预览已发布并核验。** 标签保留 `axismeld-2026.10.12-bilingual-ui-preview`；仅 `en_US`/`zh_HANS`，默认英文。原生词库与补词覆盖热盒、菜单、Options、灰说明和内置 Rigify，测量与显示同文；真实数据名称、18px 列表、Views 间隔及既有交互保持。旧 locale 回退/保留、中文保存重启及重载工厂启动布局保留已保存 prefs 已验证，不能称作重置全部偏好仍保留中文。见[双语验收](docs/compatibility/2026-10-13-bilingual-ui-acceptance.md)。
 
 本批已通过新构建/安装（6,529 文件、153 选定资源）、2 组 114 原生、7 组 90 Python、3,737 固定源词运行时、129 原生按钮/英文往返、5 旧偏好种子/7 新进程、既有 3 套交互、最终双语 GUI 52 记录、中英文说明与 18/27px 几何、本地网站 14 浏览器检查。完整[双语预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.12-bilingual-ui-preview)已公开发布；功能/native 源码 `e0c4bd7f90ebc3a6016b1c934b1f4d15c42d556e`，运行 EXE 与本批验证相同。6,532 个发行文件、153 项选定资源、独立解压/工厂启动、匿名下载和公开包 3,737 源词运行时已核验。Pages `af31ae30e55c79781b3ff42e8d811d2f71ca7725` 的六个公开资源逐字节一致。 另有88项实际Views净间隔比较通过；见[发布快照](docs/compatibility/2026-10-13-bilingual-ui-preview-snapshot.json)。49项BI仍待人工；不自动恢复新算法。
