@@ -20,6 +20,42 @@ from axismeld import modeling_common_ops, modeling_mesh_ops, modeling_shapes_ops
 from axismeld import skin_weight_ops
 from axismeld import edit_preselection
 from axismeld.history_hotbox import HISTORY_TRIGGER
+from axismeld import property_navigation, translations
+
+
+class AXISMELD_OT_object_transform_properties(Operator):
+    bl_idname = 'axismeld.object_transform_properties'
+    bl_label = 'Object Transform Properties'
+    bl_description = 'Show the active selected object in an existing Properties editor'
+    # No REGISTER/UNDO: navigation is UI state, not a scene or Recent command.
+    bl_options = set()
+
+    @classmethod
+    def poll(cls, context):
+        allowed, reason = property_navigation.available(context, 'OBJECT')
+        if not allowed:
+            cls.poll_message_set(translations.tip(reason))
+        return allowed
+
+    def execute(self, context):
+        return property_navigation.run(context, 'OBJECT')
+
+
+class AXISMELD_OT_modifier_properties(Operator):
+    bl_idname = 'axismeld.modifier_properties'
+    bl_label = 'Modifier Properties'
+    bl_description = 'Show native modifiers in an existing Properties editor'
+    bl_options = set()
+
+    @classmethod
+    def poll(cls, context):
+        allowed, reason = property_navigation.available(context, 'MODIFIER')
+        if not allowed:
+            cls.poll_message_set(translations.tip(reason))
+        return allowed
+
+    def execute(self, context):
+        return property_navigation.run(context, 'MODIFIER')
 
 
 class AXISMELD_OT_command(Operator):
@@ -310,7 +346,8 @@ class AXISMELD_Preferences(KeyConfigPreferences):
             layout.label(text=message, icon='ERROR')
 
 
-classes = (AXISMELD_OT_command, AXISMELD_OT_reload_profile, AXISMELD_OT_hotbox_dispatch,
+classes = (AXISMELD_OT_object_transform_properties, AXISMELD_OT_modifier_properties,
+           AXISMELD_OT_command, AXISMELD_OT_reload_profile, AXISMELD_OT_hotbox_dispatch,
            AXISMELD_OT_hotbox_setting, AXISMELD_OT_hotbox_refresh, AXISMELD_OT_hotbox_reset_appearance,
            *modeling_common_ops.classes, *modeling_mesh_ops.classes, *modeling_shapes_ops.classes,
            *object_modeling_ops.classes, *skin_weight_ops.classes, *edit_preselection.classes)

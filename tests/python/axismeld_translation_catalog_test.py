@@ -22,6 +22,17 @@ def walk(nodes):
 
 
 class TranslationCatalogTests(unittest.TestCase):
+    def test_property_routes_and_unavailable_reasons_are_bilingual(self):
+        from axismeld.menubar_actions import ACTIONS
+        from axismeld import property_navigation
+        sources = {'Blender Object Properties', 'Object Transform Properties', 'Modifier Properties',
+                   'Show the active selected object in an existing Properties editor',
+                   'Show native modifiers in an existing Properties editor'}
+        sources.update(property_navigation.REASONS.values())
+        sources.update(ACTIONS[key]['reason'] for key in
+                       ('properties.object_transform', 'properties.modifier'))
+        self.assertEqual(sorted(sources - translations.ZH_HANS.keys()), [])
+
     def test_every_fixed_hotbox_menu_recent_caption_and_explanation_has_a_translation(self):
         catalogs = [default_catalog(), build_workspace_menubar()['menus']]
         before = deepcopy(catalogs)

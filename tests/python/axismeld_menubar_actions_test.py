@@ -53,7 +53,7 @@ class MenubarActionsTest(unittest.TestCase):
 
     def test_closed_keys_and_semantic_rtcs(self):
         mod,bpy,ctx=fixture()
-        self.assertEqual(len(mod.ACTIONS),21)
+        self.assertEqual(len(mod.ACTIONS),23)
         self.assertEqual(mod.ACTIONS['create.camera']['maya_command'],'CreateCameraOnly')
         self.assertNotIn('maya_command',mod.ACTIONS['create.armature'])
         self.assertFalse(mod.available(ctx,'object.delete')[0])

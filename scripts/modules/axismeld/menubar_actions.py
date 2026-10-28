@@ -40,6 +40,16 @@ for _key, (_label, _type, _subtype, _icon) in _EDITORS.items():
         'label': _label + ' (New Window)', 'category': 'Windows', 'section': ('Editors',),
         'icon': _icon, 'reason': 'Open a new Blender editor window; existing layouts stay unchanged',
     }
+for _key, _label, _icon in (
+        ('object_transform', 'Object Transform Properties', 'OBJECT_DATA'),
+        ('modifier', 'Modifier Properties', 'MODIFIER')):
+    ACTIONS['properties.' + _key] = {
+        'label': _label, 'category': 'Windows',
+        'section': ('General Editors', 'Blender Object Properties'), 'icon': _icon,
+        'reason': 'Navigate native Blender properties in an existing editor; preserve pins and scene data',
+    }
+
+_PROPERTY_TARGETS = {'properties.object_transform': 'OBJECT', 'properties.modifier': 'MODIFIER'}
 
 
 def _identity(value):
@@ -60,6 +70,9 @@ def available(context, key):
     try:
         if not _live_window(context):
             return False, 'Source window is unavailable'
+        if key in _PROPERTY_TARGETS:
+            from . import property_navigation
+            return property_navigation.available(context, _PROPERTY_TARGETS[key])
         if key.startswith('editor.'):
             if bpy.app.background:
                 return False, 'Editor windows require the graphical application'
@@ -123,6 +136,9 @@ def run(context, key):
     import bpy
     if not available(context, key)[0]:
         return {'CANCELLED'}
+    if key in _PROPERTY_TARGETS:
+        from . import property_navigation
+        return property_navigation.run(context, _PROPERTY_TARGETS[key])
     if key.startswith('editor.'):
         return _open_editor(context, key)
     _, name, props, _, _, _ = _CREATES[key[7:]]

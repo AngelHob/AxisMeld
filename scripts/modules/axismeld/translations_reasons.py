@@ -6,7 +6,15 @@ Full source strings are keys, including plan IDs and native confirmation suffixe
 Translations preserve selection, topology, data, cancellation and Undo boundaries.
 """
 
-ZH_HANS = {'Absolute vertex-normal vector settings not implemented': '尚未实现顶点法向的绝对向量设置',
+ZH_HANS = {'Unknown property navigation target': '未知的属性导航目标',
+ 'Property navigation requires the graphical application': '属性导航需要图形界面',
+ 'Property navigation requires a live 3D viewport in the source window': '属性导航需要来源窗口中有效的三维视窗',
+ 'Requires an active selected object in the source view layer': '需要来源视图层中的活动选中对象',
+ 'The active object has no native Modifier Properties context': '当前活动对象没有原生修改器属性页',
+ 'No visible unpinned or same-object-pinned Properties editor in this window': '当前窗口没有可见的未固定或固定到同一对象的属性编辑器',
+ 'Property navigation source or editor is unavailable': '属性导航的来源或编辑器不可用',
+ 'Navigate native Blender properties in an existing editor; preserve pins and scene data': '在已有编辑器中打开 Blender 原生属性，保留固定状态和场景数据',
+ 'Absolute vertex-normal vector settings not implemented': '尚未实现顶点法向的绝对向量设置',
  'Activate the Blender Box Select tool': '激活 Blender 框选工具',
  'Activate the registered Blender tool; subsequent viewport strokes perform edits. Poly Build is not the complete Maya Quad Draw/Append/Target Weld workflow.': '激活已注册的 '
                                                                                                                                                                 'Blender '

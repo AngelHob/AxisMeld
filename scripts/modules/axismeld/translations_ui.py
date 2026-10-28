@@ -5,7 +5,12 @@
 Names of user objects, bones, paths and feature-set authors are not catalog keys.
 """
 
-ZH_HANS = {'2D Curve Geometry Offset': '二维曲线几何体偏移',
+ZH_HANS = {'Blender Object Properties': 'Blender 对象属性',
+ 'Object Transform Properties': '对象变换属性',
+ 'Modifier Properties': '修改器属性',
+ 'Show the active selected object in an existing Properties editor': '在已有属性编辑器中显示当前活动选中对象',
+ 'Show native modifiers in an existing Properties editor': '在已有属性编辑器中显示原生修改器',
+ '2D Curve Geometry Offset': '二维曲线几何体偏移',
  'Active Mesh Component Hotbox': '活动网格组件热盒',
  'Add Custom Property...': '添加自定义属性…',
  'Align Objects...': '对齐对象…',

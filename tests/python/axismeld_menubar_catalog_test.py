@@ -39,6 +39,20 @@ class MenubarCatalogTest(unittest.TestCase):
             self.assertTrue(all(identifier in self.menus for identifier in expected))
         self.assertFalse(any(identifier.startswith(('pane.', 'internal.')) for identifier in self.menus))
 
+    def test_blender_properties_are_separate_actions_below_general_editors(self):
+        windows = self.menus['common.windows']
+        general = next(node for node in windows['children'] if node['label'] == 'General Editors')
+        properties = next((node for node in general['children']
+                           if node['label'] == 'Blender Object Properties'), None)
+        self.assertIsNotNone(properties)
+        self.assertEqual([(node['label'], node.get('action_key')) for node in properties['children']],
+                         [('Object Transform Properties', 'properties.object_transform'),
+                          ('Modifier Properties', 'properties.modifier')])
+        for node in self.nodes:
+            if node['label'] in {'Attribute Editor', 'Channel Box / Layer Editor'}:
+                self.assertEqual(node['kind'], 'disabled')
+                self.assertFalse(node.get('action_key'))
+
     def test_original_maya_rows_remain_at_their_original_parent_in_order(self):
         from axismeld.menubar_reference import REFERENCE_MENUS
         actual = {item['id']: item for item in self.nodes}
