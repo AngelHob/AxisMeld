@@ -1,0 +1,411 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-29T15:09:01.930137+00:00",
+  "tag": "axismeld-2026.10.29-custom-property-preview",
+  "sourceCommit": "1183c5ef866f4b2cc11b7c4dc301dbc23a6564dc",
+  "nativeSourceCommit": "1183c5ef866f4b2cc11b7c4dc301dbc23a6564dc",
+  "upstreamCommit": "754ebe3c4b4e1402a159df6e1e58823cc93ef887",
+  "nativeSourceCommitMeaning": "Build/install distribution checkout assertion, not an embedded EXE revision.",
+  "buildinfo": false,
+  "changeScope": "Python UI only",
+  "binarySha256": "e85cc631490981c0a4893ffd6fe60b4bc70c2534108c21c181219c86772a74a4",
+  "guiCaseCountMeaning": "GUI record count including complete marker; not independent test count.",
+  "diagnosticBoundary": "GUI 的 caseCount 是记录数，包含 complete 完成标记，不等于独立测试数。此前失败 GUI 报告与日志保留为诊断，不计入最终 PASS；夹具修正不能替代最终运行实际完成的 PASS 回执。legacy M3 检查在基线与当前实现均于 line 81 失败，本批未将它计为 PASS。",
+  "package": {
+    "status": "STATIC_PACKAGE_PASS",
+    "archive": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-release\\AxisMeld-2026.10.29-custom-property-preview-windows-x64.zip",
+    "archiveBytes": 280175244,
+    "archiveSha256": "89ba9e033ccda03eaf7c14926e3d5f59df0e632aa10096ac8e697d0d6a1d1e8d",
+    "manifestSha256": "0b70cc1d07fad12e4a8a0e5c264d67955d6a10cc3faf985df4e1c886c8a7f253"
+  },
+  "manualCatalog": {
+    "previous": 400,
+    "total": 405,
+    "current": 391,
+    "historical": 14,
+    "historicallyTested": 47,
+    "currentPending": 344,
+    "allPending": 358,
+    "newIds": [
+      "CP-01",
+      "CP-02",
+      "CP-03",
+      "CP-04",
+      "CP-05"
+    ],
+    "oldItemsPreservedExceptRecent": true
+  },
+  "release": {
+    "status": "PUBLISHED",
+    "url": "https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.29-custom-property-preview",
+    "sourceCommit": "1183c5ef866f4b2cc11b7c4dc301dbc23a6564dc",
+    "tag": "axismeld-2026.10.29-custom-property-preview"
+  },
+  "verification": {
+    "build": {
+      "status": "PASS",
+      "sourceCommit": "1183c5ef866f4b2cc11b7c4dc301dbc23a6564dc",
+      "binarySha256": "e85cc631490981c0a4893ffd6fe60b4bc70c2534108c21c181219c86772a74a4",
+      "steps": [
+        {
+          "stage": "build",
+          "exitCode": 0,
+          "logSha256": "7693236f95750878b6d773d8159016323ee3d148bc02dc1aa346b4a4ee3c53d9"
+        },
+        {
+          "stage": "install",
+          "exitCode": 0,
+          "logSha256": "ae54bf66f093a6171d086b683f4a40155d744ec4578f8e65c7849428c4e571bc"
+        }
+      ]
+    },
+    "focused": {
+      "status": "PASS",
+      "sourceCommit": "1183c5ef866f4b2cc11b7c4dc301dbc23a6564dc",
+      "total": 63,
+      "suites": [
+        {
+          "suite": "custom_property",
+          "exitCode": 0,
+          "tests": 15
+        },
+        {
+          "suite": "menubar_catalog",
+          "exitCode": 0,
+          "tests": 13
+        },
+        {
+          "suite": "menubar_runtime",
+          "exitCode": 0,
+          "tests": 14
+        },
+        {
+          "suite": "translation_catalog",
+          "exitCode": 0,
+          "tests": 5
+        },
+        {
+          "suite": "property_navigation",
+          "exitCode": 0,
+          "tests": 16
+        }
+      ]
+    },
+    "gui": [
+      {
+        "receipt": "gui1",
+        "scope": "最终安装",
+        "status": "PASS",
+        "sourceCommit": "1183c5ef866f4b2cc11b7c4dc301dbc23a6564dc",
+        "binarySha256": "e85cc631490981c0a4893ffd6fe60b4bc70c2534108c21c181219c86772a74a4",
+        "caseCount": 21,
+        "interactionMethod": "simulated-native-events",
+        "reportSha256": "328c7517e2c779321094bbb5547f688f294863ce2cb08347cfb5483aed96a919",
+        "evidenceSha256": [
+          "328c7517e2c779321094bbb5547f688f294863ce2cb08347cfb5483aed96a919",
+          "f0e4383d313746db475d9291eb9166b727ae0f30c5bb0b24f263373b22a8a20a",
+          "ea6c3011f1bfe874a58ff82529f513a57fa8619bf96c479e6ea3d0d356e380a9"
+        ]
+      },
+      {
+        "receipt": "gui2",
+        "scope": "独立解压运行",
+        "status": "PASS",
+        "sourceCommit": "1183c5ef866f4b2cc11b7c4dc301dbc23a6564dc",
+        "binarySha256": "e85cc631490981c0a4893ffd6fe60b4bc70c2534108c21c181219c86772a74a4",
+        "caseCount": 21,
+        "interactionMethod": "simulated-native-events",
+        "reportSha256": "213b667cd10046d6d9fb95bbb1aabb044500d015cffe61bf1266125d22e3f57c",
+        "evidenceSha256": [
+          "213b667cd10046d6d9fb95bbb1aabb044500d015cffe61bf1266125d22e3f57c",
+          "f0e4383d313746db475d9291eb9166b727ae0f30c5bb0b24f263373b22a8a20a",
+          "4958c18cf16c5c6dee4a495fe3cba3005742056871e3983031b497509a7db3f8"
+        ]
+      }
+    ],
+    "static": {
+      "stage": {
+        "status": "PASS",
+        "source_commit": "1183c5ef866f4b2cc11b7c4dc301dbc23a6564dc",
+        "binary_sha256": "e85cc631490981c0a4893ffd6fe60b4bc70c2534108c21c181219c86772a74a4",
+        "files_count": 6533,
+        "resource_fingerprint": "bec8aae9a9899a5d46046eafa9681888274a36c3df9ba1ce75ca2eaed85757e4",
+        "resourcesCount": 154
+      },
+      "extract": {
+        "status": "PASS",
+        "source_commit": "1183c5ef866f4b2cc11b7c4dc301dbc23a6564dc",
+        "binary_sha256": "e85cc631490981c0a4893ffd6fe60b4bc70c2534108c21c181219c86772a74a4",
+        "files_count": 6533,
+        "resource_fingerprint": "bec8aae9a9899a5d46046eafa9681888274a36c3df9ba1ce75ca2eaed85757e4",
+        "resourcesCount": 154
+      }
+    },
+    "anonymous": {
+      "status": "ANONYMOUS_DOWNLOAD_STATIC_PASS",
+      "authenticated": false,
+      "archiveSha256": "89ba9e033ccda03eaf7c14926e3d5f59df0e632aa10096ac8e697d0d6a1d1e8d",
+      "archiveBytes": 280175244,
+      "transferMethod": "Public byte ranges, 18 parallel recovery workers excluding the failing node; validated prefix reuse, strict Content-Range, final whole-ZIP SHA256 and public checksum"
+    },
+    "publicFactory": {
+      "status": "PASS",
+      "sourceCommit": "1183c5ef866f4b2cc11b7c4dc301dbc23a6564dc",
+      "binarySha256": "e85cc631490981c0a4893ffd6fe60b4bc70c2534108c21c181219c86772a74a4"
+    },
+    "site": {
+      "checksCount": 14,
+      "checks": [
+        {
+          "name": "405-item catalog loads under /AxisMeld/; fresh visitor has zero tested",
+          "result": "passed"
+        },
+        {
+          "name": "pagination limits records to 50 and repeats the correct group headings on every page",
+          "result": "passed"
+        },
+        {
+          "name": "hotbox and menu categories filter exact stable IDs within four optgroups",
+          "result": "passed"
+        },
+        {
+          "name": "state, Unicode note and per-item version survive reload; default change preserves prior version",
+          "result": "passed"
+        },
+        {
+          "name": "GitHub Issue URL round-trips exact ID, version, result and multiline special-character note; never submitted",
+          "result": "passed"
+        },
+        {
+          "name": "2000-character limit and long-URL warning preserve complete feedback",
+          "result": "passed"
+        },
+        {
+          "name": "JSON backup downloads real local records and explicitly says not submitted",
+          "result": "passed"
+        },
+        {
+          "name": "status, group, recent and history filters; search finds historical IDs with non-acceptance notice",
+          "result": "passed"
+        },
+        {
+          "name": "390px viewport has no horizontal overflow, including expanded notes and steps",
+          "result": "passed"
+        },
+        {
+          "name": "separate visitor context never inherits another visitor record",
+          "result": "passed"
+        },
+        {
+          "name": "GU-28 and MB-40 retain old status, notes, versions and timestamps after catalog regrouping and reordering",
+          "result": "passed"
+        },
+        {
+          "name": "injected catalog/search text is inert; local/private/unsafe outbound configuration is rejected",
+          "result": "passed"
+        },
+        {
+          "name": "blocked storage gives visible warning and never claims successful persistence",
+          "result": "passed"
+        },
+        {
+          "name": "no browser script errors or external background requests",
+          "result": "passed"
+        }
+      ]
+    },
+    "pages": {
+      "status": "PASS",
+      "pagesCommit": "bbc80edf43d61be08bcde38ddf130bfdd740bb2a",
+      "byteVerified": true,
+      "resources": [
+        {
+          "name": "index.html",
+          "url": "https://angelhob.github.io/AxisMeld/index.html",
+          "status": 200,
+          "bytes": 7227,
+          "sha256": "17a02e8ae5c540620de523a3dfeec4fa4198b2a57e10a3a681e363b48a509e76",
+          "expectedSha256": "17a02e8ae5c540620de523a3dfeec4fa4198b2a57e10a3a681e363b48a509e76",
+          "byteEqual": true
+        },
+        {
+          "name": "app.mjs",
+          "url": "https://angelhob.github.io/AxisMeld/app.mjs",
+          "status": 200,
+          "bytes": 23382,
+          "sha256": "fcdb4c181ab724733fd0f7583d6f2e21c2e04131091dc4f3c01b82d1a7d4e5f9",
+          "expectedSha256": "fcdb4c181ab724733fd0f7583d6f2e21c2e04131091dc4f3c01b82d1a7d4e5f9",
+          "byteEqual": true
+        },
+        {
+          "name": "styles.css",
+          "url": "https://angelhob.github.io/AxisMeld/styles.css",
+          "status": 200,
+          "bytes": 15393,
+          "sha256": "368ced53879bbd113aaf1aae63cbd68a3cf22d5aa9c3aca501d5c939f245eb8d",
+          "expectedSha256": "368ced53879bbd113aaf1aae63cbd68a3cf22d5aa9c3aca501d5c939f245eb8d",
+          "byteEqual": true
+        },
+        {
+          "name": "catalog.json",
+          "url": "https://angelhob.github.io/AxisMeld/catalog.json",
+          "status": 200,
+          "bytes": 304961,
+          "sha256": "2badcfb7bccc06617394c758dbe252719ef3911725bdad0ac61ef5da3fa11f97",
+          "expectedSha256": "2badcfb7bccc06617394c758dbe252719ef3911725bdad0ac61ef5da3fa11f97",
+          "byteEqual": true
+        },
+        {
+          "name": "config.json",
+          "url": "https://angelhob.github.io/AxisMeld/config.json",
+          "status": 200,
+          "bytes": 513,
+          "sha256": "ad011a6900230649c33c23f9f7abee1cba2dd3a2f5180015f92921a79e69bbf6",
+          "expectedSha256": "ad011a6900230649c33c23f9f7abee1cba2dd3a2f5180015f92921a79e69bbf6",
+          "byteEqual": true
+        },
+        {
+          "name": "favicon.svg",
+          "url": "https://angelhob.github.io/AxisMeld/favicon.svg",
+          "status": 200,
+          "bytes": 246,
+          "sha256": "2cca7741a0dede35653d222677e15559e566c8dbab6882229ec6ab7b8f410737",
+          "expectedSha256": "2cca7741a0dede35653d222677e15559e566c8dbab6882229ec6ab7b8f410737",
+          "byteEqual": true
+        }
+      ]
+    }
+  },
+  "evidenceFingerprints": {
+    "package": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\package-receipt.json",
+      "sha256": "6c67a6ba954d16bbe64780e51e388055ca9355da46dead3d3b95d13159a0c04f"
+    },
+    "release": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\github-release.json",
+      "sha256": "9464664dd804c1e53a7b7e033a2585082d4d3570c2e3a2f937953ae2c04a5108"
+    },
+    "anonymous": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\anonymous-download.json",
+      "sha256": "0fe7a185bf0e5dbf00166dd54abbd7d6117a51ee6a76713f05016230e7df29b2"
+    },
+    "factory": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\public-factory.json",
+      "sha256": "6bc227cc798b00bb3bbf167d5fdd3ca7c440dbc7e129c674e4d6cbbd0d8bbac3"
+    },
+    "stage": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\stage-static.json",
+      "sha256": "48222e8072d45fcd0da5be180948555b292fc4036a5c4d80dcb70c12ff9975c0"
+    },
+    "extract": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\extract-static.json",
+      "sha256": "596f4d9f9b1f719ed8d3300617be6610ebb1d37c824415334464a58d43178ba6"
+    },
+    "manual": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\manual-catalog-update.json",
+      "sha256": "3821aae2a8c75f472ca7a47ef8484ecd848f443e254c37aed5d5c6c5e457137d"
+    },
+    "pages": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\pages-public-proof.json",
+      "sha256": "e5a52c1d8b0930fce846bfd8ba88f59dcffeb1e94aff0788583f8d5a8fc1965e"
+    },
+    "site": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\site-final-02\\browser-report.json",
+      "sha256": "31bc2829592b747798a712e4e21cc7d4b67efc4740fb09e8d1a2ab678529a635"
+    },
+    "focused": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\focused-final-02\\receipt.json",
+      "sha256": "4c99678286a65ea743d7f9841e0a740ca892f290dd34cd1170904faee5bbc65a"
+    },
+    "build": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\build-final-02\\build-receipt.json",
+      "sha256": "3c114a5a0113803f721c2e9c94373f9eb61ab4aad060cc9bc207b40a99d831d8"
+    },
+    "gui1": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\gui-final-02\\gui-receipt.json",
+      "sha256": "948080e6447709ff78fdef14a8cf6a476cbabc2d06ef0376209f741e319b2266"
+    },
+    "gui2": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\gui-extracted-final\\gui-receipt.json",
+      "sha256": "c27d205ec194dc5c917404fc29326ea0805c1741df67a5aed624fe17f124de78"
+    },
+    "diagnostic:gui-02/artifacts/custom-property-gui.json": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\gui-02\\artifacts\\custom-property-gui.json",
+      "sha256": "72247a7ed8ea6e659f970a563a4646c8e0d9547c80a96c51df8038bac6ca9d16",
+      "status": "FAIL",
+      "acceptance": false
+    },
+    "diagnostic:gui-02/artifacts/custom-property-gui.json:log": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\gui-02\\app.log",
+      "sha256": "5e3128d50feb62f954a6681d1217a2c648aaa070110064b3882c350541bd5d41",
+      "acceptance": false
+    },
+    "diagnostic:gui-03/artifacts/custom-property-gui.json": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\gui-03\\artifacts\\custom-property-gui.json",
+      "sha256": "08c46c93c24852e2cd66e977df9e6638bfbfa22bd5059da328d281ffc4263e41",
+      "status": "FAIL",
+      "acceptance": false
+    },
+    "diagnostic:gui-03/artifacts/custom-property-gui.json:log": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\gui-03\\app.log",
+      "sha256": "7ae30cedad1325c248055666036553e5aef566792bee7d41bd755df5f3e183ec",
+      "acceptance": false
+    },
+    "diagnostic:gui-final/artifacts/custom-property-gui.json": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\gui-final\\artifacts\\custom-property-gui.json",
+      "sha256": "a86f79480dc3f1620ccf31050bf8bd07b797d35f1dc35a378f24e42b0be116ff",
+      "status": "FAIL",
+      "acceptance": false
+    },
+    "diagnostic:gui-final/artifacts/custom-property-gui.json:log": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\gui-final\\app.log",
+      "sha256": "bb8142a1c344778e205fb7fc043b0aced7c66b2a67e3cab185d338963a7662d6",
+      "acceptance": false
+    },
+    "diagnostic:gui-worker-f9-diagnostic-01/artifacts/custom-property-gui.json": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\gui-worker-f9-diagnostic-01\\artifacts\\custom-property-gui.json",
+      "sha256": "c8c221bbbbb38dc2d76abaf6daa4740a6b3d09743ff86878f8eb24d1ee67291e",
+      "status": "DIAGNOSTIC_COMPLETE",
+      "acceptance": false
+    },
+    "diagnostic:gui-worker-f9-diagnostic-01/artifacts/custom-property-gui.json:log": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\gui-worker-f9-diagnostic-01\\app.log",
+      "sha256": "6cf5d3443b72202882898601d48150d54cdd7b85827767c001f7908f1267751e",
+      "acceptance": false
+    },
+    "diagnostic:D:\\source\\AxisMeld-build\\gui-2026-10-29-options-context-audit\\m3-common-baseline.log": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-options-context-audit\\m3-common-baseline.log",
+      "sha256": "e8f80e31af8802ddf776eefca656ab478fa28154b71e5c68d8b53c5f9c72f21f",
+      "acceptance": false
+    },
+    "diagnostic:D:\\source\\AxisMeld-build\\gui-2026-10-29-options-context-audit\\m3-common-green.log": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-options-context-audit\\m3-common-green.log",
+      "sha256": "13f1a449f1a2fbdf0a8e21886c4ce478a911ed81c03d2eb2cc206e4fd1ab11df",
+      "acceptance": false
+    },
+    "diagnostic:D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\network-diagnostics.json": {
+      "path": "D:\\source\\AxisMeld-build\\gui-2026-10-29-custom-property-audit\\network-diagnostics.json",
+      "sha256": "448d3649a714603dc3bcfe1185f22964e0df025ca1f99d8415c153491674a412",
+      "acceptance": false
+    }
+  },
+  "manualAcceptance": {
+    "physicalMouse": "MANUAL_PENDING",
+    "physicalF3": "MANUAL_PENDING",
+    "bilingualHighDpi": "MANUAL_PENDING",
+    "fullVisualLayout": "MANUAL_PENDING",
+    "CP": [
+      "CP-01",
+      "CP-02",
+      "CP-03",
+      "CP-04",
+      "CP-05"
+    ],
+    "previousPN": "MANUAL_PENDING"
+  },
+  "limits": [
+    "继续以 UI、交互和 Maya 2026 默认快捷键为优先；新增建模、Skin/Skeleton、UV 算法保持暂停。",
+    "CP-01～CP-05 与原 PN-01～PN-06 继续待人工；物理鼠标操作、物理 F3 搜索、双语和高 DPI 可读性及完整视觉布局仍待人工验收。",
+    "No inherited PASS counts; no independent reproducible build claim."
+  ]
+}

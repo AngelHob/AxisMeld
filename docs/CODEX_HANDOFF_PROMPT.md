@@ -5,17 +5,15 @@
 ```text
 请接续开发我的 AxisMeld 项目。默认用中文，结论优先，主动核实并完成有界任务。
 
-最新交付（2026-10-29）：属性导航预览，tag axismeld-2026.10.29-property-navigation-preview。Transform / Modifiers 接入原生属性，功能/native源码 45a5a51a01925164f11dcf4ce1ecbb8be217dced。
-发布入口：https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.29-property-navigation-preview
-ZIP SHA256：88c3a3728bed8f3d83fd6229545a06493c071ffc4e458b27c482cff048027858
-EXE SHA256：e85cc631490981c0a4893ffd6fe60b4bc70c2534108c21c181219c86772a74a4
-Python-only、buildinfo OFF，EXE hash 与前批相同，保留真实构建与安装回执。
-本批10组127项Python、真实事件hotbox-repost、候选/独立解压运行副本各14项GUI、14项网站浏览器检查通过；6,533文件/154资源、匿名下载和公开包factory通过。
-公开目录 400 项（当前 386、历史 14），47 项仅为历史已测；当前初始待测 339、全表初始待测 353。本批新增 PN-01～PN-06，六项均待人工；既有编号与人工结果保留。
-实际 GUI 验证覆盖原生 RNA 属性与 operator/Undo：最终安装候选 14 项、独立解压运行副本 14 项通过；物理 F3 键盘搜索和字段鼠标编辑未自动化，仍待人工。启动截图存在覆盖视窗的启动模态框，不能据此宣称全部视觉布局已验清。
-继续 UI、交互与 Maya 2026 默认快捷键优先；新增建模、Skin/Skeleton、UV 算法暂停。后续可按用户反馈改进既有 Options 体验，不自动开启新算法开发。
-当前人工维护且按入口分组的 tools/testing_site/catalog.json 是公开目录权威来源。不要运行旧 tools/utils/axismeld_public_test_catalog.py 导出：它遗漏多段 BI 编号和新组，会把当前目录回退；同步维护人工 ledger 与按入口索引。
-公开Pages本批六资源已逐字节核验通过，提交22f6ad60ddac2261e44ac26e64540dc8b390f74b；最终配置14项浏览器检查通过。先读 docs/compatibility/2026-10-29-property-navigation-acceptance.md 和 docs/compatibility/2026-10-29-property-navigation-preview-snapshot.json；前批双语/18px记录按日期保留。
+最新交付（2026-10-29）：自定义属性参数窗口修复预览，tag axismeld-2026.10.29-custom-property-preview。
+入口：Space → Modify → Add/Edit/Delete Attribute...；保留四种类型、下拉同步草稿与首次确认来源保护。
+发布入口：https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.29-custom-property-preview
+先读 docs/compatibility/2026-10-29-custom-property-acceptance.md 和 docs/compatibility/2026-10-29-custom-property-preview-snapshot.json；完整指纹集中于快照，不继承前批测试结论。
+公开目录 405 项（当前 391、历史 14），历史已测 47，当前待测 344、全表待测 358；既有编号与人工结果保留。
+CP-01～CP-05 与原 PN-01～PN-06 继续待人工；物理鼠标操作、物理 F3 搜索、双语和高 DPI 可读性及完整视觉布局仍待人工验收。
+继续以 UI、交互和 Maya 2026 默认快捷键为优先；新增建模、Skin/Skeleton、UV 算法保持暂停。
+人工维护 tools/testing_site/catalog.json 为权威目录；禁止旧导出器覆盖当前编号和结果。
+前批属性导航、双语和 18px 记录按日期保留为历史；构建源码后允许另有文档提交，以快照 sourceCommit 为包身份。
 
 仓库：https://github.com/AngelHob/AxisMeld
 最新开发分支：axismeld/phase-2a

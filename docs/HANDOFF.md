@@ -1,5 +1,13 @@
 # 新机器接续开发
 
+## 2026-10-29 · 自定义属性参数窗口交付
+
+**当前交付：自定义属性参数窗口修复预览。** 版本 `axismeld-2026.10.29-custom-property-preview`；[下载](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.29-custom-property-preview)。 [本批验收](../docs/compatibility/2026-10-29-custom-property-acceptance.md) · [集中指纹与验证快照](../docs/compatibility/2026-10-29-custom-property-preview-snapshot.json)。
+
+继续以 UI、交互和 Maya 2026 默认快捷键为优先；新增建模、Skin/Skeleton、UV 算法保持暂停。 CP-01～CP-05 与原 PN-01～PN-06 继续待人工；物理鼠标操作、物理 F3 搜索、双语和高 DPI 可读性及完整视觉布局仍待人工验收。
+
+下方既有日期记录保留为历史；当前版本以上段和本批快照为准。
+
 ## 2026-10-29 · 属性导航交付
 
 **当前交付（2026-10-29）：Transform / Modifiers 属性导航预览已发布并核验。** 在现有界面中打开 Blender 原生变换与修改器属性，保留中英文显示、18px 伴随列表与现有交互；不增加建模算法。 [下载完整预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.29-property-navigation-preview)；功能/native 源码 `45a5a51a01925164f11dcf4ce1ecbb8be217dced`，固定 Blender 5.4 Alpha upstream `754ebe3c4b4e1402a159df6e1e58823cc93ef887`。
