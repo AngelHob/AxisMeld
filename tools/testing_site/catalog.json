@@ -2338,7 +2338,7 @@
       "title": "属性对话框：撤销重做和双语显示",
       "group": "菜单 · Modify 修改",
       "steps": [
-        "通过 Modify 菜单编辑一个属性，执行一次 Undo、Redo，再用 F9 调整已执行操作；检查请求的新值和类型是否生效。",
+        "通过 Modify 菜单编辑一个属性，执行一次 Undo、Redo；再新确认一次编辑，立即用原生 Adjust Last Operation 调整并检查新值与类型（Blender 默认键位为 F9，Maya 键位不要用 F9 代替此命令）。",
         "在中英文、100%/150%界面缩放下打开 Add/Edit/Delete Attribute...，检查原生字段、按钮和新失败说明；从窄窗口取消后重开 Space/QWER。"
       ],
       "expected": [
