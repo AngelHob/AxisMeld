@@ -252,9 +252,20 @@ def suite():
         assert len(boxes) == 1, ('Expected one rendered F9 popup', boxes)
         left, bottom, right, top = boxes[0]
         point[:] = [round(right - 70 * scale), round(bottom + 17 * scale)]
-        yield from key('LEFTMOUSE')
+        # Native UI needs a hover event to activate the new button before text
+        # entry. Match the proven Skin options field-edit event sequence.
+        event('MOUSEMOVE', 'NOTHING')
+        yield from settle(3)
+        yield from key('LEFTMOUSE', ctrl=True)
+        focus_path = screenshot(locale + '-F9-field-focus')
+        focus_fields = fields(bpy.context.window_manager.operators[-1])
         yield from key('A', ctrl=True)
         yield from key('FOUR', unicode='4')
+        text_path = screenshot(locale + '-F9-field-pending-text')
+        record('native-F9-input-stages', locale=locale, focusScreenshot=str(focus_path),
+               pendingTextScreenshot=str(text_path), focusOperator=focus_fields,
+               pendingOperator=fields(bpy.context.window_manager.operators[-1]),
+               method='MOUSEMOVE; Ctrl+click; Ctrl+A; text PRESS-only Unicode; RNA commits on RET')
         yield from key('RET')
         yield from settle(8)
         assert source()['Count'] == 4 and type(source()['Count']) is int, ('F9 did not recompute', TRACE[trace_start:])
@@ -264,7 +275,7 @@ def suite():
         yield from key('ESC')
         colors.inner = previous_color
         record('native-F9-field-recompute', locale=locale, popup=list(boxes[0]), click=list(point), executions=executions,
-               method='screen.redo_last popup; rendered bottom-field position; simulated mouse/Ctrl+A/4/RET')
+               method='screen.redo_last popup; rendered bottom-field position; simulated hover/Ctrl+click/Ctrl+A/4/RET')
         # Restore this fixture through RNA for the next locale, then push a new
         # explicit baseline; these pushes are harness setup, never product work.
         source()['Count'] = 7
