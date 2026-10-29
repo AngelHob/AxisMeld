@@ -183,7 +183,25 @@ def suite():
             assert bpy.ops.ed.redo() == {'FINISHED'}
         yield from settle()
         assert source()['Count'] == 9 and type(source()['Count']) is int
-        record('native-one-undo-and-redo', locale=locale, value=source()['Count'])
+        with context():
+            f9_after_undo_redo = bpy.ops.screen.redo_last.poll()
+        record('native-one-undo-and-redo', locale=locale, value=source()['Count'],
+               operatorStackCount=len(bpy.context.window_manager.operators), f9Available=f9_after_undo_redo)
+
+        # Native ed_undo_refresh_for_op clears the last-operator stack. F9 must
+        # follow a fresh confirmed operation, rather than the independent
+        # Undo/Redo check above (screen.redo_last polls that stack).
+        yield from open_edit(locale + '-fresh-confirm-for-F9')
+        with context():
+            CURRENT.value = '11'
+        yield from key('RET')
+        yield from settle()
+        assert source()['Count'] == 11 and type(source()['Count']) is int
+        with context():
+            assert bpy.ops.screen.redo_last.poll(), 'Fresh confirmed operator missing from native F9 stack'
+        record('fresh-native-confirm-for-F9', locale=locale, value=source()['Count'],
+               operatorStackCount=len(bpy.context.window_manager.operators), method='RNA value; RET event')
+        CURRENT = None
 
         # Native F9 popup is measured from its rendered background only. The
         # bottom field is Value in this four-field operator's existing draw.
@@ -197,7 +215,7 @@ def suite():
             bpy.ops.screen.redo_last('INVOKE_DEFAULT')
         yield from settle(8)
         draws = [item for item in TRACE[trace_start:] if item['method'] == 'draw']
-        assert draws and draws[-1]['fields']['value'] == '9' and draws[-1]['fields']['kind'] == 'INTEGER', draws
+        assert draws and draws[-1]['fields']['value'] == '11' and draws[-1]['fields']['kind'] == 'INTEGER', draws
         path = screenshot(locale + '-F9-before')
         image = bpy.data.images.load(str(path), check_existing=False)
         try:
