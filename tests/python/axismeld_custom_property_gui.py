@@ -35,6 +35,7 @@ RECORD = {'schema': 1, 'status': 'RUNNING', 'cases': [], 'module': implementatio
           'boundary': 'Test-owned instrumentation calls original invoke/draw/execute/cancel. No physical input, complete public-menu route or high-DPI readability acceptance.'}
 OP = implementation.AXISMELD_OT_m3_custom_property
 CURRENT = None
+POPUP = None
 TRACE = []
 TAG = ''
 ORIGINAL = {name: getattr(OP, name) for name in ('invoke', 'draw', 'execute', 'cancel')}
@@ -45,27 +46,34 @@ def fields(op):
 
 
 def tracked_invoke(op, context, event):
-    global CURRENT
+    global CURRENT, POPUP
     CURRENT = op
+    POPUP = None
     result = ORIGINAL['invoke'](op, context, event)
     TRACE.append({'method': 'invoke', 'tag': TAG, 'result': sorted(result), 'fields': fields(op)})
     return result
 
 
 def tracked_draw(op, context):
+    global POPUP
+    POPUP = context.region_popup
     TRACE.append({'method': 'draw', 'tag': TAG, 'fields': fields(op)})
     ORIGINAL['draw'](op, context)
 
 
 def tracked_execute(op, context):
+    global POPUP
     entry = {'method': 'execute', 'tag': TAG, 'fields': fields(op)}
     result = ORIGINAL['execute'](op, context)
+    POPUP = None
     entry['result'] = sorted(result)
     TRACE.append(entry)
     return result
 
 
 def tracked_cancel(op, context):
+    global POPUP
+    POPUP = None
     TRACE.append({'method': 'cancel', 'tag': TAG})
     return ORIGINAL['cancel'](op, context)
 
@@ -105,10 +113,14 @@ def suite():
     def event(kind, value='PRESS', **kwargs):
         window.event_simulate(type=kind, value=value, x=point[0], y=point[1], **kwargs)
 
-    def key(kind, **kwargs):
+    def key(kind, unicode=None, **modifiers):
+        kwargs = dict(modifiers)
+        if unicode is not None:
+            kwargs['unicode'] = unicode
         event(kind, **kwargs)
         yield from settle(2)
-        event(kind, 'RELEASE', **kwargs)
+        # Native event_simulate accepts unicode on PRESS only.
+        event(kind, 'RELEASE', **modifiers)
         yield from settle(2)
 
     def screenshot(name):
@@ -129,6 +141,7 @@ def suite():
             assert bpy.ops.axismeld.m3_custom_property('INVOKE_DEFAULT', action='EDIT') == {'RUNNING_MODAL'}
         yield from settle()
         assert any(item['method'] == 'draw' and item['tag'] == tag for item in TRACE), 'Native dialog never drew'
+        assert POPUP is not None and POPUP.type == 'TEMPORARY', 'Missing native popup refresh context'
         assert CURRENT.kind == 'INTEGER' and CURRENT.name == 'Count' and CURRENT.value == str(source()['Count'])
 
     with context():
@@ -153,11 +166,22 @@ def suite():
         yield from open_edit(locale + '-cancel')
         for name, kind, value in (('Enabled', 'BOOLEAN', 'False'), ('Text', 'STRING', '007'),
                                   ('Weight', 'FLOAT', '1.5'), ('Name', 'STRING', '用户字符串')):
+            trace_start = len(TRACE)
             with context():
                 CURRENT.property = name
-            yield from settle(2)
+            # Scripted RNA assignment has no native button event to refresh the
+            # cached popup layout. Use the public temporary-region refresh API,
+            # then require a real draw with the changed fields before capturing.
+            POPUP.tag_refresh_ui()
+            event('MOUSEMOVE', 'NOTHING')
+            yield from settle()
             assert (CURRENT.name, CURRENT.kind, CURRENT.value) == (name, kind, value)
+            draws = [item for item in TRACE[trace_start:] if item['method'] == 'draw' and item['tag'] == TAG]
+            assert draws and all(draws[-1]['fields'][key] == expected for key, expected in
+                                 (('property', name), ('name', name), ('kind', kind), ('value', value))), draws
             assert values(source()) == before
+            record('selector-native-draw', locale=locale, fields=draws[-1]['fields'],
+                   method='RNA selector; native Region.tag_refresh_ui; MOUSEMOVE event; actual operator draw')
         screenshot(locale + '-dialog-user-data')
         yield from key('ESC')
         yield from settle()
