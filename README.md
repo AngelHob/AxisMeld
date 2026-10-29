@@ -12,27 +12,19 @@ AxisMeld 与 Blender Foundation、Autodesk 及其产品均无隶属、合作、�
 
 ## 当前开发与接续（2026-10-29）
 
-最新功能分支为 `axismeld/phase-2a`，默认 `axismeld/integration` 尚未集成。
+最新功能分支为 `axismeld/phase-2a`，`axismeld/integration` 尚未合并本批功能。
 
-**当前交付（2026-10-29）：Transform / Modifiers 属性导航预览已发布并核验。** 在现有界面中打开 Blender 原生变换与修改器属性，保留中英文显示、18px 伴随列表与现有交互；不增加建模算法。 [下载完整预览包](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.29-property-navigation-preview)；功能/native 源码 `45a5a51a01925164f11dcf4ce1ecbb8be217dced`，固定 Blender 5.4 Alpha upstream `754ebe3c4b4e1402a159df6e1e58823cc93ef887`。
+**当前交付：自定义属性参数窗口修复预览。** 版本 `axismeld-2026.10.29-custom-property-preview`；[下载](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.29-custom-property-preview)。 [本批验收](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/compatibility/2026-10-29-custom-property-acceptance.md) · [集中指纹与验证快照](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/compatibility/2026-10-29-custom-property-preview-snapshot.json)。
 
-10 组 127 项针对性 Python、当前真实事件 hotbox-repost、最终安装和独立解压副本各 14 项 GUI、本地网站 14 项浏览器检查通过。完整包 6,533 文件、154 选定资源，stage/extract、匿名下载和公开包工厂启动通过。ZIP 280,173,712 字节，SHA256 `88c3a3728bed8f3d83fd6229545a06493c071ffc4e458b27c482cff048027858`；EXE SHA256 `e85cc631490981c0a4893ffd6fe60b4bc70c2534108c21c181219c86772a74a4`。本批为 Python 改动且 buildinfo OFF，EXE hash 与双语基线相同；如实记录，不称独立可复现重编证明。
+继续以 UI、交互和 Maya 2026 默认快捷键为优先；新增建模、Skin/Skeleton、UV 算法保持暂停。 CP-01～CP-05 与原 PN-01～PN-06 继续待人工；物理鼠标操作、物理 F3 搜索、双语和高 DPI 可读性及完整视觉布局仍待人工验收。
 
-公开目录 400 项（当前 386、历史 14），47 项仅为历史已测；当前初始待测 339、全表初始待测 353。本批新增 PN-01～PN-06，六项均待人工；既有编号与人工结果保留。
+入口：Space → Modify → Add Attribute... / Edit Attribute... / Delete Attribute...。编辑时保留属性类型，Property 下拉重载草稿，首次确认保护原对象来源。
 
-实际 GUI 验证覆盖原生 RNA 属性与 operator/Undo：最终安装候选 14 项、独立解压运行副本 14 项通过；物理 F3 键盘搜索和字段鼠标编辑未自动化，仍待人工。启动截图存在覆盖视窗的启动模态框，不能据此宣称全部视觉布局已验清。
+默认 Blender 键位、Layout 和英文；简中在 Preferences → Interface → Language 选择；Maya 流程选择 AxisMeld Maya 2026 键位后进入 Modeling/Rigging。
 
-继续 UI、交互与 Maya 2026 默认快捷键优先；新增建模、Skin/Skeleton、UV 算法暂停。后续可按用户反馈改进既有 Options 体验，不自动开启新算法开发。
+[修改日志](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/CHANGELOG.md) · [路线图](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/ROADMAP.md) · [接续](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/HANDOFF.md) · [接续提示词](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/CODEX_HANDOFF_PROMPT.md) · [构建交付](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/BUILD_AND_DELIVERY.md) · [公开测试页](https://angelhob.github.io/AxisMeld/)
 
-公开 Pages 本批六资源已逐字节核验通过，提交 `22f6ad60ddac2261e44ac26e64540dc8b390f74b`；最终网站配置下 14 项浏览器检查通过。 详见[本批验收](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/compatibility/2026-10-29-property-navigation-acceptance.md)与[发布快照](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/compatibility/2026-10-29-property-navigation-preview-snapshot.json)。
-
-当前人工维护且按入口分组的 tools/testing_site/catalog.json 是公开目录权威来源。不要运行旧 tools/utils/axismeld_public_test_catalog.py 导出：它遗漏多段 BI 编号和新组，会把当前目录回退；同步维护人工 ledger 与按入口索引。
-
-默认 Blender 键位、Layout 和英文；简中在 Preferences → Interface → Language 选择，Maya 流程选择 AxisMeld Maya 2026 键位后进入 Modeling/Rigging。
-
-前批双语界面与迁移的日期证据保留于[双语验收](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/compatibility/2026-10-13-bilingual-ui-acceptance.md)，不当作本批新测。
-
-[路线图](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/ROADMAP.md) · [问题](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/CURRENT_ISSUES.md) · [接续](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/HANDOFF.md) · [构建交付](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/BUILD_AND_DELIVERY.md) · [公开测试页](https://angelhob.github.io/AxisMeld/)
+前批历史证据：[属性导航验收](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/compatibility/2026-10-29-property-navigation-acceptance.md) · [双语界面验收](https://github.com/AngelHob/AxisMeld/blob/axismeld/phase-2a/docs/compatibility/2026-10-13-bilingual-ui-acceptance.md)。
 
 ## AxisMeld project statement
 
