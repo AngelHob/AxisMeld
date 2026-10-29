@@ -754,8 +754,46 @@ def _custom_keys(context):
                  isinstance(obj[key], (str, float, int, bool))) if obj else ()
 
 
-def _property_items(_self, context):
-    return [(key, key, '') for key in _custom_keys(context)]
+# Enum callbacks receive OperatorProperties, not the Python Operator instance.
+# Weak owners also discard state if Blender destroys a dialog without cancel.
+from weakref import WeakValueDictionary
+_custom_dialogs = WeakValueDictionary()
+# Blender borrows dynamic-enum strings even outside dialogs (EXEC/F9). Keep one
+# copy of each encountered user name for this module's lifetime, not per call.
+_custom_property_names = {}
+
+
+def _property_items(self, context):
+    draft = _custom_dialogs.get(self.as_pointer())
+    keys = draft._custom_dialog_keys if draft else (_custom_keys(context) if context else ())
+    return [(_custom_property_names.setdefault(key, key),
+             _custom_property_names[key], '') for key in keys]
+
+
+def _custom_source(context):
+    """Only stable scalar identities; never retain borrowed RNA references."""
+    obj = context.active_object
+    if not _object_mode(context) or obj is None or not obj.is_editable:
+        return None
+    return (context.window.as_pointer() if context.window else 0,
+            context.scene.session_uid, context.view_layer.as_pointer(),
+            obj.session_uid, context.mode)
+
+
+def _custom_load_draft(self, context):
+    if self.property not in _custom_keys(context):
+        return
+    value = context.active_object[self.property]
+    self.name = self.property
+    self.kind = ('BOOLEAN' if isinstance(value, bool) else 'INTEGER' if isinstance(value, int)
+                 else 'FLOAT' if isinstance(value, float) else 'STRING')
+    self.value = str(value)
+
+
+def _custom_property_update(self, context):
+    draft = _custom_dialogs.get(self.as_pointer())
+    if draft and draft._custom_dialog_source == _custom_source(context) and self.action == 'EDIT':
+        _custom_load_draft(self, context)
 
 
 class AXISMELD_OT_m3_custom_property(Operator):
@@ -763,7 +801,8 @@ class AXISMELD_OT_m3_custom_property(Operator):
     bl_label = 'Object Custom Property'
     bl_options = {'REGISTER', 'UNDO'}
     action: EnumProperty(items=[(key, key.title(), '') for key in ('ADD', 'EDIT', 'DELETE')])
-    property: EnumProperty(name='Property', items=_property_items)
+    property: EnumProperty(name='Property', items=_property_items, update=_custom_property_update,
+                           translation_context='AxisMeld Custom Property Data')
     name: StringProperty(name='Name', default='Property')
     value: StringProperty(name='Value', default='0')
     kind: EnumProperty(name='Type', items=[(key, key.title(), '') for key in ('FLOAT', 'INTEGER', 'BOOLEAN', 'STRING')])
@@ -773,32 +812,56 @@ class AXISMELD_OT_m3_custom_property(Operator):
         return _object_mode(context) and context.active_object is not None and context.active_object.is_editable
 
     def invoke(self, context, _event):
+        source = _custom_source(context)
+        if source is None:
+            self.report({'WARNING'}, 'Custom property source context or object changed')
+            return {'CANCELLED'}
         keys = _custom_keys(context)
         if self.action != 'ADD':
             if not keys:
+                self.report({'WARNING'}, 'No supported custom property on the active object')
                 return {'CANCELLED'}
-            self.property = keys[0]
-            self.name = keys[0]
-            self.value = str(context.active_object[keys[0]])
+        self._custom_dialog_source = source
+        self._custom_dialog_keys = keys
+        _custom_dialogs[self.properties.as_pointer()] = self
+        if self.action != 'ADD':
+            key = self.property if self.properties.is_property_set('property') and self.property in keys else keys[0]
+            self.property = key
+            if self.action == 'EDIT':
+                _custom_load_draft(self, context)
         return context.window_manager.invoke_props_dialog(self)
+
+    def cancel(self, _context):
+        _custom_dialogs.pop(self.properties.as_pointer(), None)
+        self._custom_dialog_source = None
 
     def draw(self, _context):
         if self.action != 'ADD':
-            self.layout.prop(self, 'property')
+            self.layout.prop(self, 'property', text='Property', text_ctxt='*')
         if self.action != 'DELETE':
             self.layout.prop(self, 'name')
             self.layout.prop(self, 'kind')
             self.layout.prop(self, 'value')
 
     def execute(self, context):
+        # Confirmation ends the editable draft even on failure. Keep the first
+        # identity on this operator until success, but never in a reused RNA slot.
+        selected = self.property if self.action != 'ADD' else None
+        _custom_dialogs.pop(self.properties.as_pointer(), None)
+        source = getattr(self, '_custom_dialog_source', None)
+        if source is not None and source != _custom_source(context):
+            self.report({'WARNING'}, 'Custom property source context or object changed')
+            return {'CANCELLED'}
         obj = context.active_object
-        if self.action != 'ADD' and self.property not in _custom_keys(context):
+        if self.action != 'ADD' and selected not in _custom_keys(context):
+            self.report({'WARNING'}, 'Selected custom property is missing or unsupported')
             return {'CANCELLED'}
         if self.action == 'DELETE':
-            del obj[self.property]
+            del obj[selected]
+            self._custom_dialog_source = None
             return {'FINISHED'}
         if not self.name.strip() or self.name.startswith('_') or (self.name in obj and
-                (self.action == 'ADD' or self.name != self.property)):
+                (self.action == 'ADD' or self.name != selected)):
             self.report({'ERROR'}, 'Choose a unique non-reserved property name')
             return {'CANCELLED'}
         try:
@@ -806,12 +869,15 @@ class AXISMELD_OT_m3_custom_property(Operator):
                 raise ValueError('Boolean value must be true, false, 1 or 0')
             value = {'FLOAT': float, 'INTEGER': int, 'STRING': str,
                      'BOOLEAN': lambda item: item.lower() in {'true', '1'}}[self.kind](self.value)
-        except ValueError as error:
-            self.report({'ERROR'}, str(error))
+        except ValueError:
+            self.report({'ERROR'}, 'Custom property value is invalid for the selected type')
             return {'CANCELLED'}
         obj[self.name] = value
-        if self.action == 'EDIT' and self.name != self.property:
-            del obj[self.property]
+        if self.action == 'EDIT' and self.name != selected:
+            del obj[selected]
+        # Native Undo/F9 may rebuild IDs. Only the first dialog confirmation
+        # requires the opening identity; subsequent native replays use RNA args.
+        self._custom_dialog_source = None
         return {'FINISHED'}
 
 

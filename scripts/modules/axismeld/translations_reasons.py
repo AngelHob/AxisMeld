@@ -6,7 +6,12 @@ Full source strings are keys, including plan IDs and native confirmation suffixe
 Translations preserve selection, topology, data, cancellation and Undo boundaries.
 """
 
-ZH_HANS = {'Unknown property navigation target': '未知的属性导航目标',
+ZH_HANS = {'Custom property source context or object changed': '自定义属性的来源上下文或对象已改变',
+ 'No supported custom property on the active object': '活动对象上没有支持的自定义属性',
+ 'Selected custom property is missing or unsupported': '所选自定义属性已丢失或类型不受支持',
+ 'Custom property value is invalid for the selected type': '自定义属性值不符合所选类型',
+ 'Choose a unique non-reserved property name': '请选择唯一且非保留的属性名称',
+ 'Unknown property navigation target': '未知的属性导航目标',
  'Property navigation requires the graphical application': '属性导航需要图形界面',
  'Property navigation requires a live 3D viewport in the source window': '属性导航需要来源窗口中有效的三维视窗',
  'Requires an active selected object in the source view layer': '需要来源视图层中的活动选中对象',
