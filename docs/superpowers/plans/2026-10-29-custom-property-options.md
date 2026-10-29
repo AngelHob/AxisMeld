@@ -37,19 +37,28 @@
 - Preserve ADD/EDIT/DELETE and FLOAT/INTEGER/BOOLEAN/STRING public RNA arguments.
 - Produce focused tests and isolated GUI script that writes a JSON receipt with evidence boundaries. New private helper names are implementer decisions.
 
-- [ ] Write failing tests for untouched integer/bool/string and selector draft refresh; source swap must cancel and preserve both objects. Verify RED against baseline.
-- [ ] Implement minimal load/update callbacks and transient source guard, preserving supplied EXEC arguments and F9. Cover removal/same-name replacement, no-property/unsupported value, invalid conversion/collision, cancel and deliberate rename/type changes.
-- [ ] Run focused tests with actual Blender RNA where callbacks matter. Avoid tests merely asserting stub behavior.
-- [ ] Add GUI harness compatible with disposable factory process (`AXISMELD_TEST_ROOT` and `AXISMELD_TEST_ARTIFACTS`); suppress splash explicitly. Exercise real RNA dialog selection and simulated confirm/cancel, native Undo/Redo and F9, and English/Chinese. Do not operate existing user sessions. Controller launches GUI sequentially after fresh install.
-- [ ] Run existing M3 common/translation/catalog tests appropriate to changed code; document exact test boundaries, self-review and commit only task files.
+- [x] Write failing tests for untouched integer/bool/string and selector draft refresh; source swap must cancel and preserve both objects. Verify RED against baseline.
+- [x] Implement minimal load/update callbacks and transient source guard, preserving supplied EXEC arguments and F9. Cover removal/same-name replacement, no-property/unsupported value, invalid conversion/collision, cancel and deliberate rename/type changes.
+- [x] Run focused tests with actual Blender RNA where callbacks matter. Avoid tests merely asserting stub behavior.
+- [x] Add GUI harness compatible with disposable factory process (`AXISMELD_TEST_ROOT` and `AXISMELD_TEST_ARTIFACTS`); suppress splash explicitly. Exercise real RNA dialog selection and simulated confirm/cancel, native Undo/Redo and F9, and English/Chinese. Do not operate existing user sessions. Controller launches GUI sequentially after fresh install.
+- [x] Run existing M3 common/translation/catalog tests appropriate to changed code; document exact test boundaries, self-review and commit only task files.
 
 ### Task 2: Verify and deliver one reviewed batch
 
 **Files:** dated acceptance/snapshot, CHANGELOG/current handoff, manual ledger/index, curated testing-site catalog/config; existing release audit tools.
 **Interfaces:** consumes reviewed Task 1 source SHA, actual native build/install and GUI receipts; produces versioned package, public download proof and Pages proof.
 
-- [ ] Add four to six manual cases for Modify → Edit Attribute... and Delete Attribute...; preserve old 400 entries except moving isNew flags.
-- [ ] Fresh incremental build/install, relevant regressions, installed GUI verification, independent archive extraction/factory checks.
-- [ ] Push source and publish versioned preview with frozen source identity. Verify anonymous download and factory startup.
-- [ ] Update current docs and website; validate state/browser, push Pages, verify six public resources against committed bytes; push final docs and metadata-only integration README.
-- [ ] Record manual limitations and final remote identities. Do not merge feature code into integration.
+- [x] Add four to six manual cases for Modify → Edit Attribute... and Delete Attribute...; preserve old 400 entries except moving isNew flags.
+- [x] Fresh incremental build/install, relevant regressions, installed GUI verification, independent archive extraction/factory checks.
+- [x] Push source and publish versioned preview with frozen source identity. Verify anonymous download and factory startup.
+- [x] Update current docs and website; validate state/browser, push Pages, verify six public resources against committed bytes; push final docs and metadata-only integration README.
+- [x] Record manual limitations and final remote identities. Do not merge feature code into integration.
+
+## Completed delivery evidence
+
+- Runtime/distribution source: `1183c5ef866f4b2cc11b7c4dc301dbc23a6564dc`; final review approved.
+- Final build/install, 5 focused suites/63 tests, installed and independent extracted GUI each 21 records, and local browser 14 checks passed. GUI records include instrumentation/completion; physical acceptance remains pending. Legacy M3 checker fails unchanged on baseline/current and was not counted passing.
+- Public release: `axismeld-2026.10.29-custom-property-preview`; full anonymous ZIP checksum, 6533-file/154-resource extraction audit and a new factory process passed. Incomplete network attempts were preserved; recovery used validated public byte ranges and an exact whole-ZIP SHA256.
+- Pages: `bbc80edf43d61be08bcde38ddf130bfdd740bb2a`, six public resources byte-matched. Catalog 405/current 391/current-pending 344; CP-01–CP-05 pending, old 400 records preserved except recency flags.
+- Verified delivery docs: `5fb39898a14651a1a34da3585262fb3f7260fc39`. Integration README-only metadata: `f826282cc7fabecfd6024d6caced193237345b33`; feature code was not merged into integration.
+- This plan-close commit follows the packaged runtime source and does not change the preview's identity.
