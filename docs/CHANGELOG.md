@@ -1,5 +1,13 @@
 # AxisMeld 修改日志
 
+## 2026-11-24 · MWK 迁移筛选与 Maya 原生核对（研究归档）
+
+完成 [MWK v0.22.0 可迁移部分筛选](development/2026-11-24-mwk-maya-migration-audit.md)，固定参考提交并校验 16 份源码；在隔离 Maya 2026.2 中使用合成 Qt 输入、原生 popup 查询与截图核对。10 个按下时场景的 68 个方向槽位与 MWK 相符，同时记录正文、可用性、独立 Options 的具体差异。公开保存脱敏目录和三张应用截图；此研究目录用局部 Git 属性保存普通 PNG，避免公开 fork 拒收新增 LFS 对象，不改其他资源规则。
+
+优先候选为径向子菜单“快速穿过不误开、停留后展开”；QWER 持键重复 LMB 已核对，Axis 已有对应机制，只需补测试。布局器、Esc 策略、Space→File 父菜单生命周期不据未完成的核对直接迁移。
+
+验证：16/16 源码 Git blob SHA、4 组 QWER 重唤、10 个精确活动 popup / 306 条根记录及脱敏数据关联已核对。合成事件不替代物理操作；Esc、File 父层、完整底边/DPI 与命令效果仍未核实。本批只有文档和观测数据，没有运行时改动、构建或新试用版本；公开测试目录及人工结果不变。
+
 ## 2026-10-29 · 自定义属性参数窗口交付
 
 **当前交付：自定义属性参数窗口修复预览。** 版本 `axismeld-2026.10.29-custom-property-preview`；[下载](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.29-custom-property-preview)。 [本批验收](../docs/compatibility/2026-10-29-custom-property-acceptance.md) · [集中指纹与验证快照](../docs/compatibility/2026-10-29-custom-property-preview-snapshot.json)。

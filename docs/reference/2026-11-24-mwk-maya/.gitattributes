@@ -1,0 +1,2 @@
+# Public forks reject new LFS objects; these small audit screenshots use regular Git.
+*.png -filter -diff -merge -text

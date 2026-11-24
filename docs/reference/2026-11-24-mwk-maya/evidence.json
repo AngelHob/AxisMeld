@@ -1,0 +1,281 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-11-24",
+  "scope": "research only; synthetic Qt events in real Maya; not physical input or Axis acceptance",
+  "maya": {
+    "version": "2026.2",
+    "exe_version": "26.2.0.2567",
+    "api_version": 20260200,
+    "keyset": "Maya_Default",
+    "isolated_preferences": true,
+    "scratch_scene_only": true
+  },
+  "mwk_sources": {
+    "repository": "5hyuns/maya-workflow-kit-for-blender",
+    "tag": "v0.22.0",
+    "tag_object": "2fc6666ff49c2cb80829ce592837ff126cea19b2",
+    "commit": "63e33723ad9e81fc79c94c424aa7cf2ee64daf24",
+    "status": "read-only source; not installed or executed",
+    "files": [
+      {
+        "path": "src/allset/marking/engine.py",
+        "git_blob_sha": "ab1874955b9162fa7642346080f0cc680d5501ed",
+        "source": "https://github.com/5hyuns/maya-workflow-kit-for-blender/blob/63e33723ad9e81fc79c94c424aa7cf2ee64daf24/src/allset/marking/engine.py"
+      },
+      {
+        "path": "src/allset/marking/hotbox_engine.py",
+        "git_blob_sha": "14821d816ebaa2b13e735560faf5b467c9c96d67",
+        "source": "https://github.com/5hyuns/maya-workflow-kit-for-blender/blob/63e33723ad9e81fc79c94c424aa7cf2ee64daf24/src/allset/marking/hotbox_engine.py"
+      },
+      {
+        "path": "src/allset/marking/modal.py",
+        "git_blob_sha": "76b69833048ed23b3ef3c619ce8bae9d5819ff58",
+        "source": "https://github.com/5hyuns/maya-workflow-kit-for-blender/blob/63e33723ad9e81fc79c94c424aa7cf2ee64daf24/src/allset/marking/modal.py"
+      },
+      {
+        "path": "src/allset/marking/menu_layout.py",
+        "git_blob_sha": "ac41185941ad18fbe501da1035dfd647304aac7d",
+        "source": "https://github.com/5hyuns/maya-workflow-kit-for-blender/blob/63e33723ad9e81fc79c94c424aa7cf2ee64daf24/src/allset/marking/menu_layout.py"
+      },
+      {
+        "path": "src/allset/marking/ring_fit.py",
+        "git_blob_sha": "fb7a7da2ebbeae1d745dbbeddc352ca67ad820aa",
+        "source": "https://github.com/5hyuns/maya-workflow-kit-for-blender/blob/63e33723ad9e81fc79c94c424aa7cf2ee64daf24/src/allset/marking/ring_fit.py"
+      },
+      {
+        "path": "src/allset/marking/menus.py",
+        "git_blob_sha": "1b59f1a60c2fe41e449b119174e248703f4672ec",
+        "source": "https://github.com/5hyuns/maya-workflow-kit-for-blender/blob/63e33723ad9e81fc79c94c424aa7cf2ee64daf24/src/allset/marking/menus.py"
+      },
+      {
+        "path": "src/allset/ui/option_click.py",
+        "git_blob_sha": "296f3edb68c57bb743072f412a89f99913294426",
+        "source": "https://github.com/5hyuns/maya-workflow-kit-for-blender/blob/63e33723ad9e81fc79c94c424aa7cf2ee64daf24/src/allset/ui/option_click.py"
+      },
+      {
+        "path": "LICENSE",
+        "git_blob_sha": "94a9ed024d3859793618152ea559a168bbcbb5e2",
+        "source": "https://github.com/5hyuns/maya-workflow-kit-for-blender/blob/63e33723ad9e81fc79c94c424aa7cf2ee64daf24/LICENSE"
+      },
+      {
+        "path": "tests/test_step9_engine.py",
+        "git_blob_sha": "25e9cd11f98da49f5f792f11be94bf094e4373ee",
+        "source": "https://github.com/5hyuns/maya-workflow-kit-for-blender/blob/63e33723ad9e81fc79c94c424aa7cf2ee64daf24/tests/test_step9_engine.py"
+      },
+      {
+        "path": "tests/test_issue387_marking_pass_through.py",
+        "git_blob_sha": "bf8446290c97e1106fbd0de165a8275281d13f37",
+        "source": "https://github.com/5hyuns/maya-workflow-kit-for-blender/blob/63e33723ad9e81fc79c94c424aa7cf2ee64daf24/tests/test_issue387_marking_pass_through.py"
+      },
+      {
+        "path": "tests/test_issue412_marking_rest_open.py",
+        "git_blob_sha": "db9172fa38d1db53441a40f8a4b9b2a14f7d0dab",
+        "source": "https://github.com/5hyuns/maya-workflow-kit-for-blender/blob/63e33723ad9e81fc79c94c424aa7cf2ee64daf24/tests/test_issue412_marking_rest_open.py"
+      },
+      {
+        "path": "tests/test_step183_option_click.py",
+        "git_blob_sha": "5a2b79783d59b98f128a2323fe15a6eb4700a5a7",
+        "source": "https://github.com/5hyuns/maya-workflow-kit-for-blender/blob/63e33723ad9e81fc79c94c424aa7cf2ee64daf24/tests/test_step183_option_click.py"
+      },
+      {
+        "path": "tests/test_step260_hotbox.py",
+        "git_blob_sha": "74d0734dc4b640c9a1fa3790c483c22c6d093bc9",
+        "source": "https://github.com/5hyuns/maya-workflow-kit-for-blender/blob/63e33723ad9e81fc79c94c424aa7cf2ee64daf24/tests/test_step260_hotbox.py"
+      },
+      {
+        "path": "tests/test_step129_marking_bounds.py",
+        "git_blob_sha": "57615e5ceac0f2417b9b1103031a10baa57a04b6",
+        "source": "https://github.com/5hyuns/maya-workflow-kit-for-blender/blob/63e33723ad9e81fc79c94c424aa7cf2ee64daf24/tests/test_step129_marking_bounds.py"
+      },
+      {
+        "path": "tests/test_step151_ring.py",
+        "git_blob_sha": "c8b0fda3b0a3d0bb4c8c1e5bee050ac741b5fa9e",
+        "source": "https://github.com/5hyuns/maya-workflow-kit-for-blender/blob/63e33723ad9e81fc79c94c424aa7cf2ee64daf24/tests/test_step151_ring.py"
+      },
+      {
+        "path": "tests/test_issue414_marking_press_clock.py",
+        "git_blob_sha": "71a2bfca0f3a6922ec1b2ceb03589cc38d4408e0",
+        "source": "https://github.com/5hyuns/maya-workflow-kit-for-blender/blob/63e33723ad9e81fc79c94c424aa7cf2ee64daf24/tests/test_issue414_marking_press_clock.py"
+      }
+    ]
+  },
+  "qwer_repeat": [
+    {
+      "key": "q",
+      "first_press": {
+        "source": "12-q-first-lmb.json",
+        "sha256": "bfbbae435822eac4b20581adf348924111eaf6b94fef383debec1e0b04523348",
+        "marking_window_visible": true,
+        "temp_menu_exists": true,
+        "temp_menu_root_count": 6
+      },
+      "mouse_release": {
+        "source": "13-q-lmb-released.json",
+        "sha256": "65db748ecb28b59f3650e28a9e24b7633906c816b348ef856f07839360413e5d",
+        "marking_window_visible": false,
+        "temp_menu_exists": true,
+        "temp_menu_root_count": 6
+      },
+      "second_press": {
+        "source": "14-q-second-lmb.json",
+        "sha256": "645467a189e0d08c92d4760dc6d71b89521cf93cbaf97212fba46dc826683f16",
+        "marking_window_visible": true,
+        "temp_menu_exists": true,
+        "temp_menu_root_count": 6
+      },
+      "key_release": {
+        "temp_menu_exists": false,
+        "context": "selectSuperContext"
+      }
+    },
+    {
+      "key": "w",
+      "first_press": {
+        "source": "12-w-first-lmb.json",
+        "sha256": "746ee64827292f368a543e9f22bcfcb69b13f45da5cd346316fad3732aa41585",
+        "marking_window_visible": true,
+        "temp_menu_exists": true,
+        "temp_menu_root_count": 20
+      },
+      "mouse_release": {
+        "source": "13-w-lmb-released.json",
+        "sha256": "028ec39945073d539854a1d441083e6d11574bba5387fc827d9548c9bea932cb",
+        "marking_window_visible": false,
+        "temp_menu_exists": true,
+        "temp_menu_root_count": 20
+      },
+      "second_press": {
+        "source": "14-w-second-lmb.json",
+        "sha256": "f48865e6efb5547717d145a1ddde769ade04f95bf379ea7ff6b7401c73db6e8f",
+        "marking_window_visible": true,
+        "temp_menu_exists": true,
+        "temp_menu_root_count": 20
+      },
+      "key_release": {
+        "temp_menu_exists": false,
+        "context": "moveSuperContext"
+      }
+    },
+    {
+      "key": "e",
+      "first_press": {
+        "source": "12-e-first-lmb.json",
+        "sha256": "4fd1067b010fcbc2f19e1c090c472e7ab08fc381ea176d7cd6084b99b2a5e48e",
+        "marking_window_visible": true,
+        "temp_menu_exists": true,
+        "temp_menu_root_count": 22
+      },
+      "mouse_release": {
+        "source": "13-e-lmb-released.json",
+        "sha256": "bfeccf7f2c982695e48b4ae7c2701b7f1ea1cacab916278ee562d9d5a21d796a",
+        "marking_window_visible": false,
+        "temp_menu_exists": true,
+        "temp_menu_root_count": 22
+      },
+      "second_press": {
+        "source": "14-e-second-lmb.json",
+        "sha256": "1f01c562813708bff234db5c4a5096a459a4fbf9c2b91c73e49610f4434ed2d0",
+        "marking_window_visible": true,
+        "temp_menu_exists": true,
+        "temp_menu_root_count": 22
+      },
+      "key_release": {
+        "temp_menu_exists": false,
+        "context": "RotateSuperContext"
+      }
+    },
+    {
+      "key": "r",
+      "first_press": {
+        "source": "12-r-first-lmb.json",
+        "sha256": "523eec47066f101ac67de307aa765d27c97f91161d74a1e8e6b7179e5542e028",
+        "marking_window_visible": true,
+        "temp_menu_exists": true,
+        "temp_menu_root_count": 21
+      },
+      "mouse_release": {
+        "source": "13-r-lmb-released.json",
+        "sha256": "d21a8114f22bcb3faeabd1852616d68903140990868e1369a609ca64e1fb5175",
+        "marking_window_visible": false,
+        "temp_menu_exists": true,
+        "temp_menu_root_count": 21
+      },
+      "second_press": {
+        "source": "14-r-second-lmb.json",
+        "sha256": "c93652cdc044876a6cd55da171f13b3066ec60c331883d05d232cbde3958d277",
+        "marking_window_visible": true,
+        "temp_menu_exists": true,
+        "temp_menu_root_count": 21
+      },
+      "key_release": {
+        "temp_menu_exists": false,
+        "context": "scaleSuperContext"
+      }
+    }
+  ],
+  "pass_through": {
+    "points_frame_xy": [
+      [
+        664,
+        535
+      ],
+      [
+        664,
+        555
+      ],
+      [
+        664,
+        575
+      ],
+      [
+        664,
+        600
+      ]
+    ],
+    "elapsed_ms": 66.331
+  },
+  "dwell": {
+    "point_frame_xy": [
+      664,
+      557
+    ],
+    "exact_threshold_measured": false,
+    "filename_timing_is_scheduled_not_measured": true,
+    "measurement_phase": "snapshot() entry timestamp before menu queries and grabWindow; not the exact screenshot time"
+  },
+  "frames": [
+    {
+      "image": "24-w-south-fast-cross.png",
+      "image_sha256": "2746a6ba9d242e6e278a60f7594edd593ddc4c7ad257c7264fe8110a6235a59c",
+      "source_json": "24-w-south-fast-cross.json",
+      "source_json_sha256": "d18b99a0132dfbdf89e0e3a69fb38aed511a02b63bf69bb7d710e1bda04c9138",
+      "observation": "W parent retained; ordinary Selection Constraints cascade open"
+    },
+    {
+      "image": "27-w-select-dwell-50ms.png",
+      "image_sha256": "0b8bb4b8d25fa9306be5a03df7b45725239defd39c925f7e74c5b204990c8b0a",
+      "source_json": "27-w-select-dwell-50ms.json",
+      "source_json_sha256": "511fc9689043b9b874142ab83d159f4723cabdc2efbb94f0c8d68875f54d430b",
+      "observation": "Select highlighted; W parent retained",
+      "snapshot_start_elapsed_since_dwell_move_ms": 44.525
+    },
+    {
+      "image": "28-w-select-dwell-350ms.png",
+      "image_sha256": "2580dab3dcdebf507da2715c0b326ee5598f6be22e5c7dcc405fe9f4339537c0",
+      "source_json": "28-w-select-dwell-350ms.json",
+      "source_json_sha256": "644368ac3a751c5f7f9f9d4f5fb7350f2965d17527c4fc0fdd992684cd0f109d",
+      "observation": "Select radial child shown",
+      "snapshot_start_elapsed_since_dwell_move_ms": 612.571
+    }
+  ],
+  "catalog_sha256": "1f944c67a97a68ade94267cfee1a47bcd88a2a0bbe4017545d735ba949d3b4d1",
+  "limits": [
+    "root catalog only",
+    "MWK not run",
+    "Escape route not verified",
+    "Space File parent lifecycle not verified",
+    "bottom-edge DPI matrix incomplete",
+    "some context releases caused unintended scratch actions; press snapshots only accepted"
+  ],
+  "raw_data": "Original JSON and diagnostic scripts retained locally; not included because they contain unnecessary callbacks and environment identifiers."
+}

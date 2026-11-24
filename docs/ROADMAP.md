@@ -1,5 +1,9 @@
 # AxisMeld 整体规划与路线图
 
+## 2026-11-24 · 外部交互实现筛选
+
+[MWK 与 Maya 原生核对报告](development/2026-11-24-mwk-maya-migration-audit.md)已归档。本次为研究，未改变当前交付版本。下一候选是径向子菜单“快穿不误开、停留后展开”的最小规则与轨迹测试；其余先用菜单对照数据和故障输入场景补验证，不整体替换布局或状态机。精确停留阈值、Esc 与 Space→File 父层行为尚未标定/核实，不作为已确认的 Maya 契约。新增算法仍暂停，已有人工待测状态不变。
+
 ## 2026-10-29 · 自定义属性参数窗口交付
 
 **当前交付：自定义属性参数窗口修复预览。** 版本 `axismeld-2026.10.29-custom-property-preview`；[下载](https://github.com/AngelHob/AxisMeld/releases/tag/axismeld-2026.10.29-custom-property-preview)。 [本批验收](../docs/compatibility/2026-10-29-custom-property-acceptance.md) · [集中指纹与验证快照](../docs/compatibility/2026-10-29-custom-property-preview-snapshot.json)。
